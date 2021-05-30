@@ -1,16 +1,29 @@
-@font-face {
-  font-family: 'Shankster';
-  /* src: url('./my-font.woff2') format('woff2'),
-    url('./Shankster.ttf.woff') format('woff'); */
-  src:  url('./Shankster.ttf.woff') format('woff');
-  font-weight: 600;
-  font-style: normal;
+#game-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 0;
+    margin: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    overflow-y: hidden;
+
+    canvas {
+      // border: 1px solid;
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
+      user-select: none;
+      touch-action: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      margin: 0;
+      padding: 0;
+    }
 }
 
 body {
-  .hello {
-    color: red;
-    font-family: 'Shankster';
-    background: url('./star.png');
-  }
+  overflow-y: hidden;
 }

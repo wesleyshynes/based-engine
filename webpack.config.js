@@ -51,7 +51,11 @@ module.exports = {
   },
   plugins: [
    new HtmlWebpackPlugin({
-     title: 'Custom Title',
+     // title: 'Custom Title',
+     template: './src/assets/index.html'
    }),
  ],
+ resolve: {
+    extensions: ['.ts', '.js', '.json']
+  }
 };
