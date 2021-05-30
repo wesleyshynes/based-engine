@@ -1,0 +1,16 @@
+@font-face {
+  font-family: 'Shankster';
+  /* src: url('./my-font.woff2') format('woff2'),
+    url('./Shankster.ttf.woff') format('woff'); */
+  src:  url('./Shankster.ttf.woff') format('woff');
+  font-weight: 600;
+  font-style: normal;
+}
+
+body {
+  .hello {
+    color: red;
+    font-family: 'Shankster';
+    background: url('./star.png');
+  }
+}
