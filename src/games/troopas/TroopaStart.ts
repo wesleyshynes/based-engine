@@ -1,7 +1,9 @@
 import { BasedButton } from "../../engine/BasedButton";
 import { BasedLevel } from "../../engine/BasedLevel";
-import { drawText } from "../../engine/libs/drawHelpers";
+import { createSprite, drawImage, drawText } from "../../engine/libs/drawHelpers";
 import { getRandomInt } from "../../engine/libs/mathHelpers";
+
+import StarUrl from '../../assets/star.png'
 
 const customSong = [
 
@@ -47,7 +49,9 @@ export class TroopaStart extends BasedLevel {
     soundRef: null,
   }
 
-  initialize() {
+  star: any;
+
+  async initialize() {
     this.newHighScore = false
     this.startButton = new BasedButton({
       key: `start-button`,
@@ -80,6 +84,23 @@ export class TroopaStart extends BasedLevel {
       this.newHighScore = true
       localStorage.setItem('hi-score', `${this.highScore}`)
     }
+
+
+    this.star = {
+        c: this.gameRef.ctx,
+        sprite: StarUrl,
+        sx: 0,
+        sy: 0,
+        sWidth: 32,
+        sHeight: 32,
+        dx: 0,
+        dy: 0,
+        dWidth: 64,
+        dHeight: 64,
+        frame: 0
+    }
+
+    this.star = await createSprite(this.star)
   }
 
   handleSounds() {
@@ -237,6 +258,8 @@ export class TroopaStart extends BasedLevel {
       text: `${JSON.stringify(this.gameRef.mouseInfo)}`
     })
 
+
+    drawImage(this.star)
 
   }
   tearDown() {

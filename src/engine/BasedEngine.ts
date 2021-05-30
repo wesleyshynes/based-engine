@@ -149,11 +149,11 @@ export class BasedGame implements BasedGameType {
     this.lastUpdate = Date.now()
   }
 
-  start() {
+  async start() {
     // console.log('game start')
     this.soundPlayer.initialize()
     this.gameActive = true
-    this.levels[this.activeLevel].initialize()
+    await this.levels[this.activeLevel].initialize()
     window.requestAnimationFrame(this.gameLoop)
   }
 
@@ -168,10 +168,10 @@ export class BasedGame implements BasedGameType {
     this.levels[this.activeLevel].draw()
   }
 
-  loadLevel(level: string) {
+  async loadLevel(level: string) {
     this.levels[this.activeLevel].tearDown()
     this.activeLevel = level
-    this.levels[this.activeLevel].initialize()
+    await this.levels[this.activeLevel].initialize()
   }
 
   gameLoop() {
