@@ -6,7 +6,7 @@ export class Bullet extends BasedObject {
   active: boolean = false
   target: { x: number, y: number } = { x: 0, y: 0 }
   speed: number = 15
-  radius: number = 8
+  radius: number = 6
   velocity: { x: number, y: number } = { x: 0, y: 0 }
   maxDistance: number = 800
   traveled: number = 0

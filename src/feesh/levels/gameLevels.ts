@@ -1,4 +1,4 @@
-import { BasedLevel } from "../engine/BasedLevel"
+import { BasedLevel } from "../../engine/BasedLevel"
 import { FeeshObject } from "../entities/feeshObject";
 import { MovingBox } from "../entities/movingBoxObject";
 

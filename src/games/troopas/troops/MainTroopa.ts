@@ -2,10 +2,12 @@ import { BasedObject } from "../../../engine/BasedObject";
 import { drawCircle } from "../../../engine/libs/drawHelpers";
 import { angleBetween, degToRad, distanceBetween, pointOnCircle, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 
+import BoomUrl from '../../../assets/boom.ogg'
+
 export class MainTroopa extends BasedObject {
 
   target: { x: number, y: number, active?: boolean } = { x: 0, y: 0 };
-  radius: number = 30
+  radius: number = 15
   speed: number = 7
   health: number = 10
   maxHealth: number = 10
@@ -24,7 +26,7 @@ export class MainTroopa extends BasedObject {
   shootingHand: any = {
     x: 0,
     y: 0,
-    radius: 10,
+    radius: 5,
     fillColor: '#55dafd',
     currentAngle: 0,
     angleSpeed: 5
@@ -117,6 +119,9 @@ export class MainTroopa extends BasedObject {
     }
     this.health -= amount
     this.lastHit = this.gameRef.lastUpdate
+    if(this.health <= 0) {
+      this.gameRef.soundPlayer.loadSound(BoomUrl)
+    }
   }
 
 }

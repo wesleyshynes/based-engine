@@ -1,6 +1,6 @@
-import { BasedObject } from "../engine/BasedObject";
-import { drawCircle } from "../engine/libs/drawHelpers";
-import { degToRad, distanceBetween, pointOnCircle, radToDeg, XYCoordinateType } from "../engine/libs/mathHelpers";
+import { BasedObject } from "../../engine/BasedObject";
+import { drawCircle } from "../../engine/libs/drawHelpers";
+import { degToRad, distanceBetween, pointOnCircle, radToDeg, XYCoordinateType } from "../../engine/libs/mathHelpers";
 
 export class FeeshObject extends BasedObject {
   radius: number = 10
@@ -42,18 +42,18 @@ export class FeeshObject extends BasedObject {
 
     const turnFactor = 5 * diffMulti
 
-    if (pressedKeys[65]) {
+    if (pressedKeys['KeyA']) {
       this.facing -= turnFactor
       this.tailSpeedDirection = this.offSetAngle > 10 ? -1 : this.tailSpeedDirection
     }
-    if (pressedKeys[68]) {
+    if (pressedKeys['KeyD']) {
       this.facing += turnFactor
       this.tailSpeedDirection = this.offSetAngle < -10 ? 1 : this.tailSpeedDirection
     }
-    if (pressedKeys[87]) {
+    if (pressedKeys['KeyW']) {
       this.speed += this.speed < 5 ? 1 : 0
     }
-    if (pressedKeys[83]) {
+    if (pressedKeys['KeyS']) {
       this.speed -= this.speed > 2 ? 1 : 0
     }
     const dt = distanceBetween(this, moveTarget)

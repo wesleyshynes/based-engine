@@ -109,7 +109,14 @@ export class BasedSounds {
 
     const newBuffer = this.audioContext.createBufferSource()
     newBuffer.buffer = decodedBuffer
-    newBuffer.connect(this.primaryGainControl)
+
+    const soundGain = this.audioContext.createGain()
+    soundGain.gain.setValueAtTime(1, this.audioContext.currentTime)
+
+    newBuffer.connect(soundGain)
+    soundGain.connect(this.primaryGainControl)
+
+    // newBuffer.connect(this.primaryGainControl)
     newBuffer.start()
   }
 

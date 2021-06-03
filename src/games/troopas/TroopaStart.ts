@@ -51,7 +51,25 @@ export class TroopaStart extends BasedLevel {
 
   star: any;
 
-  async initialize() {
+  async preload() {
+    this.star = {
+        c: this.gameRef.ctx,
+        sprite: StarUrl,
+        sx: 0,
+        sy: 0,
+        sWidth: 32,
+        sHeight: 32,
+        dx: 0,
+        dy: 0,
+        dWidth: 64,
+        dHeight: 64,
+        frame: 0
+    }
+
+    this.star = await createSprite(this.star)
+  }
+
+  initialize() {
     this.newHighScore = false
     this.startButton = new BasedButton({
       key: `start-button`,
@@ -85,22 +103,6 @@ export class TroopaStart extends BasedLevel {
       localStorage.setItem('hi-score', `${this.highScore}`)
     }
 
-
-    this.star = {
-        c: this.gameRef.ctx,
-        sprite: StarUrl,
-        sx: 0,
-        sy: 0,
-        sWidth: 32,
-        sHeight: 32,
-        dx: 0,
-        dy: 0,
-        dWidth: 64,
-        dHeight: 64,
-        frame: 0
-    }
-
-    this.star = await createSprite(this.star)
   }
 
   handleSounds() {
@@ -245,18 +247,18 @@ export class TroopaStart extends BasedLevel {
 
 
 
-    drawText({
-      c: this.gameRef.ctx,
-      x: (this.gameRef.gameWidth)/2,
-      y: 50,
-      align:'center',
-      fillColor: '#000',
-      style: '',
-      weight: 'bold',
-      fontFamily: 'sans-serif',
-      fontSize: 15,
-      text: `${JSON.stringify(this.gameRef.mouseInfo)}`
-    })
+    // drawText({
+    //   c: this.gameRef.ctx,
+    //   x: (this.gameRef.gameWidth)/2,
+    //   y: 50,
+    //   align:'center',
+    //   fillColor: '#000',
+    //   style: '',
+    //   weight: 'bold',
+    //   fontFamily: 'sans-serif',
+    //   fontSize: 15,
+    //   text: `${JSON.stringify(this.gameRef.mouseInfo)}`
+    // })
 
 
     drawImage(this.star)

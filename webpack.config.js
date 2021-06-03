@@ -8,7 +8,8 @@ module.exports = {
     // index: './src/index.js'
   },
   devtool: 'inline-source-map',
-  mode: 'development',
+  // mode: 'development',
+  mode: 'production',
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
@@ -16,6 +17,7 @@ module.exports = {
   },
   devServer: {
     contentBase: './dist',
+    // host: '10.0.0.5'
   },
   module: {
     rules: [
@@ -41,6 +43,10 @@ module.exports = {
       },
       {
         test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        type: 'asset/resource',
+      },
+      {
+        test: /\.(ogg|mp3)$/i,
         type: 'asset/resource',
       },
       {

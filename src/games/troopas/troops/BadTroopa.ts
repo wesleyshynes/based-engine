@@ -8,7 +8,7 @@ export class BadTroopa extends MainTroopa {
   baseSpeed: number = 1
   fastSpeed: number = 3
   aggroRange: number = 250
-  radius: number = 20
+  radius: number = 10
   health: number = 2
   maxHealth: number = 2
   damageBuffer: number = 100

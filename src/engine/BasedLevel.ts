@@ -4,6 +4,7 @@ import { BasedGame } from "../engine/BasedEngine";
 export interface BasedLevelType {
   levelKey: string;
   gameRef: BasedGame;
+  preload: () => Promise<void>;
   initialize: () => void;
   update: () => void;
   draw: () => void;
@@ -21,6 +22,7 @@ export class BasedLevel {
     this.draw = this.draw.bind(this)
     this.tearDown = this.tearDown.bind(this)
   }
+  async preload() {}
   initialize() { }
   update() { }
   draw() { }

@@ -1,6 +1,6 @@
-import { BasedButton } from "../engine/BasedButton";
-import { BasedLevel } from "../engine/BasedLevel";
-import { drawText } from "../engine/libs/drawHelpers";
+import { BasedButton } from "../../engine/BasedButton";
+import { BasedLevel } from "../../engine/BasedLevel";
+import { drawText } from "../../engine/libs/drawHelpers";
 
 export class StartLevel extends BasedLevel {
 

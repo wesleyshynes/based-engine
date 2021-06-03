@@ -3,8 +3,8 @@ import { TroopasLevel1 } from "./games/troopas/levels/TroopasLevel1-1";
 import { TroopaStart } from "./games/troopas/TroopaStart";
 import './assets/style.scss';
 
-// import { LevelOneBase, OtherLevel } from "./levels/gameLevels";
-// import { StartLevel } from "./levels/startLevel";
+import { LevelOneBase, OtherLevel } from "./feesh/levels/gameLevels";
+import { StartLevel } from "./feesh/levels/startLevel";
 
 function startGame() {
   const newGame = new BasedGame({
@@ -16,9 +16,10 @@ function startGame() {
     // height: window.innerHeight > 800 ? 800 : window.innerHeight,
     // height: 600,
     levels: [
-      // { key: 'start-level', level: StartLevel },
-      // { key: 'new-level-1', level: OtherLevel },
-      // { key: 'level-one', level: LevelOneBase }
+      { key: 'start-level', level: StartLevel },
+      { key: 'new-level-1', level: OtherLevel },
+      { key: 'level-one', level: LevelOneBase },
+
       { key: 'start-screen', level: TroopaStart },
       { key: 'troopa1-1', level: TroopasLevel1 },
     ]
