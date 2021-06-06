@@ -9,10 +9,12 @@ export class BasedObject {
     this.objectKey = objectSettings.key
     this.gameRef = objectSettings.gameRef
     this.initialize = this.initialize.bind(this)
+    this.preload = this.preload.bind(this)
     this.update = this.update.bind(this)
     this.draw = this.draw.bind(this)
     this.tearDown = this.tearDown.bind(this)
   }
+  async preload() { }
   initialize() { }
   update() { }
   draw() { }

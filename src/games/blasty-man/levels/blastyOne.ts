@@ -1,9 +1,9 @@
-import { BasedButton } from "../../../engine/BasedButton";
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { createSprite, drawCircle, drawImage, drawText, rotateDraw } from "../../../engine/libs/drawHelpers";
 
-import BlastyManUrl from '../../../assets/blasty-man/blasty-man-concept-pixel.png'
 import BlastyManGun from '../../../assets/blasty-man/blasty-man-gun-concept.png'
+import { angleBetween } from "../../../engine/libs/mathHelpers";
+import { BlastMan } from "../entities/BlastMan";
 
 export class BlastyLevelOne extends BasedLevel {
 
@@ -11,38 +11,15 @@ export class BlastyLevelOne extends BasedLevel {
   bGun: any;
 
   gunRotate: number = 0
-  gunRotate2: number = 180
+  gunRotate2: number = 0
+
+  target: {x: number, y: number} = {x: 0, y: 0}
 
   async preload() {
-    this.bMan = {
-      c: this.gameRef.ctx,
-      sprite: BlastyManUrl,
-      sx: 0,
-      sy: 0,
-      sWidth: 40,
-      sHeight: 64,
-      dx: 115 - 20,
-      dy: 100 - 32,
-      dWidth: 40,
-      dHeight: 64,
-      frame: 0
-    }
-    this.bMan = await createSprite(this.bMan)
-
-    this.bGun = {
-      c: this.gameRef.ctx,
-      sprite: BlastyManGun,
-      sx: 0,
-      sy: 0,
-      sWidth: 32,
-      sHeight: 16,
-      dx: 100,
-      dy: 100,
-      dWidth: 32,
-      dHeight: 16,
-      frame: 0
-    }
-    this.bGun = await createSprite(this.bGun)
+    this.bMan = new BlastMan({key: 'blast-man', gameRef: this.gameRef})
+    this.bMan.x = 115 - 20,
+    this.bMan.y = 100 - 32,
+    await this.bMan.preload()
   }
 
   initialize() { }
@@ -52,9 +29,8 @@ export class BlastyLevelOne extends BasedLevel {
   update() {
     this.updateBg()
     this.handleSounds()
-    const speedFactor = 2 * this.gameRef.diffMulti
-    this.gunRotate = this.gunRotate % 360 + speedFactor
-    this.gunRotate2 = this.gunRotate2 % 360 + speedFactor
+
+    this.bMan.update()
   }
 
   updateBg() { }
@@ -69,56 +45,7 @@ export class BlastyLevelOne extends BasedLevel {
 
     this.drawBg()
 
-
-
-    drawImage(this.bMan)
-
-
-
-    // drawCircle({
-    //   c: this.gameRef.ctx,
-    //   x: 100,
-    //   y: 100,
-    //   radius: 10,
-    //   fillColor: 'red',
-    // })
-    // drawCircle({
-    //   c: this.gameRef.ctx,
-    //   x: 130,
-    //   y: 100,
-    //   radius: 10,
-    //   fillColor: 'red',
-    // })
-
-    rotateDraw({
-      c: this.gameRef.ctx,
-      x: 100,
-      y: 100,
-      a: -this.gunRotate2
-    }, () => {
-      drawImage({
-        ...this.bGun,
-        dx: -36,
-        dy: -8,
-        flipX: true,
-        flipY: this.gunRotate2 > 90 && this.gunRotate2 < 270,
-      })
-    })
-
-    rotateDraw({
-      c: this.gameRef.ctx,
-      x: 130,
-      y: 100,
-      a: this.gunRotate
-    }, () => {
-      drawImage({
-        ...this.bGun,
-        dx: -36,
-        dy: -8,
-        flipX: true,
-        flipY: this.gunRotate > 90 && this.gunRotate < 270,
-      })
-    })
+    this.bMan.draw()
     // console.log(this.gunRotate)
   }
 
