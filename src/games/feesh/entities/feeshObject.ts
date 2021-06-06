@@ -1,6 +1,6 @@
-import { BasedObject } from "../../engine/BasedObject";
-import { drawCircle } from "../../engine/libs/drawHelpers";
-import { degToRad, distanceBetween, pointOnCircle, radToDeg, XYCoordinateType } from "../../engine/libs/mathHelpers";
+import { BasedObject } from "../../../engine/BasedObject";
+import { drawCircle } from "../../../engine/libs/drawHelpers";
+import { degToRad, distanceBetween, pointOnCircle, radToDeg, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 
 export class FeeshObject extends BasedObject {
   radius: number = 10

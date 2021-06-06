@@ -1,19 +1,16 @@
 import { BasedGame } from "./engine/BasedEngine";
-import { TroopasLevel1 } from "./games/troopas/levels/TroopasLevel1-1";
-import { TroopaStart } from "./games/troopas/TroopaStart";
 import './assets/style.scss';
-
-// import { LevelOneBase, OtherLevel } from "./feesh/levels/gameLevels";
-// import { StartLevel } from "./feesh/levels/startLevel";
+import { BlastyStart } from "./games/blasty-man/levels/startBlasty";
+import { BlastyLevelOne } from "./games/blasty-man/levels/blastyOne";
 
 function startGame() {
   const newGame = new BasedGame({
     canvasElementId: 'game-container',
-    width: window.innerWidth,
-    // width: window.innerWidth > 600 ? 600: window.innerWidth,
+    // width: window.innerWidth,
+    width: window.innerWidth > 400 ? 400: window.innerWidth,
     // width: 400,
-    height: window.innerHeight,
-    // height: window.innerHeight > 800 ? 800 : window.innerHeight,
+    // height: window.innerHeight,
+    height: window.innerHeight > 400 ? 400 : window.innerHeight,
     // height: 600,
     levels: [
       // Feeshy
@@ -22,8 +19,12 @@ function startGame() {
       // { key: 'level-one', level: LevelOneBase },
 
       // Troopas
-      { key: 'start-screen', level: TroopaStart },
-      { key: 'troopa1-1', level: TroopasLevel1 },
+      // { key: 'start-screen', level: TroopaStart },
+      // { key: 'troopa1-1', level: TroopasLevel1 },
+
+      // Blasty man
+      { key: 'start-screen', level: BlastyStart },
+      { key: 'blasty-1', level: BlastyLevelOne },
     ]
   })
   newGame.enableMouse()
@@ -49,15 +50,3 @@ if(startBtn && audioP && audioP) {
   })
 
 }
-
-// openFullscreen(newGame.canvasElement)
-//
-// function openFullscreen(elem: any) {
-//   if (elem.requestFullscreen) {
-//     elem.requestFullscreen();
-//   } else if (elem.webkitRequestFullscreen) { /* Safari */
-//     elem.webkitRequestFullscreen();
-//   } else if (elem.msRequestFullscreen) { /* IE11 */
-//     elem.msRequestFullscreen();
-//   }
-// }

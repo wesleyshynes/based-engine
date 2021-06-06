@@ -1,5 +1,34 @@
 import { degToRad } from "./mathHelpers"
 
+
+export function rotateDraw(settings: {
+  c: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  a: number,
+}, drawFn: () => void) {
+  const {
+    c,x,y,a
+  } = settings
+
+    c.save();
+
+    // move to the center of the canvas
+    c.translate(x,y);
+
+    // rotate the canvas to the specified degrees
+    c.rotate(a*Math.PI/180);
+
+    // draw the image
+    // since the context is rotated, the image will be rotated also
+    drawFn()
+
+    // we’re done with the rotating so restore the unrotated context
+    c.restore();
+
+
+}
+
 export function drawImage(settings: {
   c: CanvasRenderingContext2D,
   img: CanvasImageSource,
@@ -11,7 +40,9 @@ export function drawImage(settings: {
   dy: number,
   dWidth: number,
   dHeight: number,
-  sprite: string
+  sprite: string,
+  flipX?:boolean,
+  flipY?:boolean
 }) {
     const {
         c,
@@ -24,9 +55,13 @@ export function drawImage(settings: {
         dy,
         dWidth,
         dHeight,
-        img
+        img,
+        flipX,
+        flipY
     } = settings
+    c.scale(flipX ? -1: 1, flipY ? -1 : 1)
     c.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+    c.scale(1,1)
 }
 
 export async function createSprite(spriteOptions: any) {
@@ -151,13 +186,15 @@ export function drawText(settings: {
    c.textAlign = align ? align : 'center'
    c.font = `${style ? style + ' ' : ''}${weight ? weight + ' ' : ''}${fontSize}px ${fontFamily}`
 
-   if(fillColor) {
-       c.fillStyle = fillColor
-       c.fillText(text, x, y)
-   }
    if(strokeWidth && strokeColor) {
        c.strokeStyle = strokeColor
        c.lineWidth = strokeWidth
        c.strokeText(text, x, y)
    }
+
+   if(fillColor) {
+       c.fillStyle = fillColor
+       c.fillText(text, x, y)
+   }
+
 }

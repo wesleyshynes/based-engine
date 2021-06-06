@@ -1,4 +1,4 @@
-import { BasedObject } from "../../engine/BasedObject"
+import { BasedObject } from "../../../engine/BasedObject"
 
 export class MovingBox extends BasedObject {
 
