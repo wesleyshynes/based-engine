@@ -22,7 +22,9 @@ export class BlastyLevelOne extends BasedLevel {
     await this.bMan.preload()
   }
 
-  initialize() { }
+  initialize() {
+    this.bMan.initialize()
+  }
 
   handleSounds() { }
 

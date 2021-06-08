@@ -1,7 +1,7 @@
 import { BasedObject } from "../../../engine/BasedObject";
 import BlastyManGun from '../../../assets/blasty-man/blasty-man-gun-concept.png'
 import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
-import { angleBetween } from "../../../engine/libs/mathHelpers";
+import { angleBetween, degToRad, distanceBetween, pointOnCircle } from "../../../engine/libs/mathHelpers";
 
 
 export class Gun extends BasedObject {
@@ -14,6 +14,10 @@ export class Gun extends BasedObject {
   rotateSpeed: number = 5
 
   target: { x: number, y: number } = { x: 0, y: 0 }
+
+  gunTip: {x: number, y: number} = { x: 0, y: 0 }
+
+  onTarget: boolean = false
 
   async preload() {
     this.sprite = await createSprite({
@@ -29,8 +33,8 @@ export class Gun extends BasedObject {
       dHeight: 16,
       frame: 0,
     })
-    this.sprite.dx = -36
-    this.sprite.dy = -8
+    this.sprite.dx = -32
+    this.sprite.dy = -4
     this.sprite.flipX = true
     this.sprite.flipY = false
   }
@@ -48,6 +52,12 @@ export class Gun extends BasedObject {
     if(this.angle < 0) {
       this.angle += 360
     }
+    this.gunTip = pointOnCircle(degToRad(this.angle), 32)
+
+    const enemyAnglePos = pointOnCircle(angleBetween(this, this.target), 32)
+    const shootingPos = pointOnCircle(degToRad(this.angle), 32)
+    const shotDistance = distanceBetween(enemyAnglePos, shootingPos)
+    this.onTarget = Math.abs(shotDistance) <= 1
   }
 
   moveTo(newLocation: {x: number, y: number}) {
@@ -61,13 +71,6 @@ export class Gun extends BasedObject {
   }
 
   draw() {
-    drawCircle({
-      c: this.gameRef.ctx,
-      x: this.x,
-      y: this.y,
-      radius: 10,
-      fillColor: 'red',
-    })
 
     rotateDraw({
       c: this.gameRef.ctx,
@@ -76,7 +79,25 @@ export class Gun extends BasedObject {
       a: this.angle
     }, () => {
       drawImage(this.sprite)
+
+      // draw hand
+      drawCircle({
+        c: this.gameRef.ctx,
+        x: -6,
+        y: 8,
+        radius: 5,
+        fillColor: 'green',
+      })
     })
+
+    // drawCircle({
+    //   c: this.gameRef.ctx,
+    //   x: this.gunTip.x + this.x,
+    //   y: this.gunTip.y + this.y,
+    //   radius: 3,
+    //   fillColor: this.onTarget ? 'orange' : 'yellow',
+    // })
+
   }
 
 }

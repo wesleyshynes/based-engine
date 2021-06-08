@@ -2,6 +2,7 @@ import { BasedObject } from "../../../engine/BasedObject";
 import { createSprite, drawImage } from "../../../engine/libs/drawHelpers";
 import BlastyManUrl from '../../../assets/blasty-man/blasty-man-concept-pixel.png'
 import { Gun } from "./Gun";
+import { Bullet } from "./Bullet";
 
 
 export class BlastMan extends BasedObject {
@@ -19,6 +20,9 @@ export class BlastMan extends BasedObject {
 
   gun1: any;
   gun2: any;
+
+  gun1Bullet: any;
+  gun2Bullet: any;
 
   async preload() {
     this.sprite = await createSprite({
@@ -46,7 +50,10 @@ export class BlastMan extends BasedObject {
     await this.gun2.preload()
   }
 
-  initialize() { }
+  initialize() {
+    this.gun1Bullet = new Bullet({key: 'gun1Bullet', gameRef: this.gameRef})
+    this.gun2Bullet = new Bullet({key: 'gun2Bullet', gameRef: this.gameRef})
+  }
 
   update() {
 
@@ -77,13 +84,31 @@ export class BlastMan extends BasedObject {
       y: this.gameRef.mouseInfo.y,
     }
 
+
+
     this.gun1.moveTo({ x: cX - 15, y: cY + 5 })
     this.gun1.setTarget(this.target)
     this.gun1.update()
 
+    if(!this.gun1Bullet.active && this.gun1.onTarget) {
+      this.gun1Bullet.fire({
+        x: this.gun1.gunTip.x + this.gun1.x,
+        y: this.gun1.gunTip.y + this.gun1.y
+      }, this.target)
+    }
+    this.gun1Bullet.update()
+
     this.gun2.moveTo({ x: cX + 15, y: cY + 5})
     this.gun2.setTarget(this.target)
     this.gun2.update()
+
+    if(!this.gun2Bullet.active && this.gun2.onTarget) {
+      this.gun2Bullet.fire({
+        x: this.gun2.gunTip.x + this.gun2.x,
+        y: this.gun2.gunTip.y + this.gun2.y
+      }, this.target)
+    }
+    this.gun2Bullet.update()
   }
 
   draw() {
@@ -96,5 +121,7 @@ export class BlastMan extends BasedObject {
       this.gun2.draw()
     }
 
+    this.gun1Bullet.draw()
+    this.gun2Bullet.draw()
   }
 }
