@@ -84,8 +84,6 @@ export class BlastMan extends BasedObject {
       y: this.gameRef.mouseInfo.y,
     }
 
-
-
     this.gun1.moveTo({ x: cX - 15, y: cY + 5 })
     this.gun1.setTarget(this.target)
     this.gun1.update()
