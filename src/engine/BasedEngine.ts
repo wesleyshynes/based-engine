@@ -35,6 +35,7 @@ export interface BasedGameType {
   loadLevel: (level: string) => void;
   levels: { [key: string]: BasedLevel }
   activeLevel: string;
+  enableMouse: () => void;
 }
 
 export class BasedGame implements BasedGameType {
@@ -154,9 +155,9 @@ export class BasedGame implements BasedGameType {
     this.soundPlayer.initialize()
     this.gameActive = true
 
-    for(let i = 0; i < Object.keys(this.levels).length; i++) {
+    for (let i = 0; i < Object.keys(this.levels).length; i++) {
       const lvl = Object.keys(this.levels)[i]
-      if(this.levels[lvl].preload){
+      if (this.levels[lvl].preload) {
         await this.levels[lvl].preload()
       }
     }

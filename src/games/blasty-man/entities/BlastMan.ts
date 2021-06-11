@@ -109,6 +109,13 @@ export class BlastMan extends BasedObject {
     this.gun2Bullet.update()
   }
 
+  centerCoordinates() {
+    return {
+      x: this.x + this.width / 2,
+      y: this.y + this.height / 2
+    }
+  }
+
   draw() {
     drawImage(this.sprite)
     if (this.target.x > this.x) {
