@@ -25,6 +25,7 @@ export class Human extends BasedObject {
   speed: number = 1
 
   angerBar: HealthBar;
+  onLastTarget: () => void = () => null
 
   async preload() {}
   initialize() {
@@ -38,7 +39,7 @@ export class Human extends BasedObject {
       if(this.targetList.length > 0) {
         this.target = this.targetList.shift()
       } else {
-        this.gameRef.loadLevel('start-screen')
+        this.onLastTarget()
       }
     })
     this.angerBar.x = this.x

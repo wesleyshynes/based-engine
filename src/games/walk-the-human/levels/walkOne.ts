@@ -3,10 +3,13 @@ import { drawText } from "../../../engine/libs/drawHelpers";
 import { angleBetween, distanceBetween, pointOnCircle, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { Animal } from "../entities/Animal";
 import { Human } from "../entities/Human";
+import { Pickup } from "../entities/Pickup";
 
 export class WalkOne extends BasedLevel {
   human: any;
   animal: any;
+
+  pickupList: any[] = [];
 
   maxDistance: number = 100
 
@@ -22,9 +25,27 @@ export class WalkOne extends BasedLevel {
   async preload() {
     this.human = new Human({key: 'human', gameRef: this.gameRef})
     this.animal = new Animal({key: 'animal', gameRef: this.gameRef})
+
+    this.pickupList = [
+      {x: 300, y: 250},
+      {x: 850, y: 600},
+      {x: 1150, y: 1000},
+      {x: 1650, y: 1400},
+    ].map((p,i) => {
+      const newP = new Pickup({key: `pickup-${i}`, gameRef: this.gameRef})
+      newP.x = p.x
+      newP.y = p.y
+      newP.onPickup = () => {
+        newP.active = false
+        this.score += 1000
+      }
+      return newP
+    })
   }
 
   initialize() {
+    this.score = 0
+
     this.human.initialize()
     this.human.x = 100
     this.human.y = 100
@@ -41,6 +62,10 @@ export class WalkOne extends BasedLevel {
       {x: 1250, y: 900},
       {x: 1750, y: 1500},
     ]
+    this.human.onLastTarget = () => {
+      localStorage.setItem('last-score-walk', `${this.score}`)
+      this.gameRef.loadLevel('start-screen')
+    }
 
     this.animal.initialize()
     this.animal.x = 150
@@ -50,6 +75,10 @@ export class WalkOne extends BasedLevel {
        this.animal.activeTarget = true
        this.score -= 500
     }
+
+    this.pickupList.forEach(p => {
+      p.initialize()
+    })
   }
 
   handleSounds() {}
@@ -89,7 +118,7 @@ export class WalkOne extends BasedLevel {
       this.human.angerBar.tick(-1)
       this.animal.fillColor = 'green'
       if(!this.animal.bonked) {
-        this.updateScore(scoreDiff)        
+        this.updateScore(scoreDiff)
       }
     }
     if(this.animal.bonked) {
@@ -105,6 +134,12 @@ export class WalkOne extends BasedLevel {
         y: this.gameRef.mouseInfo.y - this.cameraPos.y,
       })
     }
+
+    this.pickupList.forEach(p => {
+      if(p.active && distanceBetween(p, this.animal) < this.animal.radius + p.radius){
+        p.onPickup()
+      }
+    })
 
     this.updateCamera()
   }
@@ -159,6 +194,12 @@ export class WalkOne extends BasedLevel {
     this.gameRef.ctx.fillStyle = '#333'
     this.gameRef.ctx.fill()
 
+    this.pickupList.forEach(p => {
+      if(p.active){
+        p.draw(this.cameraPos)
+      }
+    })
+
     this.drawLeash(this.gameRef.ctx)
 
     this.human.draw(this.cameraPos)
@@ -167,13 +208,13 @@ export class WalkOne extends BasedLevel {
     drawText({
       c: this.gameRef.ctx,
       x: 20,
-      y: 20,
+      y: 28,
       fontSize: 16,
       fontFamily: 'sans-serif',
       fillColor: 'black',
       weight: 'bold',
       strokeColor: 'white',
-      strokeWidth: 3,
+      strokeWidth: 5,
       align: 'left',
       text: `Score: ${this.score > 0 ? Math.round(this.score) : 0}`
     })

@@ -6,6 +6,10 @@ export class WalkTheHumanStart extends BasedLevel {
 
   startButton: any;
 
+  highScore: number = 0
+  lastScore: number = 0
+  newHighScore: boolean = false
+
   async preload() {
   }
 
@@ -22,6 +26,20 @@ export class WalkTheHumanStart extends BasedLevel {
     this.startButton.clickFunction = () => {
       this.gameRef.soundPlayer.playNote(900, .4, 'square')
       this.gameRef.loadLevel('walk-1')
+    }
+    this.newHighScore = false
+    const bHighScore = localStorage.getItem('hi-score-walk')
+    const bLastScore = localStorage.getItem('last-score-walk')
+    if(bLastScore) {
+      this.lastScore = Number(bLastScore)
+    }
+    if(bHighScore) {
+      this.highScore = Number(bHighScore)
+    }
+    if(this.lastScore > this.highScore) {
+      this.highScore = this.lastScore
+      this.newHighScore = true
+      localStorage.setItem('hi-score-walk', `${this.highScore}`)
     }
 
   }
@@ -51,7 +69,7 @@ export class WalkTheHumanStart extends BasedLevel {
     drawText({
       c: this.gameRef.ctx,
       x: (this.gameRef.gameWidth)/2,
-      y: 150,
+      y: 100,
       align:'center',
       fillColor: '#000',
       strokeColor: '#fff',
@@ -66,7 +84,7 @@ export class WalkTheHumanStart extends BasedLevel {
     drawText({
       c: this.gameRef.ctx,
       x: (this.gameRef.gameWidth)/2,
-      y: 190,
+      y: 140,
       align:'center',
       fillColor: '#000',
       strokeColor: '#fff',
@@ -76,6 +94,38 @@ export class WalkTheHumanStart extends BasedLevel {
       fontFamily: 'sans-serif',
       fontSize: 40,
       text: 'THE HUMAN'
+    })
+
+    drawText({
+      c: this.gameRef.ctx,
+      x: (this.gameRef.gameWidth)/2,
+      y: 185,
+      align:'center',
+      fillColor: '#000',
+      strokeColor: '#fff',
+      strokeWidth: 3,
+      style: '',
+      weight: 'bold',
+      fontFamily: 'sans-serif',
+      fontSize: this.newHighScore ? 20 : 16,
+      text: `${this.newHighScore ? 'New High ' : ''}Score: ${this.lastScore}`
+      // text: `${JSON.stringify(this.gameRef.mouseInfo)}`
+    })
+
+    drawText({
+      c: this.gameRef.ctx,
+      x: (this.gameRef.gameWidth)/2,
+      y: 210,
+      align:'center',
+      fillColor: '#000',
+      strokeColor: '#fff',
+      strokeWidth: 3,
+      style: '',
+      weight: 'bold',
+      fontFamily: 'sans-serif',
+      fontSize: 16,
+      text: `Hi Score: ${this.highScore}`
+      // text: `${JSON.stringify(this.gameRef.mouseInfo)}`
     })
 
 

@@ -5,7 +5,7 @@ import { distanceBetween, XYCoordinateType } from "../../../engine/libs/mathHelp
 export class Animal extends BasedObject {
   x: number = 0
   y: number = 0
-  radius: number =10
+  radius: number = 16
   velocity: XYCoordinateType = {x: 0, y: 0}
   speed: number = 2
   target: XYCoordinateType = {x: 200, y: 300}
