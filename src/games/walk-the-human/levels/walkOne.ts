@@ -1,13 +1,15 @@
 import { BasedLevel } from "../../../engine/BasedLevel";
-import { drawText } from "../../../engine/libs/drawHelpers";
+import { createSprite, drawImage, drawText } from "../../../engine/libs/drawHelpers";
 import { angleBetween, distanceBetween, pointOnCircle, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { Animal } from "../entities/Animal";
 import { Human } from "../entities/Human";
 import { Pickup } from "../entities/Pickup";
+import BackgroundImage from '../../../assets/walk-the-human/level-bg.jpg'
 
 export class WalkOne extends BasedLevel {
   human: any;
   animal: any;
+  bgSprite: any;
 
   pickupList: any[] = [];
 
@@ -23,8 +25,24 @@ export class WalkOne extends BasedLevel {
   scoreTick: number = 200
 
   async preload() {
+    this.bgSprite = await createSprite({
+      c: this.gameRef.ctx,
+      sprite: BackgroundImage,
+      sx: 0,
+      sy: 0,
+      sWidth: this.gameRef.gameWidth,
+      sHeight: this.gameRef.gameHeight,
+      dx: 0,
+      dy: 0,
+      dWidth: this.gameRef.gameWidth,
+      dHeight: this.gameRef.gameHeight,
+      frame: 0
+    })
+
     this.human = new Human({key: 'human', gameRef: this.gameRef})
+    await this.human.preload()
     this.animal = new Animal({key: 'animal', gameRef: this.gameRef})
+    await this.animal.preload()
 
     this.pickupList = [
       {x: 300, y: 250},
@@ -41,6 +59,10 @@ export class WalkOne extends BasedLevel {
       }
       return newP
     })
+
+    for(let i = 0; i < this.pickupList.length; i++){
+      await this.pickupList[i].preload()
+    }
   }
 
   initialize() {
@@ -101,7 +123,7 @@ export class WalkOne extends BasedLevel {
     const scoreDiff = this.scoreSpeed * this.gameRef.diffMulti
     const leash = distanceBetween(this.human, this.animal)
     if(leash > this.maxDistance) {
-      this.animal.fillColor = 'orange'
+      // this.animal.fillColor = 'orange'
       const angle = angleBetween(this.human, this.animal)
       const location = pointOnCircle(angle, this.maxDistance)
       this.animal.x = this.human.x + location.x + this.human.velocity.x
@@ -116,7 +138,7 @@ export class WalkOne extends BasedLevel {
       }
     } else {
       this.human.angerBar.tick(-1)
-      this.animal.fillColor = 'green'
+      // this.animal.fillColor = 'green'
       if(!this.animal.bonked) {
         this.updateScore(scoreDiff)
       }
@@ -135,6 +157,9 @@ export class WalkOne extends BasedLevel {
       })
     }
 
+    const leashAngle = angleBetween(this.human, this.animal)
+    this.human.leashHand = pointOnCircle(leashAngle, this.human.armLength)
+
     this.pickupList.forEach(p => {
       if(p.active && distanceBetween(p, this.animal) < this.animal.radius + p.radius){
         p.onPickup()
@@ -146,13 +171,22 @@ export class WalkOne extends BasedLevel {
 
   updateBg() {}
 
-  drawBg() {}
+  drawBg() {
+    this.bgSprite.sx = -this.cameraPos.x
+    this.bgSprite.sy = -this.cameraPos.y
+    drawImage(this.bgSprite)
+  }
 
   drawLeash(c: CanvasRenderingContext2D) {
     c.beginPath()
+    // c.moveTo(
+    //   this.cameraPos.x + this.human.x,
+    //   this.cameraPos.y + this.human.y
+    // )
+
     c.moveTo(
-      this.cameraPos.x + this.human.x,
-      this.cameraPos.y + this.human.y
+      this.cameraPos.x + this.human.x + this.human.leashHand.x,
+      this.cameraPos.y + this.human.y + this.human.leashHand.y
     )
 
     c.quadraticCurveTo(
@@ -164,7 +198,7 @@ export class WalkOne extends BasedLevel {
     // right rail point
     // c.closePath()
     c.strokeStyle = '#eee'
-    c.lineWidth = 1
+    c.lineWidth = 3
     c.stroke()
   }
 
@@ -193,6 +227,7 @@ export class WalkOne extends BasedLevel {
     this.gameRef.ctx.rect(0, 0, this.gameRef.gameWidth, this.gameRef.gameHeight)
     this.gameRef.ctx.fillStyle = '#333'
     this.gameRef.ctx.fill()
+    this.drawBg()
 
     this.pickupList.forEach(p => {
       if(p.active){
@@ -200,9 +235,8 @@ export class WalkOne extends BasedLevel {
       }
     })
 
-    this.drawLeash(this.gameRef.ctx)
-
     this.human.draw(this.cameraPos)
+    this.drawLeash(this.gameRef.ctx)
     this.animal.draw(this.cameraPos)
 
     drawText({

@@ -1,6 +1,7 @@
 import { BasedObject } from "../../../engine/BasedObject";
-import { drawCircle } from "../../../engine/libs/drawHelpers";
+import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { distanceBetween, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import DogSprite from '../../../assets/walk-the-human/dog.png'
 
 export class Animal extends BasedObject {
   x: number = 0
@@ -20,7 +21,23 @@ export class Animal extends BasedObject {
   bonkSpeed: number = 0
   bonkCallback: () => void = () => null
 
-  async preload(){}
+  sprite: any;
+
+  async preload(){
+    this.sprite = await createSprite({
+      c: this.gameRef.ctx,
+      sprite: DogSprite,
+      sx: 0,
+      sy: 0,
+      sWidth: 32,
+      sHeight: 32,
+      dx: -this.radius,
+      dy: -this.radius,
+      dWidth: 32,
+      dHeight: 32,
+      frame: 0
+    })
+  }
   initialize() {
     this.bonked = false
     this.lastBonk = 0
@@ -78,13 +95,24 @@ export class Animal extends BasedObject {
     })
   }
 
-    drawCircle({
+    // drawCircle({
+    //   c: this.gameRef.ctx,
+    //   x: cameraOffset.x + this.x,
+    //   y: cameraOffset.y + this.y,
+    //   radius: this.radius,
+    //   fillColor: this.fillColor
+    // })
+    rotateDraw({
       c: this.gameRef.ctx,
       x: cameraOffset.x + this.x,
       y: cameraOffset.y + this.y,
-      radius: this.radius,
-      fillColor: this.fillColor
+      a: 0
+    }, () => {
+      this.sprite.flipX = this.velocity.x < 0
+      drawImage(this.sprite)
     })
+
+
   }
   tearDown() {}
 

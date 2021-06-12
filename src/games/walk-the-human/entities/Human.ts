@@ -1,7 +1,8 @@
 import { BasedObject } from "../../../engine/BasedObject";
-import { drawBox, drawCircle, drawLine } from "../../../engine/libs/drawHelpers";
-import { distanceBetween, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { createSprite, drawBox, drawCircle, drawImage, drawLine } from "../../../engine/libs/drawHelpers";
+import { angleBetween, degToRad, distanceBetween, pointOnCircle, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { HealthBar } from "../ui/HealthBar";
+import HumanSprite from '../../../assets/walk-the-human/human.png'
 
 export class Human extends BasedObject {
   x: number = 0
@@ -27,7 +28,31 @@ export class Human extends BasedObject {
   angerBar: HealthBar;
   onLastTarget: () => void = () => null
 
-  async preload() {}
+  sprite: any;
+
+  handRadius: number = 3
+  handColor: string = '#D3B453';
+  armLength: number = 11;
+  handRotateSpeed: number = 5
+  goHand: XYCoordinateType = {x: 0, y: 0};
+  goHandAngle: number = 0
+  leashHand: XYCoordinateType = {x: 0, y: 0};
+
+  async preload() {
+    this.sprite = await createSprite({
+      c: this.gameRef.ctx,
+      sprite: HumanSprite,
+      sx: 0,
+      sy: 0,
+      sWidth: 32,
+      sHeight: 32,
+      dx: this.x - this.radius,
+      dy: this.y - this.radius,
+      dWidth: 32,
+      dHeight: 32,
+      frame: 0
+    })
+  }
   initialize() {
     this.angerBar = new HealthBar({key: 'human-anger', gameRef: this.gameRef})
     this.angerBar.width = this.radius*2
@@ -44,6 +69,22 @@ export class Human extends BasedObject {
     })
     this.angerBar.x = this.x
     this.angerBar.y = this.y
+
+    const angleSpeed = this.handRotateSpeed * this.gameRef.diffMulti
+    const targetAngle = angleBetween(this, this.target, true)
+    const rotDir = (targetAngle - this.goHandAngle + 540)%360-180
+    // const rotDir = (targetAngle - this.gunRotate + 540)%360-180
+    if(rotDir > 0) {
+      this.goHandAngle = this.goHandAngle % 360  + (rotDir > angleSpeed ? angleSpeed : rotDir)
+    } else if (rotDir < 0) {
+      this.goHandAngle = this.goHandAngle % 360  - (rotDir < angleSpeed ? angleSpeed : -rotDir)
+    }
+    if(this.goHandAngle < 0) {
+      this.goHandAngle += 360
+    }
+
+    // const goHandAngle = angleBetween(this, this.target)
+    this.goHand = pointOnCircle(degToRad(this.goHandAngle), this.armLength)
   }
 
   moveTo(moveTarget: {x: number, y: number, active?: boolean}, arriveFn: () => void = () => undefined) {
@@ -116,16 +157,57 @@ export class Human extends BasedObject {
     }
   }
 
+
   draw(cameraOffset: {x: number, y: number} = {x: 0, y: 0}) {
 
-    this.drawPath(cameraOffset)
+    // this.drawPath(cameraOffset)
 
+    // drawCircle({
+    //   c: this.gameRef.ctx,
+    //   x: cameraOffset.x + this.x,
+    //   y: cameraOffset.y + this.y,
+    //   fillColor: this.fillColor,
+    //   radius: this.radius,
+    // })
+
+    this.sprite.dx = cameraOffset.x + this.x - this.radius
+    this.sprite.dy = cameraOffset.y + this.y - this.radius
+    drawImage(this.sprite)
+
+    // go Hand
+    // drawLine({
+    //   c: this.gameRef.ctx,
+    //   x: cameraOffset.x + this.x + 10,
+    //   y: cameraOffset.y + this.y - 6,
+    //   toX: cameraOffset.x + this.x + this.goHand.x,
+    //   toY: cameraOffset.y + this.y + this.goHand.y,
+    //   strokeWidth: 3,
+    //   strokeColor: 'blue'
+    // })
     drawCircle({
       c: this.gameRef.ctx,
-      x: cameraOffset.x + this.x,
-      y: cameraOffset.y + this.y,
-      fillColor: this.fillColor,
-      radius: this.radius,
+      x: cameraOffset.x + this.x + this.goHand.x,
+      y: cameraOffset.y + this.y + this.goHand.y,
+      fillColor: this.handColor,
+      radius: this.handRadius,
+    })
+
+    // leash Hand
+    // drawLine({
+    //   c: this.gameRef.ctx,
+    //   x: cameraOffset.x + this.x - 10,
+    //   y: cameraOffset.y + this.y - 6,
+    //   toX: cameraOffset.x + this.x + this.leashHand.x,
+    //   toY: cameraOffset.y + this.y + this.leashHand.y,
+    //   strokeWidth: 3,
+    //   strokeColor: 'blue'
+    // })
+    drawCircle({
+      c: this.gameRef.ctx,
+      x: cameraOffset.x + this.x + this.leashHand.x,
+      y: cameraOffset.y + this.y + this.leashHand.y,
+      fillColor: this.handColor,
+      radius: this.handRadius,
     })
 
     this.angerBar.draw(cameraOffset)
