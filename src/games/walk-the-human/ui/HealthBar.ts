@@ -23,24 +23,26 @@ export class HealthBar extends BasedObject {
     }
   }
 
-  draw() {
+  draw(cameraOffset: {x: number, y: number} = {x: 0, y: 0}) {
     drawBox({
       c: this.gameRef.ctx,
-      x: this.x - this.width/2 + this.xOffset,
-      y: this.y - this.height + this.yOffset,
+      x: cameraOffset.x + this.x - this.width/2 + this.xOffset,
+      y: cameraOffset.y + this.y - this.height + this.yOffset,
       width: this.width,
       height: this.height,
       fillColor: 'white'
     })
 
     if(this.current > 0){
+      const p = this.current/this.max
       drawBox({
         c: this.gameRef.ctx,
-        x: this.x - this.width/2 + this.xOffset,
-        y: this.y - this.height + this.yOffset,
+        x: cameraOffset.x + this.x - this.width/2 + this.xOffset,
+        y: cameraOffset.y + this.y - this.height + this.yOffset,
         width: this.width * this.current/this.max,
         height: this.height,
-        fillColor: 'red'
+        // fillColor: 'red'
+        fillColor: p < .5 ? 'green' : p < .8 ? 'orange' : 'red'
       })
     }
   }

@@ -12,6 +12,9 @@ export class Human extends BasedObject {
     {x: 50, y: 150},
     {x: 200, y: 350},
     {x: 350, y: 50},
+    {x: 850, y: 400},
+    {x: 1250, y: 900},
+    {x: 1750, y: 1500},
   ]
   radius: number = 16
   fillColor: string = 'red'
@@ -34,6 +37,8 @@ export class Human extends BasedObject {
     this.moveTo(this.target, () => {
       if(this.targetList.length > 0) {
         this.target = this.targetList.shift()
+      } else {
+        this.gameRef.loadLevel('start-screen')
       }
     })
     this.angerBar.x = this.x
@@ -56,10 +61,11 @@ export class Human extends BasedObject {
     }
   }
 
-  draw() {
+  drawPath(cameraOffset: {x: number, y: number} = {x: 0, y: 0}, fullPath: boolean = false) {
     drawCircle({
       c: this.gameRef.ctx,
-      ...this.target,
+      x: cameraOffset.x + this.target.x,
+      y: cameraOffset.y + this.target.y,
       strokeColor: 'red',
       strokeWidth: 2,
       radius: this.targetRadius
@@ -67,29 +73,29 @@ export class Human extends BasedObject {
 
     drawLine({
       c: this.gameRef.ctx,
-      x: this.x,
-      y: this.y,
-      toX: this.target.x,
-      toY: this.target.y,
+      x: cameraOffset.x + this.x,
+      y: cameraOffset.y + this.y,
+      toX: cameraOffset.x + this.target.x,
+      toY: cameraOffset.y + this.target.y,
       strokeWidth: 1,
       strokeColor: 'white'
     })
 
-    if(this.targetList.length > 0) {
-
+    if(this.targetList.length > 0 && fullPath) {
       drawLine({
         c: this.gameRef.ctx,
-        ...this.target,
+        x: cameraOffset.x + this.target.x,
+        y: cameraOffset.y + this.target.y,
         toX: this.targetList[0].x,
         toY: this.targetList[0].y,
         strokeWidth: 1,
         strokeColor: 'white'
       })
-
       this.targetList.forEach((t: XYCoordinateType, i: number) => {
         drawCircle({
           c: this.gameRef.ctx,
-          ...t,
+          x: cameraOffset.x + t.x,
+          y: cameraOffset.y + t.y,
           strokeColor: 'yellow',
           strokeWidth: 2,
           radius: this.targetRadius
@@ -97,25 +103,31 @@ export class Human extends BasedObject {
         if(i < this.targetList.length -1) {
           drawLine({
             c: this.gameRef.ctx,
-            ...t,
-            toX: this.targetList[i+1].x,
-            toY: this.targetList[i+1].y,
+            x: cameraOffset.x + t.x,
+            y: cameraOffset.y + t.y,
+            toX: cameraOffset.x + this.targetList[i+1].x,
+            toY: cameraOffset.y + this.targetList[i+1].y,
             strokeWidth: 1,
             strokeColor: 'white'
           })
         }
       })
     }
+  }
+
+  draw(cameraOffset: {x: number, y: number} = {x: 0, y: 0}) {
+
+    this.drawPath(cameraOffset)
 
     drawCircle({
       c: this.gameRef.ctx,
-      x: this.x,
-      y: this.y,
+      x: cameraOffset.x + this.x,
+      y: cameraOffset.y + this.y,
       fillColor: this.fillColor,
       radius: this.radius,
     })
 
-    this.angerBar.draw()
+    this.angerBar.draw(cameraOffset)
   }
 
   tearDown() {}

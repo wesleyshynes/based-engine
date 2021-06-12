@@ -18,11 +18,15 @@ export class Animal extends BasedObject {
 
   maxSpeed: number = 2
   bonkSpeed: number = 0
+  bonkCallback: () => void = () => null
 
   async preload(){}
-  initialize() {}
+  initialize() {
+    this.bonked = false
+    this.lastBonk = 0
+  }
   update() {
-    if(this.activeTarget && !this.bonked) {
+    if(this.activeTarget) {
       this.moveTo(this.target, () => {
         this.activeTarget = false
       })
@@ -36,6 +40,7 @@ export class Animal extends BasedObject {
       this.bonked = true
       this.lastBonk = this.gameRef.lastUpdate
       this.velocity = {x: 0,y: 0}
+      this.bonkCallback()
     }
   }
 
@@ -60,13 +65,13 @@ export class Animal extends BasedObject {
     }
   }
 
-  draw() {
+  draw(cameraOffset: {x: number, y: number} = {x: 0, y: 0}) {
 
     if(this.activeTarget){
       drawCircle({
       c: this.gameRef.ctx,
-      x: this.target.x,
-      y: this.target.y,
+      x: cameraOffset.x + this.target.x,
+      y: cameraOffset.y + this.target.y,
       radius: 10,
       strokeColor: 'orange',
       strokeWidth: 2
@@ -75,8 +80,8 @@ export class Animal extends BasedObject {
 
     drawCircle({
       c: this.gameRef.ctx,
-      x: this.x,
-      y: this.y,
+      x: cameraOffset.x + this.x,
+      y: cameraOffset.y + this.y,
       radius: this.radius,
       fillColor: this.fillColor
     })
