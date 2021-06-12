@@ -4,10 +4,11 @@ import { drawCircle } from "../../../engine/libs/drawHelpers"
 export class Pickup extends BasedObject {
   x: number = 0
   y: number = 0
-  radius: number = 10
+  radius: number = 12
   fillColor: string = 'yellow'
   active: boolean = true
   onPickup: () => void = () => null
+
   async preload() {}
   initialize() {
     this.active = true

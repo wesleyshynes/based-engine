@@ -68,7 +68,10 @@ export class BasedSounds {
     kickSound.stop(this.audioContext.currentTime + length)
   }
 
-  playCustomSound(frequencyChart: {f: number, t: number}[], soundType: 'sawtooth' | 'sine' | 'triangle' | 'square' | '' = '', endedCallback?: () => void ) {
+  playCustomSound(
+    frequencyChart: {f: number, t: number}[],
+    soundType: 'sawtooth' | 'sine' | 'triangle' | 'square' | '' = '',
+    endedCallback?: () => void ) {
     if(!this.enabled) {
       return
     }
@@ -86,6 +89,40 @@ export class BasedSounds {
     const soundGain = this.audioContext.createGain()
     soundGain.gain.setValueAtTime(1, this.audioContext.currentTime)
     soundGain.gain.linearRampToValueAtTime(0.01, this.audioContext.currentTime + length)
+    customSound.connect(soundGain)
+    soundGain.connect(this.primaryGainControl)
+
+    if(endedCallback) {
+      customSound.onended = endedCallback
+    }
+
+    customSound.start()
+    customSound.stop(this.audioContext.currentTime + length)
+
+    return customSound
+  }
+
+  playCustomSoundNoFall(
+    frequencyChart: {f: number, t: number}[],
+    soundType: 'sawtooth' | 'sine' | 'triangle' | 'square' | '' = '',
+    endedCallback?: () => void ) {
+    if(!this.enabled) {
+      return
+    }
+    const customSound = this.audioContext.createOscillator()
+    if(soundType) {
+      customSound.type = soundType
+    }
+    let length = 0
+
+    frequencyChart.forEach(x => {
+      customSound.frequency.setValueAtTime(x.f, this.audioContext.currentTime + length + x.t)
+      length += x.t
+    })
+
+    const soundGain = this.audioContext.createGain()
+    soundGain.gain.setValueAtTime(1, this.audioContext.currentTime)
+    // soundGain.gain.linearRampToValueAtTime(0.01, this.audioContext.currentTime + length)
     customSound.connect(soundGain)
     soundGain.connect(this.primaryGainControl)
 

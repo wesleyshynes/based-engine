@@ -1,6 +1,8 @@
 import { BasedButton } from "../../../engine/BasedButton";
 import { BasedLevel } from "../../../engine/BasedLevel";
-import { drawText } from "../../../engine/libs/drawHelpers";
+import { createSprite, drawImage, drawText } from "../../../engine/libs/drawHelpers";
+import StartScreenBg from '../../../assets/walk-the-human/start-screen-bg.png'
+import { walkTheHumanStartSong } from "../music/Music";
 
 export class WalkTheHumanStart extends BasedLevel {
 
@@ -10,7 +12,29 @@ export class WalkTheHumanStart extends BasedLevel {
   lastScore: number = 0
   newHighScore: boolean = false
 
+  sprite: any;
+
+  activeSound: any = {
+    playing: false,
+    soundRef: null,
+  }
+
   async preload() {
+    this.sprite = await createSprite({
+      c: this.gameRef.ctx,
+      sprite: StartScreenBg,
+      sx: 0,
+      sy: 0,
+      sWidth: this.gameRef.gameWidth,
+      sHeight: this.gameRef.gameHeight,
+      dx: 0,
+      dy: 0,
+      dWidth: this.gameRef.gameWidth,
+      dHeight: this.gameRef.gameHeight,
+      frame: 0,
+      lastUpdate: 0,
+      updateDiff: 1000/60 * 10
+    })
   }
 
   initialize() {
@@ -21,9 +45,12 @@ export class WalkTheHumanStart extends BasedLevel {
     this.startButton.fillColor = '#ce192b'
     this.startButton.x = 100
     this.startButton.y = this.gameRef.gameHeight - 100
-    this.startButton.buttonText = 'Start Game'
+    this.startButton.buttonText = 'Go for a Walk'
     this.startButton.width = this.gameRef.gameWidth - 200
     this.startButton.clickFunction = () => {
+      if(this.activeSound.playing && this.activeSound.soundRef && this.activeSound.soundRef.stop) {
+        this.activeSound.soundRef.stop()
+      }
       this.gameRef.soundPlayer.playNote(900, .4, 'square')
       this.gameRef.loadLevel('walk-1')
     }
@@ -41,10 +68,16 @@ export class WalkTheHumanStart extends BasedLevel {
       this.newHighScore = true
       localStorage.setItem('hi-score-walk', `${this.highScore}`)
     }
-
   }
 
-  handleSounds() {}
+  handleSounds() {
+    if(this.activeSound.playing == false) {
+      this.activeSound.soundRef = this.gameRef.soundPlayer.playCustomSound(walkTheHumanStartSong, 'square', () => {
+        this.activeSound.playing = false
+      })
+      this.activeSound.playing = true
+    }
+  }
 
   update() {
     this.updateBg()
@@ -54,7 +87,9 @@ export class WalkTheHumanStart extends BasedLevel {
 
   updateBg() {}
 
-  drawBg() {}
+  drawBg() {
+    drawImage(this.sprite)
+  }
 
   draw() {
     this.gameRef.ctx.beginPath()

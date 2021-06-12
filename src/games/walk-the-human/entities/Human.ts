@@ -2,7 +2,7 @@ import { BasedObject } from "../../../engine/BasedObject";
 import { createSprite, drawBox, drawCircle, drawImage, drawLine } from "../../../engine/libs/drawHelpers";
 import { angleBetween, degToRad, distanceBetween, pointOnCircle, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { HealthBar } from "../ui/HealthBar";
-import HumanSprite from '../../../assets/walk-the-human/human.png'
+import HumanSprite from '../../../assets/walk-the-human/human-spritesheet.png'
 
 export class Human extends BasedObject {
   x: number = 0
@@ -31,7 +31,7 @@ export class Human extends BasedObject {
   sprite: any;
 
   handRadius: number = 3
-  handColor: string = '#D3B453';
+  handColor: string = '#F7E09F';
   armLength: number = 11;
   handRotateSpeed: number = 5
   goHand: XYCoordinateType = {x: 0, y: 0};
@@ -50,7 +50,9 @@ export class Human extends BasedObject {
       dy: this.y - this.radius,
       dWidth: 32,
       dHeight: 32,
-      frame: 0
+      frame: 0,
+      lastUpdate: 0,
+      updateDiff: 1000/60 * 10
     })
   }
   initialize() {
@@ -85,6 +87,19 @@ export class Human extends BasedObject {
 
     // const goHandAngle = angleBetween(this, this.target)
     this.goHand = pointOnCircle(degToRad(this.goHandAngle), this.armLength)
+    this.updateSprite()
+  }
+
+  updateSprite() {
+    if(this.sprite.lastUpdate + this.sprite.updateDiff < this.gameRef.lastUpdate) {
+      this.sprite.frame++
+      if(this.sprite.frame > 1) {
+        this.sprite.frame = 0
+      }
+      this.sprite.lastUpdate = this.gameRef.lastUpdate
+
+      this.sprite.sx = this.sprite.frame * this.sprite.dWidth
+    }
   }
 
   moveTo(moveTarget: {x: number, y: number, active?: boolean}, arriveFn: () => void = () => undefined) {

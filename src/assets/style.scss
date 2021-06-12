@@ -11,6 +11,26 @@
     align-items: center;
     justify-content: center;
     overflow-y: hidden;
+    flex-direction: column;
+    font-family: sans-serif;
+
+    #game-description {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 20px;
+      max-width: 300px;
+      p {
+        line-height: 1.4em;
+        font-size: 1em;
+      }
+    }
+
+    #start-game {
+      padding: 10px 20px;
+      background: #eee;
+      border: 1px solid #333;
+      font-size: 1em;
+    }
 
     canvas {
       // border: 1px solid;
