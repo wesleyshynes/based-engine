@@ -140,6 +140,10 @@ export class WalkOne extends BasedLevel {
     this.pickupList.forEach(p => {
       p.initialize()
     })
+
+    this.duckList.forEach(p => {
+      p.initialize()
+    })
   }
 
   handleSounds() {
