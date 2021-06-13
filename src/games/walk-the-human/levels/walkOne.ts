@@ -55,10 +55,18 @@ export class WalkOne extends BasedLevel {
     await this.animal.preload()
 
     this.pickupList = [
-      {x: 300, y: 250},
-      {x: 850, y: 600},
-      {x: 1150, y: 1000},
-      {x: 1650, y: 1400},
+      {x: 350, y: 100},
+      {x: 250, y: 500},
+      {x: 290, y: 920},
+      {x: 250, y: 700},
+      {x: 780, y: 260},
+      {x: 745, y: 940},
+      {x: 620, y: 1400},
+      {x: 1275, y: 180},
+      {x: 1275, y: 180},
+      {x: 950, y: 1660},
+      {x: 1650, y: 1140},
+      {x: 1440, y: 1685},
     ].map((p,i) => {
       const newP = new Bone({key: `pickup-${i}`, gameRef: this.gameRef})
       newP.x = p.x
@@ -76,10 +84,18 @@ export class WalkOne extends BasedLevel {
     }
 
     this.duckList = [
-      {x: 100, y: 150},
-      {x: 500, y: 1400},
-      {x: 1350, y: 1700},
-      {x: 1850, y: 1800},
+      {x: 90, y: 340},
+      {x: 200, y: 785},
+      {x: 160, y: 1330},
+      {x: 685, y: 175},
+      {x: 790, y: 720},
+      {x: 655, y: 1870},
+      {x: 1535, y: 126},
+      {x: 1454, y: 690},
+      {x: 1095, y: 1440},
+      {x: 1880, y: 380},
+      {x: 1820, y: 873},
+      {x: 1700, y: 1760},
     ].map((p,i) => {
       const newP = new Ducks({key: `duck-${i}`, gameRef: this.gameRef})
       newP.x = p.x
@@ -111,13 +127,20 @@ export class WalkOne extends BasedLevel {
       y: this.human.y
     }
     this.human.targetList = [
-      {x: 20, y: 50},
-      {x: 50, y: 150},
-      {x: 200, y: 350},
-      {x: 350, y: 50},
-      {x: 850, y: 400},
-      {x: 1250, y: 900},
-      {x: 1750, y: 1500},
+      {x: 300, y: 300},
+      {x: 530, y: 615},
+      {x: 520, y: 1025},
+      {x: 470, y: 1700},
+      {x: 770, y: 1430},
+      {x: 960, y: 1050},
+      {x: 1150, y: 700},
+      {x: 1400, y: 450},
+      {x: 1750, y: 300},
+      {x: 1640, y: 645},
+      {x: 1445, y: 670},
+      {x: 1420, y: 970},
+      {x: 1410, y: 1370},
+      {x: 1710, y: 1500},
     ]
     this.human.onLastTarget = () => {
       if(this.activeSound.playing && this.activeSound.soundRef && this.activeSound.soundRef.stop) {

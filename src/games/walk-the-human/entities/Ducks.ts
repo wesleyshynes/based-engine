@@ -1,6 +1,8 @@
 import { createSprite, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { Pickup } from "./Pickup";
 import DuckSprite from '../../../assets/walk-the-human/ducks-spritesheet.png'
+import DuckSprite2 from '../../../assets/walk-the-human/ducks2-spritesheet.png'
+import Ducklings from '../../../assets/walk-the-human/ducklings-spritesheet.png'
 import { distanceBetween, getRandomInt, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 
 export class Ducks extends Pickup {
@@ -21,7 +23,7 @@ export class Ducks extends Pickup {
     async preload() {
       this.sprite = await createSprite({
         c: this.gameRef.ctx,
-        sprite: DuckSprite,
+        sprite: [DuckSprite, DuckSprite2, Ducklings][getRandomInt(3)],
         sx: 0,
         sy: 0,
         sWidth: 32,
@@ -110,6 +112,7 @@ export class Ducks extends Pickup {
         y: cameraOffset.y + this.y,
         a: 0
       }, () => {
+        this.sprite.flipX = this.velocity.x < 0
         drawImage(this.sprite)
       })
     }
