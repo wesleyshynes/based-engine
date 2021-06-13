@@ -6,6 +6,7 @@ import { Human } from "../entities/Human";
 import BackgroundImage from '../../../assets/walk-the-human/level-bg.jpg'
 import { Bone } from "../entities/Bone";
 import { boneNoise, bonkNoise, escapeSong, walkTheHumanWalkSong } from "../music/Music";
+import { Ducks } from "../entities/Ducks";
 
 export class WalkOne extends BasedLevel {
   human: any;
@@ -18,6 +19,7 @@ export class WalkOne extends BasedLevel {
   }
 
   pickupList: any[] = [];
+  duckList: any[] = []
 
   maxDistance: number = 100
 
@@ -71,6 +73,30 @@ export class WalkOne extends BasedLevel {
 
     for(let i = 0; i < this.pickupList.length; i++){
       await this.pickupList[i].preload()
+    }
+
+    this.duckList = [
+      {x: 100, y: 150},
+      {x: 500, y: 1400},
+      {x: 1350, y: 1700},
+      {x: 1850, y: 1800},
+    ].map((p,i) => {
+      const newP = new Ducks({key: `duck-${i}`, gameRef: this.gameRef})
+      newP.x = p.x
+      newP.y = p.y
+      newP.spawnX = p.x
+      newP.spawnY = p.y
+      newP.onPickup = () => {
+        // newP.active = false
+        newP.flee()
+        this.score += 4000
+        this.gameRef.soundPlayer.playCustomSound(boneNoise, 'square', () => null)
+      }
+      return newP
+    })
+
+    for(let i = 0; i < this.duckList.length; i++){
+      await this.duckList[i].preload()
     }
   }
 
@@ -177,7 +203,7 @@ export class WalkOne extends BasedLevel {
         }
       }
     } else {
-      this.human.speed = 2.3
+      this.human.speed = 2.1
       this.updateScore(scoreDiff * 2)
       if(leash < this.human.radius + this.animal.radius - 8) {
         this.leashed = true
@@ -207,6 +233,17 @@ export class WalkOne extends BasedLevel {
         if(distanceBetween(p, this.animal) < this.animal.radius + p.radius) {
           p.onPickup()
         }
+        p.update()
+      }
+    })
+
+    this.duckList.forEach(p => {
+      if(p.active && !p.fleeing){
+        if(distanceBetween(p, this.animal) < this.animal.radius + p.radius) {
+          p.onPickup()
+        }
+        p.update()
+      } else if(p.fleeing) {
         p.update()
       }
     })
@@ -275,6 +312,12 @@ export class WalkOne extends BasedLevel {
     this.drawBg()
 
     this.pickupList.forEach(p => {
+      if(p.active){
+        p.draw(this.cameraPos)
+      }
+    })
+
+    this.duckList.forEach(p => {
       if(p.active){
         p.draw(this.cameraPos)
       }

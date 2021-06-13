@@ -64,7 +64,7 @@ export class BasedButton extends BasedObject {
       style: this.style,
       weight: this.weight,
       fontFamily: this.fontFamily,
-      fontSize: 16,
+      fontSize: this.fontSize,
       text: this.buttonText
     })
 

@@ -7,6 +7,7 @@ import { walkTheHumanStartSong } from "../music/Music";
 export class WalkTheHumanStart extends BasedLevel {
 
   startButton: any;
+  soundButton: any;
 
   highScore: number = 0
   lastScore: number = 0
@@ -38,6 +39,26 @@ export class WalkTheHumanStart extends BasedLevel {
   }
 
   initialize() {
+    this.soundButton = new BasedButton({
+      key: `sound-button`,
+      gameRef: this.gameRef,
+    })
+    this.soundButton.fillColor = '#333'
+    this.soundButton.hoverColor = '#000'
+    this.soundButton.x = this.gameRef.gameWidth/2 - 50
+    this.soundButton.y = this.gameRef.gameHeight - 30
+    this.soundButton.buttonText = `${this.gameRef.soundPlayer.enabled ? 'Disable' : 'Enable'} Sound`
+    this.soundButton.width = 100
+    this.soundButton.height = 20
+    this.soundButton.fontSize = 12
+    this.soundButton.clickFunction = () => {
+      if(this.activeSound.playing && this.activeSound.soundRef && this.activeSound.soundRef.stop) {
+        this.activeSound.soundRef.stop()
+      }
+      this.gameRef.soundPlayer.enabled = !this.gameRef.soundPlayer.enabled
+      this.soundButton.buttonText = `${this.gameRef.soundPlayer.enabled ? 'Disable' : 'Enable'} Sound`
+    }
+
     this.startButton = new BasedButton({
       key: `start-button`,
       gameRef: this.gameRef,
@@ -83,6 +104,7 @@ export class WalkTheHumanStart extends BasedLevel {
     this.updateBg()
     this.handleSounds()
     this.startButton.update()
+    this.soundButton.update()
   }
 
   updateBg() {}
@@ -100,6 +122,7 @@ export class WalkTheHumanStart extends BasedLevel {
     this.drawBg()
 
     this.startButton.draw()
+    this.soundButton.draw()
 
     drawText({
       c: this.gameRef.ctx,
