@@ -9,7 +9,7 @@ export class BasedSounds {
   buffer: AudioBuffer;
   channelData: Float32Array;
   primaryGainControl: GainNode;
-  enabled: boolean = true;
+  enabled: boolean = false;
 
   constructor() {
     const audioC = window.AudioContext || window.webkitAudioContext

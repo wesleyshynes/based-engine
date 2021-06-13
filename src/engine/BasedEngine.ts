@@ -1,5 +1,6 @@
 import { BasedLevel } from "./BasedLevel";
 import { BasedSounds } from "./BasedSounds";
+import { drawText } from "./libs/drawHelpers";
 import { getClickPosition, getTouchPosition } from "./libs/mathHelpers";
 
 export interface gameSettings {
@@ -152,6 +153,7 @@ export class BasedGame implements BasedGameType {
 
   async start() {
     // console.log('game start')
+    this.drawLoading()
     this.soundPlayer.initialize()
     this.gameActive = true
 
@@ -175,6 +177,28 @@ export class BasedGame implements BasedGameType {
   draw() {
     // console.log('game draw')
     this.levels[this.activeLevel].draw()
+  }
+
+  drawLoading() {
+    this.ctx.beginPath()
+    this.ctx.rect(0, 0, this.gameWidth, this.gameHeight)
+    this.ctx.fillStyle = '#eee'
+    this.ctx.fill()
+
+    drawText({
+      c: this.ctx,
+      x: (this.gameWidth)/2,
+      y: 100,
+      align:'center',
+      fillColor: '#000',
+      strokeColor: '#fff',
+      strokeWidth: 3,
+      style: '',
+      weight: '500',
+      fontFamily: 'sans-serif',
+      fontSize: 20,
+      text: 'Loading Assets'
+    })
   }
 
   loadLevel(level: string) {

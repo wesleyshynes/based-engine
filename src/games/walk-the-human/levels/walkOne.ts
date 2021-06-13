@@ -234,6 +234,7 @@ export class WalkOne extends BasedLevel {
       this.updateScore(scoreDiff * 2)
       if(leash < this.human.radius + this.animal.radius - 8) {
         this.leashed = true
+        this.score *= 1.5
         this.animal.bonk()
       }
     }
