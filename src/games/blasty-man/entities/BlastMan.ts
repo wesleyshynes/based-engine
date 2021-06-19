@@ -60,16 +60,16 @@ export class BlastMan extends BasedObject {
     const pressedKeys = this.gameRef.pressedKeys
     const speedFactor = this.speed * this.gameRef.diffMulti
 
-    if (pressedKeys['KeyA']) {
+    if (pressedKeys['KeyA'] || pressedKeys['ArrowLeft']) {
       this.x -= speedFactor
     }
-    if (pressedKeys['KeyD']) {
+    if (pressedKeys['KeyD'] || pressedKeys['ArrowRight']) {
       this.x += speedFactor
     }
-    if (pressedKeys['KeyW']) {
+    if (pressedKeys['KeyW'] || pressedKeys['ArrowUp']) {
       this.y -= speedFactor
     }
-    if (pressedKeys['KeyS']) {
+    if (pressedKeys['KeyS'] || pressedKeys['ArrowDown']) {
       this.y += speedFactor
     }
 

@@ -136,6 +136,7 @@ export class BasedGame implements BasedGameType {
       return
     }
     document.addEventListener('keydown', (e) => {
+      // console.log(e.code)
       this.pressedKeys[e.code] = true
       // this.pressedKeys[e.keyCode] = true
     })

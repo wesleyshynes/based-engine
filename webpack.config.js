@@ -17,7 +17,7 @@ module.exports = {
   },
   devServer: {
     contentBase: './dist',
-    host: '10.0.0.4'
+    host: '10.0.0.250'
   },
   module: {
     rules: [
