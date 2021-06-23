@@ -63,6 +63,21 @@ export class BlastyStart extends BasedLevel {
       text: 'BLASTY MAN'
     })
 
+    drawText({
+      c: this.gameRef.ctx,
+      x: (this.gameRef.gameWidth)/2,
+      y: 300,
+      align:'center',
+      fillColor: '#000',
+      strokeColor: '#fff',
+      strokeWidth: 3,
+      style: '',
+      weight: '900',
+      fontFamily: 'sans-serif',
+      fontSize: 10,
+      text: JSON.stringify(this.gameRef.touchInfo)
+    })
+
 
   }
   tearDown() {

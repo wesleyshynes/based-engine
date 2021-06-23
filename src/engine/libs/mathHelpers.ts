@@ -14,11 +14,24 @@ export function getClickPosition(e: any) {
     return [x, y]
 }
 
-export function getTouchPosition(e: any) {
+export function getTouchPosition(e: any, p: number = 0) {
     const rect = e.target.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left; //x position within the element.
-    const y = e.touches[0].clientY - rect.top;  //y position within the element.
+    const x = e.touches[p].clientX - rect.left; //x position within the element.
+    const y = e.touches[p].clientY - rect.top;  //y position within the element.
     return [x, y]
+}
+
+export function getTouchArray(e: any) {
+    const rect = e.target.getBoundingClientRect();
+    const ret: any = []
+    for(let i = 0; i < e.touches.length; i++ ) {
+      ret.push({
+        x: e.touches[i].clientX - rect.left,
+        y: e.touches[i].clientY - rect.top,
+        id: e.touches[i].identifier
+      })
+    }
+    return ret
 }
 
 export function distanceBetween(p1:XYCoordinateType, p2:XYCoordinateType) {

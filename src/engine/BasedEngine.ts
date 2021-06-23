@@ -1,7 +1,7 @@
 import { BasedLevel } from "./BasedLevel";
 import { BasedSounds } from "./BasedSounds";
 import { drawText } from "./libs/drawHelpers";
-import { getClickPosition, getTouchPosition } from "./libs/mathHelpers";
+import { getClickPosition, getTouchArray, getTouchPosition, XYCoordinateType } from "./libs/mathHelpers";
 
 export interface gameSettings {
   width?: number
@@ -63,6 +63,8 @@ export class BasedGame implements BasedGameType {
     mouseDown: boolean
   } = { x: -100, y: -100, mouseDown: false }
 
+  touchInfo: XYCoordinateType[] = []
+
   levels: { [key: string]: BasedLevel } = {}
   activeLevel: string = '';
 
@@ -120,14 +122,17 @@ export class BasedGame implements BasedGameType {
       // e.preventDefault()
       [this.mouseInfo.x, this.mouseInfo.y] = getTouchPosition(e)
       this.mouseInfo.mouseDown = true;
+      this.touchInfo = getTouchArray(e)
     });
 
     this.canvasElement.addEventListener('touchmove', e => {
       [this.mouseInfo.x, this.mouseInfo.y] = getTouchPosition(e)
+      this.touchInfo = getTouchArray(e)
     });
     window.addEventListener('touchend', e => {
       // e.preventDefault()
       this.mouseInfo.mouseDown = false;
+      this.touchInfo = getTouchArray(e)
     });
   }
 
