@@ -64,6 +64,7 @@ export class BasedGame implements BasedGameType {
   } = { x: -100, y: -100, mouseDown: false }
 
   touchInfo: XYCoordinateType[] = []
+  touchMode: boolean = false
 
   levels: { [key: string]: BasedLevel } = {}
   activeLevel: string = '';
@@ -112,6 +113,7 @@ export class BasedGame implements BasedGameType {
 
     this.canvasElement.addEventListener('mousemove', e => {
       [this.mouseInfo.x, this.mouseInfo.y] = getClickPosition(e)
+      this.touchMode = false
     });
     window.addEventListener('mouseup', e => {
       this.mouseInfo.mouseDown = false;
@@ -122,6 +124,7 @@ export class BasedGame implements BasedGameType {
       // e.preventDefault()
       [this.mouseInfo.x, this.mouseInfo.y] = getTouchPosition(e)
       this.mouseInfo.mouseDown = true;
+      this.touchMode = true
       this.touchInfo = getTouchArray(e)
     });
 
