@@ -15,18 +15,28 @@ export class TouchKnob extends BasedObject {
   knobRadius: number = 30
 
   maxOffset: number = 30
+  touchId: string = ''
+  mouseMode: boolean = false;
 
   async preload() { }
   initialize() { }
 
   update() {
+    if(this.mouseMode) {
+      this.checkMouse()
+    } else {
+      this.checkTouch()
+    }
+
+  }
+
+  checkMouse() {
     const x1 = this.x
     const y1 = this.y
     const x2 = this.x + this.width
     const y2 = this.y + this.height
     const { x, y } = this.gameRef.mouseInfo
     const hovered = x > x1 && x < x2 && y > y1 && y < y2
-
     if (!this.knobActive) {
       if (this.gameRef.mouseInfo.mouseDown && hovered) {
         this.knobActive = true
@@ -46,6 +56,47 @@ export class TouchKnob extends BasedObject {
         this.knobCoord = pointOnCircle(angle, dist <= this.maxOffset ? dist : this.maxOffset)
       } else {
         this.knobActive = false
+        this.touchId = ''
+      }
+    }
+  }
+
+  checkTouch() {
+
+    if (!this.knobActive) {
+      if (this.gameRef.touchInfo.length > 0) {
+        let touchFound: any = {}
+        this.gameRef.touchInfo.forEach(t => {
+          const x1 = this.x
+          const y1 = this.y
+          const x2 = this.x + this.width
+          const y2 = this.y + this.height
+          const { x, y } = t
+          const hovered = x > x1 && x < x2 && y > y1 && y < y2
+          if(hovered) {
+            touchFound = {...t}
+            this.knobActive = true
+            this.touchId = t.id
+          }
+        })
+
+        if(this.knobActive && touchFound.x && touchFound.y) {
+          this.knobCoord = {
+            x: 0,
+            y: 0
+          }
+          this.knobCenter = touchFound
+        }
+      }
+    } else {
+      const touchIndex = this.gameRef.touchInfo.filter(x => x.id === this.touchId)
+      if (touchIndex.length > 0) {
+        const dist = distanceBetween(this.knobCenter, touchIndex[0])
+        const angle = angleBetween(this.knobCenter, touchIndex[0])
+        this.knobCoord = pointOnCircle(angle, dist <= this.maxOffset ? dist : this.maxOffset)
+      } else {
+        this.knobActive = false
+        this.touchId = ''
       }
     }
   }

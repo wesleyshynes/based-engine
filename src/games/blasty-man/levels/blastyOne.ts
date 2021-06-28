@@ -11,6 +11,7 @@ export class BlastyLevelOne extends BasedLevel {
   bMan: any;
   spider: any;
   moveKnob: any;
+  aimKnob: any;
 
   async preload() {
     this.bMan = new BlastMan({key: 'blast-man', gameRef: this.gameRef})
@@ -24,8 +25,12 @@ export class BlastyLevelOne extends BasedLevel {
     await this.spider.preload()
 
     this.moveKnob = new TouchKnob({key: 'move-knob', gameRef: this.gameRef})
-    this.moveKnob.x = this.gameRef.gameWidth/2 - this.moveKnob.width/2
+    this.moveKnob.x = 0
     this.moveKnob.y = this.gameRef.gameHeight - this.moveKnob.height
+
+    this.aimKnob = new TouchKnob({key: 'aim-knob', gameRef: this.gameRef})
+    this.aimKnob.x = this.gameRef.gameWidth - this.aimKnob.width
+    this.aimKnob.y = this.gameRef.gameHeight - this.moveKnob.height
 
   }
 
@@ -50,6 +55,13 @@ export class BlastyLevelOne extends BasedLevel {
       const speedFactor = this.bMan.speed * this.gameRef.diffMulti
       this.bMan.x += (this.moveKnob.knobCoord.x/this.moveKnob.maxOffset)*speedFactor
       this.bMan.y += (this.moveKnob.knobCoord.y/this.moveKnob.maxOffset)*speedFactor
+    }
+
+    this.aimKnob.update()
+    if(this.aimKnob.knobActive) {
+      const{x: bx, y: by} = this.bMan.centerCoordinates()
+      this.bMan.target.x = (this.aimKnob.knobCoord.x/this.aimKnob.maxOffset) * 1000 + bx
+      this.bMan.target.y = (this.aimKnob.knobCoord.y/this.aimKnob.maxOffset)* 1000 + by
     }
   }
 
@@ -78,8 +90,10 @@ export class BlastyLevelOne extends BasedLevel {
     //   align: 'left',
     //   fontSize: 16
     // })
-
-    this.moveKnob.draw()
+    if(this.gameRef.touchMode) {
+      this.moveKnob.draw()
+      this.aimKnob.draw()
+    }
   }
 
   tearDown() { }

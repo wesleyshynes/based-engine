@@ -79,10 +79,10 @@ export class BlastMan extends BasedObject {
     const cX = this.x + this.width / 2
     const cY = this.y + this.height / 2
 
-    this.target = {
+    this.target =  !this.gameRef.touchMode ? {
       x: this.gameRef.mouseInfo.x,
       y: this.gameRef.mouseInfo.y,
-    }
+    } : this.target
 
     this.gun1.moveTo({ x: cX - 15, y: cY + 5 })
     this.gun1.setTarget(this.target)

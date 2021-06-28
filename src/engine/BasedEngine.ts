@@ -63,7 +63,7 @@ export class BasedGame implements BasedGameType {
     mouseDown: boolean
   } = { x: -100, y: -100, mouseDown: false }
 
-  touchInfo: XYCoordinateType[] = []
+  touchInfo: {x: number, y: number, id: string}[] = []
   touchMode: boolean = false
 
   levels: { [key: string]: BasedLevel } = {}
