@@ -16,16 +16,15 @@ export class TouchKnob extends BasedObject {
 
   maxOffset: number = 30
   touchId: string = ''
-  mouseMode: boolean = false;
 
   async preload() { }
   initialize() { }
 
   update() {
-    if(this.mouseMode) {
-      this.checkMouse()
-    } else {
+    if(this.gameRef.touchMode) {
       this.checkTouch()
+    } else {
+      this.checkMouse()
     }
 
   }
