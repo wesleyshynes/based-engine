@@ -1,10 +1,8 @@
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { BlastMan } from "../entities/BlastMan";
 import { BlastSpider } from "../entities/BlastSpider";
-
-import { drawBox, drawText, rotateDraw } from "../../../engine/libs/drawHelpers";
-import { radToDeg } from "../../../engine/libs/mathHelpers";
 import { TouchKnob } from "../controls/TouchKnob";
+import { BlastyMap } from "../maps/BlastyMap";
 
 export class BlastyLevelOne extends BasedLevel {
 
@@ -13,7 +11,15 @@ export class BlastyLevelOne extends BasedLevel {
   moveKnob: any;
   aimKnob: any;
 
+  tileMap: any;
+
   async preload() {
+    this.tileMap = new BlastyMap({key: 'blast-map-1', gameRef: this.gameRef})
+    this.tileMap.width = this.gameRef.gameWidth
+    this.tileMap.height = this.gameRef.gameHeight
+    this.tileMap.tileSize = 32
+    await this.tileMap.preload()
+
     this.bMan = new BlastMan({key: 'blast-man', gameRef: this.gameRef})
     this.bMan.x = 115 - 20
     this.bMan.y = 100 - 32
@@ -74,6 +80,8 @@ export class BlastyLevelOne extends BasedLevel {
     this.gameRef.ctx.rect(0, 0, this.gameRef.gameWidth, this.gameRef.gameHeight)
     this.gameRef.ctx.fillStyle = '#777'
     this.gameRef.ctx.fill()
+
+    this.tileMap.draw()
 
     this.drawBg()
 
