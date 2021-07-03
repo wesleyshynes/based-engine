@@ -70,12 +70,12 @@ export class Gun extends BasedObject {
     this.target = newTarget
   }
 
-  draw() {
+  draw(cameraOffset: {x: number, y: number} = {x: 0, y: 0}) {
 
     rotateDraw({
       c: this.gameRef.ctx,
-      x: this.x,
-      y: this.y,
+      x: cameraOffset.x + this.x,
+      y: cameraOffset.y + this.y,
       a: this.angle
     }, () => {
       drawImage(this.sprite)

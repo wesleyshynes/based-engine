@@ -74,7 +74,7 @@ export class BlastSpider extends BasedObject {
 
 
 
-    draw() {
+    draw(cameraOffset: {x: number, y: number} = {x: 0, y: 0}) {
       // drawCircle({
       //   c: this.gameRef.ctx,
       //   x: this.x,
@@ -85,8 +85,8 @@ export class BlastSpider extends BasedObject {
 
       rotateDraw({
         c: this.gameRef.ctx,
-        x: this.x,
-        y: this.y,
+        x: cameraOffset.x + this.x,
+        y: cameraOffset.y + this.y,
         a: this.angle
       }, () => {
         drawImage(this.sprite)

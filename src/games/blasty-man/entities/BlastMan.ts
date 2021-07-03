@@ -1,8 +1,9 @@
 import { BasedObject } from "../../../engine/BasedObject";
-import { createSprite, drawImage } from "../../../engine/libs/drawHelpers";
+import { createSprite, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import BlastyManUrl from '../../../assets/blasty-man/blasty-man-concept-pixel.png'
 import { Gun } from "./Gun";
 import { Bullet } from "./Bullet";
+import { XYCoordinateType } from "../../../engine/libs/mathHelpers";
 
 
 export class BlastMan extends BasedObject {
@@ -32,8 +33,8 @@ export class BlastMan extends BasedObject {
       sy: 0,
       sWidth: this.width,
       sHeight: this.height,
-      dx: this.x,
-      dy: this.y,
+      dx:  0,
+      dy:  0,
       dWidth: this.width,
       dHeight: this.height,
       frame: 0
@@ -55,7 +56,7 @@ export class BlastMan extends BasedObject {
     this.gun2Bullet = new Bullet({key: 'gun2Bullet', gameRef: this.gameRef})
   }
 
-  update() {
+  update(cameraPos: XYCoordinateType = {x: 0,y: 0}) {
 
     const pressedKeys = this.gameRef.pressedKeys
     const speedFactor = this.speed * this.gameRef.diffMulti
@@ -73,15 +74,15 @@ export class BlastMan extends BasedObject {
       this.y += speedFactor
     }
 
-    this.sprite.dx = this.x
-    this.sprite.dy = this.y
+    // this.sprite.dx = this.x
+    // this.sprite.dy = this.y
 
     const cX = this.x + this.width / 2
     const cY = this.y + this.height / 2
 
     this.target =  !this.gameRef.touchMode ? {
-      x: this.gameRef.mouseInfo.x,
-      y: this.gameRef.mouseInfo.y,
+      x: this.gameRef.mouseInfo.x - cameraPos.x,
+      y: this.gameRef.mouseInfo.y - cameraPos.y,
     } : this.target
 
     this.gun1.moveTo({ x: cX - 15, y: cY + 5 })
@@ -116,17 +117,27 @@ export class BlastMan extends BasedObject {
     }
   }
 
-  draw() {
-    drawImage(this.sprite)
+  draw(cameraOffset: {x: number, y: number} = {x: 0, y: 0}) {
+    // drawImage(this.sprite)
+    rotateDraw({
+      c: this.gameRef.ctx,
+      x: cameraOffset.x + this.x,
+      y: cameraOffset.y + this.y,
+      a: 0
+    }, () => {
+      // this.sprite.flipX = this.velocity.x < 0
+      drawImage(this.sprite)
+    })
+
     if (this.target.x > this.x) {
-      this.gun2.draw()
-      this.gun1.draw()
+      this.gun2.draw(cameraOffset)
+      this.gun1.draw(cameraOffset)
     } else {
-      this.gun1.draw()
-      this.gun2.draw()
+      this.gun1.draw(cameraOffset)
+      this.gun2.draw(cameraOffset)
     }
 
-    this.gun1Bullet.draw()
-    this.gun2Bullet.draw()
+    this.gun1Bullet.draw(cameraOffset)
+    this.gun2Bullet.draw(cameraOffset)
   }
 }
