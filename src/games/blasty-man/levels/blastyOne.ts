@@ -3,7 +3,7 @@ import { BlastMan } from "../entities/BlastMan";
 import { BlastSpider } from "../entities/BlastSpider";
 import { TouchKnob } from "../controls/TouchKnob";
 import { BlastyMap } from "../maps/BlastyMap";
-import { XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { distanceBetween, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 
 export class BlastyLevelOne extends BasedLevel {
 
@@ -76,6 +76,20 @@ export class BlastyLevelOne extends BasedLevel {
       const{x: bx, y: by} = this.bMan.centerCoordinates()
       this.bMan.target.x = (this.aimKnob.knobCoord.x/this.aimKnob.maxOffset) * 1000 + bx
       this.bMan.target.y = (this.aimKnob.knobCoord.y/this.aimKnob.maxOffset)* 1000 + by
+    }
+
+    if(distanceBetween(this.bMan.centerCoordinates(), this.spider) <= 16){
+      this.bMan.healthBar.tick(-5)
+    }
+
+    if(distanceBetween(this.bMan.gun1Bullet, this.spider) <= 16){
+      this.bMan.gun1Bullet.active = false
+      this.spider.healthBar.tick(-1)
+    }
+
+    if(distanceBetween(this.bMan.gun2Bullet, this.spider) <= 16){
+      this.bMan.gun2Bullet.active = false
+      this.spider.healthBar.tick(-1)
     }
 
     this.updateCamera()

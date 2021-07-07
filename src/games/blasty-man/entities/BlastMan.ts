@@ -4,6 +4,7 @@ import BlastyManUrl from '../../../assets/blasty-man/blasty-man-concept-pixel.pn
 import { Gun } from "./Gun";
 import { Bullet } from "./Bullet";
 import { XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { HealthBar } from "../ui/HealthBar";
 
 
 export class BlastMan extends BasedObject {
@@ -24,6 +25,9 @@ export class BlastMan extends BasedObject {
 
   gun1Bullet: any;
   gun2Bullet: any;
+
+  healthBar: any;
+  health: number = 100;
 
   async preload() {
     this.sprite = await createSprite({
@@ -52,6 +56,11 @@ export class BlastMan extends BasedObject {
   }
 
   initialize() {
+    this.healthBar = new HealthBar({key: 'blasty-health', gameRef: this.gameRef})
+    this.healthBar.width = this.width
+    this.healthBar.yOffset = -this.height/2 - 5
+    this.healthBar.current = 100
+
     this.gun1Bullet = new Bullet({key: 'gun1Bullet', gameRef: this.gameRef})
     this.gun2Bullet = new Bullet({key: 'gun2Bullet', gameRef: this.gameRef})
   }
@@ -76,6 +85,9 @@ export class BlastMan extends BasedObject {
 
     // this.sprite.dx = this.x
     // this.sprite.dy = this.y
+
+    this.healthBar.x = this.centerCoordinates().x
+    this.healthBar.y = this.centerCoordinates().y
 
     const cX = this.x + this.width / 2
     const cY = this.y + this.height / 2
@@ -118,6 +130,9 @@ export class BlastMan extends BasedObject {
   }
 
   draw(cameraOffset: {x: number, y: number} = {x: 0, y: 0}) {
+
+    this.healthBar.draw(cameraOffset)
+
     // drawImage(this.sprite)
     rotateDraw({
       c: this.gameRef.ctx,
@@ -139,5 +154,6 @@ export class BlastMan extends BasedObject {
 
     this.gun1Bullet.draw(cameraOffset)
     this.gun2Bullet.draw(cameraOffset)
+
   }
 }

@@ -2,6 +2,7 @@ import { BasedObject } from "../../../engine/BasedObject";
 import BlastySpiderUrl from '../../../assets/blasty-man/blasty-spider-concept.png'
 import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { angleBetween, distanceBetween, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { HealthBar } from "../ui/HealthBar";
 
 export class BlastSpider extends BasedObject {
     x: number = 0
@@ -20,6 +21,9 @@ export class BlastSpider extends BasedObject {
 
     angle: number = 0
 
+    healthBar: any;
+    health: number = 100;
+
     async preload() {
       this.sprite = await createSprite({
         c: this.gameRef.ctx,
@@ -35,7 +39,12 @@ export class BlastSpider extends BasedObject {
         frame: 0
       })
     }
-    initialize() {}
+    initialize() {
+      this.healthBar = new HealthBar({key: 'spider-health', gameRef: this.gameRef})
+      this.healthBar.width = this.radius * 2
+      this.healthBar.yOffset = -this.radius - 5
+      this.healthBar.current = 100
+    }
 
 
     update() {
@@ -51,6 +60,9 @@ export class BlastSpider extends BasedObject {
       if(this.angle < 0) {
         this.angle += 360
       }
+
+      this.healthBar.x = this.x
+      this.healthBar.y = this.y
 
       this.moveTo(this.target)
     }
@@ -91,6 +103,8 @@ export class BlastSpider extends BasedObject {
       }, () => {
         drawImage(this.sprite)
       })
+
+      this.healthBar.draw(cameraOffset)
     }
 
   }
