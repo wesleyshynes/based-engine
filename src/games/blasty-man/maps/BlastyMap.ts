@@ -93,8 +93,8 @@ export class BlastyMap extends BasedObject {
     // generate rooms
     const rooms = [
       {x: 1, y: 1, w: 5, h: 7},
-      {x: 15, y: 5, w: 8, h: 5},
-      {x: 5, y: 20, w: 4, h: 4},
+      {x: 19, y: 6, w: 8, h: 5},
+      {x: 2, y: 25, w: 8, h: 6},
       {x: this.tileMap[0].length - 7, y: this.tileMap.length - 6, w: 3, h: 3},
     ]
 
@@ -124,7 +124,7 @@ export class BlastyMap extends BasedObject {
           // console.log(roomCenter)
           const moveX = prevRoomCenter.x - roomCenter.x != 0 ? (prevRoomCenter.x - roomCenter.x)/Math.abs(prevRoomCenter.x - roomCenter.x) : 0
           const moveY = prevRoomCenter.y - roomCenter.y != 0 ? (prevRoomCenter.y - roomCenter.y)/Math.abs(prevRoomCenter.y - roomCenter.y) : 0
-          console.log(moveX, moveY)
+          // console.log(moveX, moveY)
           if(moveX !== 0 && moveY !== 0) {
             if(getRandomInt(2) > 0) {
               roomCenter.x += moveX

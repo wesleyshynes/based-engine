@@ -25,12 +25,12 @@ export class BlastyLevelOne extends BasedLevel {
     this.tileMap.tileSize = 64
     await this.tileMap.preload()
 
-    this.bMan = new BlastMan({key: 'blast-man', gameRef: this.gameRef})
+    this.bMan = new BlastMan({key: 'blastMan', gameRef: this.gameRef})
     this.bMan.x = 115 - 20
     this.bMan.y = 100 - 32
     await this.bMan.preload()
 
-    this.spider = new BlastSpider({key: 'blast-spider', gameRef: this.gameRef})
+    this.spider = new BlastSpider({key: 'blastSpider', gameRef: this.gameRef})
     this.spider.x = 200
     this.spider.y = 200
     await this.spider.preload()
@@ -70,11 +70,6 @@ export class BlastyLevelOne extends BasedLevel {
     this.spider.update()
     this.spider.target = this.bMan.centerCoordinates()
 
-    this.tileMap.addOccupant({...this.bMan.centerCoordinates(), key: this.bMan.key})
-    this.tileMap.addOccupant(this.bMan.gun1Bullet)
-    this.tileMap.addOccupant(this.bMan.gun2Bullet)
-    this.tileMap.addOccupant(this.spider)
-
     this.moveKnob.update()
     if(this.moveKnob.knobActive) {
       const speedFactor = this.bMan.speed * this.gameRef.diffMulti
@@ -88,6 +83,13 @@ export class BlastyLevelOne extends BasedLevel {
       this.bMan.target.x = (this.aimKnob.knobCoord.x/this.aimKnob.maxOffset) * 1000 + bx
       this.bMan.target.y = (this.aimKnob.knobCoord.y/this.aimKnob.maxOffset)* 1000 + by
     }
+
+    this.tileMap.addOccupant({...this.bMan.centerCoordinates(), key: this.bMan.key})
+    this.tileMap.addOccupant(this.bMan.gun1Bullet)
+    this.tileMap.addOccupant(this.bMan.gun2Bullet)
+    this.tileMap.addOccupant(this.spider)
+
+
 
     if(distanceBetween(this.bMan.centerCoordinates(), this.spider) <= 16){
       this.bMan.healthBar.tick(-5)
