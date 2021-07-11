@@ -22,7 +22,7 @@ export class BlastyLevelOne extends BasedLevel {
     this.tileMap = new BlastyMap({key: 'blast-map-1', gameRef: this.gameRef})
     this.tileMap.width = this.levelWidth
     this.tileMap.height = this.levelHeight
-    this.tileMap.tileSize = 32
+    this.tileMap.tileSize = 64
     await this.tileMap.preload()
 
     this.bMan = new BlastMan({key: 'blast-man', gameRef: this.gameRef})
@@ -60,9 +60,20 @@ export class BlastyLevelOne extends BasedLevel {
     this.updateBg()
     this.handleSounds()
 
+
+    this.tileMap.removeOccupant({...this.bMan.centerCoordinates(), key: this.bMan.key})
+    this.tileMap.removeOccupant(this.bMan.gun1Bullet)
+    this.tileMap.removeOccupant(this.bMan.gun2Bullet)
+    this.tileMap.removeOccupant(this.spider)
+
     this.bMan.update(this.cameraPos)
     this.spider.update()
     this.spider.target = this.bMan.centerCoordinates()
+
+    this.tileMap.addOccupant({...this.bMan.centerCoordinates(), key: this.bMan.key})
+    this.tileMap.addOccupant(this.bMan.gun1Bullet)
+    this.tileMap.addOccupant(this.bMan.gun2Bullet)
+    this.tileMap.addOccupant(this.spider)
 
     this.moveKnob.update()
     if(this.moveKnob.knobActive) {
