@@ -70,19 +70,7 @@ export class BlastyLevelOne extends BasedLevel {
     this.spider.update()
     this.spider.target = this.bMan.centerCoordinates()
 
-    this.moveKnob.update()
-    if(this.moveKnob.knobActive) {
-      const speedFactor = this.bMan.speed * this.gameRef.diffMulti
-      this.bMan.x += (this.moveKnob.knobCoord.x/this.moveKnob.maxOffset)*speedFactor
-      this.bMan.y += (this.moveKnob.knobCoord.y/this.moveKnob.maxOffset)*speedFactor
-    }
-
-    this.aimKnob.update()
-    if(this.aimKnob.knobActive) {
-      const{x: bx, y: by} = this.bMan.centerCoordinates()
-      this.bMan.target.x = (this.aimKnob.knobCoord.x/this.aimKnob.maxOffset) * 1000 + bx
-      this.bMan.target.y = (this.aimKnob.knobCoord.y/this.aimKnob.maxOffset)* 1000 + by
-    }
+    this.moveCharacter()
 
     this.tileMap.addOccupant({...this.bMan.centerCoordinates(), key: this.bMan.key})
     this.tileMap.addOccupant(this.bMan.gun1Bullet)
@@ -90,7 +78,7 @@ export class BlastyLevelOne extends BasedLevel {
     this.tileMap.addOccupant(this.spider)
 
 
-
+    // collision checks
     if(distanceBetween(this.bMan.centerCoordinates(), this.spider) <= 16){
       this.bMan.healthBar.tick(-5)
     }
@@ -106,6 +94,52 @@ export class BlastyLevelOne extends BasedLevel {
     }
 
     this.updateCamera()
+  }
+
+  moveCharacter() {
+    const pressedKeys = this.gameRef.pressedKeys
+    const speedFactor = this.bMan.speed * this.gameRef.diffMulti
+
+    let moveX = 0
+    let moveY = 0
+
+    if (pressedKeys['KeyA'] || pressedKeys['ArrowLeft']) {
+      moveX -= speedFactor
+    }
+    if (pressedKeys['KeyD'] || pressedKeys['ArrowRight']) {
+      moveX += speedFactor
+    }
+    if (pressedKeys['KeyW'] || pressedKeys['ArrowUp']) {
+      moveY -= speedFactor
+    }
+    if (pressedKeys['KeyS'] || pressedKeys['ArrowDown']) {
+      moveY += speedFactor
+    }
+
+    this.moveKnob.update()
+    if(this.moveKnob.knobActive) {
+      const speedFactor = this.bMan.speed * this.gameRef.diffMulti
+      moveX += (this.moveKnob.knobCoord.x/this.moveKnob.maxOffset)*speedFactor
+      moveY += (this.moveKnob.knobCoord.y/this.moveKnob.maxOffset)*speedFactor
+    }
+
+    this.aimKnob.update()
+    if(this.aimKnob.knobActive) {
+      const{x: bx, y: by} = this.bMan.centerCoordinates()
+      this.bMan.target.x = (this.aimKnob.knobCoord.x/this.aimKnob.maxOffset) * 1000 + bx
+      this.bMan.target.y = (this.aimKnob.knobCoord.y/this.aimKnob.maxOffset)* 1000 + by
+    }
+
+    this.bMan.x += moveX
+    if(!this.tileMap.onMap(this.bMan.centerCoordinates()) || this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this.bMan.centerCoordinates())).color == 0) {
+      this.bMan.x -= moveX
+    }
+
+    this.bMan.y += moveY
+    if(!this.tileMap.onMap(this.bMan.centerCoordinates()) || this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this.bMan.centerCoordinates())).color == 0) {
+      this.bMan.y -= moveY
+    }
+
   }
 
   updateCamera() {

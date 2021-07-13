@@ -65,6 +65,10 @@ export class BlastyMap extends BasedObject {
     }
   }
 
+  getRoomFromCoord(coordinates: XYCoordinateType){
+    return this.tileMap[coordinates.y][coordinates.x]
+  }
+
   onMap(coordinates: XYCoordinateType){
     const {x,y} = coordinates
      return x >= 0 && x <= this.width && y >= 0 && y <= this.height

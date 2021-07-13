@@ -66,23 +66,6 @@ export class BlastMan extends BasedObject {
   }
 
   update(cameraPos: XYCoordinateType = {x: 0,y: 0}) {
-
-    const pressedKeys = this.gameRef.pressedKeys
-    const speedFactor = this.speed * this.gameRef.diffMulti
-
-    if (pressedKeys['KeyA'] || pressedKeys['ArrowLeft']) {
-      this.x -= speedFactor
-    }
-    if (pressedKeys['KeyD'] || pressedKeys['ArrowRight']) {
-      this.x += speedFactor
-    }
-    if (pressedKeys['KeyW'] || pressedKeys['ArrowUp']) {
-      this.y -= speedFactor
-    }
-    if (pressedKeys['KeyS'] || pressedKeys['ArrowDown']) {
-      this.y += speedFactor
-    }
-
     // this.sprite.dx = this.x
     // this.sprite.dy = this.y
 
