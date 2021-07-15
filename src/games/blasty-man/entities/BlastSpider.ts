@@ -24,6 +24,8 @@ export class BlastSpider extends BasedObject {
     healthBar: any;
     health: number = 100;
 
+    tileMap: any;
+
     async preload() {
       this.sprite = await createSprite({
         c: this.gameRef.ctx,
@@ -76,8 +78,18 @@ export class BlastSpider extends BasedObject {
           x: (speedFactor / dt) * (moveTarget.x - this.x),
           y: (speedFactor / dt) * (moveTarget.y - this.y)
         }
+
+
         this.x += this.velocity.x
+        if(this.tileMap && (!this.tileMap.onMap(this) || this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this)).color == 0)) {
+          this.x -= this.velocity.x
+        }
         this.y += this.velocity.y
+        if(this.tileMap && (!this.tileMap.onMap(this) || this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this)).color == 0)) {
+          this.y -= this.velocity.y
+        }
+
+
       } else {
         this.velocity = { x: 0, y: 0 }
         arriveFn()
