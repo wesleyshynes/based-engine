@@ -3,6 +3,7 @@ import BlastySpiderUrl from '../../../assets/blasty-man/blasty-spider-concept.pn
 import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { angleBetween, distanceBetween, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { HealthBar } from "../ui/HealthBar";
+import PF from 'pathfinding';
 
 export class BlastSpider extends BasedObject {
     x: number = 0
@@ -18,6 +19,7 @@ export class BlastSpider extends BasedObject {
     sprite: any;
 
     target: XYCoordinateType = {x: 0, y: 0}
+    activeTarget: XYCoordinateType = {x: 0, y: 0}
 
     angle: number = 0
 
@@ -25,6 +27,8 @@ export class BlastSpider extends BasedObject {
     health: number = 100;
 
     tileMap: any;
+    pathList: [number,number][] = []
+    finder: any;
 
     async preload() {
       this.sprite = await createSprite({
@@ -34,24 +38,37 @@ export class BlastSpider extends BasedObject {
         sy: 0,
         sWidth: this.width,
         sHeight: this.height,
-        dx:  -this.width/2,
+        dx: -this.width/2,
         dy: -this.height/2,
         dWidth: this.width,
         dHeight: this.height,
         frame: 0
       })
     }
+
     initialize() {
       this.healthBar = new HealthBar({key: 'spider-health', gameRef: this.gameRef})
       this.healthBar.width = this.radius * 2
       this.healthBar.yOffset = -this.radius - 5
       this.healthBar.current = 100
+
+      this.finder = new PF.AStarFinder()
     }
 
 
     update() {
+      if(this.pathList.length <= 0) {
+        const mapClone = this.tileMap.pfGrid.clone()
+        const {x,y} = this.tileMap.getMapCoord(this)
+        const {x:x1,y:y1} = this.tileMap.getMapCoord(this.target)
+        console.log(x,y,x1,y1)
+        this.pathList = this.finder.findPath(x,y,x1,y1,mapClone)
+        console.log(this.pathList)
+        this.getNextActiveTarget()
+      }
+
       const angleSpeed = 5 * this.gameRef.diffMulti
-      const targetAngle = angleBetween(this, this.target, true) + 90
+      const targetAngle = angleBetween(this, this.activeTarget, true) + 90
       const rotDir = (targetAngle - this.angle + 540)%360-180
       // const rotDir = (targetAngle - this.gunRotate + 540)%360-180
       if(rotDir > 0) {
@@ -66,7 +83,19 @@ export class BlastSpider extends BasedObject {
       this.healthBar.x = this.x
       this.healthBar.y = this.y
 
-      this.moveTo(this.target)
+      this.moveTo(this.activeTarget, () => {
+        this.getNextActiveTarget()
+      })
+    }
+
+    getNextActiveTarget() {
+      if(this.pathList && this.pathList.length > 0) {
+        const [px,py] = this.pathList.shift()
+        this.activeTarget = {
+          x: (px * this.tileMap.tileSize) + Math.floor(this.tileMap.tileSize/2),
+          y: (py * this.tileMap.tileSize) + Math.floor(this.tileMap.tileSize/2)
+        }
+      }
     }
 
 

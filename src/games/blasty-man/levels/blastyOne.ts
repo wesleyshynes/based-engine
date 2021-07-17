@@ -51,6 +51,7 @@ export class BlastyLevelOne extends BasedLevel {
     this.bMan.initialize()
     this.spider.initialize()
     this.spider.tileMap = this.tileMap
+    this.spider.target = this.bMan.centerCoordinates()
     this.moveKnob.initialize()
     this.aimKnob.initialize()
   }

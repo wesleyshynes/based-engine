@@ -1,6 +1,7 @@
 import { BasedObject } from "../../../engine/BasedObject";
 import { drawBox } from "../../../engine/libs/drawHelpers";
 import { getRandomInt, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import PF from 'pathfinding'
 
 export class BlastyMap extends BasedObject {
 
@@ -10,6 +11,8 @@ export class BlastyMap extends BasedObject {
   height: number = 100
   tileSize: number = 10
   tileMap: any[][] = []
+
+  pfGrid: any;
 
   async preload() {
     const x = this.width / this.tileSize
@@ -29,6 +32,16 @@ export class BlastyMap extends BasedObject {
     this.tileMap = newMap
 
     this.generateMap()
+
+    // Setup PathFinder
+    this.pfGrid = new PF.Grid(Math.ceil(x),Math.ceil(y))
+    this.tileMap.forEach((row, k) => {
+      row.forEach((col, l) => {
+        if(col.color === 0) {
+          this.pfGrid.setWalkableAt(l, k, false)
+        }
+      })
+    })
   }
 
   initialize() {}
