@@ -1,6 +1,6 @@
 import { BasedObject } from "../../../engine/BasedObject";
 import { createSprite, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
-import BlastyManUrl from '../../../assets/blasty-man/blasty-man-concept-pixel.png'
+import BlastyManUrl from '../../../assets/blasty-man/blasty-man-spritesheet.png'
 import { Gun } from "./Gun";
 import { Bullet } from "./Bullet";
 import { XYCoordinateType } from "../../../engine/libs/mathHelpers";
@@ -41,7 +41,9 @@ export class BlastMan extends BasedObject {
       dy:  0,
       dWidth: this.width,
       dHeight: this.height,
-      frame: 0
+      frame: 0,
+      lastUpdate: 0,
+      updateDiff: 1000/60 * 10
     })
 
     this.gun1 = new Gun({ key: 'gun1', gameRef: this.gameRef })
@@ -103,7 +105,22 @@ export class BlastMan extends BasedObject {
       }, this.target)
     }
     this.gun2Bullet.update()
+
+    this.updateSprite()
   }
+
+  updateSprite() {
+    if(this.sprite.lastUpdate + this.sprite.updateDiff < this.gameRef.lastUpdate) {
+      this.sprite.frame++
+      if(this.sprite.frame > 2) {
+        this.sprite.frame = 0
+      }
+      this.sprite.lastUpdate = this.gameRef.lastUpdate
+
+      this.sprite.sx = this.sprite.frame * this.sprite.dWidth
+    }
+  }
+
 
   centerCoordinates() {
     return {

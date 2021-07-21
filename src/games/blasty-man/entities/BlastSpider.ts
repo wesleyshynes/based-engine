@@ -1,5 +1,5 @@
 import { BasedObject } from "../../../engine/BasedObject";
-import BlastySpiderUrl from '../../../assets/blasty-man/blasty-spider-concept.png'
+import BlastySpiderUrl from '../../../assets/blasty-man/blasty-spider-spritesheet.png'
 import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { angleBetween, distanceBetween, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { HealthBar } from "../ui/HealthBar";
@@ -42,7 +42,9 @@ export class BlastSpider extends BasedObject {
         dy: -this.height/2,
         dWidth: this.width,
         dHeight: this.height,
-        frame: 0
+        frame: 0,
+        lastUpdate: 0,
+        updateDiff: 1000/60 * 10
       })
     }
 
@@ -86,6 +88,20 @@ export class BlastSpider extends BasedObject {
       this.moveTo(this.activeTarget, () => {
         this.getNextActiveTarget()
       })
+
+      this.updateSprite()
+    }
+
+    updateSprite() {
+      if(this.sprite.lastUpdate + this.sprite.updateDiff < this.gameRef.lastUpdate) {
+        this.sprite.frame++
+        if(this.sprite.frame > 2) {
+          this.sprite.frame = 0
+        }
+        this.sprite.lastUpdate = this.gameRef.lastUpdate
+
+        this.sprite.sx = this.sprite.frame * this.sprite.dWidth
+      }
     }
 
     getNextActiveTarget() {
