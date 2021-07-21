@@ -30,6 +30,8 @@ export class BlastSpider extends BasedObject {
     pathList: [number,number][] = []
     finder: any;
 
+    chasing: boolean = false
+
     async preload() {
       this.sprite = await createSprite({
         c: this.gameRef.ctx,
@@ -59,14 +61,24 @@ export class BlastSpider extends BasedObject {
 
 
     update() {
-      if(this.pathList.length <= 0) {
+      const distanceToTarget = distanceBetween(this, this.target)
+      if((this.pathList.length <= 0 && !this.chasing) || (distanceToTarget > 100 && this.chasing === true)) {
+        this.chasing = false
         const mapClone = this.tileMap.pfGrid.clone()
         const {x,y} = this.tileMap.getMapCoord(this)
         const {x:x1,y:y1} = this.tileMap.getMapCoord(this.target)
-        console.log(x,y,x1,y1)
+        // console.log(x,y,x1,y1)
         this.pathList = this.finder.findPath(x,y,x1,y1,mapClone)
-        console.log(this.pathList)
+        // console.log(this.pathList)
+        console.log('Chasing False')
         this.getNextActiveTarget()
+      } else if (distanceToTarget <= 100) {
+        this.activeTarget = this.target
+        if(this.chasing === false) {
+          console.log('Chasing True')
+          this.chasing = true
+          this.pathList = []
+        }
       }
 
       const angleSpeed = 5 * this.gameRef.diffMulti
@@ -86,7 +98,9 @@ export class BlastSpider extends BasedObject {
       this.healthBar.y = this.y
 
       this.moveTo(this.activeTarget, () => {
-        this.getNextActiveTarget()
+        if(!this.chasing) {
+          this.getNextActiveTarget()
+        }
       })
 
       this.updateSprite()
