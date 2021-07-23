@@ -93,12 +93,18 @@ export class BlastyMap extends BasedObject {
     if(!this.onMap(occupant)) return
     const {x,y} = this.getMapCoord(occupant)
     delete this.tileMap[y][x].occupants[occupant.key]
+    if(Object.keys(this.tileMap[y][x].occupants) && this.tileMap[y][x].color == 1) {
+      this.pfGrid.setWalkableAt(x, y, true)
+    }
   }
 
   addOccupant(occupant: {x: number, y: number, key: string}){
     if(!this.onMap(occupant)) return
     const {x,y} = this.getMapCoord(occupant)
     this.tileMap[y][x].occupants[occupant.key] = occupant
+    if(this.tileMap[y][x].color == 1) {
+      this.pfGrid.setWalkableAt(x, y, false)
+    }
   }
 
   generateMap() {
@@ -113,9 +119,26 @@ export class BlastyMap extends BasedObject {
     const rooms = [
       {x: 1, y: 1, w: 5, h: 7},
       {x: 19, y: 6, w: 8, h: 5},
-      {x: 2, y: 25, w: 8, h: 6},
-      {x: this.tileMap[0].length - 7, y: this.tileMap.length - 6, w: 3, h: 3},
+      // {x: 2, y: 25, w: 8, h: 6},
+      // {x: this.tileMap[0].length - 7, y: this.tileMap.length - 6, w: 3, h: 3},
     ]
+
+    let attempts = 0
+
+    while(rooms.length < 10 && attempts < 100) {
+      attempts++
+      const newRoom = {
+        x: 0,
+        y: 0,
+        w: 3 + getRandomInt(5),
+        h: 3 + getRandomInt(5)
+      }
+      newRoom.x = 1 + getRandomInt(this.tileMap[0].length - (newRoom.w + 2))
+      newRoom.y = 1 + getRandomInt(this.tileMap.length - (newRoom.h + 2))
+      rooms.push(newRoom)
+    }
+
+
 
     rooms.map((room, idx) => {
       for(let i = room.y; i < room.y + room.h; i++) {

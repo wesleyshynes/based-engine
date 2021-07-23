@@ -59,10 +59,18 @@ export class BlastSpider extends BasedObject {
       this.finder = new PF.AStarFinder()
     }
 
+    cleanDistanceToTarget() {
+      return (this.tileMap.getRoomFromCoord(
+          this.tileMap.getMapCoord(
+            { x:(this.x + this.target.x)/2 ,
+              y: (this.y + this.target.y)/2
+            })).color == 1)
+    }
 
     update() {
       const distanceToTarget = distanceBetween(this, this.target)
-      if((this.pathList.length <= 0 && !this.chasing) || (distanceToTarget > 100 && this.chasing === true)) {
+      const cleanDistance = this.cleanDistanceToTarget()
+      if((this.pathList.length <= 0 && !this.chasing) || ((distanceToTarget > 300 || !cleanDistance) && this.chasing === true)) {
         this.chasing = false
         const mapClone = this.tileMap.pfGrid.clone()
         const {x,y} = this.tileMap.getMapCoord(this)
@@ -72,7 +80,7 @@ export class BlastSpider extends BasedObject {
         // console.log(this.pathList)
         console.log('Chasing False')
         this.getNextActiveTarget()
-      } else if (distanceToTarget <= 100) {
+      } else if (distanceToTarget <= 300 && cleanDistance) {
         this.activeTarget = this.target
         if(this.chasing === false) {
           console.log('Chasing True')
