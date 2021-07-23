@@ -32,6 +32,8 @@ export class BlastSpider extends BasedObject {
 
     chasing: boolean = false
 
+    entityTag: string = 'spider'
+
     async preload() {
       this.sprite = await createSprite({
         c: this.gameRef.ctx,
@@ -78,16 +80,17 @@ export class BlastSpider extends BasedObject {
         // console.log(x,y,x1,y1)
         this.pathList = this.finder.findPath(x,y,x1,y1,mapClone)
         // console.log(this.pathList)
-        console.log('Chasing False')
+        // console.log('Chasing False')
         this.getNextActiveTarget()
       } else if (distanceToTarget <= 300 && cleanDistance) {
         this.activeTarget = this.target
         if(this.chasing === false) {
-          console.log('Chasing True')
+          // console.log('Chasing True')
           this.chasing = true
           this.pathList = []
         }
       }
+      // this.checkRoom()
 
       const angleSpeed = 5 * this.gameRef.diffMulti
       const targetAngle = angleBetween(this, this.activeTarget, true) + 90
@@ -133,6 +136,29 @@ export class BlastSpider extends BasedObject {
           x: (px * this.tileMap.tileSize) + Math.floor(this.tileMap.tileSize/2),
           y: (py * this.tileMap.tileSize) + Math.floor(this.tileMap.tileSize/2)
         }
+      }
+    }
+
+    checkRoom() {
+      const room = this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this))
+      if(Object.keys(room.occupants).filter(o => {
+        return room.occupants[o].entityTag === this.entityTag &&
+        room.occupants[o].objectKey !== this.objectKey &&
+        room.occupants[o].activeTarget.x === this.activeTarget.x &&
+        room.occupants[o].activeTargety === this.activeTarget.y
+      }).length > 0) {
+        console.log('new route', room.occupants)
+        this.chasing = false
+        const mapClone = this.tileMap.pfGrid.clone()
+        const nt = this.tileMap.getMapCoord(this.tileMap.getMapCoord(this.activeTarget))
+        mapClone.setWalkableAt(nt.x, nt.y, false)
+        const {x,y} = this.tileMap.getMapCoord(this.tileMap.getMapCoord(this))
+        const {x:x1,y:y1} = this.tileMap.getMapCoord(this.tileMap.getMapCoord(this.target))
+        // console.log(x,y,x1,y1)
+        this.pathList = this.finder.findPath(x,y,x1,y1,mapClone)
+        // console.log(this.pathList)
+        // console.log('Chasing False')
+        this.getNextActiveTarget()
       }
     }
 
