@@ -141,12 +141,12 @@ export class BlastSpider extends BasedObject {
 
     checkRoom() {
       const room = this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this))
-      if(Object.keys(room.occupants).filter(o => {
+      if(Object.keys(room.occupants).find(o => {
         return room.occupants[o].entityTag === this.entityTag &&
         room.occupants[o].objectKey !== this.objectKey &&
         room.occupants[o].activeTarget.x === this.activeTarget.x &&
         room.occupants[o].activeTarget.y === this.activeTarget.y
-      }).length > 0) {
+      })) {
         // console.log('new route', room.occupants)
         this.chasing = false
         const mapClone = this.tileMap.pfGrid.clone()
