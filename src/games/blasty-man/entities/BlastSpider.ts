@@ -90,7 +90,7 @@ export class BlastSpider extends BasedObject {
           this.pathList = []
         }
       }
-      // this.checkRoom()
+      this.checkRoom()
 
       const angleSpeed = 5 * this.gameRef.diffMulti
       const targetAngle = angleBetween(this, this.activeTarget, true) + 90
@@ -145,9 +145,9 @@ export class BlastSpider extends BasedObject {
         return room.occupants[o].entityTag === this.entityTag &&
         room.occupants[o].objectKey !== this.objectKey &&
         room.occupants[o].activeTarget.x === this.activeTarget.x &&
-        room.occupants[o].activeTargety === this.activeTarget.y
+        room.occupants[o].activeTarget.y === this.activeTarget.y
       }).length > 0) {
-        console.log('new route', room.occupants)
+        // console.log('new route', room.occupants)
         this.chasing = false
         const mapClone = this.tileMap.pfGrid.clone()
         const nt = this.tileMap.getMapCoord(this.tileMap.getMapCoord(this.activeTarget))

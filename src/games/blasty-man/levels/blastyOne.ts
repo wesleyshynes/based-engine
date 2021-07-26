@@ -79,22 +79,23 @@ export class BlastyLevelOne extends BasedLevel {
     this.tileMap.removeOccupant(this.bMan.gun1Bullet)
     this.tileMap.removeOccupant(this.bMan.gun2Bullet)
     this.tileMap.removeOccupant(this.spider)
+    this.tileMap.removeOccupant(this.spider2)
 
     this.bMan.update(this.cameraPos)
 
     this.spider.update()
     this.spider.target = this.bMan.centerCoordinates()
+    this.tileMap.addOccupant(this.spider)
 
     this.spider2.update()
     this.spider2.target = this.bMan.centerCoordinates()
+    this.tileMap.addOccupant(this.spider2)
 
     this.moveCharacter()
 
-    this.tileMap.addOccupant({...this.bMan.centerCoordinates(), key: this.bMan.key})
+    this.tileMap.addOccupant({...this.bMan.centerCoordinates(), objectKey: this.bMan.objectKey})
     this.tileMap.addOccupant(this.bMan.gun1Bullet)
     this.tileMap.addOccupant(this.bMan.gun2Bullet)
-    this.tileMap.addOccupant(this.spider)
-
 
     // collision checks
     if(distanceBetween(this.bMan.centerCoordinates(), this.spider) <= 16){
