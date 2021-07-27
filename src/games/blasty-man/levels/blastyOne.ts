@@ -10,6 +10,7 @@ export class BlastyLevelOne extends BasedLevel {
   bMan: any;
   spider: any;
   spider2: any;
+  spiderGroup: any[];
   moveKnob: any;
   aimKnob: any;
 
@@ -41,6 +42,18 @@ export class BlastyLevelOne extends BasedLevel {
     this.spider2.y = 500
     await this.spider2.preload()
 
+    this.spiderGroup = []
+    for(let i = 0; i < this.tileMap.roomList.length; i++) {
+      const roomInfo = this.tileMap.roomList[i]
+      const newSpider = new BlastSpider({key: `blastspider-${i}`, gameRef: this.gameRef})
+      newSpider.x = Math.floor((roomInfo.x + roomInfo.w)/2) * this.tileMap.tileSize
+      newSpider.y = Math.floor((roomInfo.y + roomInfo.h)/2) * this.tileMap.tileSize
+      await newSpider.preload()
+      if(this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: newSpider.x, y: newSpider.y})).color === 1) {
+        this.spiderGroup.push(newSpider)
+      }
+    }
+
     this.moveKnob = new TouchKnob({key: 'move-knob', gameRef: this.gameRef})
     this.moveKnob.width = this.moveKnob.width > this.gameRef.gameWidth/2 ? this.gameRef.gameWidth/2 - 5 : this.moveKnob.width
     this.moveKnob.x = 0
@@ -64,6 +77,12 @@ export class BlastyLevelOne extends BasedLevel {
     this.spider2.tileMap = this.tileMap
     this.spider2.target = this.bMan.centerCoordinates()
 
+    this.spiderGroup.map(spider => {
+      spider.initialize()
+      spider.tileMap = this.tileMap
+      spider.target = this.bMan.centerCoordinates()
+    })
+
     this.moveKnob.initialize()
     this.aimKnob.initialize()
   }
@@ -81,6 +100,10 @@ export class BlastyLevelOne extends BasedLevel {
     this.tileMap.removeOccupant(this.spider)
     this.tileMap.removeOccupant(this.spider2)
 
+    this.spiderGroup.map(spider => {
+      this.tileMap.removeOccupant(spider)
+    })
+
     this.bMan.update(this.cameraPos)
 
     this.spider.update()
@@ -90,6 +113,12 @@ export class BlastyLevelOne extends BasedLevel {
     this.spider2.update()
     this.spider2.target = this.bMan.centerCoordinates()
     this.tileMap.addOccupant(this.spider2)
+
+    this.spiderGroup.map(spider => {
+      spider.update()
+      spider.target = this.bMan.centerCoordinates()
+      this.tileMap.addOccupant(spider)
+    })
 
     this.moveCharacter()
 
@@ -199,6 +228,10 @@ export class BlastyLevelOne extends BasedLevel {
     this.bMan.draw(this.cameraPos)
     this.spider.draw(this.cameraPos)
     this.spider2.draw(this.cameraPos)
+
+    this.spiderGroup.map(spider => {
+      spider.draw(this.cameraPos)
+    })
 
     // drawText({
     //   c: this.gameRef.ctx,

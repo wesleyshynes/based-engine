@@ -13,6 +13,7 @@ export class BlastyMap extends BasedObject {
   tileMap: any[][] = []
 
   pfGrid: any;
+  roomList: any[];
 
   async preload() {
     const x = this.width / this.tileSize
@@ -138,7 +139,7 @@ export class BlastyMap extends BasedObject {
       rooms.push(newRoom)
     }
 
-
+    this.roomList = rooms
 
     rooms.map((room, idx) => {
       for(let i = room.y; i < room.y + room.h; i++) {
