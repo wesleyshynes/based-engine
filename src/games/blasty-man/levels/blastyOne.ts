@@ -102,7 +102,7 @@ export class BlastyLevelOne extends BasedLevel {
             otherObject.active = false
             spider.healthBar.tick(-5)
           }
-          if(otherObject.entityTag === 'blastMan' && distanceBetween(otherObject, spider) <= 16) {
+          if(otherObject.entityTag === 'blastMan' && distanceBetween(otherObject.centerCoordinates(), spider) <= 16) {
             otherObject.healthBar.tick(-5)
           }
         }
