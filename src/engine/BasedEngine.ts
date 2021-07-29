@@ -69,6 +69,8 @@ export class BasedGame implements BasedGameType {
   levels: { [key: string]: BasedLevel } = {}
   activeLevel: string = '';
 
+  basedObjectRefs: any = {}
+
   constructor(settings: gameSettings) {
     this.canvasElement = this.createCanvas()
     this.canvasElement.width = settings.width ? settings.width : 200
@@ -82,6 +84,11 @@ export class BasedGame implements BasedGameType {
     this.ctx = this.createContextFromElement(this.canvasElement)
 
     this.soundPlayer = new BasedSounds()
+
+    window.addEventListener('resize', e => {
+      this.resizeCanvas()
+    });
+
 
     if (settings.levels) {
       settings.levels.forEach((level) => {
@@ -100,6 +107,17 @@ export class BasedGame implements BasedGameType {
 
   createCanvas(): any {
     return document.createElement('canvas')
+  }
+
+  resizeCanvas() {
+    this.canvasElement.width = window.innerWidth
+    this.canvasElement.height = window.innerHeight
+    this.gameWidth = this.canvasElement.width
+    this.gameHeight = this.canvasElement.height
+    this.ctx = this.createContextFromElement(this.canvasElement)
+    if(this.levels[this.activeLevel].onResize) {
+      this.levels[this.activeLevel].onResize()
+    }
   }
 
   createContextFromElement(e: any): any {

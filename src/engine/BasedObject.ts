@@ -13,6 +13,7 @@ export class BasedObject {
     this.update = this.update.bind(this)
     this.draw = this.draw.bind(this)
     this.tearDown = this.tearDown.bind(this)
+    this.gameRef.basedObjectRefs[this.objectKey] = this 
   }
   async preload() { }
   initialize() { }

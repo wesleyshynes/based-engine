@@ -36,6 +36,11 @@ export class BlastyStart extends BasedLevel {
 
   updateBg() {}
 
+  onResize() {
+    this.startButton.y = this.gameRef.gameHeight - 100
+    this.startButton.width = this.gameRef.gameWidth - 200
+  }
+
   drawBg() {}
 
   draw() {

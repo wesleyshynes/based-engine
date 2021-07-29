@@ -8,8 +8,6 @@ import { distanceBetween, XYCoordinateType } from "../../../engine/libs/mathHelp
 export class BlastyLevelOne extends BasedLevel {
 
   bMan: any;
-  spider: any;
-  spider2: any;
   spiderGroup: any[];
   moveKnob: any;
   aimKnob: any;
@@ -32,16 +30,6 @@ export class BlastyLevelOne extends BasedLevel {
     this.bMan.y = 100 - 32
     await this.bMan.preload()
 
-    this.spider = new BlastSpider({key: 'blastSpider', gameRef: this.gameRef})
-    this.spider.x = 200
-    this.spider.y = 200
-    await this.spider.preload()
-
-    this.spider2 = new BlastSpider({key: 'blastSpider2', gameRef: this.gameRef})
-    this.spider2.x = 1300
-    this.spider2.y = 500
-    await this.spider2.preload()
-
     this.spiderGroup = []
     for(let i = 0; i < this.tileMap.roomList.length; i++) {
       const roomInfo = this.tileMap.roomList[i]
@@ -55,27 +43,13 @@ export class BlastyLevelOne extends BasedLevel {
     }
 
     this.moveKnob = new TouchKnob({key: 'move-knob', gameRef: this.gameRef})
-    this.moveKnob.width = this.moveKnob.width > this.gameRef.gameWidth/2 ? this.gameRef.gameWidth/2 - 5 : this.moveKnob.width
-    this.moveKnob.x = 0
-    this.moveKnob.y = this.gameRef.gameHeight - this.moveKnob.height
-
     this.aimKnob = new TouchKnob({key: 'aim-knob', gameRef: this.gameRef})
-    this.aimKnob.width = this.aimKnob.width > this.gameRef.gameWidth/2 ? this.gameRef.gameWidth/2 - 5 : this.aimKnob.width
-    this.aimKnob.x = this.gameRef.gameWidth - this.aimKnob.width
-    this.aimKnob.y = this.gameRef.gameHeight - this.moveKnob.height
+    this.positionKnobs()
 
   }
 
   initialize() {
     this.bMan.initialize()
-
-    this.spider.initialize()
-    this.spider.tileMap = this.tileMap
-    this.spider.target = this.bMan.centerCoordinates()
-
-    this.spider2.initialize()
-    this.spider2.tileMap = this.tileMap
-    this.spider2.target = this.bMan.centerCoordinates()
 
     this.spiderGroup.map(spider => {
       spider.initialize()
@@ -93,26 +67,15 @@ export class BlastyLevelOne extends BasedLevel {
     this.updateBg()
     this.handleSounds()
 
-
     this.tileMap.removeOccupant({...this.bMan.centerCoordinates(), key: this.bMan.key})
     this.tileMap.removeOccupant(this.bMan.gun1Bullet)
     this.tileMap.removeOccupant(this.bMan.gun2Bullet)
-    this.tileMap.removeOccupant(this.spider)
-    this.tileMap.removeOccupant(this.spider2)
 
     this.spiderGroup.map(spider => {
       this.tileMap.removeOccupant(spider)
     })
 
     this.bMan.update(this.cameraPos)
-
-    this.spider.update()
-    this.spider.target = this.bMan.centerCoordinates()
-    this.tileMap.addOccupant(this.spider)
-
-    this.spider2.update()
-    this.spider2.target = this.bMan.centerCoordinates()
-    this.tileMap.addOccupant(this.spider2)
 
     this.spiderGroup.map(spider => {
       spider.update()
@@ -127,21 +90,40 @@ export class BlastyLevelOne extends BasedLevel {
     this.tileMap.addOccupant(this.bMan.gun2Bullet)
 
     // collision checks
-    if(distanceBetween(this.bMan.centerCoordinates(), this.spider) <= 16){
-      this.bMan.healthBar.tick(-5)
-    }
-
-    if(distanceBetween(this.bMan.gun1Bullet, this.spider) <= 16){
-      this.bMan.gun1Bullet.active = false
-      this.spider.healthBar.tick(-1)
-    }
-
-    if(distanceBetween(this.bMan.gun2Bullet, this.spider) <= 16){
-      this.bMan.gun2Bullet.active = false
-      this.spider.healthBar.tick(-1)
-    }
+    this.spiderGroup.map(spider => {
+      const occupants = this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(spider)).occupants
+      Object.keys(occupants).map(oc => {
+        if(occupants[oc].objectKey == spider.objectKey) {
+          return
+        }
+        if(this.gameRef.basedObjectRefs[occupants[oc].objectKey]) {
+          const otherObject = this.gameRef.basedObjectRefs[occupants[oc].objectKey]
+          if(otherObject.entityTag === 'bullet' && otherObject.active && distanceBetween(otherObject, spider) <= 16) {
+            otherObject.active = false
+            spider.healthBar.tick(-5)
+          }
+          if(otherObject.entityTag === 'blastMan' && distanceBetween(otherObject, spider) <= 16) {
+            otherObject.healthBar.tick(-5)
+          }
+        }
+      })
+    })
 
     this.updateCamera()
+  }
+
+  onResize() {
+    this.positionKnobs()
+  }
+
+  positionKnobs() {
+    this.moveKnob.width = this.moveKnob.width > this.gameRef.gameWidth/2 ? this.gameRef.gameWidth/2 - 5 : this.moveKnob.width
+    this.moveKnob.x = 0
+    this.moveKnob.y = this.gameRef.gameHeight - this.moveKnob.height
+
+    this.aimKnob.width = this.aimKnob.width > this.gameRef.gameWidth/2 ? this.gameRef.gameWidth/2 - 5 : this.aimKnob.width
+    this.aimKnob.x = this.gameRef.gameWidth - this.aimKnob.width
+    this.aimKnob.y = this.gameRef.gameHeight - this.moveKnob.height
   }
 
   moveCharacter() {
@@ -226,8 +208,6 @@ export class BlastyLevelOne extends BasedLevel {
     this.drawBg()
 
     this.bMan.draw(this.cameraPos)
-    this.spider.draw(this.cameraPos)
-    this.spider2.draw(this.cameraPos)
 
     this.spiderGroup.map(spider => {
       spider.draw(this.cameraPos)

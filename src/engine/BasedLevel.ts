@@ -7,6 +7,7 @@ export interface BasedLevelType {
   preload: () => Promise<void>;
   initialize: () => void;
   update: () => void;
+  onResize: () => void;
   draw: () => void;
 }
 
@@ -26,5 +27,6 @@ export class BasedLevel {
   initialize() { }
   update() { }
   draw() { }
+  onResize() { }
   tearDown() { }
 }

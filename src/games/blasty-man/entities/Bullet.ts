@@ -12,6 +12,7 @@ export class Bullet extends BasedObject {
   traveled: number = 0
   lastShot: number = 0
   shotDelay: number = 200
+  entityTag: string = 'bullet'
 
   initialize() {}
 

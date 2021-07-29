@@ -28,6 +28,7 @@ export class BlastMan extends BasedObject {
 
   healthBar: any;
   health: number = 100;
+  entityTag: string = 'blastMan'
 
   async preload() {
     this.sprite = await createSprite({
