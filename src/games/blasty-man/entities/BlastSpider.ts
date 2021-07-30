@@ -1,7 +1,8 @@
 import { BasedObject } from "../../../engine/BasedObject";
 import BlastySpiderUrl from '../../../assets/blasty-man/blasty-spider-spritesheet.png'
+import BlastySpiderCakeUrl from '../../../assets/blasty-man/blasty-spider-spritesheet-cake.png'
 import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
-import { angleBetween, distanceBetween, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { angleBetween, distanceBetween, getRandomInt, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { HealthBar } from "../ui/HealthBar";
 import PF from 'pathfinding';
 
@@ -35,9 +36,13 @@ export class BlastSpider extends BasedObject {
     entityTag: string = 'spider'
 
     async preload() {
+      const spiderType = getRandomInt(2)
+      if(spiderType > 0) {
+        this.speed = 2
+      }
       this.sprite = await createSprite({
         c: this.gameRef.ctx,
-        sprite: BlastySpiderUrl,
+        sprite: spiderType > 0 ? BlastySpiderCakeUrl : BlastySpiderUrl,
         sx: 0,
         sy: 0,
         sWidth: this.width,

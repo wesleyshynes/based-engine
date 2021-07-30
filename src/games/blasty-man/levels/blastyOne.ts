@@ -31,13 +31,17 @@ export class BlastyLevelOne extends BasedLevel {
     await this.bMan.preload()
 
     this.spiderGroup = []
+    console.log(this.tileMap.roomList)
     for(let i = 0; i < this.tileMap.roomList.length; i++) {
       const roomInfo = this.tileMap.roomList[i]
+      console.log(roomInfo)
       const newSpider = new BlastSpider({key: `blastspider-${i}`, gameRef: this.gameRef})
-      newSpider.x = Math.floor((roomInfo.x + roomInfo.w)/2) * this.tileMap.tileSize
-      newSpider.y = Math.floor((roomInfo.y + roomInfo.h)/2) * this.tileMap.tileSize
+      newSpider.x = Math.floor((roomInfo.x*2 + roomInfo.w)/2) * this.tileMap.tileSize
+      newSpider.y = Math.floor((roomInfo.y*2 + roomInfo.h)/2) * this.tileMap.tileSize
+      console.log(newSpider)
       await newSpider.preload()
       if(this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: newSpider.x, y: newSpider.y})).color === 1) {
+        console.log('added')
         this.spiderGroup.push(newSpider)
       }
     }
