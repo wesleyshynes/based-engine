@@ -3,7 +3,7 @@ import { BlastMan } from "../entities/BlastMan";
 import { BlastSpider } from "../entities/BlastSpider";
 import { TouchKnob } from "../controls/TouchKnob";
 import { BlastyMap } from "../maps/BlastyMap";
-import { distanceBetween, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { distanceBetween, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 
 export class BlastyLevelOne extends BasedLevel {
 
@@ -165,12 +165,20 @@ export class BlastyLevelOne extends BasedLevel {
     }
 
     this.bMan.x += moveX
-    if(!this.tileMap.onMap(this.bMan.centerCoordinates()) || this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this.bMan.centerCoordinates())).color == 0) {
+    const bManCoords = this.bMan.centerCoordinates()
+    if(
+      !this.tileMap.onMap({x: bManCoords.x + (20 * relativeMultiplier(moveX)), y: bManCoords.y}) ||
+      this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x + (20 * relativeMultiplier(moveX)), y: bManCoords.y})).color == 0
+    ) {
       this.bMan.x -= moveX
     }
 
     this.bMan.y += moveY
-    if(!this.tileMap.onMap(this.bMan.centerCoordinates()) || this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this.bMan.centerCoordinates())).color == 0) {
+    const yyDis = (relativeMultiplier(moveY) > 0 ? 32 : -20)
+    if(
+      !this.tileMap.onMap({x: bManCoords.x, y: bManCoords.y + yyDis}) ||
+      this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x, y: bManCoords.y + yyDis})).color == 0
+    ) {
       this.bMan.y -= moveY
     }
 

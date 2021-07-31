@@ -7,6 +7,13 @@ export function getRandomInt(max: number) {
   return Math.floor(Math.random() * max);
 }
 
+export function relativeMultiplier(v: number = 0) {
+  if(v) {
+    return Math.abs(v)/v
+  }
+  return 0
+}
+
 export function getClickPosition(e: any) {
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left; //x position within the element.
