@@ -131,7 +131,7 @@ export class BasedGame implements BasedGameType {
 
     this.canvasElement.addEventListener('mousemove', e => {
       [this.mouseInfo.x, this.mouseInfo.y] = getClickPosition(e)
-      this.touchMode = false
+      // this.touchMode = false
     });
     window.addEventListener('mouseup', e => {
       this.mouseInfo.mouseDown = false;

@@ -26,8 +26,18 @@ export class BasedButton extends BasedObject {
   clickFunction: () => void = () => null
   holdFunction: () => void = () => null
 
+  touchId: string = ''
+
   initialize() { }
   update() {
+    if(this.gameRef.touchMode) {
+      this.checkTouch()
+    } else {
+      this.checkMouse()
+    }
+  }
+
+  checkMouse() {
     const x1 = this.x
     const y1 = this.y
     const x2 = this.x + this.width
@@ -45,6 +55,42 @@ export class BasedButton extends BasedObject {
       this.focused = false
     }
   }
+
+  checkTouch() {
+    // if(!this.hovered){
+      if (this.gameRef.touchInfo.length > 0) {
+        // let touchFound: any = {}
+        this.gameRef.touchInfo.forEach(t => {
+          const x1 = this.x
+          const y1 = this.y
+          const x2 = this.x + this.width
+          const y2 = this.y + this.height
+          const { x, y } = t
+          const hovered = x > x1 && x < x2 && y > y1 && y < y2
+          if(hovered) {
+            // touchFound = {...t}
+            // this.hovered = true
+            // this.touchId = t.id
+            this.clickFunction()
+          }
+        })
+      }
+    // }
+    // else {
+    //   const touchIndex = this.gameRef.touchInfo.filter(x => x.id === this.touchId)
+    //   if (touchIndex.length > 0) {
+    //     this.focused = true
+    //     this.holdFunction()
+    //   } else if(this.hovered) {
+    //     this.clickFunction()
+    //   } else {
+    //     this.focused = false
+    //     this.hovered = false
+    //     this.touchId = ''
+    //   }
+    // }
+  }
+
   draw() {
     drawBox({
       c: this.gameRef.ctx,

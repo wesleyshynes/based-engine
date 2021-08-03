@@ -4,13 +4,16 @@ import { BlastSpider } from "../entities/BlastSpider";
 import { TouchKnob } from "../controls/TouchKnob";
 import { BlastyMap } from "../maps/BlastyMap";
 import { distanceBetween, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { BasedButton } from "../../../engine/BasedButton";
 
 export class BlastyLevelOne extends BasedLevel {
 
   bMan: any;
   spiderGroup: any[];
+
   moveKnob: any;
   aimKnob: any;
+  swapWeaponBtn: any;
 
   tileMap: any;
 
@@ -63,6 +66,20 @@ export class BlastyLevelOne extends BasedLevel {
 
     this.moveKnob.initialize()
     this.aimKnob.initialize()
+
+    this.swapWeaponBtn = new BasedButton({
+      key: `swap-wpn-button`,
+      gameRef: this.gameRef,
+    })
+    this.swapWeaponBtn.fillColor = '#ce192b'
+    this.swapWeaponBtn.x = this.gameRef.gameWidth - 100
+    this.swapWeaponBtn.y = 40
+    this.swapWeaponBtn.buttonText = this.bMan.mode
+    this.swapWeaponBtn.width = 80
+    this.swapWeaponBtn.clickFunction = () => {
+      this.bMan.switchMode(this.bMan.mode === 'melee' ? 'ranged' : 'melee')
+      this.swapWeaponBtn.buttonText = this.bMan.mode
+    }
   }
 
   handleSounds() { }
@@ -71,6 +88,7 @@ export class BlastyLevelOne extends BasedLevel {
     this.updateBg()
     this.handleSounds()
 
+    this.swapWeaponBtn.update()
     this.tileMap.removeOccupant({...this.bMan.centerCoordinates(), key: this.bMan.key})
     this.tileMap.removeOccupant(this.bMan.gun1Bullet)
     this.tileMap.removeOccupant(this.bMan.gun2Bullet)
@@ -79,6 +97,8 @@ export class BlastyLevelOne extends BasedLevel {
     this.tileMap.addOccupant({...this.bMan.centerCoordinates(), objectKey: this.bMan.objectKey})
     this.tileMap.addOccupant(this.bMan.gun1Bullet)
     this.tileMap.addOccupant(this.bMan.gun2Bullet)
+
+
 
     this.spiderGroup.map(spider => {
       this.tileMap.removeOccupant(spider)
@@ -184,11 +204,15 @@ export class BlastyLevelOne extends BasedLevel {
         x: (this.aimKnob.knobCoord.x/this.aimKnob.maxOffset) * 1000 + bx,
         y: (this.aimKnob.knobCoord.y/this.aimKnob.maxOffset) * 1000 + by,
       })
+      this.bMan.attacking = true
     } else if(!this.gameRef.touchMode) {
+      this.bMan.attacking = this.gameRef.mouseInfo.mouseDown
       this.bMan.setTarget({
         x: this.gameRef.mouseInfo.x - this.cameraPos.x,
         y: this.gameRef.mouseInfo.y - this.cameraPos.y,
       })
+    } else {
+      this.bMan.attacking = false
     }
 
   }
@@ -244,10 +268,12 @@ export class BlastyLevelOne extends BasedLevel {
     //   align: 'left',
     //   fontSize: 16
     // })
-    if(this.gameRef.touchMode) {
+
+    // if(this.gameRef.touchMode) {
       this.moveKnob.draw()
       this.aimKnob.draw()
-    }
+    // }
+    this.swapWeaponBtn.draw()
   }
 
   tearDown() { }

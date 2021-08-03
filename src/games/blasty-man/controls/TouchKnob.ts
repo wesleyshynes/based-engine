@@ -61,31 +61,9 @@ export class TouchKnob extends BasedObject {
   }
 
   checkTouch() {
-
     if (!this.knobActive) {
       if (this.gameRef.touchInfo.length > 0) {
-        let touchFound: any = {}
-        this.gameRef.touchInfo.forEach(t => {
-          const x1 = this.x
-          const y1 = this.y
-          const x2 = this.x + this.width
-          const y2 = this.y + this.height
-          const { x, y } = t
-          const hovered = x > x1 && x < x2 && y > y1 && y < y2
-          if(hovered) {
-            touchFound = {...t}
-            this.knobActive = true
-            this.touchId = t.id
-          }
-        })
-
-        if(this.knobActive && touchFound.x && touchFound.y) {
-          this.knobCoord = {
-            x: 0,
-            y: 0
-          }
-          this.knobCenter = touchFound
-        }
+        this.findTouch()
       }
     } else {
       const touchIndex = this.gameRef.touchInfo.filter(x => x.id === this.touchId)
@@ -96,7 +74,33 @@ export class TouchKnob extends BasedObject {
       } else {
         this.knobActive = false
         this.touchId = ''
+        this.findTouch()
       }
+    }
+  }
+
+  findTouch() {
+    let touchFound: any = {}
+    this.gameRef.touchInfo.forEach(t => {
+      const x1 = this.x
+      const y1 = this.y
+      const x2 = this.x + this.width
+      const y2 = this.y + this.height
+      const { x, y } = t
+      const hovered = x > x1 && x < x2 && y > y1 && y < y2
+      if(hovered) {
+        touchFound = {...t}
+        this.knobActive = true
+        this.touchId = t.id
+      }
+    })
+
+    if(this.knobActive && touchFound.x && touchFound.y) {
+      this.knobCoord = {
+        x: 0,
+        y: 0
+      }
+      this.knobCenter = touchFound
     }
   }
 

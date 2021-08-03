@@ -39,6 +39,7 @@ export class BlastMan extends BasedObject {
   lastTargetUpdate: number = 0;
   targetUpdateDelay: number = 100;
 
+  attacking: boolean = false;
 
   async preload() {
     this.sprite = await createSprite({
@@ -117,7 +118,7 @@ export class BlastMan extends BasedObject {
     this.gun1.setTarget(this.target)
     this.gun1.update()
 
-    if(!this.gun1Bullet.active && this.gun1.onTarget) {
+    if(!this.gun1Bullet.active && this.gun1.onTarget && this.attacking) {
       this.gun1Bullet.fire({
         x: this.gun1.gunTip.x + this.gun1.x,
         y: this.gun1.gunTip.y + this.gun1.y
@@ -129,7 +130,7 @@ export class BlastMan extends BasedObject {
     this.gun2.setTarget(this.target)
     this.gun2.update()
 
-    if(!this.gun2Bullet.active && this.gun2.onTarget) {
+    if(!this.gun2Bullet.active && this.gun2.onTarget && this.attacking) {
       this.gun2Bullet.fire({
         x: this.gun2.gunTip.x + this.gun2.x,
         y: this.gun2.gunTip.y + this.gun2.y
