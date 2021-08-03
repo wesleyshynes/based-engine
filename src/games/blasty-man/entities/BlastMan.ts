@@ -5,6 +5,7 @@ import { Gun } from "./Gun";
 import { Bullet } from "./Bullet";
 import { XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { HealthBar } from "../ui/HealthBar";
+import { Sword } from "./Sword";
 
 
 export class BlastMan extends BasedObject {
@@ -25,10 +26,19 @@ export class BlastMan extends BasedObject {
 
   gun1Bullet: any;
   gun2Bullet: any;
+  sword: any;
 
   healthBar: any;
   health: number = 100;
   entityTag: string = 'blastMan'
+
+  mode: string = 'melee'
+  lastSwitch: number = 0
+  switchDelay: number = 300
+
+  lastTargetUpdate: number = 0;
+  targetUpdateDelay: number = 100;
+
 
   async preload() {
     this.sprite = await createSprite({
@@ -56,6 +66,12 @@ export class BlastMan extends BasedObject {
     this.gun2.x = 130
     this.gun2.y = 100
     await this.gun2.preload()
+
+    this.sword = new Sword({ key: 'sword1', gameRef: this.gameRef })
+    this.sword.x = this.centerCoordinates().x
+    this.sword.y = this.centerCoordinates().y
+    await this.sword.preload()
+
   }
 
   initialize() {
@@ -78,11 +94,25 @@ export class BlastMan extends BasedObject {
     const cX = this.x + this.width / 2
     const cY = this.y + this.height / 2
 
-    this.target =  !this.gameRef.touchMode ? {
-      x: this.gameRef.mouseInfo.x - cameraPos.x,
-      y: this.gameRef.mouseInfo.y - cameraPos.y,
-    } : this.target
 
+
+    if(this.mode === 'melee') {
+      this.handleMelee(cX,cY)
+    } else {
+      this.handleRanged(cX,cY)
+    }
+
+    this.updateSprite()
+  }
+
+  setTarget(newTarget: XYCoordinateType) {
+    // if(this.lastSwitch + this.targetUpdateDelay < this.gameRef.lastUpdate) {
+      this.target =  newTarget
+      this.lastTargetUpdate = this.gameRef.lastUpdate
+    // }
+  }
+
+  handleRanged(cX: number, cY: number) {
     this.gun1.moveTo({ x: cX - 15, y: cY + 5 })
     this.gun1.setTarget(this.target)
     this.gun1.update()
@@ -106,8 +136,22 @@ export class BlastMan extends BasedObject {
       }, this.target)
     }
     this.gun2Bullet.update()
+  }
 
-    this.updateSprite()
+  handleMelee(cX: number, cY: number) {
+    this.sword.moveTo({ x: cX, y: cY })
+    this.sword.setTarget(this.target)
+    this.sword.update()
+    // if(this.sword.onTarget) {
+      // do something
+    // }
+  }
+
+  switchMode(mode: string) {
+    if(this.lastSwitch + this.switchDelay < this.gameRef.lastUpdate){
+      this.mode = mode
+      this.lastSwitch = this.gameRef.lastUpdate
+    }
   }
 
   updateSprite() {
@@ -145,16 +189,20 @@ export class BlastMan extends BasedObject {
       drawImage(this.sprite)
     })
 
-    if (this.target.x > this.x) {
-      this.gun2.draw(cameraOffset)
-      this.gun1.draw(cameraOffset)
+
+
+    if(this.mode === 'melee') {
+      this.sword.draw(cameraOffset)
     } else {
-      this.gun1.draw(cameraOffset)
-      this.gun2.draw(cameraOffset)
+      if (this.target.x > this.x) {
+        this.gun2.draw(cameraOffset)
+        this.gun1.draw(cameraOffset)
+      } else {
+        this.gun1.draw(cameraOffset)
+        this.gun2.draw(cameraOffset)
+      }
+      this.gun1Bullet.draw(cameraOffset)
+      this.gun2Bullet.draw(cameraOffset)
     }
-
-    this.gun1Bullet.draw(cameraOffset)
-    this.gun2Bullet.draw(cameraOffset)
-
   }
 }

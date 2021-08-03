@@ -31,17 +31,17 @@ export class BlastyLevelOne extends BasedLevel {
     await this.bMan.preload()
 
     this.spiderGroup = []
-    console.log(this.tileMap.roomList)
+    // console.log(this.tileMap.roomList)
     for(let i = 0; i < this.tileMap.roomList.length; i++) {
       const roomInfo = this.tileMap.roomList[i]
-      console.log(roomInfo)
+      // console.log(roomInfo)
       const newSpider = new BlastSpider({key: `blastspider-${i}`, gameRef: this.gameRef})
       newSpider.x = Math.floor((roomInfo.x*2 + roomInfo.w)/2) * this.tileMap.tileSize
       newSpider.y = Math.floor((roomInfo.y*2 + roomInfo.h)/2) * this.tileMap.tileSize
-      console.log(newSpider)
+      // console.log(newSpider)
       await newSpider.preload()
       if(this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: newSpider.x, y: newSpider.y})).color === 1) {
-        console.log('added')
+        // console.log('added')
         this.spiderGroup.push(newSpider)
       }
     }
@@ -74,24 +74,21 @@ export class BlastyLevelOne extends BasedLevel {
     this.tileMap.removeOccupant({...this.bMan.centerCoordinates(), key: this.bMan.key})
     this.tileMap.removeOccupant(this.bMan.gun1Bullet)
     this.tileMap.removeOccupant(this.bMan.gun2Bullet)
+    this.moveCharacter()
+    this.bMan.update(this.cameraPos)
+    this.tileMap.addOccupant({...this.bMan.centerCoordinates(), objectKey: this.bMan.objectKey})
+    this.tileMap.addOccupant(this.bMan.gun1Bullet)
+    this.tileMap.addOccupant(this.bMan.gun2Bullet)
 
     this.spiderGroup.map(spider => {
       this.tileMap.removeOccupant(spider)
     })
-
-    this.bMan.update(this.cameraPos)
-
     this.spiderGroup.map(spider => {
       spider.update()
       spider.target = this.bMan.centerCoordinates()
       this.tileMap.addOccupant(spider)
     })
 
-    this.moveCharacter()
-
-    this.tileMap.addOccupant({...this.bMan.centerCoordinates(), objectKey: this.bMan.objectKey})
-    this.tileMap.addOccupant(this.bMan.gun1Bullet)
-    this.tileMap.addOccupant(this.bMan.gun2Bullet)
 
     // collision checks
     this.spiderGroup.map(spider => {
@@ -102,7 +99,7 @@ export class BlastyLevelOne extends BasedLevel {
         }
         if(this.gameRef.basedObjectRefs[occupants[oc].objectKey]) {
           const otherObject = this.gameRef.basedObjectRefs[occupants[oc].objectKey]
-          if(otherObject.entityTag === 'bullet' && otherObject.active && distanceBetween(otherObject, spider) <= 16) {
+          if(this.bMan.mode !== 'melee' && otherObject.entityTag === 'bullet' && otherObject.active && distanceBetween(otherObject, spider) <= 16) {
             otherObject.active = false
             spider.healthBar.tick(-5)
           }
@@ -149,19 +146,15 @@ export class BlastyLevelOne extends BasedLevel {
     if (pressedKeys['KeyS'] || pressedKeys['ArrowDown']) {
       moveY += speedFactor
     }
+    if (pressedKeys['KeyX']) {
+      this.bMan.switchMode(this.bMan.mode === 'melee' ? 'ranged' : 'melee')
+    }
 
     this.moveKnob.update()
     if(this.moveKnob.knobActive) {
       const speedFactor = this.bMan.speed * this.gameRef.diffMulti
       moveX += (this.moveKnob.knobCoord.x/this.moveKnob.maxOffset)*speedFactor
       moveY += (this.moveKnob.knobCoord.y/this.moveKnob.maxOffset)*speedFactor
-    }
-
-    this.aimKnob.update()
-    if(this.aimKnob.knobActive) {
-      const{x: bx, y: by} = this.bMan.centerCoordinates()
-      this.bMan.target.x = (this.aimKnob.knobCoord.x/this.aimKnob.maxOffset) * 1000 + bx
-      this.bMan.target.y = (this.aimKnob.knobCoord.y/this.aimKnob.maxOffset)* 1000 + by
     }
 
     this.bMan.x += moveX
@@ -180,6 +173,22 @@ export class BlastyLevelOne extends BasedLevel {
       this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x, y: bManCoords.y + yyDis})).color == 0
     ) {
       this.bMan.y -= moveY
+    }
+
+    this.aimKnob.update()
+    if(this.aimKnob.knobActive) {
+      const{x: bx, y: by} = this.bMan.centerCoordinates()
+      // this.bMan.target.x = (this.aimKnob.knobCoord.x/this.aimKnob.maxOffset) * 1000 + bx
+      // this.bMan.target.y = (this.aimKnob.knobCoord.y/this.aimKnob.maxOffset)* 1000 + by
+      this.bMan.setTarget({
+        x: (this.aimKnob.knobCoord.x/this.aimKnob.maxOffset) * 1000 + bx,
+        y: (this.aimKnob.knobCoord.y/this.aimKnob.maxOffset) * 1000 + by,
+      })
+    } else if(!this.gameRef.touchMode) {
+      this.bMan.setTarget({
+        x: this.gameRef.mouseInfo.x - this.cameraPos.x,
+        y: this.gameRef.mouseInfo.y - this.cameraPos.y,
+      })
     }
 
   }
