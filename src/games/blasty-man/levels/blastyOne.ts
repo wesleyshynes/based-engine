@@ -269,10 +269,10 @@ export class BlastyLevelOne extends BasedLevel {
     //   fontSize: 16
     // })
 
-    // if(this.gameRef.touchMode) {
+    if(this.gameRef.touchMode) {
       this.moveKnob.draw()
       this.aimKnob.draw()
-    // }
+    }
     this.swapWeaponBtn.draw()
   }
 
