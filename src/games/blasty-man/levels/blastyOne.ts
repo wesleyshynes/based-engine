@@ -198,8 +198,6 @@ export class BlastyLevelOne extends BasedLevel {
     this.aimKnob.update()
     if(this.aimKnob.knobActive) {
       const{x: bx, y: by} = this.bMan.centerCoordinates()
-      // this.bMan.target.x = (this.aimKnob.knobCoord.x/this.aimKnob.maxOffset) * 1000 + bx
-      // this.bMan.target.y = (this.aimKnob.knobCoord.y/this.aimKnob.maxOffset)* 1000 + by
       this.bMan.setTarget({
         x: (this.aimKnob.knobCoord.x/this.aimKnob.maxOffset) * 1000 + bx,
         y: (this.aimKnob.knobCoord.y/this.aimKnob.maxOffset) * 1000 + by,
