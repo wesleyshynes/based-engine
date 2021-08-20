@@ -79,7 +79,7 @@ export class BlastMan extends BasedObject {
     this.healthBar = new HealthBar({key: 'blasty-health', gameRef: this.gameRef})
     this.healthBar.width = this.width
     this.healthBar.yOffset = -this.height/2 - 5
-    this.healthBar.current = 100
+    this.healthBar.current = this.health
 
     this.gun1Bullet = new Bullet({key: 'gun1Bullet', gameRef: this.gameRef})
     this.gun2Bullet = new Bullet({key: 'gun2Bullet', gameRef: this.gameRef})

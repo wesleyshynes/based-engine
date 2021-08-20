@@ -99,19 +99,24 @@ export class BlastyLevelOne extends BasedLevel {
     this.tileMap.addOccupant(this.bMan.gun2Bullet)
 
 
-
+    let liveSpiders = 0
     this.spiderGroup.map(spider => {
       this.tileMap.removeOccupant(spider)
     })
     this.spiderGroup.map(spider => {
-      spider.update()
-      spider.target = this.bMan.centerCoordinates()
-      this.tileMap.addOccupant(spider)
+      // this.tileMap.removeOccupant(spider)
+      if(spider.healthBar.current > 0) {
+        spider.update()
+        spider.target = this.bMan.centerCoordinates()
+        this.tileMap.addOccupant(spider)
+        liveSpiders++
+      }
     })
 
 
     // collision checks
     this.spiderGroup.map(spider => {
+      if (spider.healthBar.current < 1) {return}
       const occupants = this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(spider)).occupants
       Object.keys(occupants).map(oc => {
         if(occupants[oc].objectKey == spider.objectKey) {
@@ -131,6 +136,9 @@ export class BlastyLevelOne extends BasedLevel {
     })
 
     this.updateCamera()
+    if(this.bMan.healthBar.current < 1 || liveSpiders === 0){
+      this.gameRef.loadLevel('start-screen')
+    }
   }
 
   onResize() {
@@ -253,6 +261,7 @@ export class BlastyLevelOne extends BasedLevel {
     this.bMan.draw(this.cameraPos)
 
     this.spiderGroup.map(spider => {
+      if (spider.healthBar.current < 1) {return}
       spider.draw(this.cameraPos)
     })
 

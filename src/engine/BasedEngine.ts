@@ -46,6 +46,8 @@ export class BasedGame implements BasedGameType {
 
   soundPlayer: BasedSounds;
 
+  animFrame: any;
+
   gameWidth: number;
   gameHeight: number;
 
@@ -68,6 +70,7 @@ export class BasedGame implements BasedGameType {
 
   levels: { [key: string]: BasedLevel } = {}
   activeLevel: string = '';
+  targetLevel: string = '';
 
   basedObjectRefs: any = {}
 
@@ -184,15 +187,11 @@ export class BasedGame implements BasedGameType {
     this.soundPlayer.initialize()
     this.gameActive = true
 
-    for (let i = 0; i < Object.keys(this.levels).length; i++) {
-      const lvl = Object.keys(this.levels)[i]
-      if (this.levels[lvl].preload) {
-        await this.levels[lvl].preload()
-      }
-    }
+    this.targetLevel = this.activeLevel
 
+    await this.levels[this.activeLevel].preload()
     this.levels[this.activeLevel].initialize()
-    window.requestAnimationFrame(this.gameLoop)
+    this.animFrame = window.requestAnimationFrame(this.gameLoop)
   }
 
   update() {
@@ -229,17 +228,28 @@ export class BasedGame implements BasedGameType {
   }
 
   loadLevel(level: string) {
+    this.targetLevel = level;
+  }
+
+  async handleLevelLoad() {
+    this.drawLoading()
     this.levels[this.activeLevel].tearDown()
-    this.activeLevel = level
+    this.activeLevel = this.targetLevel
+    await this.levels[this.activeLevel].preload()
     this.levels[this.activeLevel].initialize()
+    this.animFrame = window.requestAnimationFrame(this.gameLoop)
   }
 
   gameLoop() {
     // console.log('game loop')
-    this.update()
-    this.draw()
     if (this.gameActive) {
-      window.requestAnimationFrame(this.gameLoop)
+      if(this.activeLevel === this.targetLevel) {
+        this.update()
+        this.draw()
+        this.animFrame = window.requestAnimationFrame(this.gameLoop)
+      } else {
+        this.handleLevelLoad()
+      }
     }
   }
 
