@@ -80,6 +80,8 @@ export class BlastyLevelOne extends BasedLevel {
       this.bMan.switchMode(this.bMan.mode === 'melee' ? 'ranged' : 'melee')
       this.swapWeaponBtn.buttonText = this.bMan.mode
     }
+
+    console.log(this.gameRef.basedObjectRefs)
   }
 
   handleSounds() { }
@@ -89,14 +91,25 @@ export class BlastyLevelOne extends BasedLevel {
     this.handleSounds()
 
     this.swapWeaponBtn.update()
-    this.tileMap.removeOccupant({...this.bMan.centerCoordinates(), key: this.bMan.key})
+    this.tileMap.removeOccupant({...this.bMan.centerCoordinates(), objectKey: this.bMan.objectKey})
     this.tileMap.removeOccupant(this.bMan.gun1Bullet)
     this.tileMap.removeOccupant(this.bMan.gun2Bullet)
+    this.tileMap.removeOccupant({
+      x: this.bMan.sword.x + this.bMan.sword.swordTip.x,
+      y: this.bMan.sword.y + this.bMan.sword.swordTip.y,
+      objectKey: this.bMan.sword.objectKey
+    })
     this.moveCharacter()
     this.bMan.update(this.cameraPos)
     this.tileMap.addOccupant({...this.bMan.centerCoordinates(), objectKey: this.bMan.objectKey})
     this.tileMap.addOccupant(this.bMan.gun1Bullet)
     this.tileMap.addOccupant(this.bMan.gun2Bullet)
+    this.tileMap.addOccupant({
+      x: this.bMan.sword.x + this.bMan.sword.swordTip.x,
+      y: this.bMan.sword.y + this.bMan.sword.swordTip.y,
+      objectKey: this.bMan.sword.objectKey
+    })
+
 
 
     let liveSpiders = 0
@@ -126,6 +139,10 @@ export class BlastyLevelOne extends BasedLevel {
           const otherObject = this.gameRef.basedObjectRefs[occupants[oc].objectKey]
           if(this.bMan.mode !== 'melee' && otherObject.entityTag === 'bullet' && otherObject.active && distanceBetween(otherObject, spider) <= 16) {
             otherObject.active = false
+            spider.healthBar.tick(-5)
+          }
+          if(this.bMan.mode === 'melee' && otherObject.entityTag === 'sword' && /*otherObject.active &&*/ distanceBetween(occupants[oc], spider) <= 16) {
+            // otherObject.active = false
             spider.healthBar.tick(-5)
           }
           if(otherObject.entityTag === 'blastMan' && distanceBetween(otherObject.centerCoordinates(), spider) <= 16) {

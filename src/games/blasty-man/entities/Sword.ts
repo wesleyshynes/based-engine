@@ -19,6 +19,7 @@ export class Sword extends BasedObject {
   handPos: XYCoordinateType = {x: 0, y: 0 }
 
   onTarget: boolean = false
+  entityTag: string = 'sword'
 
   async preload() {
     this.sprite = await createSprite({

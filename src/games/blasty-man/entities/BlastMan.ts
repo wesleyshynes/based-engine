@@ -68,7 +68,7 @@ export class BlastMan extends BasedObject {
     this.gun2.y = 100
     await this.gun2.preload()
 
-    this.sword = new Sword({ key: 'sword1', gameRef: this.gameRef })
+    this.sword = new Sword({ key: 'sword', gameRef: this.gameRef })
     this.sword.x = this.centerCoordinates().x
     this.sword.y = this.centerCoordinates().y
     await this.sword.preload()

@@ -64,7 +64,7 @@ export class BlastyMap extends BasedObject {
           y: this.tileSize*i + cameraOffset.y,
           // fillColor: Object.keys(this.tileMap[i][j].occupants).length > 0 ? 'blue' : ['#333','#222'][this.tileMap[i][j].color],
           // strokeColor: Object.keys(this.tileMap[i][j].occupants).length > 0 ? 'blue' : ['#333','#222'][this.tileMap[i][j].color],
-          fillColor: ['#333','#222'][this.tileMap[i][j].color],
+          fillColor: this.tileMap[i][j].occupants['sword']? 'blue' : ['#333','#222'][this.tileMap[i][j].color],
           strokeColor: ['#333','#222'][this.tileMap[i][j].color],
           strokeWidth: 1
         })

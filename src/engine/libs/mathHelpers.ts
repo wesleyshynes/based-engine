@@ -66,3 +66,26 @@ export function radToDeg(rads:number) {
 export function degToRad(deg:number) {
   return deg * (Math.PI/180);
 }
+
+
+export function addVectors(v1: XYCoordinateType, v2: XYCoordinateType) {
+  return {
+    x: v1.x + v2.x,
+    y: v1.y + v2.y
+  }
+}
+
+export function subtractVectors(v1: XYCoordinateType, v2: XYCoordinateType) {
+  return {
+    x: v1.x - v2.x,
+    y: v1.y - v2.y
+  }
+}
+
+export function normalizeVector(v: XYCoordinateType) {
+  const length = Math.sqrt(v.x*v.x+v.y*v.y); //calculating length
+  return {
+    x: v.x/length,
+    y: v.y/length
+  }
+}
