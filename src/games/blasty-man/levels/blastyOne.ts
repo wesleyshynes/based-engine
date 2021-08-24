@@ -99,6 +99,11 @@ export class BlastyLevelOne extends BasedLevel {
       y: this.bMan.sword.y + this.bMan.sword.swordTip.y,
       objectKey: this.bMan.sword.objectKey
     })
+    this.tileMap.removeOccupant({
+      x: this.bMan.sword.x + this.bMan.sword.handPos.x,
+      y: this.bMan.sword.y + this.bMan.sword.handPos.y,
+      objectKey: 'swordHand'
+    })
     this.moveCharacter()
     this.bMan.update(this.cameraPos)
     this.tileMap.addOccupant({...this.bMan.centerCoordinates(), objectKey: this.bMan.objectKey})
@@ -108,6 +113,11 @@ export class BlastyLevelOne extends BasedLevel {
       x: this.bMan.sword.x + this.bMan.sword.swordTip.x,
       y: this.bMan.sword.y + this.bMan.sword.swordTip.y,
       objectKey: this.bMan.sword.objectKey
+    })
+    this.tileMap.addOccupant({
+      x: this.bMan.sword.x + this.bMan.sword.handPos.x,
+      y: this.bMan.sword.y + this.bMan.sword.handPos.y,
+      objectKey: 'swordHand'
     })
 
 
@@ -141,7 +151,7 @@ export class BlastyLevelOne extends BasedLevel {
             otherObject.active = false
             spider.healthBar.tick(-5)
           }
-          if(this.bMan.mode === 'melee' && otherObject.entityTag === 'sword' && /*otherObject.active &&*/ distanceBetween(occupants[oc], spider) <= 16) {
+          if(this.bMan.mode === 'melee' && (oc === 'sword' || oc === 'swordHand') && /*otherObject.active &&*/ distanceBetween(occupants[oc], spider) <= 16) {
             // otherObject.active = false
             spider.healthBar.tick(-5)
           }
