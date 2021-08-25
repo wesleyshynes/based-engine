@@ -15,7 +15,10 @@ export class BlastyMap extends BasedObject {
   pfGrid: any;
   roomList: any[];
 
+  occupantRef: any = {}
+
   async preload() {
+    this.occupantRef = {}
     const x = this.width / this.tileSize
     const y = this.height / this.tileSize
     const newMap = []
@@ -94,6 +97,10 @@ export class BlastyMap extends BasedObject {
   removeOccupant(occupant: {x: number, y: number, objectKey: string}){
     if(!this.onMap(occupant)) return
     const {x,y} = this.getMapCoord(occupant)
+    if(this.occupantRef[occupant.objectKey]) {
+      const {x:bx,y:by} = this.getMapCoord(this.occupantRef[occupant.objectKey])
+      delete this.tileMap[by][bx].occupants[occupant.objectKey]
+    }
     delete this.tileMap[y][x].occupants[occupant.objectKey]
     if(Object.keys(this.tileMap[y][x].occupants) && this.tileMap[y][x].color == 1) {
       this.pfGrid.setWalkableAt(x, y, true)
@@ -103,6 +110,7 @@ export class BlastyMap extends BasedObject {
   addOccupant(occupant: {x: number, y: number, objectKey: string}){
     if(!this.onMap(occupant)) return
     const {x,y} = this.getMapCoord(occupant)
+    this.occupantRef[occupant.objectKey] = occupant
     this.tileMap[y][x].occupants[occupant.objectKey] = occupant
     if(this.tileMap[y][x].color == 1) {
       this.pfGrid.setWalkableAt(x, y, false)

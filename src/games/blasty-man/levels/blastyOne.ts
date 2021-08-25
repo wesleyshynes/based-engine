@@ -171,7 +171,34 @@ export class BlastyLevelOne extends BasedLevel {
               }
             }
             if(otherObject.entityTag === 'blastMan' && distanceBetween(otherObject.centerCoordinates(), spider) <= 16) {
-              otherObject.healthBar.tick(-5)
+              // otherObject.healthBar.tick(-5)
+              const ticked = otherObject.healthBar.tick(-5)
+              if(ticked) {
+                // const bManC = this.bMan.centerCoordinates()
+                // this.tileMap.removeOccupant({...this.bMan.centerCoordinates(), objectKey: this.bMan.objectKey})
+
+                const pushSpot = pointOnCircle(angleBetween(spider, otherObject.centerCoordinates()), 10)
+
+                this.bMan.x += pushSpot.x
+                let bManCoords = this.bMan.centerCoordinates()
+                if(
+                  !this.tileMap.onMap({x: bManCoords.x + (20 * relativeMultiplier(pushSpot.x)), y: bManCoords.y}) ||
+                  this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x + (20 * relativeMultiplier(pushSpot.x)), y: bManCoords.y})).color == 0
+                ) {
+                  this.bMan.x -= pushSpot.x
+                }
+                this.bMan.y += pushSpot.y
+                bManCoords = this.bMan.centerCoordinates()
+                const yyDis = (relativeMultiplier(pushSpot.y) > 0 ? 32 : -20)
+                if(
+                  !this.tileMap.onMap({x: bManCoords.x, y: bManCoords.y + yyDis}) ||
+                  this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x, y: bManCoords.y + yyDis})).color == 0
+                ) {
+                  this.bMan.y -= pushSpot.y
+                }
+                // this.tileMap.addOccupant({...this.bMan.centerCoordinates(), objectKey: this.bMan.objectKey})
+
+              }
             }
           }
         })
@@ -240,15 +267,15 @@ export class BlastyLevelOne extends BasedLevel {
     }
 
     this.bMan.x += moveX
-    const bManCoords = this.bMan.centerCoordinates()
+    let bManCoords = this.bMan.centerCoordinates()
     if(
       !this.tileMap.onMap({x: bManCoords.x + (20 * relativeMultiplier(moveX)), y: bManCoords.y}) ||
       this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x + (20 * relativeMultiplier(moveX)), y: bManCoords.y})).color == 0
     ) {
       this.bMan.x -= moveX
     }
-
     this.bMan.y += moveY
+    bManCoords = this.bMan.centerCoordinates()
     const yyDis = (relativeMultiplier(moveY) > 0 ? 32 : -20)
     if(
       !this.tileMap.onMap({x: bManCoords.x, y: bManCoords.y + yyDis}) ||
