@@ -12,6 +12,7 @@ export class Sword extends BasedObject {
 
   angle: number = 0
   rotateSpeed: number = 10
+  currentSpeed: number = 0
 
   target: XYCoordinateType = { x: 0, y: 0 }
 
@@ -58,6 +59,8 @@ export class Sword extends BasedObject {
     }
     this.handPos = pointOnCircle(degToRad(this.angle), 16)
     this.swordTip = pointOnCircle(degToRad(this.angle), 56)
+
+    this.currentSpeed = Math.abs(rotDir)
 
     const enemyAnglePos = pointOnCircle(angleBetween(this, this.target), 56)
     const shootingPos = pointOnCircle(degToRad(this.angle), 56)

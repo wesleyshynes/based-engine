@@ -3,7 +3,7 @@ import { BlastMan } from "../entities/BlastMan";
 import { BlastSpider } from "../entities/BlastSpider";
 import { TouchKnob } from "../controls/TouchKnob";
 import { BlastyMap } from "../maps/BlastyMap";
-import { distanceBetween, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { angleBetween, distanceBetween, pointOnCircle, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { BasedButton } from "../../../engine/BasedButton";
 
 export class BlastyLevelOne extends BasedLevel {
@@ -130,6 +130,40 @@ export class BlastyLevelOne extends BasedLevel {
       // this.tileMap.removeOccupant(spider)
       if(spider.healthBar.current > 0) {
         spider.update()
+
+        const occupants = this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(spider)).occupants
+        Object.keys(occupants).map(oc => {
+          if(occupants[oc].objectKey == spider.objectKey) {
+            return
+          }
+          if(this.gameRef.basedObjectRefs[occupants[oc].objectKey]) {
+            const otherObject = this.gameRef.basedObjectRefs[occupants[oc].objectKey]
+            if(this.bMan.mode !== 'melee' && otherObject.entityTag === 'bullet' && otherObject.active && distanceBetween(otherObject, spider) <= 16) {
+              otherObject.active = false
+              spider.healthBar.tick(-5)
+            }
+            if(this.bMan.mode === 'melee' && (oc === 'sword' || oc === 'swordHand') && /*otherObject.active &&*/ distanceBetween(occupants[oc], spider) <= 16) {
+              // otherObject.active = false
+              const ticked = spider.healthBar.tick(this.bMan.sword.currentSpeed > 5 ? -30 : -5)
+              if(ticked) {
+                // const bManC = this.bMan.centerCoordinates()
+                const pushSpot = pointOnCircle(angleBetween(occupants[oc], spider), 10)
+                spider.x += pushSpot.x
+                if(spider.tileMap && (!spider.tileMap.onMap(spider) || spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).color == 0)) {
+                  spider.x -= pushSpot.x
+                }
+                spider.y += pushSpot.y
+                if(spider.tileMap && (!spider.tileMap.onMap(spider) || spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).color == 0)) {
+                  spider.y -= pushSpot.y
+                }
+              }
+            }
+            if(otherObject.entityTag === 'blastMan' && distanceBetween(otherObject.centerCoordinates(), spider) <= 16) {
+              otherObject.healthBar.tick(-5)
+            }
+          }
+        })
+
         spider.target = this.bMan.centerCoordinates()
         this.tileMap.addOccupant(spider)
         liveSpiders++
@@ -137,30 +171,11 @@ export class BlastyLevelOne extends BasedLevel {
     })
 
 
-    // collision checks
-    this.spiderGroup.map(spider => {
-      if (spider.healthBar.current < 1) {return}
-      const occupants = this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(spider)).occupants
-      Object.keys(occupants).map(oc => {
-        if(occupants[oc].objectKey == spider.objectKey) {
-          return
-        }
-        if(this.gameRef.basedObjectRefs[occupants[oc].objectKey]) {
-          const otherObject = this.gameRef.basedObjectRefs[occupants[oc].objectKey]
-          if(this.bMan.mode !== 'melee' && otherObject.entityTag === 'bullet' && otherObject.active && distanceBetween(otherObject, spider) <= 16) {
-            otherObject.active = false
-            spider.healthBar.tick(-5)
-          }
-          if(this.bMan.mode === 'melee' && (oc === 'sword' || oc === 'swordHand') && /*otherObject.active &&*/ distanceBetween(occupants[oc], spider) <= 16) {
-            // otherObject.active = false
-            spider.healthBar.tick(-5)
-          }
-          if(otherObject.entityTag === 'blastMan' && distanceBetween(otherObject.centerCoordinates(), spider) <= 16) {
-            otherObject.healthBar.tick(-5)
-          }
-        }
-      })
-    })
+    // // collision checks
+    // this.spiderGroup.map(spider => {
+    //   if (spider.healthBar.current < 1) {return}
+    //
+    // })
 
     this.updateCamera()
     if(this.bMan.healthBar.current < 1 || liveSpiders === 0){

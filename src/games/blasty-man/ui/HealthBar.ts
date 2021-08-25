@@ -20,7 +20,9 @@ export class HealthBar extends BasedObject {
       if(this.current < 0) this.current = 0
       if(this.current > this.max) this.current = this.max
       this.lastTick = this.gameRef.lastUpdate
+      return true
     }
+    return false
   }
 
   draw(cameraOffset: {x: number, y: number} = {x: 0, y: 0}) {
