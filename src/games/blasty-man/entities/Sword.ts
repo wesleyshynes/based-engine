@@ -57,8 +57,8 @@ export class Sword extends BasedObject {
     if(this.angle < 0) {
       this.angle += 360
     }
-    this.handPos = pointOnCircle(degToRad(this.angle), 16)
-    this.swordTip = pointOnCircle(degToRad(this.angle), 56)
+    this.handPos = pointOnCircle(degToRad(this.angle), 26)
+    this.swordTip = pointOnCircle(degToRad(this.angle), 66)
 
     this.currentSpeed = Math.abs(rotDir)
 

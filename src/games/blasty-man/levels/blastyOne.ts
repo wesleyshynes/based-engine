@@ -140,7 +140,19 @@ export class BlastyLevelOne extends BasedLevel {
             const otherObject = this.gameRef.basedObjectRefs[occupants[oc].objectKey]
             if(this.bMan.mode !== 'melee' && otherObject.entityTag === 'bullet' && otherObject.active && distanceBetween(otherObject, spider) <= 16) {
               otherObject.active = false
-              spider.healthBar.tick(-5)
+              const ticked = spider.healthBar.tick(-5)
+              if(ticked) {
+                // const bManC = this.bMan.centerCoordinates()
+                const pushSpot = pointOnCircle(angleBetween(occupants[oc], spider), 5)
+                spider.x += pushSpot.x
+                if(spider.tileMap && (!spider.tileMap.onMap(spider) || spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).color == 0)) {
+                  spider.x -= pushSpot.x
+                }
+                spider.y += pushSpot.y
+                if(spider.tileMap && (!spider.tileMap.onMap(spider) || spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).color == 0)) {
+                  spider.y -= pushSpot.y
+                }
+              }
             }
             if(this.bMan.mode === 'melee' && (oc === 'sword' || oc === 'swordHand') && /*otherObject.active &&*/ distanceBetween(occupants[oc], spider) <= 16) {
               // otherObject.active = false
