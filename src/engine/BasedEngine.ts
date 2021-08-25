@@ -71,6 +71,7 @@ export class BasedGame implements BasedGameType {
   levels: { [key: string]: BasedLevel } = {}
   activeLevel: string = '';
   targetLevel: string = '';
+  pendingLevelLoad: boolean = false;
 
   basedObjectRefs: any = {}
 
@@ -229,6 +230,7 @@ export class BasedGame implements BasedGameType {
 
   loadLevel(level: string) {
     this.targetLevel = level;
+    this.pendingLevelLoad = true
   }
 
   async handleLevelLoad() {
@@ -237,13 +239,14 @@ export class BasedGame implements BasedGameType {
     this.activeLevel = this.targetLevel
     await this.levels[this.activeLevel].preload()
     this.levels[this.activeLevel].initialize()
+    this.pendingLevelLoad = false
     this.animFrame = window.requestAnimationFrame(this.gameLoop)
   }
 
   gameLoop() {
     // console.log('game loop')
     if (this.gameActive) {
-      if(this.activeLevel === this.targetLevel) {
+      if(this.activeLevel === this.targetLevel && !this.pendingLevelLoad) {
         this.update()
         this.draw()
         this.animFrame = window.requestAnimationFrame(this.gameLoop)

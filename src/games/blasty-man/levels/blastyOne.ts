@@ -159,7 +159,7 @@ export class BlastyLevelOne extends BasedLevel {
               const ticked = spider.healthBar.tick(this.bMan.sword.currentSpeed > 5 ? -30 : -5)
               if(ticked) {
                 // const bManC = this.bMan.centerCoordinates()
-                const pushSpot = pointOnCircle(angleBetween(occupants[oc], spider), 10)
+                const pushSpot = pointOnCircle(angleBetween(occupants[oc], spider), 16)
                 spider.x += pushSpot.x
                 if(spider.tileMap && (!spider.tileMap.onMap(spider) || spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).color == 0)) {
                   spider.x -= pushSpot.x
@@ -177,7 +177,7 @@ export class BlastyLevelOne extends BasedLevel {
                 // const bManC = this.bMan.centerCoordinates()
                 // this.tileMap.removeOccupant({...this.bMan.centerCoordinates(), objectKey: this.bMan.objectKey})
 
-                const pushSpot = pointOnCircle(angleBetween(spider, otherObject.centerCoordinates()), 10)
+                const pushSpot = pointOnCircle(angleBetween(spider, otherObject.centerCoordinates()), 16)
 
                 this.bMan.x += pushSpot.x
                 let bManCoords = this.bMan.centerCoordinates()
@@ -218,7 +218,8 @@ export class BlastyLevelOne extends BasedLevel {
 
     this.updateCamera()
     if(this.bMan.healthBar.current < 1 || liveSpiders === 0){
-      this.gameRef.loadLevel('start-screen')
+      // this.gameRef.loadLevel('start-screen')
+      this.gameRef.loadLevel('blasty-1')
     }
   }
 
