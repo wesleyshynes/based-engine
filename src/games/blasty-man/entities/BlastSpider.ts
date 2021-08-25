@@ -38,7 +38,7 @@ export class BlastSpider extends BasedObject {
     async preload() {
       const spiderType = getRandomInt(2)
       if(spiderType > 0) {
-        this.speed = 2
+        this.speed = 1.2
       }
       this.sprite = await createSprite({
         c: this.gameRef.ctx,
