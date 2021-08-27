@@ -48,7 +48,9 @@ export class Bullet extends BasedObject {
       this.traveled = 0
       this.lastShot = this.gameRef.lastUpdate
       // this.gameRef.soundPlayer.playNote(-150, .3, 'square')
+      return true
     }
+    return false
   }
 
 

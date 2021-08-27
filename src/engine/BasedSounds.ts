@@ -9,7 +9,7 @@ export class BasedSounds {
   buffer: AudioBuffer;
   channelData: Float32Array;
   primaryGainControl: GainNode;
-  enabled: boolean = false;
+  enabled: boolean = true;
 
   constructor() {
     const audioC = window.AudioContext || window.webkitAudioContext
@@ -144,6 +144,21 @@ export class BasedSounds {
     const soundBuffer = await rawSound.arrayBuffer()
     const decodedBuffer = await this.audioContext.decodeAudioData(soundBuffer)
 
+    // const newBuffer = this.audioContext.createBufferSource()
+    // newBuffer.buffer = decodedBuffer
+    //
+    // const soundGain = this.audioContext.createGain()
+    // soundGain.gain.setValueAtTime(1, this.audioContext.currentTime)
+    //
+    // newBuffer.connect(soundGain)
+    // soundGain.connect(this.primaryGainControl)
+    //
+    // // newBuffer.connect(this.primaryGainControl)
+    // newBuffer.start()
+    return decodedBuffer
+  }
+
+  playSound(decodedBuffer: any) {
     const newBuffer = this.audioContext.createBufferSource()
     newBuffer.buffer = decodedBuffer
 

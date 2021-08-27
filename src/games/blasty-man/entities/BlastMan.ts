@@ -6,7 +6,7 @@ import { Bullet } from "./Bullet";
 import { XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { HealthBar } from "../ui/HealthBar";
 import { Sword } from "./Sword";
-
+import FireballSound from '../../../assets/blasty-man/fireball.mp3'
 
 export class BlastMan extends BasedObject {
   x: number = 0
@@ -27,6 +27,8 @@ export class BlastMan extends BasedObject {
   gun1Bullet: any;
   gun2Bullet: any;
   sword: any;
+
+  fireballSound: any;
 
   healthBar: any;
   health: number = 100;
@@ -72,6 +74,8 @@ export class BlastMan extends BasedObject {
     this.sword.x = this.centerCoordinates().x
     this.sword.y = this.centerCoordinates().y
     await this.sword.preload()
+
+    this.fireballSound = await this.gameRef.soundPlayer.loadSound(FireballSound)
 
   }
 
@@ -122,7 +126,7 @@ export class BlastMan extends BasedObject {
       this.gun1Bullet.fire({
         x: this.gun1.gunTip.x + this.gun1.x,
         y: this.gun1.gunTip.y + this.gun1.y
-      }, this.target)
+      }, this.target) && this.gameRef.soundPlayer.playSound(this.fireballSound)
     }
     this.gun1Bullet.update()
 
@@ -134,7 +138,7 @@ export class BlastMan extends BasedObject {
       this.gun2Bullet.fire({
         x: this.gun2.gunTip.x + this.gun2.x,
         y: this.gun2.gunTip.y + this.gun2.y
-      }, this.target)
+      }, this.target) && this.gameRef.soundPlayer.playSound(this.fireballSound)
     }
     this.gun2Bullet.update()
   }
