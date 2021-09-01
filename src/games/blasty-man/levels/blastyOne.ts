@@ -106,7 +106,7 @@ export class BlastyLevelOne extends BasedLevel {
     })
     this.moveCharacter()
     this.bMan.update(this.cameraPos)
-    this.tileMap.addOccupant({...this.bMan.centerCoordinates(), objectKey: this.bMan.objectKey})
+    this.tileMap.addOccupant({...this.bMan.centerCoordinates(), objectKey: this.bMan.objectKey},  {nonBlocker: true})
     this.tileMap.addOccupant(this.bMan.gun1Bullet, {nonBlocker: true})
     this.tileMap.addOccupant(this.bMan.gun2Bullet, {nonBlocker: true})
     this.tileMap.addOccupant({

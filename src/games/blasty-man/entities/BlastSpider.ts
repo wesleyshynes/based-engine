@@ -63,7 +63,10 @@ export class BlastSpider extends BasedObject {
       this.healthBar.yOffset = -this.radius - 5
       this.healthBar.current = 100
 
-      this.finder = new PF.AStarFinder()
+      this.finder = new PF.AStarFinder({
+        // allowDiagonal: true,
+        // dontCrossCorners: true
+      })
     }
 
     cleanDistanceToTarget() {
