@@ -107,12 +107,12 @@ export class BlastyMap extends BasedObject {
     }
   }
 
-  addOccupant(occupant: {x: number, y: number, objectKey: string}){
+  addOccupant(occupant: {x: number, y: number, objectKey: string}, options: any = {}){
     if(!this.onMap(occupant)) return
     const {x,y} = this.getMapCoord(occupant)
     this.occupantRef[occupant.objectKey] = occupant
     this.tileMap[y][x].occupants[occupant.objectKey] = occupant
-    if(this.tileMap[y][x].color == 1) {
+    if(this.tileMap[y][x].color == 1 && !options.nonBlocker) {
       this.pfGrid.setWalkableAt(x, y, false)
     }
   }
