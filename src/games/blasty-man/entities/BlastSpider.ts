@@ -30,6 +30,8 @@ export class BlastSpider extends BasedObject {
     tileMap: any;
     pathList: [number,number][] = []
     finder: any;
+    lastRoomCheck: number = 0
+    lastRoomCheckAmount: number = 500
 
     chasing: boolean = false
 
@@ -74,7 +76,7 @@ export class BlastSpider extends BasedObject {
           this.tileMap.getMapCoord(
             { x:(this.x + this.target.x)/2 ,
               y: (this.y + this.target.y)/2
-            })).color == 1)
+            })).walkable)
     }
 
     update() {
@@ -87,6 +89,9 @@ export class BlastSpider extends BasedObject {
         const {x:x1,y:y1} = this.tileMap.getMapCoord(this.target)
         // console.log(x,y,x1,y1)
         this.pathList = this.finder.findPath(x,y,x1,y1,mapClone)
+        if(this.pathList.length === 0) {
+          this.pathList = [[x1,y1]]
+        }
         // console.log(this.pathList)
         // console.log('Chasing False')
         this.getNextActiveTarget()
@@ -148,32 +153,35 @@ export class BlastSpider extends BasedObject {
     }
 
     checkRoom() {
-      const room = this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this))
-      if(Object.keys(room.occupants).find(o => {
-        return room.occupants[o].entityTag === this.entityTag &&
-        room.occupants[o].objectKey !== this.objectKey &&
-        room.occupants[o].activeTarget.x === this.activeTarget.x &&
-        room.occupants[o].activeTarget.y === this.activeTarget.y
-      })) {
-        // console.log('new route', room.occupants)
-        this.chasing = false
-        const mapClone = this.tileMap.pfGrid.clone()
-        const nt = this.tileMap.getMapCoord(this.tileMap.getMapCoord(this.activeTarget))
-        mapClone.setWalkableAt(nt.x, nt.y, false)
-        const {x,y} = this.tileMap.getMapCoord(this.tileMap.getMapCoord(this))
-        const {x:x1,y:y1} = this.tileMap.getMapCoord(this.tileMap.getMapCoord(this.target))
-        // console.log(x,y,x1,y1)
-        this.pathList = this.finder.findPath(x,y,x1,y1,mapClone)
-        // console.log(this.pathList)
-        // console.log('Chasing False')
-        this.getNextActiveTarget()
+      if(this.lastRoomCheck < this.gameRef.lastUpdate + this.lastRoomCheckAmount) {
+        const room = this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this))
+        if(Object.keys(room.occupants).find(o => {
+          return room.occupants[o].entityTag === this.entityTag &&
+          room.occupants[o].objectKey !== this.objectKey &&
+          room.occupants[o].activeTarget.x === this.activeTarget.x &&
+          room.occupants[o].activeTarget.y === this.activeTarget.y
+        })) {
+          // console.log('new route', room.occupants)
+          this.chasing = false
+          const mapClone = this.tileMap.pfGrid.clone()
+          const nt = this.tileMap.getMapCoord(this.tileMap.getMapCoord(this.activeTarget))
+          mapClone.setWalkableAt(nt.x, nt.y, false)
+          const {x,y} = this.tileMap.getMapCoord(this.tileMap.getMapCoord(this))
+          const {x:x1,y:y1} = this.tileMap.getMapCoord(this.tileMap.getMapCoord(this.target))
+          // console.log(x,y,x1,y1)
+          this.pathList = this.finder.findPath(x,y,x1,y1,mapClone)
+          // console.log(this.pathList)
+          // console.log('Chasing False')
+          this.getNextActiveTarget()
+        }
+        this.lastRoomCheck = this.gameRef.lastUpdate
       }
     }
 
 
     moveTo(moveTarget: {x: number, y: number, active?: boolean}, arriveFn: () => void = () => undefined) {
       const dt = distanceBetween(this, moveTarget)
-      if (dt > this.radius) {
+      if (dt > this.radius/2) {
         const speedFactor = this.speed * this.gameRef.diffMulti
         this.velocity = {
           x: (speedFactor / dt) * (moveTarget.x - this.x),
@@ -182,11 +190,11 @@ export class BlastSpider extends BasedObject {
 
 
         this.x += this.velocity.x
-        if(this.tileMap && (!this.tileMap.onMap(this) || this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this)).color == 0)) {
+        if(this.tileMap && (!this.tileMap.onMap(this) || !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this)).walkable)) {
           this.x -= this.velocity.x
         }
         this.y += this.velocity.y
-        if(this.tileMap && (!this.tileMap.onMap(this) || this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this)).color == 0)) {
+        if(this.tileMap && (!this.tileMap.onMap(this) || !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this)).walkable)) {
           this.y -= this.velocity.y
         }
 

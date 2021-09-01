@@ -1,7 +1,10 @@
 import { BasedObject } from "../../../engine/BasedObject";
-import { drawBox } from "../../../engine/libs/drawHelpers";
+import { createSprite, drawBox, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { getRandomInt, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import PF from 'pathfinding'
+import FloorSprite from '../../../assets/blasty-man/floors-test.png'
+import WallSprite from '../../../assets/blasty-man/walls-test.png'
+
 
 export class BlastyMap extends BasedObject {
 
@@ -17,7 +20,44 @@ export class BlastyMap extends BasedObject {
 
   occupantRef: any = {}
 
+  floorSprite: any;
+  wallSprite: any;
+
   async preload() {
+
+    this.floorSprite = await createSprite({
+      c: this.gameRef.ctx,
+      sprite: FloorSprite,
+      sx: 0,
+      sy: 0,
+      sWidth: this.tileSize,
+      sHeight: this.tileSize,
+      dx:  0,
+      dy:  0,
+      dWidth: this.tileSize,
+      dHeight: this.tileSize,
+      frame: 0,
+      lastUpdate: 0,
+      updateDiff: 1000/60 * 10
+    })
+
+    this.wallSprite = await createSprite({
+      c: this.gameRef.ctx,
+      sprite: WallSprite,
+      sx: 0,
+      sy: 0,
+      sWidth: this.tileSize,
+      sHeight: this.tileSize,
+      dx:  0,
+      dy:  0,
+      dWidth: this.tileSize,
+      dHeight: this.tileSize,
+      frame: 0,
+      lastUpdate: 0,
+      updateDiff: 1000/60 * 10
+    })
+
+
     this.occupantRef = {}
     const x = this.width / this.tileSize
     const y = this.height / this.tileSize
@@ -27,6 +67,7 @@ export class BlastyMap extends BasedObject {
       for(let j = 0; j < x; j++) {
         mapRow.push({
           color: 0,
+          walkable: false,
           // color: getRandomInt(2),
           occupants: {}
         })
@@ -41,9 +82,9 @@ export class BlastyMap extends BasedObject {
     this.pfGrid = new PF.Grid(Math.ceil(x),Math.ceil(y))
     this.tileMap.forEach((row, k) => {
       row.forEach((col, l) => {
-        if(col.color === 0) {
-          this.pfGrid.setWalkableAt(l, k, false)
-        }
+        // if(col.color === 0) {
+          this.pfGrid.setWalkableAt(l, k, col.walkable)
+        // }
       })
     })
   }
@@ -59,18 +100,28 @@ export class BlastyMap extends BasedObject {
     // console.log(startY, endY, startX, endX, this.tileMap.length, this.tileMap[0].length)
     for(let i = startY; i < endY; i++) {
       for(let j = startX; j < endX; j++) {
-        drawBox({
+        // drawBox({
+        //   c: this.gameRef.ctx,
+        //   width: this.tileSize,
+        //   height: this.tileSize,
+        //   x: this.tileSize*j + cameraOffset.x,
+        //   y: this.tileSize*i + cameraOffset.y,
+        //   // fillColor: Object.keys(this.tileMap[i][j].occupants).length > 0 ? 'blue' : ['#333','#222'][this.tileMap[i][j].color],
+        //   // strokeColor: Object.keys(this.tileMap[i][j].occupants).length > 0 ? 'blue' : ['#333','#222'][this.tileMap[i][j].color],
+        //   // fillColor: this.tileMap[i][j].occupants['sword']? 'blue' : ['#333','#222'][this.tileMap[i][j].color],
+        //   fillColor: ['#333','#222'][this.tileMap[i][j].color],
+        //   strokeColor: ['#333','#222'][this.tileMap[i][j].color],
+        //   strokeWidth: 1
+        // })
+
+        rotateDraw({
           c: this.gameRef.ctx,
-          width: this.tileSize,
-          height: this.tileSize,
           x: this.tileSize*j + cameraOffset.x,
           y: this.tileSize*i + cameraOffset.y,
-          // fillColor: Object.keys(this.tileMap[i][j].occupants).length > 0 ? 'blue' : ['#333','#222'][this.tileMap[i][j].color],
-          // strokeColor: Object.keys(this.tileMap[i][j].occupants).length > 0 ? 'blue' : ['#333','#222'][this.tileMap[i][j].color],
-          // fillColor: this.tileMap[i][j].occupants['sword']? 'blue' : ['#333','#222'][this.tileMap[i][j].color],
-          fillColor: ['#333','#222'][this.tileMap[i][j].color],
-          strokeColor: ['#333','#222'][this.tileMap[i][j].color],
-          strokeWidth: 1
+          a: 0
+        }, () => {
+          // this.sprite.flipX = this.velocity.x < 0
+          drawImage(this.tileMap[i][j].walkable ? this.floorSprite : this.wallSprite)
         })
       }
     }
@@ -122,6 +173,7 @@ export class BlastyMap extends BasedObject {
     for(let i = 0; i < this.tileMap.length; i++) {
       for(let j = 0; j < this.tileMap[i].length; j++) {
         this.tileMap[i][j].color = 0
+        this.tileMap[i][j].walkable = false
       }
     }
 
@@ -154,6 +206,7 @@ export class BlastyMap extends BasedObject {
       for(let i = room.y; i < room.y + room.h; i++) {
         for(let j = room.x; j < room.x + room.w; j++) {
           this.tileMap[i][j].color = 1
+          this.tileMap[i][j].walkable = true
         }
       }
       if(idx > 0) {
@@ -188,6 +241,7 @@ export class BlastyMap extends BasedObject {
             roomCenter.y += moveY
           }
           this.tileMap[roomCenter.y][roomCenter.x].color = 1
+          this.tileMap[roomCenter.y][roomCenter.x].walkable = true
         }
       }
     })

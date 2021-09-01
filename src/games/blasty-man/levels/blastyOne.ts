@@ -43,7 +43,7 @@ export class BlastyLevelOne extends BasedLevel {
       newSpider.y = Math.floor((roomInfo.y*2 + roomInfo.h)/2) * this.tileMap.tileSize
       // console.log(newSpider)
       await newSpider.preload()
-      if(this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: newSpider.x, y: newSpider.y})).color === 1) {
+      if(this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: newSpider.x, y: newSpider.y})).walkable) {
         // console.log('added')
         this.spiderGroup.push(newSpider)
       }
@@ -145,11 +145,11 @@ export class BlastyLevelOne extends BasedLevel {
                 // const bManC = this.bMan.centerCoordinates()
                 const pushSpot = pointOnCircle(angleBetween(occupants[oc], spider), 5)
                 spider.x += pushSpot.x
-                if(spider.tileMap && (!spider.tileMap.onMap(spider) || spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).color == 0)) {
+                if(spider.tileMap && (!spider.tileMap.onMap(spider) || !spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).walkable)) {
                   spider.x -= pushSpot.x
                 }
                 spider.y += pushSpot.y
-                if(spider.tileMap && (!spider.tileMap.onMap(spider) || spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).color == 0)) {
+                if(spider.tileMap && (!spider.tileMap.onMap(spider) || !spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).walkable)) {
                   spider.y -= pushSpot.y
                 }
               }
@@ -161,11 +161,11 @@ export class BlastyLevelOne extends BasedLevel {
                 // const bManC = this.bMan.centerCoordinates()
                 const pushSpot = pointOnCircle(angleBetween(occupants[oc], spider), 16)
                 spider.x += pushSpot.x
-                if(spider.tileMap && (!spider.tileMap.onMap(spider) || spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).color == 0)) {
+                if(spider.tileMap && (!spider.tileMap.onMap(spider) || !spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).walkable)) {
                   spider.x -= pushSpot.x
                 }
                 spider.y += pushSpot.y
-                if(spider.tileMap && (!spider.tileMap.onMap(spider) || spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).color == 0)) {
+                if(spider.tileMap && (!spider.tileMap.onMap(spider) || !spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).walkable)) {
                   spider.y -= pushSpot.y
                 }
               }
@@ -183,7 +183,7 @@ export class BlastyLevelOne extends BasedLevel {
                 let bManCoords = this.bMan.centerCoordinates()
                 if(
                   !this.tileMap.onMap({x: bManCoords.x + (20 * relativeMultiplier(pushSpot.x)), y: bManCoords.y}) ||
-                  this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x + (20 * relativeMultiplier(pushSpot.x)), y: bManCoords.y})).color == 0
+                  !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x + (20 * relativeMultiplier(pushSpot.x)), y: bManCoords.y})).walkable
                 ) {
                   this.bMan.x -= pushSpot.x
                 }
@@ -192,7 +192,7 @@ export class BlastyLevelOne extends BasedLevel {
                 const yyDis = (relativeMultiplier(pushSpot.y) > 0 ? 32 : -20)
                 if(
                   !this.tileMap.onMap({x: bManCoords.x, y: bManCoords.y + yyDis}) ||
-                  this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x, y: bManCoords.y + yyDis})).color == 0
+                  !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x, y: bManCoords.y + yyDis})).walkable
                 ) {
                   this.bMan.y -= pushSpot.y
                 }
@@ -271,7 +271,7 @@ export class BlastyLevelOne extends BasedLevel {
     let bManCoords = this.bMan.centerCoordinates()
     if(
       !this.tileMap.onMap({x: bManCoords.x + (20 * relativeMultiplier(moveX)), y: bManCoords.y}) ||
-      this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x + (20 * relativeMultiplier(moveX)), y: bManCoords.y})).color == 0
+      !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x + (20 * relativeMultiplier(moveX)), y: bManCoords.y})).walkable
     ) {
       this.bMan.x -= moveX
     }
@@ -280,7 +280,7 @@ export class BlastyLevelOne extends BasedLevel {
     const yyDis = (relativeMultiplier(moveY) > 0 ? 32 : -20)
     if(
       !this.tileMap.onMap({x: bManCoords.x, y: bManCoords.y + yyDis}) ||
-      this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x, y: bManCoords.y + yyDis})).color == 0
+      !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x, y: bManCoords.y + yyDis})).walkable
     ) {
       this.bMan.y -= moveY
     }
