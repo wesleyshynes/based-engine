@@ -2,7 +2,7 @@ import { BasedObject } from "../../../engine/BasedObject";
 import BlastyManSwordUrl from '../../../assets/blasty-man/short-sword-concept.png'
 import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { angleBetween, degToRad, distanceBetween, pointOnCircle, XYCoordinateType } from "../../../engine/libs/mathHelpers";
-
+import FireballSound from '../../../assets/blasty-man/fireball.mp3'
 
 export class Sword extends BasedObject {
   x: number = 0
@@ -22,6 +22,10 @@ export class Sword extends BasedObject {
   onTarget: boolean = false
   entityTag: string = 'sword'
 
+  slashSound: any;
+  lastSound: number = 0
+  soundTimeDiff: number = 200
+
   async preload() {
     this.sprite = await createSprite({
       c: this.gameRef.ctx,
@@ -40,6 +44,16 @@ export class Sword extends BasedObject {
     this.sprite.dy = -8
     this.sprite.flipX = false
     this.sprite.flipY = false
+
+    this.slashSound = await this.gameRef.soundPlayer.loadSound(FireballSound)
+
+  }
+
+  handleSlashSound() {
+    if(this.onTarget && this.lastSound + this.soundTimeDiff < this.gameRef.lastUpdate) {
+      this.gameRef.soundPlayer.playSound(this.slashSound)
+      this.lastSound = this.gameRef.lastUpdate
+    }
   }
 
   update() {
@@ -49,8 +63,10 @@ export class Sword extends BasedObject {
     // const rotDir = (targetAngle - this.gunRotate + 540)%360-180
     if(rotDir > 5) {
       this.angle = this.angle % 360  + (rotDir > angleSpeed ? angleSpeed : rotDir)
+      this.handleSlashSound()
     } else if (rotDir < -5) {
       this.angle = this.angle % 360  - (rotDir < angleSpeed ? angleSpeed : -rotDir)
+      this.handleSlashSound()
     } else {
       this.angle = targetAngle
     }
