@@ -5,6 +5,8 @@ import { TouchKnob } from "../controls/TouchKnob";
 import { BlastyMap } from "../maps/BlastyMap";
 import { angleBetween, distanceBetween, pointOnCircle, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { BasedButton } from "../../../engine/BasedButton";
+import BgMusic from '../../../assets/blasty-man/boneDaddy5.mp3'
+
 
 export class BlastyLevelOne extends BasedLevel {
 
@@ -20,6 +22,18 @@ export class BlastyLevelOne extends BasedLevel {
   cameraPos: XYCoordinateType = {x: 0, y: 0}
   levelWidth: number = 2000
   levelHeight: number = 2000
+
+  swordHitBox: any = {
+    sword: true,
+    swordMid: true,
+    swordHand: true
+  }
+
+  activeSound: any = {
+    playing: false,
+    soundRef: null,
+  }
+  bgSong: any;
 
   async preload() {
     this.tileMap = new BlastyMap({key: 'blast-map-1', gameRef: this.gameRef})
@@ -53,6 +67,7 @@ export class BlastyLevelOne extends BasedLevel {
     this.aimKnob = new TouchKnob({key: 'aim-knob', gameRef: this.gameRef})
     this.positionKnobs()
 
+    this.bgSong =  await this.gameRef.soundPlayer.loadSound(BgMusic)
   }
 
   initialize() {
@@ -84,7 +99,14 @@ export class BlastyLevelOne extends BasedLevel {
     console.log(this.gameRef.basedObjectRefs)
   }
 
-  handleSounds() { }
+  handleSounds() {
+    if(this.activeSound.playing == false) {
+      this.activeSound.soundRef = this.gameRef.soundPlayer.playSound(this.bgSong, () => {
+        this.activeSound.playing = false
+      })
+      this.activeSound.playing = true
+    }
+  }
 
   update() {
     this.updateBg()
@@ -104,6 +126,11 @@ export class BlastyLevelOne extends BasedLevel {
       y: this.bMan.sword.y + this.bMan.sword.handPos.y,
       objectKey: 'swordHand'
     })
+    this.tileMap.removeOccupant({
+      x: this.bMan.sword.x + this.bMan.sword.swordMid.x,
+      y: this.bMan.sword.y + this.bMan.sword.swordMid.y,
+      objectKey: 'swordMid'
+    })
     this.moveCharacter()
     this.bMan.update(this.cameraPos)
     this.tileMap.addOccupant({...this.bMan.centerCoordinates(), objectKey: this.bMan.objectKey},  {nonBlocker: true})
@@ -118,6 +145,11 @@ export class BlastyLevelOne extends BasedLevel {
       x: this.bMan.sword.x + this.bMan.sword.handPos.x,
       y: this.bMan.sword.y + this.bMan.sword.handPos.y,
       objectKey: 'swordHand'
+    }, {nonBlocker: true})
+    this.tileMap.addOccupant({
+      x: this.bMan.sword.x + this.bMan.sword.swordMid.x,
+      y: this.bMan.sword.y + this.bMan.sword.swordMid.y,
+      objectKey: 'swordMid'
     }, {nonBlocker: true})
 
 
@@ -154,7 +186,7 @@ export class BlastyLevelOne extends BasedLevel {
                 }
               }
             }
-            if(this.bMan.mode === 'melee' && (oc === 'sword' || oc === 'swordHand') && /*otherObject.active &&*/ distanceBetween(occupants[oc], spider) <= 16) {
+            if(this.bMan.mode === 'melee' && (this.swordHitBox[oc]) && /*otherObject.active &&*/ distanceBetween(occupants[oc], spider) <= 16) {
               // otherObject.active = false
               const ticked = spider.healthBar.tick(this.bMan.sword.currentSpeed > 5 ? -30 : -5)
               if(ticked) {
@@ -365,5 +397,9 @@ export class BlastyLevelOne extends BasedLevel {
     this.swapWeaponBtn.draw()
   }
 
-  tearDown() { }
+  tearDown() {
+    if(this.activeSound.playing){
+      this.activeSound.soundRef.stop()
+    }
+  }
 }

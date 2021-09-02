@@ -1,8 +1,8 @@
 import { BasedObject } from "../../../engine/BasedObject";
 import BlastyManSwordUrl from '../../../assets/blasty-man/short-sword-concept.png'
-import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
+import { createSprite, drawCircle, drawImage, drawLine, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { angleBetween, degToRad, distanceBetween, pointOnCircle, XYCoordinateType } from "../../../engine/libs/mathHelpers";
-import FireballSound from '../../../assets/blasty-man/fireball.mp3'
+import SwordSlash from '../../../assets/blasty-man/sword-slash.mp3'
 
 export class Sword extends BasedObject {
   x: number = 0
@@ -17,6 +17,7 @@ export class Sword extends BasedObject {
   target: XYCoordinateType = { x: 0, y: 0 }
 
   swordTip: XYCoordinateType = { x: 0, y: 0 }
+  swordMid: XYCoordinateType = { x: 0, y: 0 }
   handPos: XYCoordinateType = {x: 0, y: 0 }
 
   onTarget: boolean = false
@@ -24,7 +25,13 @@ export class Sword extends BasedObject {
 
   slashSound: any;
   lastSound: number = 0
-  soundTimeDiff: number = 200
+  soundTimeDiff: number = 150
+
+  trails: any = []
+  lastTrail: number = 0
+  trailDiff: number = 10
+  trailTime: number = 100
+  trailLimit: number = 10
 
   async preload() {
     this.sprite = await createSprite({
@@ -45,8 +52,8 @@ export class Sword extends BasedObject {
     this.sprite.flipX = false
     this.sprite.flipY = false
 
-    this.slashSound = await this.gameRef.soundPlayer.loadSound(FireballSound)
-
+    this.slashSound = await this.gameRef.soundPlayer.loadSound(SwordSlash)
+    this.trails = []
   }
 
   handleSlashSound() {
@@ -56,15 +63,39 @@ export class Sword extends BasedObject {
     }
   }
 
+  handleTrails() {
+    if(this.lastTrail + this.trailDiff < this.gameRef.lastUpdate) {
+      this.trails.unshift({
+        x: this.x,
+        y: this.y,
+        sx: this.swordTip.x,
+        sy: this.swordTip.y,
+        mx: this.swordMid.x,
+        my: this.swordMid.y,
+        hx: this.handPos.x,
+        hy: this.handPos.y,
+        angle: this.angle,
+        time: this.gameRef.lastUpdate + this.trailTime
+      })
+      this.lastTrail = this.gameRef.lastUpdate
+    }
+    if(this.trails.length > this.trailLimit) {
+      this.trails = this.trails.slice(0,this.trailLimit-1)
+    }
+  }
+
   update() {
     const angleSpeed = this.rotateSpeed * this.gameRef.diffMulti
     const targetAngle = angleBetween(this, this.target, true)
     const rotDir = (targetAngle - this.angle + 540)%360-180
     // const rotDir = (targetAngle - this.gunRotate + 540)%360-180
     if(rotDir > 5) {
+      this.handleTrails()
       this.angle = this.angle % 360  + (rotDir > angleSpeed ? angleSpeed : rotDir)
       this.handleSlashSound()
+
     } else if (rotDir < -5) {
+      this.handleTrails()
       this.angle = this.angle % 360  - (rotDir < angleSpeed ? angleSpeed : -rotDir)
       this.handleSlashSound()
     } else {
@@ -75,6 +106,7 @@ export class Sword extends BasedObject {
     }
     this.handPos = pointOnCircle(degToRad(this.angle), 26)
     this.swordTip = pointOnCircle(degToRad(this.angle), 66)
+    this.swordMid = pointOnCircle(degToRad(this.angle), 35)
 
     this.currentSpeed = Math.abs(rotDir)
 
@@ -104,6 +136,31 @@ export class Sword extends BasedObject {
       radius: 5,
       fillColor: 'green',
     })
+
+    this.trails.forEach((trail: any) => {
+      if(trail.time > this.gameRef.lastUpdate) {
+      this.gameRef.ctx.globalAlpha = (trail.time - this.gameRef.lastUpdate)/(this.trailTime * 2)
+      // rotateDraw({
+      //   c: this.gameRef.ctx,
+      //   x: cameraOffset.x + trail.x + trail.hx,
+      //   y: cameraOffset.y + trail.y + trail.hy,
+      //   a: trail.angle
+      // }, () => {
+      //   drawImage(this.sprite)
+      // })
+      drawLine({
+        c: this.gameRef.ctx,
+        x: cameraOffset.x + trail.x + trail.mx,
+        y: cameraOffset.y + trail.y + trail.my,
+        toX: cameraOffset.x + trail.x + trail.sx,
+        toY: cameraOffset.y + trail.y + trail.sy,
+        strokeWidth: 10,
+        strokeColor: 'rgba(255,255,255)'
+      })
+      this.gameRef.ctx.globalAlpha = 1
+      }
+    })
+
 
     rotateDraw({
       c: this.gameRef.ctx,

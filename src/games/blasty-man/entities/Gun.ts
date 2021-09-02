@@ -1,6 +1,6 @@
 import { BasedObject } from "../../../engine/BasedObject";
 import BlastyManGun from '../../../assets/blasty-man/blasty-man-gun-concept.png'
-import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
+import { createSprite, drawCircle, drawImage, drawLine, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { angleBetween, degToRad, distanceBetween, pointOnCircle } from "../../../engine/libs/mathHelpers";
 
 
@@ -16,8 +16,15 @@ export class Gun extends BasedObject {
   target: { x: number, y: number } = { x: 0, y: 0 }
 
   gunTip: {x: number, y: number} = { x: 0, y: 0 }
+  gunHilt: {x: number, y: number} = { x: 0, y: 0 }
 
   onTarget: boolean = false
+
+  trails: any = []
+  lastTrail: number = 0
+  trailDiff: number = 10
+  trailTime: number = 100
+  trailLimit: number = 10
 
   async preload() {
     this.sprite = await createSprite({
@@ -39,20 +46,42 @@ export class Gun extends BasedObject {
     this.sprite.flipY = false
   }
 
+  handleTrails() {
+    if(this.lastTrail + this.trailDiff < this.gameRef.lastUpdate) {
+      this.trails.unshift({
+        x: this.x,
+        y: this.y,
+        sx: this.gunTip.x,
+        sy: this.gunTip.y,
+        hx: this.gunHilt.x,
+        hy: this.gunHilt.y,
+        angle: this.angle,
+        time: this.gameRef.lastUpdate + this.trailTime
+      })
+      this.lastTrail = this.gameRef.lastUpdate
+    }
+    if(this.trails.length > this.trailLimit) {
+      this.trails = this.trails.slice(0,this.trailLimit-1)
+    }
+  }
+
   update() {
     const angleSpeed = 5 * this.gameRef.diffMulti
     const targetAngle = angleBetween(this, this.target, true)
     const rotDir = (targetAngle - this.angle + 540)%360-180
     // const rotDir = (targetAngle - this.gunRotate + 540)%360-180
     if(rotDir > 0) {
+      rotDir > 5 && this.handleTrails()
       this.angle = this.angle % 360  + (rotDir > angleSpeed ? angleSpeed : rotDir)
     } else if (rotDir < 0) {
+      rotDir < -5 && this.handleTrails()
       this.angle = this.angle % 360  - (rotDir < angleSpeed ? angleSpeed : -rotDir)
     }
     if(this.angle < 0) {
       this.angle += 360
     }
     this.gunTip = pointOnCircle(degToRad(this.angle), 32)
+    this.gunHilt = pointOnCircle(degToRad(this.angle), 8)
 
     const enemyAnglePos = pointOnCircle(angleBetween(this, this.target), 32)
     const shootingPos = pointOnCircle(degToRad(this.angle), 32)
@@ -71,6 +100,30 @@ export class Gun extends BasedObject {
   }
 
   draw(cameraOffset: {x: number, y: number} = {x: 0, y: 0}) {
+
+    this.trails.forEach((trail: any) => {
+      if(trail.time > this.gameRef.lastUpdate) {
+      this.gameRef.ctx.globalAlpha = (trail.time - this.gameRef.lastUpdate)/(this.trailTime * 2)
+      // rotateDraw({
+      //   c: this.gameRef.ctx,
+      //   x: cameraOffset.x + trail.x + trail.hx,
+      //   y: cameraOffset.y + trail.y + trail.hy,
+      //   a: trail.angle
+      // }, () => {
+      //   drawImage(this.sprite)
+      // })
+      drawLine({
+        c: this.gameRef.ctx,
+        x: cameraOffset.x + trail.x + trail.hx,
+        y: cameraOffset.y + trail.y + trail.hy,
+        toX: cameraOffset.x + trail.x + trail.sx,
+        toY: cameraOffset.y + trail.y + trail.sy,
+        strokeWidth: 2,
+        strokeColor: 'rgba(255,255,255)'
+      })
+      this.gameRef.ctx.globalAlpha = 1
+      }
+    })
 
     rotateDraw({
       c: this.gameRef.ctx,

@@ -158,7 +158,7 @@ export class BasedSounds {
     return decodedBuffer
   }
 
-  playSound(decodedBuffer: any) {
+  playSound(decodedBuffer: any, endedCallback?: () => void ) {
     const newBuffer = this.audioContext.createBufferSource()
     newBuffer.buffer = decodedBuffer
 
@@ -168,8 +168,13 @@ export class BasedSounds {
     newBuffer.connect(soundGain)
     soundGain.connect(this.primaryGainControl)
 
+    if(endedCallback) {
+      newBuffer.onended = endedCallback
+    }
+
     // newBuffer.connect(this.primaryGainControl)
     newBuffer.start()
+    return newBuffer
   }
 
 }
