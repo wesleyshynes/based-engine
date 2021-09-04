@@ -7,7 +7,6 @@ import { angleBetween, distanceBetween, pointOnCircle, relativeMultiplier, XYCoo
 import { BasedButton } from "../../../engine/BasedButton";
 import BgMusic from '../../../assets/blasty-man/boneDaddy5.mp3'
 
-
 export class BlastyLevelOne extends BasedLevel {
 
   bMan: any;
@@ -72,6 +71,7 @@ export class BlastyLevelOne extends BasedLevel {
 
   initialize() {
     this.bMan.initialize()
+    this.bMan.tileMap = this.tileMap
 
     this.spiderGroup.map(spider => {
       spider.initialize()
@@ -134,23 +134,23 @@ export class BlastyLevelOne extends BasedLevel {
     this.moveCharacter()
     this.bMan.update(this.cameraPos)
     this.tileMap.addOccupant({...this.bMan.centerCoordinates(), objectKey: this.bMan.objectKey},  {nonBlocker: true})
-    this.tileMap.addOccupant(this.bMan.gun1Bullet, {nonBlocker: true})
-    this.tileMap.addOccupant(this.bMan.gun2Bullet, {nonBlocker: true})
+    this.tileMap.addOccupant(this.bMan.gun1Bullet)
+    this.tileMap.addOccupant(this.bMan.gun2Bullet)
     this.tileMap.addOccupant({
       x: this.bMan.sword.x + this.bMan.sword.swordTip.x,
       y: this.bMan.sword.y + this.bMan.sword.swordTip.y,
       objectKey: this.bMan.sword.objectKey
-    }, {nonBlocker: true})
+    })
     this.tileMap.addOccupant({
       x: this.bMan.sword.x + this.bMan.sword.handPos.x,
       y: this.bMan.sword.y + this.bMan.sword.handPos.y,
       objectKey: 'swordHand'
-    }, {nonBlocker: true})
+    })
     this.tileMap.addOccupant({
       x: this.bMan.sword.x + this.bMan.sword.swordMid.x,
       y: this.bMan.sword.y + this.bMan.sword.swordMid.y,
       objectKey: 'swordMid'
-    }, {nonBlocker: true})
+    })
 
 
 
@@ -172,65 +172,15 @@ export class BlastyLevelOne extends BasedLevel {
             const otherObject = this.gameRef.basedObjectRefs[occupants[oc].objectKey]
             if(this.bMan.mode !== 'melee' && otherObject.entityTag === 'bullet' && otherObject.active && distanceBetween(otherObject, spider) <= 16) {
               otherObject.active = false
-              const ticked = spider.healthBar.tick(-5)
-              if(ticked) {
-                // const bManC = this.bMan.centerCoordinates()
-                const pushSpot = pointOnCircle(angleBetween(occupants[oc], spider), 5)
-                spider.x += pushSpot.x
-                if(spider.tileMap && (!spider.tileMap.onMap(spider) || !spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).walkable)) {
-                  spider.x -= pushSpot.x
-                }
-                spider.y += pushSpot.y
-                if(spider.tileMap && (!spider.tileMap.onMap(spider) || !spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).walkable)) {
-                  spider.y -= pushSpot.y
-                }
-              }
+              spider.damage(-5, occupants[oc], 5)
             }
             if(this.bMan.mode === 'melee' && (this.swordHitBox[oc]) && /*otherObject.active &&*/ distanceBetween(occupants[oc], spider) <= 16) {
               // otherObject.active = false
-              const ticked = spider.healthBar.tick(this.bMan.sword.currentSpeed > 5 ? -30 : -5)
-              if(ticked) {
-                // const bManC = this.bMan.centerCoordinates()
-                const pushSpot = pointOnCircle(angleBetween(occupants[oc], spider), 16)
-                spider.x += pushSpot.x
-                if(spider.tileMap && (!spider.tileMap.onMap(spider) || !spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).walkable)) {
-                  spider.x -= pushSpot.x
-                }
-                spider.y += pushSpot.y
-                if(spider.tileMap && (!spider.tileMap.onMap(spider) || !spider.tileMap.getRoomFromCoord(spider.tileMap.getMapCoord(spider)).walkable)) {
-                  spider.y -= pushSpot.y
-                }
-              }
+              spider.damage(this.bMan.sword.currentSpeed > 5 ? -30 : -5, occupants[oc], 16)
             }
             if(otherObject.entityTag === 'blastMan' && distanceBetween(otherObject.centerCoordinates(), spider) <= 16) {
               // otherObject.healthBar.tick(-5)
-              const ticked = otherObject.healthBar.tick(-5)
-              if(ticked) {
-                // const bManC = this.bMan.centerCoordinates()
-                // this.tileMap.removeOccupant({...this.bMan.centerCoordinates(), objectKey: this.bMan.objectKey})
-
-                const pushSpot = pointOnCircle(angleBetween(spider, otherObject.centerCoordinates()), 16)
-
-                this.bMan.x += pushSpot.x
-                let bManCoords = this.bMan.centerCoordinates()
-                if(
-                  !this.tileMap.onMap({x: bManCoords.x + (20 * relativeMultiplier(pushSpot.x)), y: bManCoords.y}) ||
-                  !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x + (20 * relativeMultiplier(pushSpot.x)), y: bManCoords.y})).walkable
-                ) {
-                  this.bMan.x -= pushSpot.x
-                }
-                this.bMan.y += pushSpot.y
-                bManCoords = this.bMan.centerCoordinates()
-                const yyDis = (relativeMultiplier(pushSpot.y) > 0 ? 32 : -20)
-                if(
-                  !this.tileMap.onMap({x: bManCoords.x, y: bManCoords.y + yyDis}) ||
-                  !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x, y: bManCoords.y + yyDis})).walkable
-                ) {
-                  this.bMan.y -= pushSpot.y
-                }
-                // this.tileMap.addOccupant({...this.bMan.centerCoordinates(), objectKey: this.bMan.objectKey})
-
-              }
+              this.bMan.damage(-5, spider, 16)
             }
           }
         })

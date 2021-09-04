@@ -14,17 +14,42 @@ export class Bullet extends BasedObject {
   shotDelay: number = 200
   entityTag: string = 'bullet'
 
+  trails: any = []
+  lastTrail: number = 0
+  trailDiff: number = 10
+  trailTime: number = 200
+  trailLimit: number = 10
+
   initialize() {}
 
   update() {
     if (this.active && this.traveled < this.maxDistance) {
+      this.handleTrails()
       this.x += this.velocity.x
       this.y += this.velocity.y
+      this.trails.forEach((trail:any) => {
+        trail.x += this.velocity.x/5
+        trail.y += this.velocity.y/5
+      })
       this.traveled += Math.abs(this.velocity.x) + Math.abs(this.velocity.y)
     } else {
       this.velocity = { x: 0, y: 0 }
       this.active = false
       this.traveled = 0
+    }
+  }
+
+  handleTrails() {
+    if(this.lastTrail + this.trailDiff < this.gameRef.lastUpdate) {
+      this.trails.unshift({
+        x: this.x,
+        y: this.y,
+        time: this.gameRef.lastUpdate + this.trailTime
+      })
+      this.lastTrail = this.gameRef.lastUpdate
+    }
+    if(this.trails.length > this.trailLimit) {
+      this.trails = this.trails.slice(0,this.trailLimit-1)
     }
   }
 
@@ -55,6 +80,19 @@ export class Bullet extends BasedObject {
 
 
   draw(cameraOffset: {x: number, y: number} = {x: 0, y: 0}) {
+    this.trails.forEach((trail: any) => {
+      if(trail.time > this.gameRef.lastUpdate) {
+      this.gameRef.ctx.globalAlpha = (trail.time - this.gameRef.lastUpdate)/(this.trailTime * 2)
+      drawCircle({
+        c: this.gameRef.ctx,
+        x: cameraOffset.x + trail.x,
+        y: cameraOffset.y + trail.y,
+        fillColor: 'black',
+        radius: this.radius * (trail.time - this.gameRef.lastUpdate)/(this.trailTime)
+      })
+      this.gameRef.ctx.globalAlpha = 1
+      }
+    })
     if (this.active) {
       drawCircle({
         c: this.gameRef.ctx,

@@ -3,10 +3,11 @@ import { createSprite, drawImage, rotateDraw } from "../../../engine/libs/drawHe
 import BlastyManUrl from '../../../assets/blasty-man/blasty-man-spritesheet.png'
 import { Gun } from "./Gun";
 import { Bullet } from "./Bullet";
-import { XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { angleBetween, pointOnCircle, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { HealthBar } from "../ui/HealthBar";
 import { Sword } from "./Sword";
 import FireballSound from '../../../assets/blasty-man/fireball.mp3'
+import HitPlayer from '../../../assets/blasty-man/player-hurt.mp3'
 
 export class BlastMan extends BasedObject {
   x: number = 0
@@ -19,6 +20,8 @@ export class BlastMan extends BasedObject {
 
   sprite: any;
 
+  tileMap: any;
+
   speed: number = 3
 
   gun1: any;
@@ -29,6 +32,7 @@ export class BlastMan extends BasedObject {
   sword: any;
 
   fireballSound: any;
+  hitPlayerSound: any;
 
   healthBar: any;
   health: number = 100;
@@ -76,6 +80,7 @@ export class BlastMan extends BasedObject {
     await this.sword.preload()
 
     this.fireballSound = await this.gameRef.soundPlayer.loadSound(FireballSound)
+    this.hitPlayerSound = await this.gameRef.soundPlayer.loadSound(HitPlayer)
 
   }
 
@@ -108,6 +113,31 @@ export class BlastMan extends BasedObject {
     }
 
     this.updateSprite()
+  }
+
+  damage(amount: number, dealer: XYCoordinateType, recoil: number){
+    const ticked = this.healthBar.tick(amount)
+    if(ticked) {
+      this.gameRef.soundPlayer.playSound(this.hitPlayerSound)
+      let bManCoords = this.centerCoordinates()
+      const pushSpot = pointOnCircle(angleBetween(dealer, bManCoords), 16)
+      this.x += pushSpot.x
+      if(
+        !this.tileMap.onMap({x: bManCoords.x + (20 * relativeMultiplier(pushSpot.x)), y: bManCoords.y}) ||
+        !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x + (20 * relativeMultiplier(pushSpot.x)), y: bManCoords.y})).walkable
+      ) {
+        this.x -= pushSpot.x
+      }
+      this.y += pushSpot.y
+      bManCoords = this.centerCoordinates()
+      const yyDis = (relativeMultiplier(pushSpot.y) > 0 ? 32 : -20)
+      if(
+        !this.tileMap.onMap({x: bManCoords.x, y: bManCoords.y + yyDis}) ||
+        !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: bManCoords.x, y: bManCoords.y + yyDis})).walkable
+      ) {
+        this.y -= pushSpot.y
+      }
+    }
   }
 
   setTarget(newTarget: XYCoordinateType) {
@@ -151,6 +181,8 @@ export class BlastMan extends BasedObject {
       // do something
     // }
   }
+
+
 
   switchMode(mode: string) {
     if(this.lastSwitch + this.switchDelay < this.gameRef.lastUpdate){

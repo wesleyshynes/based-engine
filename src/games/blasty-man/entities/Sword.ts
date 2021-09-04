@@ -171,13 +171,13 @@ export class Sword extends BasedObject {
       drawImage(this.sprite)
     })
 
-    drawCircle({
-      c: this.gameRef.ctx,
-      x: cameraOffset.x + this.swordTip.x + this.x,
-      y: cameraOffset.y + this.swordTip.y + this.y,
-      radius: 3,
-      fillColor: this.onTarget ? 'orange' : 'yellow',
-    })
+    // drawCircle({
+    //   c: this.gameRef.ctx,
+    //   x: cameraOffset.x + this.swordTip.x + this.x,
+    //   y: cameraOffset.y + this.swordTip.y + this.y,
+    //   radius: 3,
+    //   fillColor: this.onTarget ? 'orange' : 'yellow',
+    // })
 
   }
 

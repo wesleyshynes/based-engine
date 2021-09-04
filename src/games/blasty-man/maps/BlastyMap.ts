@@ -163,7 +163,7 @@ export class BlastyMap extends BasedObject {
     const {x,y} = this.getMapCoord(occupant)
     this.occupantRef[occupant.objectKey] = occupant
     this.tileMap[y][x].occupants[occupant.objectKey] = occupant
-    if(this.tileMap[y][x].color == 1 && !options.nonBlocker) {
+    if(this.tileMap[y][x].color == 1 && options.blockSpot) {
       this.pfGrid.setWalkableAt(x, y, false)
     }
   }

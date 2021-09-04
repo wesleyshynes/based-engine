@@ -2,9 +2,11 @@ import { BasedObject } from "../../../engine/BasedObject";
 import BlastySpiderUrl from '../../../assets/blasty-man/blasty-spider-spritesheet.png'
 import BlastySpiderCakeUrl from '../../../assets/blasty-man/blasty-spider-spritesheet-cake.png'
 import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
-import { angleBetween, distanceBetween, getRandomInt, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { angleBetween, distanceBetween, getRandomInt, pointOnCircle, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { HealthBar } from "../ui/HealthBar";
 import PF from 'pathfinding';
+import DeadSpider from '../../../assets/blasty-man/dead-bat.mp3'
+import HitSpider from '../../../assets/blasty-man/splat.mp3'
 
 export class BlastSpider extends BasedObject {
     x: number = 0
@@ -37,6 +39,9 @@ export class BlastSpider extends BasedObject {
 
     entityTag: string = 'spider'
 
+    hitNoise: any;
+    deadNoise: any
+
     async preload() {
       const spiderType = getRandomInt(2)
       if(spiderType > 0) {
@@ -57,6 +62,8 @@ export class BlastSpider extends BasedObject {
         lastUpdate: 0,
         updateDiff: 1000/60 * 10
       })
+      this.hitNoise =  await this.gameRef.soundPlayer.loadSound(HitSpider)
+      this.deadNoise =  await this.gameRef.soundPlayer.loadSound(DeadSpider)
     }
 
     initialize() {
@@ -187,8 +194,6 @@ export class BlastSpider extends BasedObject {
           x: (speedFactor / dt) * (moveTarget.x - this.x),
           y: (speedFactor / dt) * (moveTarget.y - this.y)
         }
-
-
         this.x += this.velocity.x
         if(this.tileMap && (!this.tileMap.onMap(this) || !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this)).walkable)) {
           this.x -= this.velocity.x
@@ -197,14 +202,31 @@ export class BlastSpider extends BasedObject {
         if(this.tileMap && (!this.tileMap.onMap(this) || !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this)).walkable)) {
           this.y -= this.velocity.y
         }
-
-
       } else {
         this.velocity = { x: 0, y: 0 }
         arriveFn()
       }
     }
 
+    damage(amount: number, dealer: XYCoordinateType, recoil: number) {
+      const ticked = this.healthBar.tick(amount)
+      if(ticked) {
+        // const bManC = this.bMan.centerCoordinates()
+        this.gameRef.soundPlayer.playSound(this.hitNoise)
+        const pushSpot = pointOnCircle(angleBetween(dealer, this), recoil)
+        this.x += pushSpot.x
+        if(this.tileMap && (!this.tileMap.onMap(this) || !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this)).walkable)) {
+          this.x -= pushSpot.x
+        }
+        this.y += pushSpot.y
+        if(this.tileMap && (!this.tileMap.onMap(this) || !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord(this)).walkable)) {
+          this.y -= pushSpot.y
+        }
+        if(this.healthBar.current <= 0) {
+          this.gameRef.soundPlayer.playSound(this.deadNoise)
+        }
+      }
+    }
 
 
     draw(cameraOffset: {x: number, y: number} = {x: 0, y: 0}) {
