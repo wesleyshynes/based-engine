@@ -1,11 +1,19 @@
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { TouchKnob } from "../../../engine/controls/TouchKnob";
+import { distanceBetween } from "../../../engine/libs/mathHelpers";
+import Baddie from "../entities/Baddie";
+import Leader from "../entities/Leader";
 import Player from "../entities/Player";
+import PushBox from "../entities/Pushbox";
 import { MapOne } from "../maps/MapOne";
 
 export class LevelOne extends BasedLevel {
 
   player: any;
+  leader: any;
+  box: any;
+
+  baddies: any[] = [];
 
   moveKnob: any;
   aimKnob: any;
@@ -16,39 +24,85 @@ export class LevelOne extends BasedLevel {
   tileMap: any;
 
   async preload() {
-    this.tileMap = new MapOne({key: 'map-1', gameRef: this.gameRef})
+    // setup map
+    this.tileMap = new MapOne({ key: 'map-1', gameRef: this.gameRef })
     this.tileMap.tileSize = 64
     await this.tileMap.preload()
     this.levelWidth = this.tileMap.width
     this.levelHeight = this.tileMap.height
 
-    this.player = new Player({ key: 'player' , gameRef: this.gameRef})
+    // setup player
+    this.player = new Player({ key: 'player', gameRef: this.gameRef })
     this.player.x = (this.tileMap.roomList[0].x + 2) * this.tileMap.tileSize
     this.player.y = (this.tileMap.roomList[0].y + 2) * this.tileMap.tileSize
     this.player.tileMap = this.tileMap
 
-    this.moveKnob = new TouchKnob({key: 'move-knob', gameRef: this.gameRef})
-    this.aimKnob = new TouchKnob({key: 'aim-knob', gameRef: this.gameRef})
+    // setup box
+    this.box = new PushBox({ key: 'box', gameRef: this.gameRef })
+    this.box.x = (this.tileMap.roomList[this.tileMap.roomList.length - 1].x + 2) * this.tileMap.tileSize
+    this.box.y = (this.tileMap.roomList[this.tileMap.roomList.length - 1].y + 2) * this.tileMap.tileSize
+    this.box.tileMap = this.tileMap
+
+    // setup goal
+    this.leader = new Leader({key: 'leader', gameRef: this.gameRef})
+    this.leader.x = (this.tileMap.roomList[0].x + 5) * this.tileMap.tileSize
+    this.leader.y = (this.tileMap.roomList[0].y + 5) * this.tileMap.tileSize
+    // this.player.tileMap = this.tileMap
+
+    //setup enemies
+    this.baddies = []
+    for (let i = 1; i < this.tileMap.roomList.length; i++) {
+      const newBaddie = new Baddie({key: `baddie-${i}`, gameRef: this.gameRef})
+      newBaddie.x = (this.tileMap.roomList[i].x + 2) * this.tileMap.tileSize
+      newBaddie.y = (this.tileMap.roomList[i].y + 2) * this.tileMap.tileSize
+      this.baddies.push(newBaddie)
+    }
+
+    // UI
+    this.moveKnob = new TouchKnob({ key: 'move-knob', gameRef: this.gameRef })
+    this.aimKnob = new TouchKnob({ key: 'aim-knob', gameRef: this.gameRef })
     this.positionKnobs()
   }
 
   initialize() {
     this.player.initialize()
+    this.baddies.map(baddie => {
+      baddie.tileMap = this.tileMap
+      baddie.target = this.player
+      baddie.initialize()
+    })
     this.moveKnob.initialize()
     this.aimKnob.initialize()
   }
 
   update() {
+    this.tileMap.removeOccupant(this.player)
     this.movePlayer()
     this.player.update()
+    this.tileMap.addOccupant(this.player)
+
+    this.tileMap.removeOccupant(this.box)
+    this.box.update()
+    this.tileMap.addOccupant(this.box)
+
+    this.baddies.map(baddie => {
+      this.tileMap.removeOccupant(baddie)
+      baddie.update()
+      this.tileMap.addOccupant(baddie)
+    })
 
     this.updateCamera()
+
+    // win condition
+    if(distanceBetween(this.leader,this.box) < this.leader.radius + this.box.radius) {
+      this.gameRef.loadLevel('start-screen')
+    }
 
   }
 
   movePlayer() {
     const pressedKeys = this.gameRef.pressedKeys
-    const speedFactor = 100//this.player.speed * this.gameRef.diffMulti
+    const speedFactor = this.player.baseSpeed //this.player.speed * this.gameRef.diffMulti
 
     let moveX = 0
     let moveY = 0
@@ -68,10 +122,10 @@ export class LevelOne extends BasedLevel {
     if (pressedKeys['KeyX']) { }
 
     this.moveKnob.update()
-    if(this.moveKnob.knobActive) {
-      const speedFactor = 10//this.player.speed * this.gameRef.diffMulti
-      moveX += (this.moveKnob.knobCoord.x/this.moveKnob.maxOffset)*speedFactor
-      moveY += (this.moveKnob.knobCoord.y/this.moveKnob.maxOffset)*speedFactor
+    if (this.moveKnob.knobActive) {
+      const speedFactor = this.player.speed * this.gameRef.diffMulti
+      moveX += (this.moveKnob.knobCoord.x / this.moveKnob.maxOffset) * speedFactor
+      moveY += (this.moveKnob.knobCoord.y / this.moveKnob.maxOffset) * speedFactor
     }
 
     this.player.moveTo({
@@ -80,14 +134,14 @@ export class LevelOne extends BasedLevel {
     })
 
     this.aimKnob.update()
-    if(this.aimKnob.knobActive) {
-      const{x: bx, y: by} = this.player
+    if (this.aimKnob.knobActive) {
+      const { x: bx, y: by } = this.player
       this.player.setTarget({
-        x: (this.aimKnob.knobCoord.x/this.aimKnob.maxOffset) * 1000 + bx,
-        y: (this.aimKnob.knobCoord.y/this.aimKnob.maxOffset) * 1000 + by,
+        x: (this.aimKnob.knobCoord.x / this.aimKnob.maxOffset) * 1000 + bx,
+        y: (this.aimKnob.knobCoord.y / this.aimKnob.maxOffset) * 1000 + by,
       })
       // this.bMan.attacking = true
-    } else if(!this.gameRef.touchMode) {
+    } else if (!this.gameRef.touchMode) {
       // this.player.attacking = this.gameRef.mouseInfo.mouseDown
       this.player.setTarget({
         x: this.gameRef.mouseInfo.x - this.gameRef.cameraPos.x,
@@ -96,22 +150,6 @@ export class LevelOne extends BasedLevel {
     } else {
       // this.bMan.attacking = false
     }
-
-
-  }
-
-  draw() {
-    this.gameRef.ctx.beginPath()
-    this.gameRef.ctx.rect(0, 0, this.gameRef.gameWidth, this.gameRef.gameHeight)
-    this.gameRef.ctx.fillStyle = '#777'
-    this.gameRef.ctx.fill()
-
-    this.tileMap.draw()
-
-    this.player.draw()
-
-    this.moveKnob.draw()
-    this.aimKnob.draw()
   }
 
   updateCamera() {
@@ -136,11 +174,11 @@ export class LevelOne extends BasedLevel {
   }
 
   positionKnobs() {
-    this.moveKnob.width = this.moveKnob.width > this.gameRef.gameWidth/2 ? this.gameRef.gameWidth/2 - 5 : this.moveKnob.width
+    this.moveKnob.width = this.moveKnob.width > this.gameRef.gameWidth / 2 ? this.gameRef.gameWidth / 2 - 5 : this.moveKnob.width
     this.moveKnob.x = 0
     this.moveKnob.y = this.gameRef.gameHeight - this.moveKnob.height
 
-    this.aimKnob.width = this.aimKnob.width > this.gameRef.gameWidth/2 ? this.gameRef.gameWidth/2 - 5 : this.aimKnob.width
+    this.aimKnob.width = this.aimKnob.width > this.gameRef.gameWidth / 2 ? this.gameRef.gameWidth / 2 - 5 : this.aimKnob.width
     this.aimKnob.x = this.gameRef.gameWidth - this.aimKnob.width
     this.aimKnob.y = this.gameRef.gameHeight - this.moveKnob.height
   }
@@ -149,6 +187,29 @@ export class LevelOne extends BasedLevel {
     this.positionKnobs()
   }
 
-  tearDown() {}
+  draw() {
+    this.gameRef.ctx.beginPath()
+    this.gameRef.ctx.rect(0, 0, this.gameRef.gameWidth, this.gameRef.gameHeight)
+    this.gameRef.ctx.fillStyle = '#777'
+    this.gameRef.ctx.fill()
+
+    this.tileMap.draw()
+
+    this.player.draw()
+    this.box.draw()
+
+    this.leader.draw()
+
+    this.baddies.map(baddie => {
+      baddie.draw()
+    })
+
+    if (this.gameRef.touchMode) {
+      this.moveKnob.draw()
+      this.aimKnob.draw()
+    }
+  }
+
+  tearDown() { }
 
 }
