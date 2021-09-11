@@ -4,15 +4,16 @@ import { getRandomInt, XYCoordinateType } from "../../../engine/libs/mathHelpers
 import PF from 'pathfinding'
 import FloorSprite from '../../../assets/blasty-man/floors-test.png'
 import WallSprite from '../../../assets/blasty-man/walls-test.png'
+import { boxCollision } from "../../../engine/libs/collisionHelpers";
 
 
 export class MapOne extends BasedObject {
 
   x: number = 0;
   y: number = 0;
-  width: number = 100
-  height: number = 100
-  tileSize: number = 10
+  width: number = 3200
+  height: number = 3200
+  tileSize: number = 64
   tileMap: any[][] = []
 
   pfGrid: any;
@@ -57,36 +58,8 @@ export class MapOne extends BasedObject {
       updateDiff: 1000/60 * 10
     })
 
-
     this.occupantRef = {}
-    const x = this.width / this.tileSize
-    const y = this.height / this.tileSize
-    const newMap = []
-    for(let i = 0; i < y; i++) {
-      const mapRow = []
-      for(let j = 0; j < x; j++) {
-        mapRow.push({
-          color: 0,
-          walkable: false,
-          // color: getRandomInt(2),
-          occupants: {}
-        })
-      }
-      newMap.push(mapRow)
-    }
-    this.tileMap = newMap
-
     this.generateMap()
-
-    // Setup PathFinder
-    this.pfGrid = new PF.Grid(Math.ceil(x),Math.ceil(y))
-    this.tileMap.forEach((row, k) => {
-      row.forEach((col, l) => {
-        // if(col.color === 0) {
-          this.pfGrid.setWalkableAt(l, k, col.walkable)
-        // }
-      })
-    })
   }
 
   initialize() {}
@@ -169,40 +142,91 @@ export class MapOne extends BasedObject {
   }
 
   generateMap() {
-    // clear the map
-    for(let i = 0; i < this.tileMap.length; i++) {
-      for(let j = 0; j < this.tileMap[i].length; j++) {
-        this.tileMap[i][j].color = 0
-        this.tileMap[i][j].walkable = false
-      }
-    }
-
     // generate rooms
     const rooms = [
-      {x: 1, y: 1, w: 5, h: 7},
-      {x: 19, y: 6, w: 8, h: 5},
-      // {x: 2, y: 25, w: 8, h: 6},
-      // {x: this.tileMap[0].length - 7, y: this.tileMap.length - 6, w: 3, h: 3},
+      {x: 0, y: 0, w: 8, h: 8}
     ]
 
     let attempts = 0
+    let left = 0
+    let right = 8
+    let top = 0
+    let bottom = 8
 
     while(rooms.length < 10 && attempts < 100) {
       attempts++
       const newRoom = {
-        x: 0,
-        y: 0,
-        w: 3 + getRandomInt(5),
-        h: 3 + getRandomInt(5)
+        x: rooms[rooms.length-1].x,
+        y: rooms[rooms.length-1].y,
+        w: 8 + getRandomInt(5),
+        h: 8 + getRandomInt(5)
       }
-      newRoom.x = 1 + getRandomInt(this.tileMap[0].length - (newRoom.w + 2))
-      newRoom.y = 1 + getRandomInt(this.tileMap.length - (newRoom.h + 2))
+
+      const direction = getRandomInt(2) > 0 ? 'x' : 'y'
+      const offset = getRandomInt(2) > 0 ? 1 : -1
+
+      while(
+        rooms.find((room) => {
+          return boxCollision(
+            newRoom,
+            {
+              x: room.x - 1,
+              y: room.y - 1,
+              w: room.w + 1,
+              h: room.h + 1
+            }
+          )
+        })
+      ) {
+        newRoom[direction] += offset
+      }
+
+      top = newRoom.y < top ? newRoom.y : top
+      left = newRoom.x < left ? newRoom.x : left
+      right = newRoom.x + newRoom.w > right ? newRoom.x + newRoom.w : right
+      bottom = newRoom.y + newRoom.h > bottom ? newRoom.y + newRoom.h : bottom
+
       rooms.push(newRoom)
     }
 
-    this.roomList = rooms
+    console.log('top', top)
+    console.log('bottom', bottom)
+    console.log('left', left)
+    console.log('right', right)
 
-    rooms.map((room, idx) => {
+
+    this.roomList = rooms.map(room => {
+      return {
+        ...room,
+        x: room.x - left + 3,
+        y: room.y - top + 3,
+      }
+    })
+
+    this.width = this.tileSize * (Math.abs(left) + right + 6)
+    this.height = this.tileSize * (Math.abs(top) + bottom + 6)
+
+    const x = (this.width / this.tileSize)
+    const y = (this.height / this.tileSize)
+    const newMap = []
+    for(let i = 0; i < y; i++) {
+      const mapRow = []
+      for(let j = 0; j < x; j++) {
+        mapRow.push({
+          color: 0,
+          walkable: false,
+          occupants: {}
+        })
+      }
+      newMap.push(mapRow)
+    }
+    this.tileMap = newMap
+
+    console.log(this.roomList)
+    console.log(this.width, this.height)
+
+    this.roomList.map((room, idx) => {
+      console.log('mapping', idx, room)
       for(let i = room.y; i < room.y + room.h; i++) {
         for(let j = room.x; j < room.x + room.w; j++) {
           this.tileMap[i][j].color = 1
@@ -211,7 +235,7 @@ export class MapOne extends BasedObject {
       }
       if(idx > 0) {
         // console.log('generating map')
-        const prevRoom = rooms[idx-1]
+        const prevRoom = this.roomList[idx-1]
         const roomCenter = {
           x: Math.floor((room.x * 2 + room.w)/2),
           y: Math.floor((room.y * 2 + room.h)/2),
@@ -222,14 +246,9 @@ export class MapOne extends BasedObject {
           x: Math.floor((prevRoom.x * 2 + prevRoom.w)/2),
           y: Math.floor((prevRoom.y * 2 + prevRoom.h)/2),
         }
-        // console.log(prevRoomCenter)
-        // console.log(prevRoomCenter.x - roomCenter.x)
-        // console.log(prevRoomCenter.y - roomCenter.y)
         while(roomCenter.x !== prevRoomCenter.x || roomCenter.y !== prevRoomCenter.y) {
-          // console.log(roomCenter)
           const moveX = prevRoomCenter.x - roomCenter.x != 0 ? (prevRoomCenter.x - roomCenter.x)/Math.abs(prevRoomCenter.x - roomCenter.x) : 0
           const moveY = prevRoomCenter.y - roomCenter.y != 0 ? (prevRoomCenter.y - roomCenter.y)/Math.abs(prevRoomCenter.y - roomCenter.y) : 0
-          // console.log(moveX, moveY)
           if(moveX !== 0 && moveY !== 0) {
             if(getRandomInt(2) > 0) {
               roomCenter.x += moveX
@@ -246,6 +265,12 @@ export class MapOne extends BasedObject {
       }
     })
 
+    this.pfGrid = new PF.Grid(Math.ceil(x),Math.ceil(y))
+    this.tileMap.forEach((row, k) => {
+      row.forEach((col, l) => {
+          this.pfGrid.setWalkableAt(l, k, col.walkable)
+      })
+    })
   }
 
 

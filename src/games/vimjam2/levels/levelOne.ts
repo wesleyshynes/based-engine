@@ -10,22 +10,21 @@ export class LevelOne extends BasedLevel {
   moveKnob: any;
   aimKnob: any;
 
-  levelWidth: number = 2000
-  levelHeight: number = 2000
+  levelWidth: number = 3200
+  levelHeight: number = 3200
 
   tileMap: any;
 
   async preload() {
     this.tileMap = new MapOne({key: 'map-1', gameRef: this.gameRef})
-    this.tileMap.width = this.levelWidth
-    this.tileMap.height = this.levelHeight
     this.tileMap.tileSize = 64
     await this.tileMap.preload()
-
+    this.levelWidth = this.tileMap.width
+    this.levelHeight = this.tileMap.height
 
     this.player = new Player({ key: 'player' , gameRef: this.gameRef})
-    this.player.x = 100
-    this.player.y = 100
+    this.player.x = (this.tileMap.roomList[0].x + 2) * this.tileMap.tileSize
+    this.player.y = (this.tileMap.roomList[0].y + 2) * this.tileMap.tileSize
     this.player.tileMap = this.tileMap
 
     this.moveKnob = new TouchKnob({key: 'move-knob', gameRef: this.gameRef})

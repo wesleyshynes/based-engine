@@ -18,6 +18,8 @@ export class TouchKnob extends BasedObject {
   maxOffset: number = 30
   touchId: string = ''
 
+  touchColor: string = 'rgba(255,0,0,.2)'
+
   async preload() { }
   initialize() { }
 
@@ -118,7 +120,7 @@ export class TouchKnob extends BasedObject {
       y: this.y,
       width: this.width,
       height: this.height,
-      fillColor: 'rgba(255,0,0,.2)'
+      fillColor: this.touchColor
     })
 
     if (this.knobActive) {
