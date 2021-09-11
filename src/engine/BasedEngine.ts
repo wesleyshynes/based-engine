@@ -51,6 +51,8 @@ export class BasedGame implements BasedGameType {
   gameWidth: number;
   gameHeight: number;
 
+  cameraPos: XYCoordinateType = {x: 0, y: 0}
+
   lastUpdate: number = Date.now()
   updateDiff: number = Date.now()
   updateTick: number = 1000 / 60

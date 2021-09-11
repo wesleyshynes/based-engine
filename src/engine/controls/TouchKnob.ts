@@ -1,6 +1,7 @@
-import { BasedObject } from "../../../engine/BasedObject";
-import { drawBox, drawCircle } from "../../../engine/libs/drawHelpers";
-import { angleBetween, distanceBetween, pointOnCircle, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { BasedObject } from "../BasedObject"
+import { drawBox, drawCircle } from "../libs/drawHelpers"
+import { angleBetween, distanceBetween, pointOnCircle, XYCoordinateType } from "../libs/mathHelpers"
+
 
 export class TouchKnob extends BasedObject {
   x: number = 0

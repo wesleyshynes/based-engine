@@ -1,11 +1,11 @@
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { BlastMan } from "../entities/BlastMan";
 import { BlastSpider } from "../entities/BlastSpider";
-import { TouchKnob } from "../controls/TouchKnob";
 import { BlastyMap } from "../maps/BlastyMap";
 import { angleBetween, distanceBetween, pointOnCircle, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { BasedButton } from "../../../engine/BasedButton";
 import BgMusic from '../../../assets/blasty-man/boneDaddy5.mp3'
+import { TouchKnob } from "../../../engine/controls/TouchKnob";
 
 export class BlastyLevelOne extends BasedLevel {
 
