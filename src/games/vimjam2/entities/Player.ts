@@ -1,6 +1,7 @@
 import { BasedObject } from "../../../engine/BasedObject";
 import { drawCircle } from "../../../engine/libs/drawHelpers";
-import { distanceBetween, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { angleBetween, distanceBetween, pointOnCircle, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { HealthBar } from "../ui/HealthBar";
 
 export default class Player extends BasedObject {
 
@@ -21,13 +22,22 @@ export default class Player extends BasedObject {
   velocity: XYCoordinateType = { x: 0, y: 0 }
   tileMap: any;
 
+  healthBar: any;
+  health: number = 100;
+
   async preload() { }
 
-  initialize() { }
+  initialize() {
+    this.healthBar = new HealthBar({key: 'player-health', gameRef: this.gameRef})
+    this.healthBar.width = this.radius * 2
+    this.healthBar.yOffset = -this.radius/2 - 5
+    this.healthBar.current = this.health
+  }
 
   update() {
     this.speed = this.baseSpeed
     this.color = '#ce192b'
+
     // check collision
     const playerCoord = this.tileMap.getMapCoord(this)
     for (let i = -1; i < 2; i++) {
@@ -53,16 +63,36 @@ export default class Player extends BasedObject {
               })
             }
 
+            if(occupants[oc].entityTag === 'baddie' && distanceBetween(this, occupants[oc]) < this.radius + occupants[oc].radius ) {
+               this.damage(-5, occupants[oc], 16)
+            }
           })
         }
       }
     }
+
+    this.healthBar.x = this.x
+    this.healthBar.y = this.y
   }
 
-  moveTo(moveTarget: { x: number, y: number, active?: boolean }, arriveFn: () => void = () => undefined) {
+  damage(amount: number, dealer: XYCoordinateType, recoil: number){
+    const ticked = this.healthBar.tick(amount)
+    if(ticked) {
+      // this.gameRef.soundPlayer.playSound(this.hitPlayerSound)
+      const pushSpot = pointOnCircle(angleBetween(dealer, this), recoil)
+      this.moveTo({
+        x: this.x + pushSpot.x,
+        y: this.y + pushSpot.y,
+        // speed: recoil,
+        distance: recoil
+      })
+    }
+  }
+
+  moveTo(moveTarget: { x: number, y: number, active?: boolean, speed?:number, distance?: number }, arriveFn: () => void = () => undefined) {
     const dt = distanceBetween(this, moveTarget)
     if (dt > 0) {
-      const speedFactor = this.speed * this.gameRef.diffMulti
+      const speedFactor = moveTarget.distance ? moveTarget.distance : (moveTarget.speed ? moveTarget.speed : this.speed) * this.gameRef.diffMulti
       this.velocity = {
         x: (speedFactor / dt) * (moveTarget.x - this.x),
         y: (speedFactor / dt) * (moveTarget.y - this.y)
@@ -103,6 +133,7 @@ export default class Player extends BasedObject {
       radius: this.radius,
       fillColor: this.color
     })
+    this.healthBar.draw()
   }
   tearDown() { }
 }

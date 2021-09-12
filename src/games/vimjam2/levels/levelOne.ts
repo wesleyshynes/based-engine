@@ -87,6 +87,9 @@ export class LevelOne extends BasedLevel {
 
     this.baddies.map(baddie => {
       this.tileMap.removeOccupant(baddie)
+    })
+    this.baddies.map(baddie => {
+      this.tileMap.removeOccupant(baddie)
       baddie.update()
       this.tileMap.addOccupant(baddie)
     })
