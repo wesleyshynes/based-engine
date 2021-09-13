@@ -46,10 +46,13 @@ export default class Player extends BasedObject {
           x: (playerCoord.x + i) * this.tileMap.tileSize,
           y: (playerCoord.y + j) * this.tileMap.tileSize
         })) {
-          const {occupants} = this.tileMap.getRoomFromCoord({
+          const {occupants, roomKey} = this.tileMap.getRoomFromCoord({
             x: playerCoord.x + i,
             y: playerCoord.y + j
           })
+          if(i === 0 && j === 0 && !this.tileMap.visitedRooms[roomKey]) {
+            this.tileMap.visitedRooms[roomKey] = true
+          }
           Object.keys(occupants).map(oc => {
             if(occupants[oc].objectKey === this.objectKey) {
               return

@@ -23,6 +23,7 @@ export class MapOne extends BasedObject {
 
   floorSprite: any;
   wallSprite: any;
+  visitedRooms: any = {}
 
   async preload() {
 
@@ -59,6 +60,7 @@ export class MapOne extends BasedObject {
     })
 
     this.occupantRef = {}
+    this.visitedRooms = {}
     this.generateMap()
   }
 
@@ -143,8 +145,8 @@ export class MapOne extends BasedObject {
 
   generateMap() {
     // generate rooms
-    const rooms = [
-      {x: 0, y: 0, w: 8, h: 8}
+    const rooms: any = [
+      {x: 0, y: 0, w: 8, h: 8, key: 'room-1'}
     ]
 
     let attempts = 0
@@ -159,21 +161,22 @@ export class MapOne extends BasedObject {
         x: rooms[rooms.length-1].x,
         y: rooms[rooms.length-1].y,
         w: 8 + getRandomInt(5),
-        h: 8 + getRandomInt(5)
+        h: 8 + getRandomInt(5),
+        key: `room-${rooms.length + 1}`
       }
 
       const direction = getRandomInt(2) > 0 ? 'x' : 'y'
       const offset = getRandomInt(2) > 0 ? 1 : -1
 
       while(
-        rooms.find((room) => {
+        rooms.find((room: any) => {
           return boxCollision(
             newRoom,
             {
               x: room.x - 1,
               y: room.y - 1,
               w: room.w + 1,
-              h: room.h + 1
+              h: room.h + 1,
             }
           )
         })
@@ -195,7 +198,7 @@ export class MapOne extends BasedObject {
     console.log('right', right)
 
 
-    this.roomList = rooms.map(room => {
+    this.roomList = rooms.map((room: any) => {
       return {
         ...room,
         x: room.x - left + 3,
@@ -215,7 +218,8 @@ export class MapOne extends BasedObject {
         mapRow.push({
           color: 0,
           walkable: false,
-          occupants: {}
+          occupants: {},
+          roomKey: ''
         })
       }
       newMap.push(mapRow)
@@ -231,6 +235,7 @@ export class MapOne extends BasedObject {
         for(let j = room.x; j < room.x + room.w; j++) {
           this.tileMap[i][j].color = 1
           this.tileMap[i][j].walkable = true
+          this.tileMap[i][j].roomKey = room.key
         }
       }
       if(idx > 0) {

@@ -55,6 +55,7 @@ export class LevelOne extends BasedLevel {
       const newBaddie = new Baddie({key: `baddie-${i}`, gameRef: this.gameRef})
       newBaddie.x = (this.tileMap.roomList[i].x + 2) * this.tileMap.tileSize
       newBaddie.y = (this.tileMap.roomList[i].y + 2) * this.tileMap.tileSize
+      newBaddie.spawnRoom = this.tileMap.roomList[i].key
       this.baddies.push(newBaddie)
     }
 
@@ -98,6 +99,11 @@ export class LevelOne extends BasedLevel {
 
     // win condition
     if(distanceBetween(this.leader,this.box) < this.leader.radius + this.box.radius) {
+      alert('You win')
+      this.gameRef.loadLevel('start-screen')
+    }
+    if(this.player.healthBar.current < 1) {
+      alert('You died')
       this.gameRef.loadLevel('start-screen')
     }
 

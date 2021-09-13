@@ -1,7 +1,8 @@
 import { BasedObject } from "../../../engine/BasedObject";
 import { drawCircle } from "../../../engine/libs/drawHelpers";
-import { distanceBetween, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { angleBetween, distanceBetween, pointOnCircle, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import PF from 'pathfinding';
+import { HealthBar } from "../ui/HealthBar";
 
 export default class Baddie extends BasedObject {
   x: number = 0
@@ -13,6 +14,7 @@ export default class Baddie extends BasedObject {
   chasing: boolean = false
 
   entityTag: string = 'baddie'
+  spawnRoom: string = ''
 
   tileMap: any;
   pathList: [number, number][] = []
@@ -25,34 +27,42 @@ export default class Baddie extends BasedObject {
 
   velocity: XYCoordinateType = { x: 0, y: 0 };
 
+  healthBar: any;
+  health: number = 100;
+
   async preload() { }
 
   initialize() {
-    this.finder = new PF.AStarFinder({
-      // allowDiagonal: true,
-      // dontCrossCorners: true
-    })
+    this.healthBar = new HealthBar({ key: `baddie-health-${this.objectKey}`, gameRef: this.gameRef })
+    this.healthBar.width = this.radius * 2
+    this.healthBar.yOffset = -this.radius / 2 - 5
+    this.healthBar.current = this.health
+
+    this.finder = new PF.AStarFinder({/* allowDiagonal: true,dontCrossCorners: true' */ })
   }
 
   update() {
+    if (!this.tileMap.visitedRooms[this.spawnRoom]) {
+      return
+    }
     const distanceToTarget = distanceBetween(this, this.target)
     const cleanDistance = this.cleanDistanceToTarget()
-    if((this.pathList.length <= 0 && !this.chasing) || ((distanceToTarget > 300 || !cleanDistance) && this.chasing === true)) {
+    if ((this.pathList.length <= 0 && !this.chasing) || ((distanceToTarget > 300 || !cleanDistance) && this.chasing === true)) {
       this.chasing = false
       const mapClone = this.tileMap.pfGrid.clone()
-      const {x,y} = this.tileMap.getMapCoord(this)
-      const {x:x1,y:y1} = this.tileMap.getMapCoord(this.target)
+      const { x, y } = this.tileMap.getMapCoord(this)
+      const { x: x1, y: y1 } = this.tileMap.getMapCoord(this.target)
       // console.log(x,y,x1,y1)
-      this.pathList = this.finder.findPath(x,y,x1,y1,mapClone)
-      if(this.pathList.length === 0) {
-        this.pathList = [[x1,y1]]
+      this.pathList = this.finder.findPath(x, y, x1, y1, mapClone)
+      if (this.pathList.length === 0) {
+        this.pathList = [[x1, y1]]
       }
       // console.log(this.pathList)
       // console.log('Chasing False')
       this.getNextActiveTarget()
     } else if (distanceToTarget <= 300 && cleanDistance) {
       this.activeTarget = this.target
-      if(this.chasing === false) {
+      if (this.chasing === false) {
         // console.log('Chasing True')
         this.chasing = true
         this.pathList = []
@@ -60,11 +70,17 @@ export default class Baddie extends BasedObject {
     }
     this.checkRoom()
 
-    this.moveTo(this.activeTarget, () => {
+    this.moveTo({
+      x: this.activeTarget.x,
+      y: this.activeTarget.y,
+    }, () => {
       if (!this.chasing) {
         this.getNextActiveTarget()
       }
     })
+
+    this.healthBar.x = this.x
+    this.healthBar.y = this.y
   }
 
   cleanDistanceToTarget() {
@@ -101,10 +117,24 @@ export default class Baddie extends BasedObject {
     }
   }
 
-  moveTo(moveTarget: { x: number, y: number, active?: boolean }, arriveFn: () => void = () => undefined) {
+  damage(amount: number, dealer: XYCoordinateType, recoil: number) {
+    const ticked = this.healthBar.tick(amount)
+    if (ticked) {
+      // this.gameRef.soundPlayer.playSound(this.hitPlayerSound)
+      const pushSpot = pointOnCircle(angleBetween(dealer, this), recoil)
+      this.moveTo({
+        x: this.x + pushSpot.x,
+        y: this.y + pushSpot.y,
+        // speed: recoil,
+        distance: recoil
+      })
+    }
+  }
+
+  moveTo(moveTarget: { x: number, y: number, active?: boolean, speed?: number, distance?: number }, arriveFn: () => void = () => undefined) {
     const dt = distanceBetween(this, moveTarget)
-    if (dt > this.radius/2) {
-      const speedFactor = this.speed * this.gameRef.diffMulti
+    if (dt > this.radius / 2) {
+      const speedFactor = moveTarget.distance ? moveTarget.distance : (moveTarget.speed ? moveTarget.speed : this.speed) * this.gameRef.diffMulti
       this.velocity = {
         x: (speedFactor / dt) * (moveTarget.x - this.x),
         y: (speedFactor / dt) * (moveTarget.y - this.y)
@@ -151,6 +181,7 @@ export default class Baddie extends BasedObject {
       radius: this.radius,
       fillColor: this.color
     })
+    this.healthBar.draw()
   }
 
 
