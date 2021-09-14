@@ -36,6 +36,7 @@ export class LevelOne extends BasedLevel {
     this.player.x = (this.tileMap.roomList[0].x + 2) * this.tileMap.tileSize
     this.player.y = (this.tileMap.roomList[0].y + 2) * this.tileMap.tileSize
     this.player.tileMap = this.tileMap
+    await this.player.preload()
 
     // setup box
     this.box = new PushBox({ key: 'box', gameRef: this.gameRef })

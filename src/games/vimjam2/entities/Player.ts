@@ -1,14 +1,15 @@
 import { BasedObject } from "../../../engine/BasedObject";
-import { drawCircle } from "../../../engine/libs/drawHelpers";
+import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { angleBetween, distanceBetween, pointOnCircle, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { HealthBar } from "../ui/HealthBar";
+import MonkeySpriteUrl from '../../../assets/vimjam2/monkeySpriteSheet.png'
 
 export default class Player extends BasedObject {
 
   x: number = 0;
   y: number = 0;
 
-  radius: number = 16;
+  radius: number = 28;
 
   speed: number = 7;
   baseSpeed: number = 7;
@@ -25,7 +26,25 @@ export default class Player extends BasedObject {
   healthBar: any;
   health: number = 100;
 
-  async preload() { }
+  sprite: any;
+
+  async preload() {
+    this.sprite = await createSprite({
+      c: this.gameRef.ctx,
+      sprite: MonkeySpriteUrl,
+      sx: 0,
+      sy: 0,
+      sWidth: 56,
+      sHeight: 56,
+      dx:  0,
+      dy:  0,
+      dWidth: 56,
+      dHeight: 56,
+      frame: 0,
+      lastUpdate: 0,
+      updateDiff: 1000/60 * 10
+    })
+  }
 
   initialize() {
     this.healthBar = new HealthBar({key: 'player-health', gameRef: this.gameRef})
@@ -76,6 +95,8 @@ export default class Player extends BasedObject {
 
     this.healthBar.x = this.x
     this.healthBar.y = this.y
+
+    this.updateSprite()
   }
 
   damage(amount: number, dealer: XYCoordinateType, recoil: number){
@@ -128,14 +149,49 @@ export default class Player extends BasedObject {
     this.target = newTarget
   }
 
+  updateSprite() {
+    if(this.sprite.lastUpdate + this.sprite.updateDiff < this.gameRef.lastUpdate) {
+      this.sprite.frame++
+      if(this.sprite.frame > 2) {
+        this.sprite.frame = 0
+      }
+      this.sprite.lastUpdate = this.gameRef.lastUpdate
+
+      if(Math.abs(this.velocity.x) > Math.abs(this.velocity.y)) {
+        this.sprite.sy = this.sprite.dHeight * 2
+        this.sprite.flipX = this.velocity.x < 0
+      } else if (Math.abs(this.velocity.y)) {
+        this.sprite.flipX = false
+        if(this.velocity.y > 0) {
+          this.sprite.sy =  0
+        } else {
+          this.sprite.sy = this.sprite.dHeight
+        }
+      }
+
+      this.sprite.sx = this.sprite.frame * this.sprite.dWidth
+    }
+  }
+
   draw() {
-    drawCircle({
+    // drawCircle({
+    //   c: this.gameRef.ctx,
+    //   x: this.x + this.gameRef.cameraPos.x,
+    //   y: this.y + this.gameRef.cameraPos.y,
+    //   radius: this.radius,
+    //   fillColor: this.color
+    // })
+
+    rotateDraw({
       c: this.gameRef.ctx,
-      x: this.x + this.gameRef.cameraPos.x,
-      y: this.y + this.gameRef.cameraPos.y,
-      radius: this.radius,
-      fillColor: this.color
+      x: this.gameRef.cameraPos.x + this.x + (this.sprite.flipX ? this.radius : -this.radius ) ,
+      y: this.gameRef.cameraPos.y + this.y - this.radius,
+      a: 0
+    }, () => {
+      // this.sprite.flipX = this.velocity.x < 0
+      drawImage(this.sprite)
     })
+
     this.healthBar.draw()
   }
   tearDown() { }

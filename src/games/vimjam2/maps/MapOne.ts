@@ -4,6 +4,7 @@ import { getRandomInt, XYCoordinateType } from "../../../engine/libs/mathHelpers
 import PF from 'pathfinding'
 import FloorSprite from '../../../assets/blasty-man/floors-test.png'
 import WallSprite from '../../../assets/blasty-man/walls-test.png'
+import GrassSprite from '../../../assets/vimjam2/grass-together.png'
 import { boxCollision } from "../../../engine/libs/collisionHelpers";
 
 
@@ -23,6 +24,8 @@ export class MapOne extends BasedObject {
 
   floorSprite: any;
   wallSprite: any;
+  grassSprite: any;
+
   visitedRooms: any = {}
 
   async preload() {
@@ -46,6 +49,22 @@ export class MapOne extends BasedObject {
     this.wallSprite = await createSprite({
       c: this.gameRef.ctx,
       sprite: WallSprite,
+      sx: 0,
+      sy: 0,
+      sWidth: this.tileSize,
+      sHeight: this.tileSize,
+      dx:  0,
+      dy:  0,
+      dWidth: this.tileSize,
+      dHeight: this.tileSize,
+      frame: 0,
+      lastUpdate: 0,
+      updateDiff: 1000/60 * 10
+    })
+
+    this.grassSprite = await createSprite({
+      c: this.gameRef.ctx,
+      sprite: GrassSprite,
       sx: 0,
       sy: 0,
       sWidth: this.tileSize,
@@ -96,7 +115,10 @@ export class MapOne extends BasedObject {
           a: 0
         }, () => {
           // this.sprite.flipX = this.velocity.x < 0
-          drawImage(this.tileMap[i][j].walkable ? this.floorSprite : this.wallSprite)
+          // drawImage(this.tileMap[i][j].walkable ? this.floorSprite : this.wallSprite)
+          this.grassSprite.sx = this.tileMap[i][j].sx * this.tileSize
+          this.grassSprite.sy = this.tileMap[i][j].sy * this.tileSize
+          drawImage(this.grassSprite)
         })
       }
     }
@@ -219,7 +241,9 @@ export class MapOne extends BasedObject {
           color: 0,
           walkable: false,
           occupants: {},
-          roomKey: ''
+          roomKey: '',
+          sx: 1,
+          sy: 3
         })
       }
       newMap.push(mapRow)
@@ -231,12 +255,52 @@ export class MapOne extends BasedObject {
 
     this.roomList.map((room, idx) => {
       console.log('mapping', idx, room)
+      let yPos = 0
+      const maxX = room.w - 1
+      const maxY = room.h - 1
       for(let i = room.y; i < room.y + room.h; i++) {
+        let xPos = 0
         for(let j = room.x; j < room.x + room.w; j++) {
           this.tileMap[i][j].color = 1
           this.tileMap[i][j].walkable = true
           this.tileMap[i][j].roomKey = room.key
+          this.tileMap[i][j].sx = 0
+          this.tileMap[i][j].sy = 3
+
+          if(xPos === 0 && yPos === 0) {
+            this.tileMap[i][j].sx = 0
+            this.tileMap[i][j].sy = 0
+          } else if(yPos === 0 && xPos !== maxX) {
+            this.tileMap[i][j].sx = 1
+            this.tileMap[i][j].sy = 0
+          } else if(yPos === 0 && xPos === maxX) {
+            this.tileMap[i][j].sx = 2
+            this.tileMap[i][j].sy = 0
+          } else if (xPos === 0 && yPos !== maxY ) {
+            this.tileMap[i][j].sx = 0
+            this.tileMap[i][j].sy = 1
+          } else if (xPos === maxX && yPos !== maxY) {
+            this.tileMap[i][j].sx = 2
+            this.tileMap[i][j].sy = 1
+          } else if (xPos === 0 && yPos === maxY) {
+            this.tileMap[i][j].sx = 0
+            this.tileMap[i][j].sy = 2
+          } else if (xPos !== maxX && yPos === maxY) {
+            this.tileMap[i][j].sx = 1
+            this.tileMap[i][j].sy = 2
+          } else if (xPos === maxX && yPos === maxY) {
+            this.tileMap[i][j].sx = 2
+            this.tileMap[i][j].sy = 2
+          } else {
+            if (getRandomInt(80) > 75) {
+              this.tileMap[i][j].sx = 1
+              this.tileMap[i][j].sy = 1
+            }
+          }
+
+          xPos++
         }
+        yPos++
       }
       if(idx > 0) {
         // console.log('generating map')
@@ -266,6 +330,9 @@ export class MapOne extends BasedObject {
           }
           this.tileMap[roomCenter.y][roomCenter.x].color = 1
           this.tileMap[roomCenter.y][roomCenter.x].walkable = true
+          this.tileMap[roomCenter.y][roomCenter.x].sx = 0
+          this.tileMap[roomCenter.y][roomCenter.x].sy = 3
+
         }
       }
     })
