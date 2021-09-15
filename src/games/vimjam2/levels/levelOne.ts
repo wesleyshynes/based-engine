@@ -6,6 +6,7 @@ import Leader from "../entities/Leader";
 import Player from "../entities/Player";
 import PushBox from "../entities/Pushbox";
 import { MapOne } from "../maps/MapOne";
+import BgMusic from '../../../assets/vimjam2/good-new-diddyPERFOMANCE.mp3'
 
 export class LevelOne extends BasedLevel {
 
@@ -22,6 +23,12 @@ export class LevelOne extends BasedLevel {
   levelHeight: number = 3200
 
   tileMap: any;
+
+  activeSound: any = {
+    playing: false,
+    soundRef: null,
+  }
+  bgSong: any;
 
   async preload() {
     // setup map
@@ -65,6 +72,11 @@ export class LevelOne extends BasedLevel {
     this.moveKnob = new TouchKnob({ key: 'move-knob', gameRef: this.gameRef })
     this.aimKnob = new TouchKnob({ key: 'aim-knob', gameRef: this.gameRef })
     this.positionKnobs()
+
+
+    // Music
+    this.bgSong =  await this.gameRef.soundPlayer.loadSound(BgMusic)
+
   }
 
   initialize() {
@@ -79,6 +91,9 @@ export class LevelOne extends BasedLevel {
   }
 
   update() {
+
+    this.handleSounds()
+
     this.tileMap.removeOccupant(this.player)
     this.movePlayer()
     this.player.update()
@@ -102,11 +117,11 @@ export class LevelOne extends BasedLevel {
 
     // win condition
     if(distanceBetween(this.leader,this.box) < this.leader.radius + this.box.radius) {
-      alert('You win')
+      // alert('You win')
       this.gameRef.loadLevel('start-screen')
     }
     if(this.player.healthBar.current < 1) {
-      alert('You died')
+      // alert('You died')
       this.gameRef.loadLevel('start-screen')
     }
 
@@ -164,6 +179,15 @@ export class LevelOne extends BasedLevel {
     }
   }
 
+  handleSounds() {
+    if(this.activeSound.playing == false) {
+      this.activeSound.soundRef = this.gameRef.soundPlayer.playSound(this.bgSong, () => {
+        this.activeSound.playing = false
+      })
+      this.activeSound.playing = true
+    }
+  }
+
   updateCamera() {
     const cameraTarget = this.player
     this.gameRef.cameraPos = {
@@ -214,7 +238,7 @@ export class LevelOne extends BasedLevel {
 
     this.baddies.map(baddie => {
       if(baddie.healthBar.current > 0) {
-        baddie.draw()        
+        baddie.draw()
       }
     })
 
@@ -224,6 +248,10 @@ export class LevelOne extends BasedLevel {
     }
   }
 
-  tearDown() { }
+  tearDown() {
+    if(this.activeSound.playing){
+      this.activeSound.soundRef.stop()
+    }
+  }
 
 }

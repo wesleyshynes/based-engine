@@ -73,8 +73,8 @@ export class MeleeWeapon extends BasedObject {
       this.trails.unshift({
         x: this.x,
         y: this.y,
-        sx: this.hitBox.x,
-        sy: this.hitBox.y,
+        mx: this.hitBox.x,
+        my: this.hitBox.y,
         hx: this.handPos.x,
         hy: this.handPos.y,
         angle: this.angle,
@@ -146,8 +146,8 @@ export class MeleeWeapon extends BasedObject {
         c: this.gameRef.ctx,
         x: this.gameRef.cameraPos.x + trail.x + trail.mx,
         y: this.gameRef.cameraPos.y + trail.y + trail.my,
-        toX: this.gameRef.cameraPos.x + trail.x + trail.sx,
-        toY: this.gameRef.cameraPos.y + trail.y + trail.sy,
+        toX: this.gameRef.cameraPos.x + trail.x + trail.hx,
+        toY: this.gameRef.cameraPos.y + trail.y + trail.hy,
         strokeWidth: 10,
         strokeColor: 'rgba(255,255,255)'
       })

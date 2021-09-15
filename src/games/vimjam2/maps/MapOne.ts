@@ -110,12 +110,18 @@ export class MapOne extends BasedObject {
 
         rotateDraw({
           c: this.gameRef.ctx,
-          x: this.tileSize*j + this.gameRef.cameraPos.x,
-          y: this.tileSize*i + this.gameRef.cameraPos.y,
+          x: Math.round(this.tileSize*j + this.gameRef.cameraPos.x),
+          y: Math.round(this.tileSize*i + this.gameRef.cameraPos.y),
           a: 0
         }, () => {
+
           // this.sprite.flipX = this.velocity.x < 0
           // drawImage(this.tileMap[i][j].walkable ? this.floorSprite : this.wallSprite)
+
+          // no rotate
+          // this.grassSprite.dx = Math.round(this.tileSize*j + this.gameRef.cameraPos.x)
+          // this.grassSprite.dy = Math.round(this.tileSize*i + this.gameRef.cameraPos.y)
+
           this.grassSprite.sx = this.tileMap[i][j].sx * this.tileSize
           this.grassSprite.sy = this.tileMap[i][j].sy * this.tileSize
           drawImage(this.grassSprite)
