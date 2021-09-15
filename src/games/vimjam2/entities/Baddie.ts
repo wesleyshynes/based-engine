@@ -7,7 +7,7 @@ import { HealthBar } from "../ui/HealthBar";
 export default class Baddie extends BasedObject {
   x: number = 0
   y: number = 0
-  speed: number = 3
+  speed: number = 2
   radius: number = 16
   color: string = 'pink'
 
@@ -35,8 +35,10 @@ export default class Baddie extends BasedObject {
   initialize() {
     this.healthBar = new HealthBar({ key: `baddie-health-${this.objectKey}`, gameRef: this.gameRef })
     this.healthBar.width = this.radius * 2
-    this.healthBar.yOffset = -this.radius / 2 - 5
+    this.healthBar.yOffset = -this.radius / 2 - 20
     this.healthBar.current = this.health
+    this.healthBar.x = this.x
+    this.healthBar.y = this.y
 
     this.finder = new PF.AStarFinder({/* allowDiagonal: true,dontCrossCorners: true' */ })
   }
@@ -181,7 +183,7 @@ export default class Baddie extends BasedObject {
       radius: this.radius,
       fillColor: this.color
     })
-    this.healthBar.draw()
+    this.healthBar.current < this.health && this.healthBar.draw()
   }
 
 

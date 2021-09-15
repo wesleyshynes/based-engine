@@ -43,6 +43,7 @@ export class LevelOne extends BasedLevel {
     this.box.x = (this.tileMap.roomList[this.tileMap.roomList.length - 1].x + 2) * this.tileMap.tileSize
     this.box.y = (this.tileMap.roomList[this.tileMap.roomList.length - 1].y + 2) * this.tileMap.tileSize
     this.box.tileMap = this.tileMap
+    await this.box.preload()
 
     // setup goal
     this.leader = new Leader({key: 'leader', gameRef: this.gameRef})
@@ -91,9 +92,10 @@ export class LevelOne extends BasedLevel {
       this.tileMap.removeOccupant(baddie)
     })
     this.baddies.map(baddie => {
-      this.tileMap.removeOccupant(baddie)
-      baddie.update()
-      this.tileMap.addOccupant(baddie)
+      if(baddie.healthBar.current > 0) {
+        baddie.update()
+        this.tileMap.addOccupant(baddie)
+      }
     })
 
     this.updateCamera()
@@ -211,7 +213,9 @@ export class LevelOne extends BasedLevel {
     this.leader.draw()
 
     this.baddies.map(baddie => {
-      baddie.draw()
+      if(baddie.healthBar.current > 0) {
+        baddie.draw()        
+      }
     })
 
     if (this.gameRef.touchMode) {

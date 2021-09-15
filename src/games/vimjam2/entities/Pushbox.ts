@@ -1,18 +1,19 @@
 import { BasedObject } from "../../../engine/BasedObject";
-import { drawBox } from "../../../engine/libs/drawHelpers";
+import { createSprite, drawBox, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { distanceBetween, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import BananaCrateSpriteUrl from '../../../assets/vimjam2/bananaCrate.png'
 
 export default class PushBox extends BasedObject {
 
   x: number = 0
   y: number = 0
 
-  radius: number = 20
+  radius: number = 32
 
   speed: number = 3
 
-  width: number = 40
-  height: number = 40
+  width: number = 64
+  height: number = 64
 
   objectKey: string = 'box'
 
@@ -21,7 +22,25 @@ export default class PushBox extends BasedObject {
 
   velocity: XYCoordinateType = { x: 0, y: 0 }
 
-  async preload() { }
+  sprite: any;
+
+  async preload() {
+    this.sprite = await createSprite({
+      c: this.gameRef.ctx,
+      sprite: BananaCrateSpriteUrl,
+      sx: 0,
+      sy: 0,
+      sWidth: this.width,
+      sHeight: this.height,
+      dx:  0,
+      dy:  0,
+      dWidth: this.width,
+      dHeight: this.height,
+      frame: 0,
+      lastUpdate: 0,
+      updateDiff: 1000/60 * 10
+    })
+  }
   initialize() { }
   update() { }
 
@@ -66,6 +85,17 @@ export default class PushBox extends BasedObject {
       height: this.height,
       fillColor: this.color
     })
+
+    rotateDraw({
+      c: this.gameRef.ctx,
+      x: this.x - this.width / 2 + this.gameRef.cameraPos.x,
+      y: this.y - this.height / 2 + this.gameRef.cameraPos.y,
+      a: 0
+    }, () => {
+      // this.sprite.flipX = this.velocity.x < 0
+      drawImage(this.sprite)
+    })
+
   }
   tearDown() { }
 }

@@ -3,6 +3,7 @@ import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine
 import { angleBetween, distanceBetween, pointOnCircle, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { HealthBar } from "../ui/HealthBar";
 import MonkeySpriteUrl from '../../../assets/vimjam2/monkeySpriteSheet.png'
+import { MeleeWeapon } from "./MeleeWeapon";
 
 export default class Player extends BasedObject {
 
@@ -28,6 +29,13 @@ export default class Player extends BasedObject {
 
   sprite: any;
 
+  mode: string = 'melee';
+  prevMode: string = 'melee'
+
+  direction: string = 'up'
+
+  meleeWeapon: any;
+
   async preload() {
     this.sprite = await createSprite({
       c: this.gameRef.ctx,
@@ -44,19 +52,30 @@ export default class Player extends BasedObject {
       lastUpdate: 0,
       updateDiff: 1000/60 * 10
     })
+
+    this.meleeWeapon = new MeleeWeapon({key: 'melee-weapon', gameRef: this.gameRef})
+    await this.meleeWeapon.preload()
   }
 
   initialize() {
     this.healthBar = new HealthBar({key: 'player-health', gameRef: this.gameRef})
     this.healthBar.width = this.radius * 2
-    this.healthBar.yOffset = -this.radius/2 - 5
+    this.healthBar.yOffset = -this.radius/2 - 20
     this.healthBar.current = this.health
+
+    this.meleeWeapon.initialize()
+    this.meleeWeapon.yOffset = 10
   }
 
   update() {
+
+    this.mode = this.speed === this.pushSpeed ? 'push' : this.prevMode
+
     this.speed = this.baseSpeed
     this.color = '#ce192b'
 
+    this.meleeWeapon.target = this.target
+    this.mode === 'melee' && this.meleeWeapon.update()
     // check collision
     const playerCoord = this.tileMap.getMapCoord(this)
     for (let i = -1; i < 2; i++) {
@@ -85,8 +104,17 @@ export default class Player extends BasedObject {
               })
             }
 
-            if(occupants[oc].entityTag === 'baddie' && distanceBetween(this, occupants[oc]) < this.radius + occupants[oc].radius ) {
-               this.damage(-5, occupants[oc], 16)
+            if(occupants[oc].entityTag === 'baddie' && occupants[oc].healthBar.current > 0) {
+              if(distanceBetween(this, occupants[oc]) < this.radius + occupants[oc].radius) {
+                this.damage(-5, occupants[oc], 16)
+              }
+              const meleeHitBox = {
+                x: this.meleeWeapon.x + this.meleeWeapon.hitBox.x,
+                y: this.meleeWeapon.y + this.meleeWeapon.hitBox.y,
+              }
+              if(this.mode === 'melee' && distanceBetween(meleeHitBox, occupants[oc]) < this.meleeWeapon.hitBoxRadius + occupants[oc].radius) {
+                occupants[oc].damage(this.meleeWeapon.currentSpeed > 5 ? -30 : -5, meleeHitBox, 16)
+              }
             }
           })
         }
@@ -143,6 +171,9 @@ export default class Player extends BasedObject {
       this.velocity = { x: 0, y: 0 }
       arriveFn()
     }
+
+    this.meleeWeapon.moveTo(this)
+
   }
 
   setTarget(newTarget: XYCoordinateType) {
@@ -157,15 +188,41 @@ export default class Player extends BasedObject {
       }
       this.sprite.lastUpdate = this.gameRef.lastUpdate
 
-      if(Math.abs(this.velocity.x) > Math.abs(this.velocity.y)) {
-        this.sprite.sy = this.sprite.dHeight * 2
-        this.sprite.flipX = this.velocity.x < 0
-      } else if (Math.abs(this.velocity.y)) {
-        this.sprite.flipX = false
-        if(this.velocity.y > 0) {
-          this.sprite.sy =  0
-        } else {
-          this.sprite.sy = this.sprite.dHeight
+      if(this.mode === 'melee') {
+        const relVel = {
+          // x: this.target.x - this.x,
+          // y: this.target.y - this.y,
+          x: this.meleeWeapon.x + this.meleeWeapon.hitBox.x - this.x,
+          y: this.meleeWeapon.y + this.meleeWeapon.hitBox.y - this.y,
+        }
+        if(Math.abs(relVel.x) > Math.abs(relVel.y)) {
+          this.sprite.sy = this.sprite.dHeight * 2
+          this.sprite.flipX = relVel.x < 0
+          this.direction = relVel.x < 0 ? 'left' : 'right'
+        } else if (Math.abs(relVel.y)) {
+          this.sprite.flipX = false
+          if(relVel.y > 0) {
+            this.sprite.sy =  0
+            this.direction = 'down'
+          } else {
+            this.sprite.sy = this.sprite.dHeight
+            this.direction = 'up'
+          }
+        }
+      } else {
+        if(Math.abs(this.velocity.x) > Math.abs(this.velocity.y)) {
+          this.sprite.sy = this.sprite.dHeight * 2
+          this.sprite.flipX = this.velocity.x < 0
+          this.direction = this.velocity.x < 0 ? 'left' : 'right'
+        } else if (Math.abs(this.velocity.y)) {
+          this.sprite.flipX = false
+          if(this.velocity.y > 0) {
+            this.sprite.sy =  0
+            this.direction = 'down'
+          } else {
+            this.sprite.sy = this.sprite.dHeight
+            this.direction = 'up'
+          }
         }
       }
 
@@ -182,6 +239,8 @@ export default class Player extends BasedObject {
     //   fillColor: this.color
     // })
 
+    this.direction === 'up' && this.mode === 'melee' && this.meleeWeapon.draw()
+
     rotateDraw({
       c: this.gameRef.ctx,
       x: this.gameRef.cameraPos.x + this.x + (this.sprite.flipX ? this.radius : -this.radius ) ,
@@ -192,7 +251,11 @@ export default class Player extends BasedObject {
       drawImage(this.sprite)
     })
 
+    this.direction !== 'up' && this.mode === 'melee' && this.meleeWeapon.draw()
+
+
     this.healthBar.draw()
+
   }
   tearDown() { }
 }
