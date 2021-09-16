@@ -114,14 +114,14 @@ export class TouchKnob extends BasedObject {
     }
   }
   draw() {
-    drawBox({
-      c: this.gameRef.ctx,
-      x: this.x,
-      y: this.y,
-      width: this.width,
-      height: this.height,
-      fillColor: this.touchColor
-    })
+    // drawBox({
+    //   c: this.gameRef.ctx,
+    //   x: this.x,
+    //   y: this.y,
+    //   width: this.width,
+    //   height: this.height,
+    //   fillColor: this.touchColor
+    // })
 
     if (this.knobActive) {
       drawCircle({
@@ -135,6 +135,22 @@ export class TouchKnob extends BasedObject {
         c: this.gameRef.ctx,
         x: this.knobCoord.x + this.knobCenter.x,
         y: this.knobCoord.y + this.knobCenter.y,
+        radius: this.knobRadius,
+        fillColor: 'rgba(0,0,0,.5)'
+      })
+    } else {
+      drawCircle({
+        c: this.gameRef.ctx,
+          x: this.x + this.width/2,
+          y: this.y + this.height/2,
+        radius: this.radius,
+        fillColor: 'rgba(255,255,255,.5)'
+      })
+
+      drawCircle({
+        c: this.gameRef.ctx,
+        x: this.x + this.width/2,
+        y: this.y + this.height/2,
         radius: this.knobRadius,
         fillColor: 'rgba(0,0,0,.5)'
       })

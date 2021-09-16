@@ -1,6 +1,7 @@
 import { BasedObject } from "../../../engine/BasedObject";
-import { drawCircle } from "../../../engine/libs/drawHelpers";
-import { distanceBetween } from "../../../engine/libs/mathHelpers";
+import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
+import { angleBetween, distanceBetween } from "../../../engine/libs/mathHelpers";
+import PoopSprite from '../../../assets/vimjam2/poop-sprite.png'
 
 export class Projectile extends BasedObject {
   active: boolean = false
@@ -14,11 +15,31 @@ export class Projectile extends BasedObject {
   shotDelay: number = 200
   entityTag: string = 'bullet'
 
+  angle: number = 0
+
   trails: any = []
   lastTrail: number = 0
   trailDiff: number = 10
   trailTime: number = 200
   trailLimit: number = 10
+
+  sprite: any;
+
+  async preload() {
+    this.sprite = await createSprite({
+      c: this.gameRef.ctx,
+      sprite: PoopSprite,
+      sx: 12,
+      sy: 0,
+      sWidth: 12,
+      sHeight: 12,
+      dx: -this.radius,
+      dy: -this.radius,
+      dWidth: 12,
+      dHeight: 12,
+      frame: 0,
+    })
+  }
 
   initialize() {}
 
@@ -69,6 +90,7 @@ export class Projectile extends BasedObject {
       this.y = start.y
       this.target = end
       this.setVelocityToTarget()
+      this.angle = angleBetween(start, end, true)
       this.active = true
       this.traveled = 0
       this.lastShot = this.gameRef.lastUpdate
@@ -91,21 +113,31 @@ export class Projectile extends BasedObject {
         x: this.gameRef.cameraPos.x + trail.x,
         y: this.gameRef.cameraPos.y + trail.y,
         fillColor: 'black',
-        radius: this.radius * (trail.time - this.gameRef.lastUpdate)/(this.trailTime)
+        radius: (this.radius * (trail.time - this.gameRef.lastUpdate)/(this.trailTime))/2
       })
       this.gameRef.ctx.globalAlpha = 1
       }
     })
     if (this.active) {
-      drawCircle({
+      // drawCircle({
+      //   c: this.gameRef.ctx,
+      //   x: this.gameRef.cameraPos.x + this.x,
+      //   y: this.gameRef.cameraPos.y + this.y,
+      //   fillColor: 'gold',
+      //   radius: this.radius,
+      //   // strokeColor: 'rgba(255,255,255,.5)',
+      //   // strokeWidth: 2
+      // })
+
+      rotateDraw({
         c: this.gameRef.ctx,
         x: this.gameRef.cameraPos.x + this.x,
         y: this.gameRef.cameraPos.y + this.y,
-        fillColor: 'gold',
-        radius: this.radius,
-        // strokeColor: 'rgba(255,255,255,.5)',
-        // strokeWidth: 2
+        a: this.angle
+      }, () => {
+        drawImage(this.sprite)
       })
+
     }
 
   }

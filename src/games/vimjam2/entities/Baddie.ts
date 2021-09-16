@@ -1,8 +1,9 @@
 import { BasedObject } from "../../../engine/BasedObject";
-import { drawCircle } from "../../../engine/libs/drawHelpers";
+import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { angleBetween, distanceBetween, pointOnCircle, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import PF from 'pathfinding';
 import { HealthBar } from "../ui/HealthBar";
+import BadMonkeySprite from '../../../assets/vimjam2/Monkey_Enemey.png'
 
 export default class Baddie extends BasedObject {
   x: number = 0
@@ -30,7 +31,25 @@ export default class Baddie extends BasedObject {
   healthBar: any;
   health: number = 100;
 
-  async preload() { }
+  sprite: any;
+
+  async preload() {
+    this.sprite = await createSprite({
+      c: this.gameRef.ctx,
+      sprite: BadMonkeySprite,
+      sx: 0,
+      sy: 0,
+      sWidth: 32,
+      sHeight: 32,
+      dx: 0,
+      dy: 0,
+      dWidth: 32,
+      dHeight: 32,
+      frame: 0,
+      lastUpdate: 0,
+      updateDiff: 1000 / 60 * 10
+    })
+  }
 
   initialize() {
     this.healthBar = new HealthBar({ key: `baddie-health-${this.objectKey}`, gameRef: this.gameRef })
@@ -176,13 +195,24 @@ export default class Baddie extends BasedObject {
   }
 
   draw() {
-    drawCircle({
+    // drawCircle({
+    //   c: this.gameRef.ctx,
+    //   x: this.x + this.gameRef.cameraPos.x,
+    //   y: this.y + this.gameRef.cameraPos.y,
+    //   radius: this.radius,
+    //   fillColor: this.color
+    // })
+
+    rotateDraw({
       c: this.gameRef.ctx,
-      x: this.x + this.gameRef.cameraPos.x,
-      y: this.y + this.gameRef.cameraPos.y,
-      radius: this.radius,
-      fillColor: this.color
+      x: this.gameRef.cameraPos.x + this.x + (this.sprite.flipX ? this.radius : -this.radius),
+      y: this.gameRef.cameraPos.y + this.y - this.radius,
+      a: 0
+    }, () => {
+      // this.sprite.flipX = this.velocity.x < 0
+      drawImage(this.sprite)
     })
+
     this.healthBar.current < this.health && this.healthBar.draw()
   }
 

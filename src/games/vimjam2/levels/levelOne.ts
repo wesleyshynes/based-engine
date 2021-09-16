@@ -43,6 +43,7 @@ export class LevelOne extends BasedLevel {
     await this.tileMap.preload()
     this.levelWidth = this.tileMap.width
     this.levelHeight = this.tileMap.height
+    this.bossRoom = false
 
     // setup player
     this.player = new Player({ key: 'player', gameRef: this.gameRef })
@@ -68,6 +69,7 @@ export class LevelOne extends BasedLevel {
     this.baddies = []
     for (let i = 1; i < this.tileMap.roomList.length; i++) {
       const newBaddie = new Baddie({ key: `baddie-${i}`, gameRef: this.gameRef })
+      await newBaddie.preload()
       newBaddie.x = (this.tileMap.roomList[i].x + 2) * this.tileMap.tileSize
       newBaddie.y = (this.tileMap.roomList[i].y + 2) * this.tileMap.tileSize
       newBaddie.spawnRoom = this.tileMap.roomList[i].key

@@ -1,7 +1,7 @@
 import { BasedObject } from "../../../engine/BasedObject";
 import { createSprite, drawCircle, drawImage, drawLine, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { angleBetween, degToRad, distanceBetween, pointOnCircle, XYCoordinateType } from "../../../engine/libs/mathHelpers";
-import BlastyManGun from '../../../assets/blasty-man/blasty-man-gun-concept.png'
+import PoopSprite from '../../../assets/vimjam2/poop-sprite.png'
 import { Projectile } from "./Projectile";
 
 export class ProjectileWeapon extends BasedObject {
@@ -16,7 +16,7 @@ export class ProjectileWeapon extends BasedObject {
   rotateSpeed: number = 5
 
   radius: number = 20
-  weaponLength: number = 20
+  weaponLength: number = 30
 
   handColor: string = '#d89b6d';
   handPos: XYCoordinateType = { x: 0, y: 0 }
@@ -39,23 +39,24 @@ export class ProjectileWeapon extends BasedObject {
   async preload() {
     this.sprite = await createSprite({
       c: this.gameRef.ctx,
-      sprite: BlastyManGun,
+      sprite: PoopSprite,
       sx: 0,
       sy: 0,
-      sWidth: 32,
-      sHeight: 16,
-      dx: -32,
-      dy: -8,
-      dWidth: 32,
-      dHeight: 16,
+      sWidth: 12,
+      sHeight: 12,
+      dx: 0,
+      dy: -6,
+      dWidth: 12,
+      dHeight: 12,
       frame: 0,
     })
-    this.sprite.dx = -32
-    this.sprite.dy = -4
-    this.sprite.flipX = true
-    this.sprite.flipY = false
+    // this.sprite.dx = 0
+    // this.sprite.dy = 0
+    // this.sprite.flipX = false
+    // this.sprite.flipY = false
 
     this.projectile = new Projectile({ key: 'projectile', gameRef: this.gameRef })
+    await this.projectile.preload()
   }
 
   initialize() {}
@@ -114,7 +115,7 @@ export class ProjectileWeapon extends BasedObject {
   moveTo(newLocation: {x: number, y: number}) {
     this.x = newLocation.x + this.xOffset
     this.y = newLocation.y + this.yOffset
-    this.sprite.flipY =  this.angle > 90 && this.angle < 270
+    // this.sprite.flipY =  this.angle > 90 && this.angle < 270
   }
 
   setTarget(newTarget: {x: number, y: number}) {
@@ -123,29 +124,29 @@ export class ProjectileWeapon extends BasedObject {
 
   draw() {
 
-    // this.trails.forEach((trail: any) => {
-    //   if(trail.time > this.gameRef.lastUpdate) {
-    //   this.gameRef.ctx.globalAlpha = (trail.time - this.gameRef.lastUpdate)/(this.trailTime * 2)
-    //   // rotateDraw({
-    //   //   c: this.gameRef.ctx,
-    //   //   x: cameraOffset.x + trail.x + trail.hx,
-    //   //   y: cameraOffset.y + trail.y + trail.hy,
-    //   //   a: trail.angle
-    //   // }, () => {
-    //   //   drawImage(this.sprite)
-    //   // })
-    //   drawLine({
-    //     c: this.gameRef.ctx,
-    //     x: cameraOffset.x + trail.x + trail.hx,
-    //     y: cameraOffset.y + trail.y + trail.hy,
-    //     toX: cameraOffset.x + trail.x + trail.sx,
-    //     toY: cameraOffset.y + trail.y + trail.sy,
-    //     strokeWidth: 2,
-    //     strokeColor: 'rgba(255,255,255)'
-    //   })
-    //   this.gameRef.ctx.globalAlpha = 1
-    //   }
-    // })
+    this.trails.forEach((trail: any) => {
+      if(trail.time > this.gameRef.lastUpdate) {
+      this.gameRef.ctx.globalAlpha = (trail.time - this.gameRef.lastUpdate)/(this.trailTime * 2)
+      // rotateDraw({
+      //   c: this.gameRef.ctx,
+      //   x: cameraOffset.x + trail.x + trail.hx,
+      //   y: cameraOffset.y + trail.y + trail.hy,
+      //   a: trail.angle
+      // }, () => {
+      //   drawImage(this.sprite)
+      // })
+      drawLine({
+        c: this.gameRef.ctx,
+        x: this.gameRef.cameraPos.x + trail.x + trail.hx,
+        y: this.gameRef.cameraPos.y + trail.y + trail.hy,
+        toX: this.gameRef.cameraPos.x + trail.x + trail.sx,
+        toY: this.gameRef.cameraPos.y + trail.y + trail.sy,
+        strokeWidth: 2,
+        strokeColor: 'rgba(255,255,255)'
+      })
+      this.gameRef.ctx.globalAlpha = 1
+      }
+    })
 
     drawCircle({
       c: this.gameRef.ctx,
@@ -159,26 +160,14 @@ export class ProjectileWeapon extends BasedObject {
 
     this.projectile.draw()
 
-    // rotateDraw({
-    //   c: this.gameRef.ctx,
-    //   x: this.gameRef.cameraPos.x + this.handPos.x + this.x,
-    //   y: this.gameRef.cameraPos.y + this.handPos.y + this.y,
-    //   a: this.angle
-    // }, () => {
-    //
-    //   // drawImage(this.sprite)
-    //
-    //   // draw hand
-    //   drawCircle({
-    //     c: this.gameRef.ctx,
-    //     // x: -6,
-    //     // y: 8,
-    //     x: 0,
-    //     y: 0,
-    //     radius: 5,
-    //     fillColor: this.handColor,
-    //   })
-    // })
+    this.projectile.canFire() && rotateDraw({
+      c: this.gameRef.ctx,
+      x: this.gameRef.cameraPos.x + this.handPos.x + this.x,
+      y: this.gameRef.cameraPos.y + this.handPos.y + this.y,
+      a: this.angle
+    }, () => {
+      drawImage(this.sprite)
+    })
 
     // drawCircle({
     //   c: this.gameRef.ctx,

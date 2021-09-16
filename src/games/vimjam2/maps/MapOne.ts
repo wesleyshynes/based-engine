@@ -240,16 +240,27 @@ export class MapOne extends BasedObject {
     const x = (this.width / this.tileSize)
     const y = (this.height / this.tileSize)
     const newMap = []
+    const treePool = [
+      [1,3],
+      [2,3],
+      [0,4],
+      [1,4],
+      [2,4],
+      [0,5],
+      [1,5],
+      [2,5],
+    ]
     for(let i = 0; i < y; i++) {
       const mapRow = []
       for(let j = 0; j < x; j++) {
+        const [sX,sY] = treePool[getRandomInt(8)]
         mapRow.push({
           color: 0,
           walkable: false,
           occupants: {},
           roomKey: '',
-          sx: 1,
-          sy: 3
+          sx: sX,
+          sy: sY,
         })
       }
       newMap.push(mapRow)
