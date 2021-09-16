@@ -167,15 +167,15 @@ export class LevelOne extends BasedLevel {
         x: (this.aimKnob.knobCoord.x / this.aimKnob.maxOffset) * 1000 + bx,
         y: (this.aimKnob.knobCoord.y / this.aimKnob.maxOffset) * 1000 + by,
       })
-      // this.bMan.attacking = true
+      this.player.attacking = true
     } else if (!this.gameRef.touchMode) {
-      // this.player.attacking = this.gameRef.mouseInfo.mouseDown
+      this.player.attacking = this.gameRef.mouseInfo.mouseDown
       this.player.setTarget({
         x: this.gameRef.mouseInfo.x - this.gameRef.cameraPos.x,
         y: this.gameRef.mouseInfo.y - this.gameRef.cameraPos.y,
       })
     } else {
-      // this.bMan.attacking = false
+      this.player.attacking = false
     }
   }
 

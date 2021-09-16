@@ -4,6 +4,7 @@ import { angleBetween, distanceBetween, pointOnCircle, relativeMultiplier, XYCoo
 import { HealthBar } from "../ui/HealthBar";
 import MonkeySpriteUrl from '../../../assets/vimjam2/monkeySpriteSheet.png'
 import { MeleeWeapon } from "./MeleeWeapon";
+import { ProjectileWeapon } from "./ProjectileWeapon";
 
 export default class Player extends BasedObject {
 
@@ -25,16 +26,24 @@ export default class Player extends BasedObject {
   tileMap: any;
 
   healthBar: any;
+  poopHealthBar: any;
   health: number = 100;
+
 
   sprite: any;
 
-  mode: string = 'melee';
-  prevMode: string = 'melee'
+  // mode: string = 'melee';
+  // prevMode: string = 'melee'
+
+  mode: string = 'shoot';
+  prevMode: string = 'shoot'
 
   direction: string = 'up'
 
   meleeWeapon: any;
+  projectileWeapon: any;
+
+  attacking: boolean = false;
 
   async preload() {
     this.sprite = await createSprite({
@@ -44,27 +53,44 @@ export default class Player extends BasedObject {
       sy: 0,
       sWidth: 56,
       sHeight: 56,
-      dx:  0,
-      dy:  0,
+      dx: 0,
+      dy: 0,
       dWidth: 56,
       dHeight: 56,
       frame: 0,
       lastUpdate: 0,
-      updateDiff: 1000/60 * 10
+      updateDiff: 1000 / 60 * 10
     })
 
-    this.meleeWeapon = new MeleeWeapon({key: 'melee-weapon', gameRef: this.gameRef})
+    this.meleeWeapon = new MeleeWeapon({ key: 'melee-weapon', gameRef: this.gameRef })
     await this.meleeWeapon.preload()
+
+
+    this.projectileWeapon = new ProjectileWeapon({ key: 'projectile-weapon', gameRef: this.gameRef })
+    await this.projectileWeapon.preload()
   }
 
   initialize() {
-    this.healthBar = new HealthBar({key: 'player-health', gameRef: this.gameRef})
+    this.healthBar = new HealthBar({ key: 'player-health', gameRef: this.gameRef })
     this.healthBar.width = this.radius * 2
-    this.healthBar.yOffset = -this.radius/2 - 20
+    this.healthBar.yOffset = -this.radius / 2 - 20
     this.healthBar.current = this.health
+
+    this.poopHealthBar = new HealthBar({ key: 'poop-health', gameRef: this.gameRef })
+    this.poopHealthBar.width = this.radius * 2
+    this.poopHealthBar.yOffset = this.radius / 2 + 30
+    this.poopHealthBar.current = this.health
 
     this.meleeWeapon.initialize()
     this.meleeWeapon.yOffset = 10
+
+    this.projectileWeapon.initialize()
+    this.projectileWeapon.yOffset = 10
+  }
+
+  switchMode(mode: string) {
+    this.mode = mode
+    this.prevMode = mode
   }
 
   update() {
@@ -76,26 +102,59 @@ export default class Player extends BasedObject {
 
     this.meleeWeapon.target = this.target
     this.mode === 'melee' && this.meleeWeapon.update()
+
+    this.projectileWeapon.target = this.target
+    if (this.mode === 'shoot') {
+      this.projectileWeapon.update()
+      if (this.poopHealthBar.current > 0) {
+        this.attacking && this.projectileWeapon.onTarget && this.projectileWeapon.fire() && this.poopHealthBar.tick(-10)
+      } else {
+        this.switchMode('melee')
+      }
+    }
+
     // check collision
     const playerCoord = this.tileMap.getMapCoord(this)
+    const projectileCoord = this.tileMap.getMapCoord(this.projectileWeapon.projectile)
     for (let i = -1; i < 2; i++) {
       for (let j = -1; j < 2; j++) {
+
+        if(this.mode === 'shoot' && this.projectileWeapon.projectile.active) {
+          if (this.tileMap.onMap({
+            x: (projectileCoord.x + i) * this.tileMap.tileSize,
+            y: (projectileCoord.y + j) * this.tileMap.tileSize
+          })) {
+            const { occupants } = this.tileMap.getRoomFromCoord({
+              x: projectileCoord.x + i,
+              y: projectileCoord.y + j
+            })
+            Object.keys(occupants).map(oc => {
+              if (occupants[oc].entityTag === 'baddie' && occupants[oc].healthBar.current > 0) {}
+                if (distanceBetween(this.projectileWeapon.projectile, occupants[oc]) < this.projectileWeapon.projectile.radius + occupants[oc].radius) {
+                  occupants[oc].damage(-10, this.projectileWeapon.projectile, 16)
+                  this.projectileWeapon.projectile.active = false
+                }
+
+            })
+          }
+        }
+
         if (this.tileMap.onMap({
           x: (playerCoord.x + i) * this.tileMap.tileSize,
           y: (playerCoord.y + j) * this.tileMap.tileSize
         })) {
-          const {occupants, roomKey} = this.tileMap.getRoomFromCoord({
+          const { occupants, roomKey } = this.tileMap.getRoomFromCoord({
             x: playerCoord.x + i,
             y: playerCoord.y + j
           })
-          if(i === 0 && j === 0 && !this.tileMap.visitedRooms[roomKey]) {
+          if (i === 0 && j === 0 && !this.tileMap.visitedRooms[roomKey]) {
             this.tileMap.visitedRooms[roomKey] = true
           }
           Object.keys(occupants).map(oc => {
-            if(occupants[oc].objectKey === this.objectKey) {
+            if (occupants[oc].objectKey === this.objectKey) {
               return
             }
-            if(occupants[oc].objectKey === 'box' && distanceBetween(this, occupants[oc]) < this.radius + occupants[oc].radius ) {
+            if (occupants[oc].objectKey === 'box' && distanceBetween(this, occupants[oc]) < this.radius + occupants[oc].radius) {
               this.speed = this.pushSpeed
               // this.color = 'blue'
               occupants[oc].moveTo({
@@ -104,15 +163,15 @@ export default class Player extends BasedObject {
               })
             }
 
-            if(occupants[oc].entityTag === 'baddie' && occupants[oc].healthBar.current > 0) {
-              if(distanceBetween(this, occupants[oc]) < this.radius + occupants[oc].radius) {
+            if (occupants[oc].entityTag === 'baddie' && occupants[oc].healthBar.current > 0) {
+              if (distanceBetween(this, occupants[oc]) < this.radius + occupants[oc].radius) {
                 this.damage(-5, occupants[oc], 16)
               }
               const meleeHitBox = {
                 x: this.meleeWeapon.x + this.meleeWeapon.hitBox.x,
                 y: this.meleeWeapon.y + this.meleeWeapon.hitBox.y,
               }
-              if(this.mode === 'melee' && distanceBetween(meleeHitBox, occupants[oc]) < this.meleeWeapon.hitBoxRadius + occupants[oc].radius) {
+              if (this.mode === 'melee' && distanceBetween(meleeHitBox, occupants[oc]) < this.meleeWeapon.hitBoxRadius + occupants[oc].radius) {
                 occupants[oc].damage(this.meleeWeapon.currentSpeed > 5 ? -30 : -5, meleeHitBox, 16)
               }
             }
@@ -124,12 +183,15 @@ export default class Player extends BasedObject {
     this.healthBar.x = this.x
     this.healthBar.y = this.y
 
+    this.poopHealthBar.x = this.x
+    this.poopHealthBar.y = this.y
+
     this.updateSprite()
   }
 
-  damage(amount: number, dealer: XYCoordinateType, recoil: number){
+  damage(amount: number, dealer: XYCoordinateType, recoil: number) {
     const ticked = this.healthBar.tick(amount)
-    if(ticked) {
+    if (ticked) {
       // this.gameRef.soundPlayer.playSound(this.hitPlayerSound)
       const pushSpot = pointOnCircle(angleBetween(dealer, this), recoil)
       this.moveTo({
@@ -141,7 +203,7 @@ export default class Player extends BasedObject {
     }
   }
 
-  moveTo(moveTarget: { x: number, y: number, active?: boolean, speed?:number, distance?: number }, arriveFn: () => void = () => undefined) {
+  moveTo(moveTarget: { x: number, y: number, active?: boolean, speed?: number, distance?: number }, arriveFn: () => void = () => undefined) {
     const dt = distanceBetween(this, moveTarget)
     if (dt > 0) {
       const speedFactor = moveTarget.distance ? moveTarget.distance : (moveTarget.speed ? moveTarget.speed : this.speed) * this.gameRef.diffMulti
@@ -153,8 +215,8 @@ export default class Player extends BasedObject {
       const relX = relativeMultiplier(this.velocity.x) * this.radius
       if (
         this.tileMap &&
-        (!this.tileMap.onMap({x: this.x + relX, y: this.y}) ||
-        !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: this.x + relX, y: this.y})).walkable)
+        (!this.tileMap.onMap({ x: this.x + relX, y: this.y }) ||
+          !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({ x: this.x + relX, y: this.y })).walkable)
       ) {
         this.x -= this.velocity.x
       }
@@ -162,8 +224,8 @@ export default class Player extends BasedObject {
       const relY = relativeMultiplier(this.velocity.y) * this.radius
       if (
         this.tileMap &&
-        (!this.tileMap.onMap({x: this.x, y: this.y + relY}) ||
-        !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({x: this.x, y: this.y + relY})).walkable)
+        (!this.tileMap.onMap({ x: this.x, y: this.y + relY }) ||
+          !this.tileMap.getRoomFromCoord(this.tileMap.getMapCoord({ x: this.x, y: this.y + relY })).walkable)
       ) {
         this.y -= this.velocity.y
       }
@@ -173,6 +235,7 @@ export default class Player extends BasedObject {
     }
 
     this.meleeWeapon.moveTo(this)
+    this.projectileWeapon.moveTo(this)
 
   }
 
@@ -181,28 +244,28 @@ export default class Player extends BasedObject {
   }
 
   updateSprite() {
-    if(this.sprite.lastUpdate + this.sprite.updateDiff < this.gameRef.lastUpdate) {
+    if (this.sprite.lastUpdate + this.sprite.updateDiff < this.gameRef.lastUpdate) {
       this.sprite.frame++
-      if(this.sprite.frame > 2) {
+      if (this.sprite.frame > 2) {
         this.sprite.frame = 0
       }
       this.sprite.lastUpdate = this.gameRef.lastUpdate
 
-      if(this.mode === 'melee') {
+      if (this.mode === 'melee') {
         const relVel = {
           // x: this.target.x - this.x,
           // y: this.target.y - this.y,
           x: this.meleeWeapon.x + this.meleeWeapon.hitBox.x - this.x,
           y: this.meleeWeapon.y + this.meleeWeapon.hitBox.y - this.y,
         }
-        if(Math.abs(relVel.x) > Math.abs(relVel.y)) {
+        if (Math.abs(relVel.x) > Math.abs(relVel.y)) {
           this.sprite.sy = this.sprite.dHeight * 2
           this.sprite.flipX = relVel.x < 0
           this.direction = relVel.x < 0 ? 'left' : 'right'
         } else if (Math.abs(relVel.y)) {
           this.sprite.flipX = false
-          if(relVel.y > 0) {
-            this.sprite.sy =  0
+          if (relVel.y > 0) {
+            this.sprite.sy = 0
             this.direction = 'down'
           } else {
             this.sprite.sy = this.sprite.dHeight
@@ -210,14 +273,14 @@ export default class Player extends BasedObject {
           }
         }
       } else {
-        if(Math.abs(this.velocity.x) > Math.abs(this.velocity.y)) {
+        if (Math.abs(this.velocity.x) > Math.abs(this.velocity.y)) {
           this.sprite.sy = this.sprite.dHeight * 2
           this.sprite.flipX = this.velocity.x < 0
           this.direction = this.velocity.x < 0 ? 'left' : 'right'
         } else if (Math.abs(this.velocity.y)) {
           this.sprite.flipX = false
-          if(this.velocity.y > 0) {
-            this.sprite.sy =  0
+          if (this.velocity.y > 0) {
+            this.sprite.sy = 0
             this.direction = 'down'
           } else {
             this.sprite.sy = this.sprite.dHeight
@@ -240,10 +303,11 @@ export default class Player extends BasedObject {
     // })
 
     this.direction === 'up' && this.mode === 'melee' && this.meleeWeapon.draw()
+    this.direction === 'up' && this.mode === 'shoot' && this.projectileWeapon.draw()
 
     rotateDraw({
       c: this.gameRef.ctx,
-      x: this.gameRef.cameraPos.x + this.x + (this.sprite.flipX ? this.radius : -this.radius ) ,
+      x: this.gameRef.cameraPos.x + this.x + (this.sprite.flipX ? this.radius : -this.radius),
       y: this.gameRef.cameraPos.y + this.y - this.radius,
       a: 0
     }, () => {
@@ -252,9 +316,11 @@ export default class Player extends BasedObject {
     })
 
     this.direction !== 'up' && this.mode === 'melee' && this.meleeWeapon.draw()
+    this.direction !== 'up' && this.mode === 'shoot' && this.projectileWeapon.draw()
 
 
     this.healthBar.draw()
+    this.mode === 'shoot' && this.poopHealthBar.draw()
 
   }
   tearDown() { }

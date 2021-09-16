@@ -1,5 +1,5 @@
 import { BasedObject } from "../../../engine/BasedObject";
-import BlastyManSwordUrl from '../../../assets/blasty-man/short-sword-concept.png'
+import StickMelee from '../../../assets/vimjam2/Stick_melee.png'
 import { createSprite, drawCircle, drawImage, drawLine, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { angleBetween, degToRad, distanceBetween, pointOnCircle, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import SwordSlash from '../../../assets/blasty-man/sword-slash.mp3'
@@ -13,6 +13,9 @@ export class MeleeWeapon extends BasedObject {
 
   sprite: any;
 
+  radius: number = 26
+  weaponLength: number = 30
+
   angle: number = 0
   rotateSpeed: number = 10
   currentSpeed: number = 0
@@ -21,7 +24,7 @@ export class MeleeWeapon extends BasedObject {
 
   hitBox: XYCoordinateType = { x: 0, y: 0 }
   hitBoxRadius: number = 10
-  handPos: XYCoordinateType = {x: 0, y: 0 }
+  handPos: XYCoordinateType = { x: 0, y: 0 }
 
   handColor: string = '#d89b6d';
 
@@ -41,19 +44,19 @@ export class MeleeWeapon extends BasedObject {
   async preload() {
     this.sprite = await createSprite({
       c: this.gameRef.ctx,
-      sprite: BlastyManSwordUrl,
+      sprite: StickMelee,
       sx: 0,
       sy: 0,
       sWidth: 40,
-      sHeight: 16,
+      sHeight: 20,
       dx: 0,
       dy: 0,
       dWidth: 40,
-      dHeight: 16,
+      dHeight: 20,
       frame: 0,
     })
     this.sprite.dx = 0
-    this.sprite.dy = -8
+    this.sprite.dy = -10
     this.sprite.flipX = false
     this.sprite.flipY = false
 
@@ -62,14 +65,14 @@ export class MeleeWeapon extends BasedObject {
   }
 
   handleSlashSound() {
-    if(this.onTarget && this.lastSound + this.soundTimeDiff < this.gameRef.lastUpdate) {
+    if (this.onTarget && this.lastSound + this.soundTimeDiff < this.gameRef.lastUpdate) {
       this.gameRef.soundPlayer.playSound(this.swingSound)
       this.lastSound = this.gameRef.lastUpdate
     }
   }
 
   handleTrails() {
-    if(this.lastTrail + this.trailDiff < this.gameRef.lastUpdate) {
+    if (this.lastTrail + this.trailDiff < this.gameRef.lastUpdate) {
       this.trails.unshift({
         x: this.x,
         y: this.y,
@@ -82,49 +85,46 @@ export class MeleeWeapon extends BasedObject {
       })
       this.lastTrail = this.gameRef.lastUpdate
     }
-    if(this.trails.length > this.trailLimit) {
-      this.trails = this.trails.slice(0,this.trailLimit-1)
+    if (this.trails.length > this.trailLimit) {
+      this.trails = this.trails.slice(0, this.trailLimit - 1)
     }
   }
 
   update() {
     const angleSpeed = this.rotateSpeed * this.gameRef.diffMulti
     const targetAngle = angleBetween(this, this.target, true)
-    const rotDir = (targetAngle - this.angle + 540)%360-180
+    const rotDir = (targetAngle - this.angle + 540) % 360 - 180
     // const rotDir = (targetAngle - this.gunRotate + 540)%360-180
-    if(rotDir > 5) {
+    if (Math.abs(rotDir) > 5) {
       this.handleTrails()
-      this.angle = this.angle % 360  + (rotDir > angleSpeed ? angleSpeed : rotDir)
-      this.handleSlashSound()
-
-    } else if (rotDir < -5) {
-      this.handleTrails()
-      this.angle = this.angle % 360  - (rotDir < angleSpeed ? angleSpeed : -rotDir)
+      this.angle = rotDir > 0 ?
+        this.angle % 360 + (rotDir > angleSpeed ? angleSpeed : rotDir) :
+        this.angle % 360 - (rotDir < angleSpeed ? angleSpeed : -rotDir)
       this.handleSlashSound()
     } else {
       this.angle = targetAngle
     }
-    if(this.angle < 0) {
+    if (this.angle < 0) {
       this.angle += 360
     }
-    this.handPos = pointOnCircle(degToRad(this.angle), 26)
-    this.hitBox = pointOnCircle(degToRad(this.angle), 56)
+    this.handPos = pointOnCircle(degToRad(this.angle), this.radius)
+    this.hitBox = pointOnCircle(degToRad(this.angle), this.radius + this.weaponLength)
 
     this.currentSpeed = Math.abs(rotDir)
 
-    const enemyAnglePos = pointOnCircle(angleBetween(this, this.target), 56)
-    const shootingPos = pointOnCircle(degToRad(this.angle), 56)
+    const enemyAnglePos = pointOnCircle(angleBetween(this, this.target), this.weaponLength)
+    const shootingPos = pointOnCircle(degToRad(this.angle), this.weaponLength)
     const shotDistance = distanceBetween(enemyAnglePos, shootingPos)
     this.onTarget = Math.abs(shotDistance) <= 1
   }
 
-  moveTo(newLocation: {x: number, y: number}) {
+  moveTo(newLocation: { x: number, y: number }) {
     this.x = newLocation.x + this.xOffset
     this.y = newLocation.y + this.yOffset
     // this.sprite.flipY =  this.angle > 90 && this.angle < 270
   }
 
-  setTarget(newTarget: {x: number, y: number}) {
+  setTarget(newTarget: { x: number, y: number }) {
     this.target = newTarget
   }
 
@@ -140,47 +140,47 @@ export class MeleeWeapon extends BasedObject {
     })
 
     this.trails.forEach((trail: any) => {
-      if(trail.time > this.gameRef.lastUpdate) {
-      this.gameRef.ctx.globalAlpha = (trail.time - this.gameRef.lastUpdate)/(this.trailTime * 2)
-      drawLine({
-        c: this.gameRef.ctx,
-        x: this.gameRef.cameraPos.x + trail.x + trail.mx,
-        y: this.gameRef.cameraPos.y + trail.y + trail.my,
-        toX: this.gameRef.cameraPos.x + trail.x + trail.hx,
-        toY: this.gameRef.cameraPos.y + trail.y + trail.hy,
-        strokeWidth: 10,
-        strokeColor: 'rgba(255,255,255)'
-      })
-      this.gameRef.ctx.globalAlpha = 1
+      if (trail.time > this.gameRef.lastUpdate) {
+        this.gameRef.ctx.globalAlpha = (trail.time - this.gameRef.lastUpdate) / (this.trailTime * 2)
+        drawLine({
+          c: this.gameRef.ctx,
+          x: this.gameRef.cameraPos.x + trail.x + trail.mx,
+          y: this.gameRef.cameraPos.y + trail.y + trail.my,
+          toX: this.gameRef.cameraPos.x + trail.x + trail.hx,
+          toY: this.gameRef.cameraPos.y + trail.y + trail.hy,
+          strokeWidth: 10,
+          strokeColor: 'rgba(255,255,255)'
+        })
+        this.gameRef.ctx.globalAlpha = 1
       }
     })
 
-    drawLine({
-      c: this.gameRef.ctx,
-      x: this.gameRef.cameraPos.x + this.x + this.handPos.x,
-      y: this.gameRef.cameraPos.y + this.y + this.handPos.y,
-      toX: this.gameRef.cameraPos.x + this.x + this.hitBox.x,
-      toY: this.gameRef.cameraPos.y + this.y + this.hitBox.y,
-      strokeWidth: 6,
-      strokeColor: 'brown'
-    })
-
-    // rotateDraw({
+    // drawLine({
     //   c: this.gameRef.ctx,
-    //   x: this.gameRef.cameraPos.x + this.handPos.x + this.x,
-    //   y: this.gameRef.cameraPos.y + this.handPos.y + this.y,
-    //   a: this.angle
-    // }, () => {
-    //   drawImage(this.sprite)
+    //   x: this.gameRef.cameraPos.x + this.x + this.handPos.x,
+    //   y: this.gameRef.cameraPos.y + this.y + this.handPos.y,
+    //   toX: this.gameRef.cameraPos.x + this.x + this.hitBox.x,
+    //   toY: this.gameRef.cameraPos.y + this.y + this.hitBox.y,
+    //   strokeWidth: 6,
+    //   strokeColor: 'brown'
     // })
 
-    drawCircle({
+    // drawCircle({
+    //   c: this.gameRef.ctx,
+    //   x: this.gameRef.cameraPos.x + this.hitBox.x + this.x,
+    //   y: this.gameRef.cameraPos.y + this.hitBox.y + this.y,
+    //   radius: this.hitBoxRadius,
+    //   fillColor: 'red',
+    //   // fillColor: this.onTarget ? 'orange' : 'yellow',
+    // })
+
+    rotateDraw({
       c: this.gameRef.ctx,
-      x: this.gameRef.cameraPos.x + this.hitBox.x + this.x,
-      y: this.gameRef.cameraPos.y + this.hitBox.y + this.y,
-      radius: this.hitBoxRadius,
-      fillColor: 'grey',
-      // fillColor: this.onTarget ? 'orange' : 'yellow',
+      x: this.gameRef.cameraPos.x + this.handPos.x + this.x,
+      y: this.gameRef.cameraPos.y + this.handPos.y + this.y,
+      a: this.angle
+    }, () => {
+      drawImage(this.sprite)
     })
 
   }
