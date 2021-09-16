@@ -7,6 +7,7 @@ import Player from "../entities/Player";
 import PushBox from "../entities/Pushbox";
 import { MapOne } from "../maps/MapOne";
 import BgMusic from '../../../assets/vimjam2/good-new-diddyPERFOMANCE.mp3'
+import BgMusic2 from '../../../assets/vimjam2/Deep space.mp3'
 
 export class LevelOne extends BasedLevel {
 
@@ -28,7 +29,12 @@ export class LevelOne extends BasedLevel {
     playing: false,
     soundRef: null,
   }
+
   bgSong: any;
+  bgSong2: any;
+
+  bossRoom: boolean = false
+  bossRoomTag: string;
 
   async preload() {
     // setup map
@@ -53,7 +59,7 @@ export class LevelOne extends BasedLevel {
     await this.box.preload()
 
     // setup goal
-    this.leader = new Leader({key: 'leader', gameRef: this.gameRef})
+    this.leader = new Leader({ key: 'leader', gameRef: this.gameRef })
     this.leader.x = (this.tileMap.roomList[0].x + 5) * this.tileMap.tileSize
     this.leader.y = (this.tileMap.roomList[0].y + 5) * this.tileMap.tileSize
     // this.player.tileMap = this.tileMap
@@ -61,12 +67,14 @@ export class LevelOne extends BasedLevel {
     //setup enemies
     this.baddies = []
     for (let i = 1; i < this.tileMap.roomList.length; i++) {
-      const newBaddie = new Baddie({key: `baddie-${i}`, gameRef: this.gameRef})
+      const newBaddie = new Baddie({ key: `baddie-${i}`, gameRef: this.gameRef })
       newBaddie.x = (this.tileMap.roomList[i].x + 2) * this.tileMap.tileSize
       newBaddie.y = (this.tileMap.roomList[i].y + 2) * this.tileMap.tileSize
       newBaddie.spawnRoom = this.tileMap.roomList[i].key
       this.baddies.push(newBaddie)
     }
+
+    this.bossRoomTag = this.tileMap.roomList[this.tileMap.roomList.length - 1].key
 
     // UI
     this.moveKnob = new TouchKnob({ key: 'move-knob', gameRef: this.gameRef })
@@ -75,7 +83,8 @@ export class LevelOne extends BasedLevel {
 
 
     // Music
-    this.bgSong =  await this.gameRef.soundPlayer.loadSound(BgMusic)
+    this.bgSong = await this.gameRef.soundPlayer.loadSound(BgMusic)
+    this.bgSong2 = await this.gameRef.soundPlayer.loadSound(BgMusic2)
 
   }
 
@@ -107,7 +116,7 @@ export class LevelOne extends BasedLevel {
       this.tileMap.removeOccupant(baddie)
     })
     this.baddies.map(baddie => {
-      if(baddie.healthBar.current > 0) {
+      if (baddie.healthBar.current > 0) {
         baddie.update()
         this.tileMap.addOccupant(baddie)
       }
@@ -116,11 +125,11 @@ export class LevelOne extends BasedLevel {
     this.updateCamera()
 
     // win condition
-    if(distanceBetween(this.leader,this.box) < this.leader.radius + this.box.radius) {
+    if (distanceBetween(this.leader, this.box) < this.leader.radius + this.box.radius) {
       // alert('You win')
       this.gameRef.loadLevel('start-screen')
     }
-    if(this.player.healthBar.current < 1) {
+    if (this.player.healthBar.current < 1) {
       // alert('You died')
       this.gameRef.loadLevel('start-screen')
     }
@@ -180,8 +189,12 @@ export class LevelOne extends BasedLevel {
   }
 
   handleSounds() {
-    if(this.activeSound.playing == false) {
-      this.activeSound.soundRef = this.gameRef.soundPlayer.playSound(this.bgSong, () => {
+    if (!this.bossRoom && this.tileMap.visitedRooms[this.bossRoomTag]) {
+      this.bossRoom = true
+      this.activeSound.soundRef.stop()
+    }
+    if (this.activeSound.playing == false) {
+      this.activeSound.soundRef = this.gameRef.soundPlayer.playSound(this.bossRoom ? this.bgSong2 : this.bgSong, () => {
         this.activeSound.playing = false
       })
       this.activeSound.playing = true
@@ -237,7 +250,7 @@ export class LevelOne extends BasedLevel {
     this.leader.draw()
 
     this.baddies.map(baddie => {
-      if(baddie.healthBar.current > 0) {
+      if (baddie.healthBar.current > 0) {
         baddie.draw()
       }
     })
