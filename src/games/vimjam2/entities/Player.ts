@@ -35,8 +35,10 @@ export default class Player extends BasedObject {
   // mode: string = 'melee';
   // prevMode: string = 'melee'
 
-  mode: string = 'shoot';
+  mode: string = 'shoot'
   prevMode: string = 'shoot'
+  lastSwitch: number = 0
+  switchDelay: number = 300
 
   direction: string = 'up'
 
@@ -89,8 +91,13 @@ export default class Player extends BasedObject {
   }
 
   switchMode(mode: string) {
-    this.mode = mode
-    this.prevMode = mode
+    if(this.lastSwitch + this.switchDelay < this.gameRef.lastUpdate){
+      this.mode = mode
+      this.prevMode = mode
+      this.projectileWeapon.projectile.lastShot = this.gameRef.lastUpdate
+      this.projectileWeapon.projectile.active = false
+      this.lastSwitch = this.gameRef.lastUpdate
+    }
   }
 
   update() {
@@ -107,7 +114,7 @@ export default class Player extends BasedObject {
     if (this.mode === 'shoot') {
       this.projectileWeapon.update()
       if (this.poopHealthBar.current > 0) {
-        this.attacking && this.projectileWeapon.onTarget && this.projectileWeapon.fire() && this.poopHealthBar.tick(-10)
+        this.attacking && this.projectileWeapon.onTarget && this.projectileWeapon.fire() && this.poopHealthBar.tick(-5)
       } else {
         this.switchMode('melee')
       }
@@ -116,6 +123,7 @@ export default class Player extends BasedObject {
     // check collision
     const playerCoord = this.tileMap.getMapCoord(this)
     const projectileCoord = this.tileMap.getMapCoord(this.projectileWeapon.projectile)
+
     for (let i = -1; i < 2; i++) {
       for (let j = -1; j < 2; j++) {
 
@@ -124,18 +132,23 @@ export default class Player extends BasedObject {
             x: (projectileCoord.x + i) * this.tileMap.tileSize,
             y: (projectileCoord.y + j) * this.tileMap.tileSize
           })) {
-            const { occupants } = this.tileMap.getRoomFromCoord({
-              x: projectileCoord.x + i,
-              y: projectileCoord.y + j
-            })
-            Object.keys(occupants).map(oc => {
-              if (occupants[oc].entityTag === 'baddie' && occupants[oc].healthBar.current > 0) {}
-                if (distanceBetween(this.projectileWeapon.projectile, occupants[oc]) < this.projectileWeapon.projectile.radius + occupants[oc].radius) {
-                  occupants[oc].damage(-10, this.projectileWeapon.projectile, 16)
-                  this.projectileWeapon.projectile.active = false
+            // try {
+              const { occupants } = this.tileMap.getRoomFromCoord({
+                x: projectileCoord.x + i,
+                y: projectileCoord.y + j
+              })
+              Object.keys(occupants).map(oc => {
+                if (occupants[oc].entityTag === 'baddie' && occupants[oc].healthBar.current > 0) {
+                  if (distanceBetween(this.projectileWeapon.projectile, occupants[oc]) < this.projectileWeapon.projectile.radius + occupants[oc].radius) {
+                    occupants[oc].damage(-10, this.projectileWeapon.projectile, 16)
+                    this.projectileWeapon.projectile.active = false
+                  }
                 }
-
-            })
+              })
+            // } catch(err) {
+            //   console.log(err)
+            //   console.log(projectileCoord, i, j)
+            // }
           }
         }
 
@@ -161,6 +174,10 @@ export default class Player extends BasedObject {
                 x: occupants[oc].x + this.velocity.x,
                 y: occupants[oc].y + this.velocity.y
               })
+            }
+
+            if (occupants[oc].entityTag === 'pickup' && occupants[oc].active && distanceBetween(this, occupants[oc]) < this.radius + occupants[oc].radius) {
+              occupants[oc].onPickup()
             }
 
             if (occupants[oc].entityTag === 'baddie' && occupants[oc].healthBar.current > 0) {

@@ -14,8 +14,8 @@ export class HealthBar extends BasedObject {
   lastTick: number = 0
   tickSize: number = 100
 
-  tick(amount: number) {
-    if(this.gameRef.lastUpdate > this.lastTick + this.tickSize) {
+  tick(amount: number, force: boolean = false) {
+    if(force || this.gameRef.lastUpdate > this.lastTick + this.tickSize) {
       this.current+=amount
       if(this.current < 0) this.current = 0
       if(this.current > this.max) this.current = this.max

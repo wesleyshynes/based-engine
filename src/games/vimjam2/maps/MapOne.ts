@@ -145,7 +145,7 @@ export class MapOne extends BasedObject {
 
   onMap(coordinates: XYCoordinateType){
     const {x,y} = coordinates
-     return x >= 0 && x <= this.width && y >= 0 && y <= this.height
+     return x >= 0 && x < this.width && y >= 0 && y < this.height
   }
 
   removeOccupant(occupant: {x: number, y: number, objectKey: string}){
@@ -269,6 +269,7 @@ export class MapOne extends BasedObject {
 
     console.log(this.roomList)
     console.log(this.width, this.height)
+    console.log(this.width/this.tileSize, this.height/this.tileSize)
 
     this.roomList.map((room, idx) => {
       console.log('mapping', idx, room)

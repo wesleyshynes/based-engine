@@ -15,6 +15,8 @@
     overflow-y: hidden;
     flex-direction: column;
     font-family: sans-serif;
+    -webkit-user-select: none;
+    -moz-user-select: none;
 
     #game-description {
       width: 100%;
@@ -22,14 +24,23 @@
       margin-bottom: 20px;
       max-width: 300px;
       color: white;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+
       h1 {
         font-size: 2em;
         font-weight: bold;
         line-height: 2em;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+
       }
       p {
         line-height: 1.4em;
         font-size: 1em;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+
       }
     }
 
@@ -38,6 +49,9 @@
       background: #eee;
       border: 1px solid #333;
       font-size: 1em;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+
     }
 
     canvas {
@@ -55,4 +69,7 @@
 body {
   overflow-y: hidden;
   background: #333;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  
 }

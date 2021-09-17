@@ -1,6 +1,6 @@
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { TouchKnob } from "../../../engine/controls/TouchKnob";
-import { distanceBetween } from "../../../engine/libs/mathHelpers";
+import { distanceBetween, getRandomInt } from "../../../engine/libs/mathHelpers";
 import Baddie from "../entities/Baddie";
 import Leader from "../entities/Leader";
 import Player from "../entities/Player";
@@ -8,6 +8,13 @@ import PushBox from "../entities/Pushbox";
 import { MapOne } from "../maps/MapOne";
 import BgMusic from '../../../assets/vimjam2/good-new-diddyPERFOMANCE.mp3'
 import BgMusic2 from '../../../assets/vimjam2/Deep space.mp3'
+import { Pickup } from "../entities/Pickup";
+import { BasedButton } from "../../../engine/BasedButton";
+
+import PoopSprite from '../../../assets/vimjam2/poop-sprite.png'
+import StickMelee from '../../../assets/vimjam2/Stick_melee.png'
+import { createSprite, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
+
 
 export class LevelOne extends BasedLevel {
 
@@ -16,9 +23,11 @@ export class LevelOne extends BasedLevel {
   box: any;
 
   baddies: any[] = [];
+  pickups: any[] = [];
 
   moveKnob: any;
   aimKnob: any;
+  swapWeaponBtn: any;
 
   levelWidth: number = 3200
   levelHeight: number = 3200
@@ -36,7 +45,39 @@ export class LevelOne extends BasedLevel {
   bossRoom: boolean = false
   bossRoomTag: string;
 
+  swingSprite: any;
+  flingSprite: any;
+
   async preload() {
+
+    this.swingSprite = await await createSprite({
+      c: this.gameRef.ctx,
+      sprite: StickMelee,
+      sx: 0,
+      sy: 0,
+      sWidth: 40,
+      sHeight: 20,
+      dx: 0,
+      dy: 0,
+      dWidth: 80,
+      dHeight: 40,
+      frame: 0,
+    })
+
+    this.flingSprite = await createSprite({
+      c: this.gameRef.ctx,
+      sprite: PoopSprite,
+      sx: 0,
+      sy: 0,
+      sWidth: 12,
+      sHeight: 12,
+      dx: 0,
+      dy: 0,
+      dWidth: 36,
+      dHeight: 36,
+      frame: 0,
+    })
+
     // setup map
     this.tileMap = new MapOne({ key: 'map-1', gameRef: this.gameRef })
     this.tileMap.tileSize = 64
@@ -64,6 +105,33 @@ export class LevelOne extends BasedLevel {
     this.leader.x = (this.tileMap.roomList[0].x + 5) * this.tileMap.tileSize
     this.leader.y = (this.tileMap.roomList[0].y + 5) * this.tileMap.tileSize
     // this.player.tileMap = this.tileMap
+
+    // setup pickups
+    this.pickups = []
+    let pickupCount = 1
+    for (let i = 1; i < this.tileMap.roomList.length; i++) {
+      const newPickup = new Pickup({ key: `pickup-${pickupCount}`, gameRef: this.gameRef })
+      await newPickup.preload()
+      newPickup.x = (this.tileMap.roomList[i].x + getRandomInt(this.tileMap.roomList[i].w)) * this.tileMap.tileSize + this.tileMap.tileSize/2
+      newPickup.y = (this.tileMap.roomList[i].y + getRandomInt(this.tileMap.roomList[i].h)) * this.tileMap.tileSize + this.tileMap.tileSize/2
+      newPickup.spawnRoom = this.tileMap.roomList[i].key
+      if(getRandomInt(2) > 0) {
+        newPickup.setOnPickup(() => {
+          this.player.healthBar.tick(20, true)
+          newPickup.active = false
+        })
+        newPickup.pickupColor = 'yellow'
+      }  else {
+        newPickup.setOnPickup(() => {
+          this.player.poopHealthBar.tick(50, true)
+          newPickup.active = false
+        })
+      }
+      newPickup.active = true
+      this.tileMap.addOccupant(newPickup)
+      this.pickups.push(newPickup)
+      pickupCount++
+    }
 
     //setup enemies
     this.baddies = []
@@ -97,16 +165,32 @@ export class LevelOne extends BasedLevel {
       baddie.target = this.player
       baddie.initialize()
     })
+
     this.moveKnob.initialize()
     this.aimKnob.initialize()
+
+    this.swapWeaponBtn = new BasedButton({
+      key: `swap-wpn-button`,
+      gameRef: this.gameRef,
+    })
+    this.swapWeaponBtn.fillColor = '#ce192b'
+    this.swapWeaponBtn.x = this.gameRef.gameWidth - 100
+    this.swapWeaponBtn.y = 40
+    this.swapWeaponBtn.buttonText = 'swap'
+    this.swapWeaponBtn.width = 80
+    this.swapWeaponBtn.clickFunction = () => {
+      this.player.switchMode(this.player.mode === 'melee' ? 'shoot' : 'melee')
+      // this.swapWeaponBtn.buttonText = this.player.mode === 'melee' ? 'swing' : 'fling'
+    }
+
   }
 
   update() {
 
     this.handleSounds()
-
     this.tileMap.removeOccupant(this.player)
     this.movePlayer()
+    this.swapWeaponBtn.update()
     this.player.update()
     this.tileMap.addOccupant(this.player)
 
@@ -157,7 +241,9 @@ export class LevelOne extends BasedLevel {
     if (pressedKeys['KeyS'] || pressedKeys['ArrowDown']) {
       moveY += speedFactor
     }
-    if (pressedKeys['KeyX']) { }
+    if (pressedKeys['KeyX']) {
+      this.player.switchMode(this.player.mode === 'melee' ? 'shoot' : 'melee')
+    }
 
     this.moveKnob.update()
     if (this.moveKnob.knobActive) {
@@ -180,7 +266,7 @@ export class LevelOne extends BasedLevel {
       })
       this.player.attacking = true
     } else if (!this.gameRef.touchMode) {
-      this.player.attacking = this.gameRef.mouseInfo.mouseDown
+      this.player.attacking = this.gameRef.mouseInfo.mouseDown && !this.swapWeaponBtn.hovered
       this.player.setTarget({
         x: this.gameRef.mouseInfo.x - this.gameRef.cameraPos.x,
         y: this.gameRef.mouseInfo.y - this.gameRef.cameraPos.y,
@@ -236,6 +322,7 @@ export class LevelOne extends BasedLevel {
 
   onResize() {
     this.positionKnobs()
+    this.swapWeaponBtn.x = this.gameRef.gameWidth - 100
   }
 
   draw() {
@@ -257,10 +344,43 @@ export class LevelOne extends BasedLevel {
       }
     })
 
+    this.pickups.map(pickup => {
+      if (pickup.active) {
+        pickup.draw()
+      }
+    })
+
     if (this.gameRef.touchMode) {
       this.moveKnob.draw()
       this.aimKnob.draw()
     }
+
+    // this.swapWeaponBtn.draw()
+
+    this.player.mode === 'shoot' && rotateDraw({
+      c: this.gameRef.ctx,
+      x: this.gameRef.gameWidth - 100,
+      y: 40,
+      a: 0
+    }, () => {
+      drawImage(this.swingSprite)
+    })
+
+    this.player.mode === 'melee' && rotateDraw({
+      c: this.gameRef.ctx,
+      x: this.gameRef.gameWidth - 100,
+      y: 40,
+      a: 0
+    }, () => {
+      if(this.player.poopHealthBar.current > 0) {
+        drawImage(this.flingSprite)
+      } else {
+        this.gameRef.ctx.globalAlpha = .5
+        drawImage(this.flingSprite)
+        this.gameRef.ctx.globalAlpha = 1
+      }
+    })
+
   }
 
   tearDown() {
