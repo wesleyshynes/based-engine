@@ -2,6 +2,8 @@ import { BasedObject } from "../../../engine/BasedObject";
 import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { angleBetween, distanceBetween } from "../../../engine/libs/mathHelpers";
 import PoopSprite from '../../../assets/vimjam2/poop-sprite.png'
+import FireNoise from '../../../assets/blasty-man/fireball.mp3'
+import ContactNoise from '../../../assets/blasty-man/splat.mp3'
 
 export class Projectile extends BasedObject {
   active: boolean = false
@@ -25,6 +27,9 @@ export class Projectile extends BasedObject {
 
   sprite: any;
 
+  fireNoise: any;
+  contactNoise: any;
+
   async preload() {
     this.sprite = await createSprite({
       c: this.gameRef.ctx,
@@ -39,9 +44,17 @@ export class Projectile extends BasedObject {
       dHeight: 12,
       frame: 0,
     })
+
+    this.fireNoise = await this.gameRef.soundPlayer.loadSound(FireNoise)
+    this.contactNoise = await this.gameRef.soundPlayer.loadSound(ContactNoise)
   }
 
   initialize() {}
+
+  hit(){
+    this.active = false
+    this.gameRef.soundPlayer.playSound(this.contactNoise)
+  }
 
   update() {
     if (this.active && this.traveled < this.maxDistance) {
@@ -95,6 +108,7 @@ export class Projectile extends BasedObject {
       this.traveled = 0
       this.lastShot = this.gameRef.lastUpdate
       // this.gameRef.soundPlayer.playNote(-150, .3, 'square')
+      this.gameRef.soundPlayer.playSound(this.fireNoise)
       return true
     }
     return false

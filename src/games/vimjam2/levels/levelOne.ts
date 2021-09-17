@@ -112,16 +112,16 @@ export class LevelOne extends BasedLevel {
     for (let i = 1; i < this.tileMap.roomList.length; i++) {
       const newPickup = new Pickup({ key: `pickup-${pickupCount}`, gameRef: this.gameRef })
       await newPickup.preload()
-      newPickup.x = (this.tileMap.roomList[i].x + getRandomInt(this.tileMap.roomList[i].w)) * this.tileMap.tileSize + this.tileMap.tileSize/2
-      newPickup.y = (this.tileMap.roomList[i].y + getRandomInt(this.tileMap.roomList[i].h)) * this.tileMap.tileSize + this.tileMap.tileSize/2
+      newPickup.x = (this.tileMap.roomList[i].x + getRandomInt(this.tileMap.roomList[i].w)) * this.tileMap.tileSize + this.tileMap.tileSize / 2
+      newPickup.y = (this.tileMap.roomList[i].y + getRandomInt(this.tileMap.roomList[i].h)) * this.tileMap.tileSize + this.tileMap.tileSize / 2
       newPickup.spawnRoom = this.tileMap.roomList[i].key
-      if(getRandomInt(2) > 0) {
+      if (getRandomInt(2) > 0) {
         newPickup.setOnPickup(() => {
           this.player.healthBar.tick(20, true)
           newPickup.active = false
         })
         newPickup.pickupColor = 'yellow'
-      }  else {
+      } else {
         newPickup.setOnPickup(() => {
           this.player.poopHealthBar.tick(50, true)
           newPickup.active = false
@@ -155,7 +155,7 @@ export class LevelOne extends BasedLevel {
     // Music
     this.bgSong = await this.gameRef.soundPlayer.loadSound(BgMusic)
     this.bgSong2 = await this.gameRef.soundPlayer.loadSound(BgMusic2)
-
+    this.activeSound.playing = false
   }
 
   initialize() {
@@ -180,7 +180,6 @@ export class LevelOne extends BasedLevel {
     this.swapWeaponBtn.width = 80
     this.swapWeaponBtn.clickFunction = () => {
       this.player.switchMode(this.player.mode === 'melee' ? 'shoot' : 'melee')
-      // this.swapWeaponBtn.buttonText = this.player.mode === 'melee' ? 'swing' : 'fling'
     }
 
   }
@@ -325,6 +324,43 @@ export class LevelOne extends BasedLevel {
     this.swapWeaponBtn.x = this.gameRef.gameWidth - 100
   }
 
+  drawInterface() {
+    if (this.gameRef.touchMode) {
+      this.moveKnob.draw()
+      this.aimKnob.draw()
+    }
+
+    // this.swapWeaponBtn.draw()
+
+    if (this.player.mode === 'shoot') {
+      rotateDraw({
+        c: this.gameRef.ctx,
+        x: this.gameRef.gameWidth - 100,
+        y: 40,
+        a: 0
+      }, () => {
+        drawImage(this.swingSprite)
+      })
+    }
+
+    if (this.player.mode === 'melee') {
+      rotateDraw({
+        c: this.gameRef.ctx,
+        x: this.gameRef.gameWidth - 80,
+        y: 40,
+        a: 0
+      }, () => {
+        if (this.player.poopHealthBar.current > 0) {
+          // drawImage(this.flingSprite)
+          // } else {
+          this.gameRef.ctx.globalAlpha = this.player.poopHealthBar.current / this.player.poopHealthBar.max
+          drawImage(this.flingSprite)
+          this.gameRef.ctx.globalAlpha = 1
+        }
+      })
+    }
+  }
+
   draw() {
     this.gameRef.ctx.beginPath()
     this.gameRef.ctx.rect(0, 0, this.gameRef.gameWidth, this.gameRef.gameHeight)
@@ -350,41 +386,12 @@ export class LevelOne extends BasedLevel {
       }
     })
 
-    if (this.gameRef.touchMode) {
-      this.moveKnob.draw()
-      this.aimKnob.draw()
-    }
-
-    // this.swapWeaponBtn.draw()
-
-    this.player.mode === 'shoot' && rotateDraw({
-      c: this.gameRef.ctx,
-      x: this.gameRef.gameWidth - 100,
-      y: 40,
-      a: 0
-    }, () => {
-      drawImage(this.swingSprite)
-    })
-
-    this.player.mode === 'melee' && rotateDraw({
-      c: this.gameRef.ctx,
-      x: this.gameRef.gameWidth - 100,
-      y: 40,
-      a: 0
-    }, () => {
-      if(this.player.poopHealthBar.current > 0) {
-        drawImage(this.flingSprite)
-      } else {
-        this.gameRef.ctx.globalAlpha = .5
-        drawImage(this.flingSprite)
-        this.gameRef.ctx.globalAlpha = 1
-      }
-    })
+    this.drawInterface()
 
   }
 
   tearDown() {
-    if(this.activeSound.playing){
+    if (this.activeSound.playing && this.activeSound.soundRef) {
       this.activeSound.soundRef.stop()
     }
   }

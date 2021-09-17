@@ -137,9 +137,9 @@ export class BasedSounds {
   }
 
   async loadSound(soundUrl: string = 'https://raw.githubusercontent.com/TinaSoltanian/Patatap/master/sounds/bubbles.mp3') {
-    if(!this.enabled) {
-      return
-    }
+    // if(!this.enabled) {
+    //   return
+    // }
     const rawSound = await fetch(soundUrl)
     const soundBuffer = await rawSound.arrayBuffer()
     const decodedBuffer = await this.audioContext.decodeAudioData(soundBuffer)
@@ -159,6 +159,9 @@ export class BasedSounds {
   }
 
   playSound(decodedBuffer: any, endedCallback?: () => void ) {
+    if(!this.enabled) {
+      return
+    }
     const newBuffer = this.audioContext.createBufferSource()
     newBuffer.buffer = decodedBuffer
 

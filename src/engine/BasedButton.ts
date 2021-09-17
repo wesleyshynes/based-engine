@@ -26,6 +26,9 @@ export class BasedButton extends BasedObject {
   clickFunction: () => void = () => null
   holdFunction: () => void = () => null
 
+  lastSwitch: number = 0
+  switchDelay: number = 300
+
   touchId: string = ''
 
   initialize() { }
@@ -71,7 +74,10 @@ export class BasedButton extends BasedObject {
             // touchFound = {...t}
             // this.hovered = true
             // this.touchId = t.id
-            this.clickFunction()
+            if(this.lastSwitch + this.switchDelay < this.gameRef.lastUpdate) {
+              this.clickFunction()
+              this.lastSwitch = this.gameRef.lastUpdate
+            }
           }
         })
       }

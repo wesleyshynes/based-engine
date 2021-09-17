@@ -141,7 +141,7 @@ export default class Player extends BasedObject {
                 if (occupants[oc].entityTag === 'baddie' && occupants[oc].healthBar.current > 0) {
                   if (distanceBetween(this.projectileWeapon.projectile, occupants[oc]) < this.projectileWeapon.projectile.radius + occupants[oc].radius) {
                     occupants[oc].damage(-10, this.projectileWeapon.projectile, 16)
-                    this.projectileWeapon.projectile.active = false
+                    this.projectileWeapon.projectile.hit()
                   }
                 }
               })
@@ -189,7 +189,7 @@ export default class Player extends BasedObject {
                 y: this.meleeWeapon.y + this.meleeWeapon.hitBox.y,
               }
               if (this.mode === 'melee' && distanceBetween(meleeHitBox, occupants[oc]) < this.meleeWeapon.hitBoxRadius + occupants[oc].radius) {
-                occupants[oc].damage(this.meleeWeapon.currentSpeed > 5 ? -30 : -5, meleeHitBox, 16)
+                occupants[oc].damage(this.meleeWeapon.currentSpeed > 5 ? -30 : -5, meleeHitBox, 16) && this.meleeWeapon.playImpactNoise()
               }
             }
           })
@@ -336,8 +336,8 @@ export default class Player extends BasedObject {
     this.direction !== 'up' && this.mode === 'shoot' && this.projectileWeapon.draw()
 
 
-    this.healthBar.draw()
-    this.mode === 'shoot' && this.poopHealthBar.draw()
+    this.healthBar.current < this.healthBar.max && this.healthBar.draw()
+    // this.mode === 'shoot' && this.poopHealthBar.draw()
 
   }
   tearDown() { }

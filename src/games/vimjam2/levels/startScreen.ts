@@ -6,6 +6,8 @@ import BgMusic from '../../../assets/vimjam2/poopytime34.mp3'
 export class StartScreen extends BasedLevel {
 
   startButton: any;
+  soundButton: any;
+  creditsButton: any;
 
   activeSound: any = {
     playing: false,
@@ -15,6 +17,7 @@ export class StartScreen extends BasedLevel {
 
   async preload() {
     this.bgSong =  await this.gameRef.soundPlayer.loadSound(BgMusic)
+    this.activeSound.playing = false
   }
 
   initialize() {
@@ -29,6 +32,28 @@ export class StartScreen extends BasedLevel {
     this.startButton.width = this.gameRef.gameWidth - 200
     this.startButton.clickFunction = () => {
       this.gameRef.loadLevel('level-1')
+    }
+
+    // SOUND BUTTON
+    this.soundButton = new BasedButton({
+      key: `sound-button`,
+      gameRef: this.gameRef,
+    })
+    this.soundButton.fillColor = '#333'
+    this.soundButton.hoverColor = '#000'
+    this.soundButton.x = 100
+    this.soundButton.y = this.gameRef.gameHeight - 30
+    this.soundButton.buttonText = `${this.gameRef.soundPlayer.enabled ? 'Disable' : 'Enable'} Sound`
+    this.soundButton.width = this.gameRef.gameWidth - 200
+    this.soundButton.height = 20
+    this.soundButton.fontSize = 12
+    this.soundButton.clickFunction = () => {
+      if(this.activeSound.playing && this.activeSound.soundRef && this.activeSound.soundRef.stop) {
+        this.activeSound.soundRef.stop()
+      }
+      this.gameRef.soundPlayer.enabled = !this.gameRef.soundPlayer.enabled
+      this.soundButton.buttonText = `${this.gameRef.soundPlayer.enabled ? 'Disable' : 'Enable'} Sound`
+      this.activeSound.playing = false
     }
   }
 
@@ -46,6 +71,7 @@ export class StartScreen extends BasedLevel {
     this.updateBg()
     this.handleSounds()
     this.startButton.update()
+    this.soundButton.update()
   }
 
   updateBg() {}
@@ -53,6 +79,9 @@ export class StartScreen extends BasedLevel {
   onResize() {
     this.startButton.y = this.gameRef.gameHeight - 100
     this.startButton.width = this.gameRef.gameWidth - 200
+
+    this.soundButton.y = this.gameRef.gameHeight - 30
+    this.soundButton.width = this.gameRef.gameWidth - 200
   }
 
   drawBg() {}
@@ -60,12 +89,13 @@ export class StartScreen extends BasedLevel {
   draw() {
     this.gameRef.ctx.beginPath()
     this.gameRef.ctx.rect(0, 0, this.gameRef.gameWidth, this.gameRef.gameHeight)
-    this.gameRef.ctx.fillStyle = '#eee'
+    this.gameRef.ctx.fillStyle = '#799b1f'
     this.gameRef.ctx.fill()
 
     this.drawBg()
 
     this.startButton.draw()
+    this.soundButton.draw()
 
     drawText({
       c: this.gameRef.ctx,
@@ -116,7 +146,8 @@ export class StartScreen extends BasedLevel {
   }
   tearDown() {
     this.startButton.tearDown()
-    if(this.activeSound.playing){
+    this.soundButton.tearDown()
+    if(this.activeSound.playing && this.activeSound.soundRef){
       this.activeSound.soundRef.stop()
     }
   }

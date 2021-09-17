@@ -63,7 +63,7 @@ export default class Baddie extends BasedObject {
   }
 
   update() {
-    if (!this.tileMap.visitedRooms[this.spawnRoom]) {
+    if (!this.tileMap.visitedRooms[this.spawnRoom] && this.healthBar.current === this.healthBar.max) {
       return
     }
     const distanceToTarget = distanceBetween(this, this.target)
@@ -73,18 +73,14 @@ export default class Baddie extends BasedObject {
       const mapClone = this.tileMap.pfGrid.clone()
       const { x, y } = this.tileMap.getMapCoord(this)
       const { x: x1, y: y1 } = this.tileMap.getMapCoord(this.target)
-      // console.log(x,y,x1,y1)
       this.pathList = this.finder.findPath(x, y, x1, y1, mapClone)
       if (this.pathList.length === 0) {
         this.pathList = [[x1, y1]]
       }
-      // console.log(this.pathList)
-      // console.log('Chasing False')
       this.getNextActiveTarget()
     } else if (distanceToTarget <= 300 && cleanDistance) {
       this.activeTarget = this.target
       if (this.chasing === false) {
-        // console.log('Chasing True')
         this.chasing = true
         this.pathList = []
       }
@@ -149,7 +145,9 @@ export default class Baddie extends BasedObject {
         // speed: recoil,
         distance: recoil
       })
+      return true
     }
+    return false
   }
 
   moveTo(moveTarget: { x: number, y: number, active?: boolean, speed?: number, distance?: number }, arriveFn: () => void = () => undefined) {

@@ -3,6 +3,7 @@ import StickMelee from '../../../assets/vimjam2/Stick_melee.png'
 import { createSprite, drawCircle, drawImage, drawLine, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { angleBetween, degToRad, distanceBetween, pointOnCircle, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import SwordSlash from '../../../assets/blasty-man/sword-slash.mp3'
+import ImpactSound from '../../../assets/vimjam2/wet impact.mp3'
 
 export class MeleeWeapon extends BasedObject {
 
@@ -32,6 +33,7 @@ export class MeleeWeapon extends BasedObject {
   entityTag: string = 'meleeWeapon'
 
   swingSound: any;
+  impactSound: any;
   lastSound: number = 0
   soundTimeDiff: number = 150
 
@@ -61,7 +63,12 @@ export class MeleeWeapon extends BasedObject {
     this.sprite.flipY = false
 
     this.swingSound = await this.gameRef.soundPlayer.loadSound(SwordSlash)
+    this.impactSound = await this.gameRef.soundPlayer.loadSound(ImpactSound)
     this.trails = []
+  }
+
+  playImpactNoise() {
+    this.gameRef.soundPlayer.playSound(this.impactSound)
   }
 
   handleSlashSound() {
