@@ -14,6 +14,7 @@ import { BasedButton } from "../../../engine/BasedButton";
 import PoopSprite from '../../../assets/vimjam2/poop-sprite.png'
 import StickMelee from '../../../assets/vimjam2/Stick_melee.png'
 import { createSprite, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
+import Boss from "../entities/Boss";
 
 
 export class LevelOne extends BasedLevel {
@@ -119,12 +120,14 @@ export class LevelOne extends BasedLevel {
         newPickup.setOnPickup(() => {
           this.player.healthBar.tick(20, true)
           newPickup.active = false
+          newPickup.playPickupNoise()
         })
         newPickup.pickupColor = 'yellow'
       } else {
         newPickup.setOnPickup(() => {
           this.player.poopHealthBar.tick(50, true)
           newPickup.active = false
+          newPickup.playPickupNoise()
         })
       }
       newPickup.active = true
@@ -135,14 +138,27 @@ export class LevelOne extends BasedLevel {
 
     //setup enemies
     this.baddies = []
+    let baddieCount = 0
     for (let i = 1; i < this.tileMap.roomList.length; i++) {
-      const newBaddie = new Baddie({ key: `baddie-${i}`, gameRef: this.gameRef })
+      const newBaddie = new Baddie({ key: `baddie-${baddieCount}`, gameRef: this.gameRef })
       await newBaddie.preload()
       newBaddie.x = (this.tileMap.roomList[i].x + 2) * this.tileMap.tileSize
       newBaddie.y = (this.tileMap.roomList[i].y + 2) * this.tileMap.tileSize
       newBaddie.spawnRoom = this.tileMap.roomList[i].key
       this.baddies.push(newBaddie)
+      baddieCount++
     }
+
+    // add boss
+    const bossBaddie = new Boss({ key: `baddie-${baddieCount}`, gameRef: this.gameRef })
+    await bossBaddie.preload()
+    const lastRoomIndex = this.tileMap.roomList.length - 1
+    bossBaddie.x = (this.tileMap.roomList[lastRoomIndex].x + 5) * this.tileMap.tileSize
+    bossBaddie.y = (this.tileMap.roomList[lastRoomIndex].y + 5) * this.tileMap.tileSize
+    bossBaddie.spawnRoom = this.tileMap.roomList[lastRoomIndex].key
+    this.baddies.push(bossBaddie)
+    console.log(bossBaddie)
+    console.log(bossBaddie.spawnRoom)
 
     this.bossRoomTag = this.tileMap.roomList[this.tileMap.roomList.length - 1].key
 
@@ -187,11 +203,11 @@ export class LevelOne extends BasedLevel {
   update() {
 
     this.handleSounds()
-    this.tileMap.removeOccupant(this.player)
+    // this.tileMap.removeOccupant(this.player)
     this.movePlayer()
     this.swapWeaponBtn.update()
     this.player.update()
-    this.tileMap.addOccupant(this.player)
+    // this.tileMap.addOccupant(this.player)
 
     this.tileMap.removeOccupant(this.box)
     this.box.update()

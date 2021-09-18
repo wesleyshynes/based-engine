@@ -1,10 +1,14 @@
 import { BasedObject } from "../../../engine/BasedObject";
 import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
-import { angleBetween, distanceBetween, pointOnCircle, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { angleBetween, distanceBetween, getRandomInt, pointOnCircle, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { HealthBar } from "../ui/HealthBar";
 import MonkeySpriteUrl from '../../../assets/vimjam2/monkeySpriteSheet.png'
 import { MeleeWeapon } from "./MeleeWeapon";
 import { ProjectileWeapon } from "./ProjectileWeapon";
+import Chimp1 from '../../../assets/vimjam2/chimp-1.mp3'
+import Chimp2 from '../../../assets/vimjam2/chimp-2.mp3'
+import Chimp3 from '../../../assets/vimjam2/chimp-3.mp3'
+import Chimp4 from '../../../assets/vimjam2/chimp-4.mp3'
 
 export default class Player extends BasedObject {
 
@@ -47,6 +51,10 @@ export default class Player extends BasedObject {
 
   attacking: boolean = false;
 
+  noises: any[] = []
+  lastSound: number = 0
+  soundDelay: number = 300
+
   async preload() {
     this.sprite = await createSprite({
       c: this.gameRef.ctx,
@@ -70,6 +78,13 @@ export default class Player extends BasedObject {
 
     this.projectileWeapon = new ProjectileWeapon({ key: 'projectile-weapon', gameRef: this.gameRef })
     await this.projectileWeapon.preload()
+
+    this.noises = []
+    const loadNoises = [Chimp1, Chimp2, Chimp3, Chimp4]
+    for(let i = 0; i < 4; i++) {
+      const loadNoise = await this.gameRef.soundPlayer.loadSound(loadNoises[i])
+      this.noises.push(loadNoise)
+    }
   }
 
   initialize() {
@@ -217,6 +232,10 @@ export default class Player extends BasedObject {
         // speed: recoil,
         distance: recoil
       })
+      if(this.lastSound + this.soundDelay < this.gameRef.lastUpdate){
+        this.gameRef.soundPlayer.playSound(this.noises[getRandomInt(4)])
+        this.lastSound = this.gameRef.lastUpdate
+      }
     }
   }
 

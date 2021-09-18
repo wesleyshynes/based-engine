@@ -1,5 +1,8 @@
 import { BasedObject } from "../../../engine/BasedObject";
 import { drawCircle } from "../../../engine/libs/drawHelpers";
+import Munch1 from '../../../assets/vimjam2/munch-1.mp3'
+import Munch2 from '../../../assets/vimjam2/munch-2.mp3'
+import { getRandomInt } from "../../../engine/libs/mathHelpers";
 
 export class Pickup extends BasedObject {
   x: number = 0
@@ -13,11 +16,22 @@ export class Pickup extends BasedObject {
   spawnRoom: string;
 
   onPickup: () => any = () => null
+  pickupNoises: any[] = []
 
-  async preload() {}
+  async preload() {
+    this.pickupNoises = []
+    const noises = [Munch1, Munch2]
+    for(let i = 0; i < 2; i++) {
+      const loadNoise = await this.gameRef.soundPlayer.loadSound(noises[i])
+      this.pickupNoises.push(loadNoise)
+    }
+  }
   initialize() {}
   setOnPickup(pickupFn: () => any) {
     this.onPickup = pickupFn
+  }
+  playPickupNoise() {
+    this.gameRef.soundPlayer.playSound(this.pickupNoises[getRandomInt(2)])
   }
   update() {}
   draw() {
