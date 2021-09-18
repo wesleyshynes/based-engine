@@ -18,6 +18,9 @@ export class StartScreen extends BasedLevel {
 
   logoSprite: any;
 
+  levelLoadedTime: number = 0
+  levelLoadedDelay: number = 1000
+
   async preload() {
 
     this.gameRef.drawLoading('Logo')
@@ -92,6 +95,8 @@ export class StartScreen extends BasedLevel {
       this.soundButton.buttonText = `${this.gameRef.soundPlayer.enabled ? 'Disable' : 'Enable'} Sound`
       this.activeSound.playing = false
     }
+
+    this.levelLoadedTime = this.gameRef.lastUpdate
   }
 
   handleSounds() {
@@ -106,10 +111,12 @@ export class StartScreen extends BasedLevel {
 
   update() {
     this.updateBg()
-    // this.handleSounds()
-    this.startButton.update()
-    this.soundButton.update()
-    this.creditsButton.update()
+    this.handleSounds()
+    if(this.gameRef.lastUpdate > this.levelLoadedTime + this.levelLoadedDelay) {
+      this.startButton.update()
+      this.soundButton.update()
+      this.creditsButton.update()
+    }
   }
 
   updateBg() {}

@@ -28,6 +28,8 @@ export class MapOne extends BasedObject {
 
   visitedRooms: any = {}
 
+  generateRoomCount: number = 6
+
   async preload() {
 
     this.floorSprite = await createSprite({
@@ -183,7 +185,7 @@ export class MapOne extends BasedObject {
     let top = 0
     let bottom = 8
 
-    while(rooms.length < 10 && attempts < 100) {
+    while(rooms.length < this.generateRoomCount && attempts < 100) {
       attempts++
       const newRoom = {
         x: rooms[rooms.length-1].x,

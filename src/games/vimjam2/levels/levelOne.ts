@@ -34,6 +34,7 @@ export class LevelOne extends BasedLevel {
   box: any;
 
   baddies: any[] = [];
+  bossBaddie: any;
   pickups: any[] = [];
 
   moveKnob: any;
@@ -263,13 +264,13 @@ export class LevelOne extends BasedLevel {
     }
 
     // add boss
-    const bossBaddie = new Boss({ key: `baddie-${baddieCount}`, gameRef: this.gameRef })
-    await bossBaddie.preload()
+    this.bossBaddie = new Boss({ key: `baddie-${baddieCount}`, gameRef: this.gameRef })
+    await this.bossBaddie.preload()
     const lastRoomIndex = this.tileMap.roomList.length - 1
-    bossBaddie.x = (this.tileMap.roomList[lastRoomIndex].x + 5) * this.tileMap.tileSize
-    bossBaddie.y = (this.tileMap.roomList[lastRoomIndex].y + 5) * this.tileMap.tileSize
-    bossBaddie.spawnRoom = this.tileMap.roomList[lastRoomIndex].key
-    this.baddies.push(bossBaddie)
+    this.bossBaddie.x = (this.tileMap.roomList[lastRoomIndex].x + 5) * this.tileMap.tileSize
+    this.bossBaddie.y = (this.tileMap.roomList[lastRoomIndex].y + 5) * this.tileMap.tileSize
+    this.bossBaddie.spawnRoom = this.tileMap.roomList[lastRoomIndex].key
+    // this.baddies.push(bossBaddie)
 
     this.bossRoomTag = this.tileMap.roomList[this.tileMap.roomList.length - 1].key
 
@@ -293,6 +294,10 @@ export class LevelOne extends BasedLevel {
       baddie.initialize()
     })
 
+    this.bossBaddie.tileMap = this.tileMap
+    this.bossBaddie.target = this.player
+    this.bossBaddie.initialize()
+
     this.moveKnob.initialize()
     this.aimKnob.initialize()
 
@@ -313,8 +318,8 @@ export class LevelOne extends BasedLevel {
 
   update() {
 
-    // this.handleSounds()
-    
+    this.handleSounds()
+
     // this.tileMap.removeOccupant(this.player)
     this.movePlayer()
     this.swapWeaponBtn.update()
@@ -324,6 +329,12 @@ export class LevelOne extends BasedLevel {
     this.tileMap.removeOccupant(this.box)
     this.box.update()
     this.tileMap.addOccupant(this.box)
+
+    this.tileMap.removeOccupant(this.bossBaddie)
+    this.bossBaddie.update()
+    if(this.bossBaddie.healthBar.current > 0) {
+      this.tileMap.addOccupant(this.bossBaddie)
+    }
 
     this.baddies.map(baddie => {
       this.tileMap.removeOccupant(baddie)
@@ -340,7 +351,7 @@ export class LevelOne extends BasedLevel {
     // win condition
     if (distanceBetween(this.leader, this.box) < this.leader.radius + this.box.radius) {
       // alert('You win')
-      this.gameRef.loadLevel('start-screen')
+      this.gameRef.loadLevel('credits-screen')
     }
     if (this.player.healthBar.current < 1) {
       // alert('You died')
@@ -635,6 +646,10 @@ export class LevelOne extends BasedLevel {
         baddie.draw()
       }
     })
+
+    // if(this.bossBaddie.healthBar.current > 0) {
+      this.bossBaddie.draw()
+    // }
 
     this.pickups.map(pickup => {
       if (pickup.active) {

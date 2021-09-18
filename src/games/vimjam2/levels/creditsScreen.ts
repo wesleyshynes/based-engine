@@ -1,9 +1,17 @@
 import { BasedButton } from "../../../engine/BasedButton";
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { drawText } from "../../../engine/libs/drawHelpers";
+import CreditsMusic from '../../../assets/vimjam2/steakuy.mp3'
 
 export default class CreditsScreen extends BasedLevel {
   backButton: any;
+
+  activeSound: any = {
+    playing: false,
+    soundRef: null,
+  }
+  bgSong: any;
+
 
   async preload() {
     // SOUND BUTTON
@@ -21,10 +29,24 @@ export default class CreditsScreen extends BasedLevel {
     this.backButton.clickFunction = () => {
       this.gameRef.loadLevel('start-screen')
     }
+
+    this.gameRef.drawLoading('Music')
+    this.bgSong =  await this.gameRef.soundPlayer.loadSound(CreditsMusic)
+    this.activeSound.playing = false
   }
   initialize() {}
   update() {
+    this.handleSounds()
     this.backButton.update()
+  }
+  handleSounds() {
+    if(!this.gameRef.soundPlayer.enabled) { return }
+    if(this.activeSound.playing == false) {
+      this.activeSound.soundRef = this.gameRef.soundPlayer.playSound(this.bgSong, () => {
+        this.activeSound.playing = false
+      })
+      this.activeSound.playing = true
+    }
   }
   draw() {
     this.gameRef.ctx.beginPath()
@@ -93,7 +115,7 @@ export default class CreditsScreen extends BasedLevel {
       weight: '900',
       fontFamily: 'sans-serif',
       fontSize: 24,
-      text: 'Anthony Mantecon'
+      text: 'Chewdawg'
     })
 
     // LEAD ARTIST //////////////////////////
@@ -165,6 +187,9 @@ export default class CreditsScreen extends BasedLevel {
   }
   tearDown() {
     this.backButton.tearDown()
+    if(this.activeSound.playing && this.activeSound.soundRef){
+      this.activeSound.soundRef.stop()
+    }
   }
 
 }

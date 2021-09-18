@@ -80,6 +80,14 @@ export default class Baddie extends BasedObject {
     if (!this.tileMap.visitedRooms[this.spawnRoom] && this.healthBar.current === this.healthBar.max) {
       return
     }
+
+    this.chaseTarget()
+
+    this.healthBar.x = this.x
+    this.healthBar.y = this.y
+  }
+
+  chaseTarget() {
     const distanceToTarget = distanceBetween(this, this.target)
     const cleanDistance = this.cleanDistanceToTarget()
     if ((this.pathList.length <= 0 && !this.chasing) || ((distanceToTarget > 300 || !cleanDistance) && this.chasing === true)) {
@@ -109,9 +117,6 @@ export default class Baddie extends BasedObject {
         this.getNextActiveTarget()
       }
     })
-
-    this.healthBar.x = this.x
-    this.healthBar.y = this.y
   }
 
   cleanDistanceToTarget() {

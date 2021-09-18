@@ -17,9 +17,9 @@ export default class Player extends BasedObject {
 
   radius: number = 28;
 
-  speed: number = 7;
-  baseSpeed: number = 7;
-  pushSpeed: number = 4;
+  speed: number = 6;
+  baseSpeed: number = 6;
+  pushSpeed: number = 3;
 
   color: string = '#ce192b'
   objectKey: string = 'player'
