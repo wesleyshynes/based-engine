@@ -64,14 +64,22 @@ export function drawImage(settings: {
     c.scale(1,1)
 }
 
+const spriteCache: any = {}
+
 export async function createSprite(spriteOptions: any) {
-    const spriteImg = await new Promise((resolve, reject) => {
+    const spriteKey = 'cache-' + spriteOptions.sprite
+    if(spriteCache[spriteKey]) {
+      spriteOptions.img = spriteCache[spriteKey]
+    } else {
+      const spriteImg = await new Promise((resolve, reject) => {
         let img = new Image();
         img.onload = () => {resolve(img)}
         img.onerror = (err) => {reject(err)}
         img.src = spriteOptions.sprite
-    })
-    spriteOptions.img = spriteImg
+      })
+      spriteOptions.img = spriteImg
+      spriteCache[spriteKey] = spriteImg
+    }
     return spriteOptions
 }
 

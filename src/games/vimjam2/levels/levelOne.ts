@@ -13,8 +13,18 @@ import { BasedButton } from "../../../engine/BasedButton";
 
 import PoopSprite from '../../../assets/vimjam2/poop-sprite.png'
 import StickMelee from '../../../assets/vimjam2/Stick_melee.png'
-import { createSprite, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
+import { createSprite, drawBox, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import Boss from "../entities/Boss";
+
+import MoveText from '../../../assets/vimjam2/MOVE_2x.png'
+import WASDText from '../../../assets/vimjam2/WASD_2x.png'
+import ArrowText from '../../../assets/vimjam2/ARROWSx.png'
+import AimText from '../../../assets/vimjam2/AIMx.png'
+import AttackText from '../../../assets/vimjam2/ATTACKx.png'
+import ButtonX from '../../../assets/vimjam2/BUTTON_Xx.png'
+import SwapText from '../../../assets/vimjam2/SWAPx.png'
+import MouseImg from '../../../assets/vimjam2/MOUSE.png'
+import HealthGFX from '../../../assets/vimjam2/Health-Bar-2.png'
 
 
 export class LevelOne extends BasedLevel {
@@ -46,10 +56,36 @@ export class LevelOne extends BasedLevel {
   bossRoom: boolean = false
   bossRoomTag: string;
 
+  // interface sprites
   swingSprite: any;
   flingSprite: any;
+  moveSprite: any;
+  wasdSprite: any;
+  arrowSprite: any;
+  aimSprite: any;
+  swapSprite: any;
+  attackSprite: any;
+  buttonXSprite: any;
+  mouseSprite: any;
+  healthSprite: any;
 
   async preload() {
+
+    this.gameRef.drawLoading('Interface')
+
+    this.healthSprite = await await createSprite({
+      c: this.gameRef.ctx,
+      sprite: HealthGFX,
+      sx: 0,
+      sy: 0,
+      sWidth: 160,
+      sHeight: 72,
+      dx: 0,
+      dy: 0,
+      dWidth: 160,
+      dHeight: 72,
+      frame: 0,
+    })
 
     this.swingSprite = await await createSprite({
       c: this.gameRef.ctx,
@@ -79,6 +115,77 @@ export class LevelOne extends BasedLevel {
       frame: 0,
     })
 
+    const commonSpriteDim = {
+      c: this.gameRef.ctx,
+      sx: 0,
+      sy: 0,
+      sWidth: 94,
+      sHeight: 24,
+      dx: 0,
+      dy: 0,
+      dWidth: 96,
+      dHeight: 24,
+      frame: 0,
+    }
+    this.wasdSprite = await createSprite({
+      sprite: WASDText,
+      ...commonSpriteDim
+    })
+
+    this.arrowSprite = await createSprite({
+      sprite: ArrowText,
+      ...commonSpriteDim
+    })
+
+    this.moveSprite = await createSprite({
+      sprite: MoveText,
+      ...commonSpriteDim
+    })
+
+    this.aimSprite = await createSprite({
+      sprite: AimText,
+      ...commonSpriteDim
+    })
+
+    this.swapSprite = await createSprite({
+      sprite: SwapText,
+      ...commonSpriteDim
+    })
+
+    this.buttonXSprite = await createSprite({
+      sprite: ButtonX,
+      ...commonSpriteDim
+    })
+
+    this.attackSprite = await createSprite({
+      c: this.gameRef.ctx,
+      sprite: AttackText,
+      sx: 0,
+      sy: 0,
+      sWidth: 140,
+      sHeight: 24,
+      dx: 0,
+      dy: 0,
+      dWidth: 140,
+      dHeight: 24,
+      frame: 0,
+    })
+
+    this.mouseSprite = await createSprite({
+      c: this.gameRef.ctx,
+      sprite: MouseImg,
+      sx: 0,
+      sy: 0,
+      sWidth: 24,
+      sHeight: 24,
+      dx: 0,
+      dy: 0,
+      dWidth: 24,
+      dHeight: 24,
+      frame: 0,
+    })
+
+    this.gameRef.drawLoading('Map')
     // setup map
     this.tileMap = new MapOne({ key: 'map-1', gameRef: this.gameRef })
     this.tileMap.tileSize = 64
@@ -86,6 +193,8 @@ export class LevelOne extends BasedLevel {
     this.levelWidth = this.tileMap.width
     this.levelHeight = this.tileMap.height
     this.bossRoom = false
+
+    this.gameRef.drawLoading('Entities')
 
     // setup player
     this.player = new Player({ key: 'player', gameRef: this.gameRef })
@@ -105,6 +214,7 @@ export class LevelOne extends BasedLevel {
     this.leader = new Leader({ key: 'leader', gameRef: this.gameRef })
     this.leader.x = (this.tileMap.roomList[0].x + 5) * this.tileMap.tileSize
     this.leader.y = (this.tileMap.roomList[0].y + 5) * this.tileMap.tileSize
+    await this.leader.preload()
     // this.player.tileMap = this.tileMap
 
     // setup pickups
@@ -112,16 +222,16 @@ export class LevelOne extends BasedLevel {
     let pickupCount = 1
     for (let i = 1; i < this.tileMap.roomList.length; i++) {
       const newPickup = new Pickup({ key: `pickup-${pickupCount}`, gameRef: this.gameRef })
-      await newPickup.preload()
       newPickup.x = (this.tileMap.roomList[i].x + getRandomInt(this.tileMap.roomList[i].w)) * this.tileMap.tileSize + this.tileMap.tileSize / 2
       newPickup.y = (this.tileMap.roomList[i].y + getRandomInt(this.tileMap.roomList[i].h)) * this.tileMap.tileSize + this.tileMap.tileSize / 2
       newPickup.spawnRoom = this.tileMap.roomList[i].key
       if (getRandomInt(2) > 0) {
         newPickup.setOnPickup(() => {
-          this.player.healthBar.tick(20, true)
+          this.player.healthBar.tick(25, true)
           newPickup.active = false
           newPickup.playPickupNoise()
         })
+        newPickup.spriteChoice = 1
         newPickup.pickupColor = 'yellow'
       } else {
         newPickup.setOnPickup(() => {
@@ -130,6 +240,7 @@ export class LevelOne extends BasedLevel {
           newPickup.playPickupNoise()
         })
       }
+      await newPickup.preload()
       newPickup.active = true
       this.tileMap.addOccupant(newPickup)
       this.pickups.push(newPickup)
@@ -140,13 +251,15 @@ export class LevelOne extends BasedLevel {
     this.baddies = []
     let baddieCount = 0
     for (let i = 1; i < this.tileMap.roomList.length; i++) {
-      const newBaddie = new Baddie({ key: `baddie-${baddieCount}`, gameRef: this.gameRef })
-      await newBaddie.preload()
-      newBaddie.x = (this.tileMap.roomList[i].x + 2) * this.tileMap.tileSize
-      newBaddie.y = (this.tileMap.roomList[i].y + 2) * this.tileMap.tileSize
-      newBaddie.spawnRoom = this.tileMap.roomList[i].key
-      this.baddies.push(newBaddie)
-      baddieCount++
+      for(let j = 0; j <= i/2; j++) {
+        const newBaddie = new Baddie({ key: `baddie-${baddieCount}`, gameRef: this.gameRef })
+        await newBaddie.preload()
+        newBaddie.x = (this.tileMap.roomList[i].x + getRandomInt(this.tileMap.roomList[i].w)) * this.tileMap.tileSize + this.tileMap.tileSize / 2
+        newBaddie.y = (this.tileMap.roomList[i].y + getRandomInt(this.tileMap.roomList[i].h)) * this.tileMap.tileSize + this.tileMap.tileSize / 2
+        newBaddie.spawnRoom = this.tileMap.roomList[i].key
+        this.baddies.push(newBaddie)
+        baddieCount++
+      }
     }
 
     // add boss
@@ -157,8 +270,6 @@ export class LevelOne extends BasedLevel {
     bossBaddie.y = (this.tileMap.roomList[lastRoomIndex].y + 5) * this.tileMap.tileSize
     bossBaddie.spawnRoom = this.tileMap.roomList[lastRoomIndex].key
     this.baddies.push(bossBaddie)
-    console.log(bossBaddie)
-    console.log(bossBaddie.spawnRoom)
 
     this.bossRoomTag = this.tileMap.roomList[this.tileMap.roomList.length - 1].key
 
@@ -167,7 +278,7 @@ export class LevelOne extends BasedLevel {
     this.aimKnob = new TouchKnob({ key: 'aim-knob', gameRef: this.gameRef })
     this.positionKnobs()
 
-
+    this.gameRef.drawLoading('Music')
     // Music
     this.bgSong = await this.gameRef.soundPlayer.loadSound(BgMusic)
     this.bgSong2 = await this.gameRef.soundPlayer.loadSound(BgMusic2)
@@ -344,6 +455,87 @@ export class LevelOne extends BasedLevel {
     if (this.gameRef.touchMode) {
       this.moveKnob.draw()
       this.aimKnob.draw()
+
+      rotateDraw({
+        c: this.gameRef.ctx,
+        x: this.moveKnob.width/2 - 48,
+        y: this.gameRef.gameHeight -40 ,
+        a: 0
+      }, () => {
+        drawImage(this.moveSprite)
+      })
+      rotateDraw({
+        c: this.gameRef.ctx,
+        x: this.aimKnob.x + this.moveKnob.width/2 - 48,
+        y: this.gameRef.gameHeight -40 ,
+        a: 0
+      }, () => {
+        drawImage(this.aimSprite)
+      })
+
+      // END TOUCH MODE
+    } else {
+      rotateDraw({
+        c: this.gameRef.ctx,
+        x: 60,
+        y: this.gameRef.gameHeight - 120 ,
+        a: 0
+      }, () => {
+        drawImage(this.moveSprite)
+      })
+      rotateDraw({
+        c: this.gameRef.ctx,
+        x: 60,
+        y: this.gameRef.gameHeight - 80 ,
+        a: 0
+      }, () => {
+        drawImage(this.wasdSprite)
+      })
+
+      rotateDraw({
+        c: this.gameRef.ctx,
+        x: 60,
+        y: this.gameRef.gameHeight - 40 ,
+        a: 0
+      }, () => {
+        drawImage(this.arrowSprite)
+      })
+
+      rotateDraw({
+        c: this.gameRef.ctx,
+        x: this.gameRef.gameWidth - 178,
+        y: this.gameRef.gameHeight - 120,
+        a: 0
+      }, () => {
+        drawImage(this.aimSprite)
+      })
+
+      rotateDraw({
+        c: this.gameRef.ctx,
+        x: this.gameRef.gameWidth - 200,
+        y: this.gameRef.gameHeight - 80,
+        a: 0
+      }, () => {
+        drawImage(this.attackSprite)
+      })
+
+      rotateDraw({
+        c: this.gameRef.ctx,
+        x: this.gameRef.gameWidth - 142,
+        y: this.gameRef.gameHeight - 40,
+        a: 0
+      }, () => {
+        drawImage(this.mouseSprite)
+      })
+
+      // rotateDraw({
+      //   c: this.gameRef.ctx,
+      //   x: this.gameRef.gameWidth - 116,
+      //   y: 90,
+      //   a: 0
+      // }, () => {
+      //   drawImage(this.buttonXSprite)
+      // })
     }
 
     // this.swapWeaponBtn.draw()
@@ -357,22 +549,68 @@ export class LevelOne extends BasedLevel {
       }, () => {
         drawImage(this.swingSprite)
       })
-    }
-
-    if (this.player.mode === 'melee') {
       rotateDraw({
         c: this.gameRef.ctx,
-        x: this.gameRef.gameWidth - 80,
+        x: this.gameRef.gameWidth - 116,
+        y: 10,
+        a: 0
+      }, () => {
+        drawImage(this.swapSprite)
+      })
+    }
+
+    rotateDraw({
+      c: this.gameRef.ctx,
+      x: 10,
+      y: 10,
+      a: 0
+    }, () => {
+      drawImage(this.healthSprite)
+    })
+
+    if(this.player.healthBar.current > 0){
+      const p = this.player.healthBar.current/this.player.healthBar.max
+      drawBox({
+        c: this.gameRef.ctx,
+        x: 90,
+        y: 18,
+        width: 72 * p,
+        height: 8,
+        // fillColor: 'red'
+        fillColor: p < .5 ? 'red' : p < .8 ? 'orange' : 'green'
+      })
+    }
+
+    if(this.player.poopHealthBar.current > 0){
+      const p = this.player.poopHealthBar.current/this.player.poopHealthBar.max
+      drawBox({
+        c: this.gameRef.ctx,
+        x: 106,
+        y: 42,
+        width: 56 * p,
+        height: 8,
+        fillColor: 'brown'
+      })
+    }
+
+    if (this.player.mode === 'melee' && this.player.poopHealthBar.current > 0) {
+      rotateDraw({
+        c: this.gameRef.ctx,
+        x: this.gameRef.gameWidth - 86,
         y: 40,
         a: 0
       }, () => {
-        if (this.player.poopHealthBar.current > 0) {
-          // drawImage(this.flingSprite)
-          // } else {
           this.gameRef.ctx.globalAlpha = this.player.poopHealthBar.current / this.player.poopHealthBar.max
           drawImage(this.flingSprite)
           this.gameRef.ctx.globalAlpha = 1
-        }
+      })
+      rotateDraw({
+        c: this.gameRef.ctx,
+        x: this.gameRef.gameWidth - 116,
+        y: 10,
+        a: 0
+      }, () => {
+        drawImage(this.swapSprite)
       })
     }
   }

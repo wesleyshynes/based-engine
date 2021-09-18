@@ -355,7 +355,7 @@ export default class Player extends BasedObject {
     this.direction !== 'up' && this.mode === 'shoot' && this.projectileWeapon.draw()
 
 
-    this.healthBar.current < this.healthBar.max && this.healthBar.draw()
+    // this.healthBar.current < this.healthBar.max && this.healthBar.draw()
     // this.mode === 'shoot' && this.poopHealthBar.draw()
 
   }

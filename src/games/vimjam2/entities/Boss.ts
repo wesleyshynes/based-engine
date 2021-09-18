@@ -1,5 +1,5 @@
 import Baddie from "./Baddie";
-import BossMonkeySprite from '../../../assets/vimjam2/kingMonkey.png'
+import BossMonkeySprite from '../../../assets/vimjam2/BigMonkey.png'
 import { createSprite } from "../../../engine/libs/drawHelpers";
 import Hurt1 from '../../../assets/vimjam2/monkey-1.mp3'
 import Hurt2 from '../../../assets/vimjam2/monkey-2.mp3'
@@ -18,11 +18,11 @@ export default class Boss extends Baddie {
       sx: 0,
       sy: 0,
       sWidth: 72,
-      sHeight: 70,
+      sHeight: 72,
       dx: 0,
       dy: 0,
       dWidth: 72,
-      dHeight: 70,
+      dHeight: 72,
       frame: 0,
       lastUpdate: 0,
       updateDiff: 1000 / 60 * 10

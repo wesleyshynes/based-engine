@@ -11,6 +11,8 @@ export class BasedSounds {
   primaryGainControl: GainNode;
   enabled: boolean = true;
 
+  soundCache: any = {}
+
   constructor() {
     const audioC = window.AudioContext || window.webkitAudioContext
     // this.audioContext = new AudioContext()
@@ -140,6 +142,10 @@ export class BasedSounds {
     // if(!this.enabled) {
     //   return
     // }
+    const soundKey = 'cache-' + soundUrl
+    if(this.soundCache[soundKey]) {
+      return this.soundCache[soundKey]
+    }
     const rawSound = await fetch(soundUrl)
     const soundBuffer = await rawSound.arrayBuffer()
     const decodedBuffer = await this.audioContext.decodeAudioData(soundBuffer)
@@ -155,6 +161,7 @@ export class BasedSounds {
     //
     // // newBuffer.connect(this.primaryGainControl)
     // newBuffer.start()
+    this.soundCache[soundKey] = decodedBuffer
     return decodedBuffer
   }
 

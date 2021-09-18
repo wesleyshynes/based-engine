@@ -77,6 +77,9 @@ export class BasedGame implements BasedGameType {
 
   basedObjectRefs: any = {}
 
+  loadingMessage: string = 'Loading Assets'
+  currentlyLoading: string = ''
+
   constructor(settings: gameSettings) {
     this.canvasElement = this.createCanvas()
     this.canvasElement.width = settings.width ? settings.width : 200
@@ -208,7 +211,7 @@ export class BasedGame implements BasedGameType {
     this.levels[this.activeLevel].draw()
   }
 
-  drawLoading() {
+  drawLoading(loadingThing?: string) {
     this.ctx.beginPath()
     this.ctx.rect(0, 0, this.gameWidth, this.gameHeight)
     this.ctx.fillStyle = '#eee'
@@ -226,7 +229,22 @@ export class BasedGame implements BasedGameType {
       weight: '500',
       fontFamily: 'sans-serif',
       fontSize: 20,
-      text: 'Loading Assets'
+      text: this.loadingMessage
+    })
+
+    drawText({
+      c: this.ctx,
+      x: (this.gameWidth)/2,
+      y: 150,
+      align:'center',
+      fillColor: '#000',
+      strokeColor: '#fff',
+      strokeWidth: 3,
+      style: '',
+      weight: '500',
+      fontFamily: 'sans-serif',
+      fontSize: 20,
+      text: loadingThing ? loadingThing : this.currentlyLoading
     })
   }
 
@@ -236,6 +254,8 @@ export class BasedGame implements BasedGameType {
   }
 
   async handleLevelLoad() {
+    this.loadingMessage = 'Loading Assets'
+    this.currentlyLoading = ''
     this.drawLoading()
     this.levels[this.activeLevel].tearDown()
     this.activeLevel = this.targetLevel
