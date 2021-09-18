@@ -58,6 +58,7 @@ export class StartScreen extends BasedLevel {
   }
 
   handleSounds() {
+    if(!this.gameRef.soundPlayer.enabled) { return }
     if(this.activeSound.playing == false) {
       this.activeSound.soundRef = this.gameRef.soundPlayer.playSound(this.bgSong, () => {
         this.activeSound.playing = false
@@ -67,9 +68,8 @@ export class StartScreen extends BasedLevel {
   }
 
   update() {
-    this.handleSounds()
     this.updateBg()
-    this.handleSounds()
+    // this.handleSounds()
     this.startButton.update()
     this.soundButton.update()
   }

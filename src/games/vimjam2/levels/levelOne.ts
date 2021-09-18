@@ -313,7 +313,8 @@ export class LevelOne extends BasedLevel {
 
   update() {
 
-    this.handleSounds()
+    // this.handleSounds()
+    
     // this.tileMap.removeOccupant(this.player)
     this.movePlayer()
     this.swapWeaponBtn.update()
@@ -403,6 +404,7 @@ export class LevelOne extends BasedLevel {
   }
 
   handleSounds() {
+    if(!this.gameRef.soundPlayer.enabled) { return }
     if (!this.bossRoom && this.tileMap.visitedRooms[this.bossRoomTag]) {
       this.bossRoom = true
       this.activeSound.soundRef.stop()
