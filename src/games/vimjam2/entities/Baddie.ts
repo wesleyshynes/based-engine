@@ -93,9 +93,8 @@ export default class Baddie extends BasedObject {
 
   chaseTarget() {
     const distanceToTarget = distanceBetween(this, this.target)
-    // const cleanDistance = this.cleanDistanceToTarget()
-    if ((this.pathList.length <= 0 && !this.chasing) || ((distanceToTarget > 300) && this.chasing === true)) {
-    // if ((this.pathList.length <= 0 && !this.chasing)) {
+    const cleanDistance = this.cleanDistanceToTarget()
+    if((this.pathList.length <= 0 && !this.chasing) || ((distanceToTarget > 300 || !cleanDistance) && this.chasing === true)) {
       this.chasing = false
       const mapClone = this.tileMap.pfGrid.clone()
       const { x, y } = this.tileMap.getMapCoord(this)
@@ -105,14 +104,14 @@ export default class Baddie extends BasedObject {
         this.pathList = [[x1, y1]]
       }
       this.getNextActiveTarget()
-    // } else if (distanceToTarget <= 300 && cleanDistance) {
-    } else if (distanceToTarget <= 300) {
+    } else if (distanceToTarget <= 300 && cleanDistance) {
       this.activeTarget = this.target
-      // if (this.chasing === false) {
+      if(this.chasing === false){
         this.chasing = true
         this.pathList = []
-      // }
+      }
     }
+
     this.checkRoom()
 
     this.moveTo({
@@ -122,11 +121,23 @@ export default class Baddie extends BasedObject {
   }
 
   cleanDistanceToTarget() {
+    const p = pointOnCircle(angleBetween(this, this.target), this.radius + 5)
+    // return (this.tileMap.getRoomFromCoord(
+    //     this.tileMap.getMapCoord({
+    //       x: (this.x + p.x),
+    //       y: (this.y + p.y)
+    //     })).walkable)
+
     return (this.tileMap.getRoomFromCoord(
       this.tileMap.getMapCoord({
         x: (this.x + this.target.x) / 2,
         y: (this.y + this.target.y) / 2
-      })).walkable)
+      })).walkable) &&
+      (this.tileMap.getRoomFromCoord(
+        this.tileMap.getMapCoord({
+          x: (this.x + p.x),
+          y: (this.y + p.y)
+        })).walkable)
     // return true
   }
 
@@ -139,7 +150,6 @@ export default class Baddie extends BasedObject {
           room.occupants[o].activeTarget.x === this.activeTarget.x &&
           room.occupants[o].activeTarget.y === this.activeTarget.y
       })) {
-        // console.log('new route', room.occupants)
         this.chasing = false
         const mapClone = this.tileMap.pfGrid.clone()
         const nt = this.tileMap.getMapCoord(this.tileMap.getMapCoord(this.activeTarget))
@@ -147,12 +157,7 @@ export default class Baddie extends BasedObject {
         const { x, y } = this.tileMap.getMapCoord(this.tileMap.getMapCoord(this))
         const { x: x1, y: y1 } = this.tileMap.getMapCoord(this.tileMap.getMapCoord(this.target))
         this.pathList = this.finder.findPath(x, y, x1, y1, mapClone)
-        // if(this.pathList.length) {
-          this.getNextActiveTarget()
-        // } else {
-        //   this.pathList = this.finder.findPath(x, y, x + getRandomInt(3)-2, y + getRandomInt(3) - 2, mapClone)
-        //   this.getNextActiveTarget()
-        // }
+        this.getNextActiveTarget()
       }
       this.lastRoomCheck = this.gameRef.lastUpdate + getRandomInt(300)
     }
@@ -176,13 +181,8 @@ export default class Baddie extends BasedObject {
   }
 
   onTargetCallBack() {
-    if (!this.chasing) {
+    // if (!this.chasing) {
       this.getNextActiveTarget()
-    }
-    // else {
-    //   this.pathList = []
-    //   this.chasing = true;
-    //   this.activeTarget = this.target
     // }
   }
 

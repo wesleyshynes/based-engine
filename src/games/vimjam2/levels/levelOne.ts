@@ -197,36 +197,54 @@ export class LevelOne extends BasedLevel {
     this.levelHeight = this.tileMap.height
     this.bossRoom = false
 
+    const getWalkableRoomPos = (room: any) => {
+      let pos = { x: 0, y: 0 }
+      let walkable = false
+      while (!walkable) {
+        pos = {
+          x: room.x + getRandomInt(room.w),
+          y: room.y + getRandomInt(room.h)
+        }
+        walkable = this.tileMap.tileMap[pos.y][pos.x].walkable
+      }
+      return pos
+    }
+
     this.gameRef.drawLoading('Entities')
 
     // setup player
     this.player = new Player({ key: 'player', gameRef: this.gameRef })
-    this.player.x = (this.tileMap.roomList[0].x + 2) * this.tileMap.tileSize
-    this.player.y = (this.tileMap.roomList[0].y + 2) * this.tileMap.tileSize
+    const randomPCoord = getWalkableRoomPos(this.tileMap.roomList[0])
+    this.player.x = (randomPCoord.x) * this.tileMap.tileSize + this.tileMap.tileSize / 2
+    this.player.y = (randomPCoord.y) * this.tileMap.tileSize + this.tileMap.tileSize / 2
     this.player.tileMap = this.tileMap
     await this.player.preload()
 
     // setup box
     this.box = new PushBox({ key: 'box', gameRef: this.gameRef })
-    this.box.x = (this.tileMap.roomList[this.tileMap.roomList.length - 1].x + 2) * this.tileMap.tileSize
-    this.box.y = (this.tileMap.roomList[this.tileMap.roomList.length - 1].y + 2) * this.tileMap.tileSize
+    const randomBCoord = getWalkableRoomPos(this.tileMap.roomList[this.tileMap.roomList.length - 1])
+    this.box.x = (randomBCoord.x) * this.tileMap.tileSize + this.tileMap.tileSize / 2
+    this.box.y = (randomBCoord.y) * this.tileMap.tileSize + this.tileMap.tileSize / 2
     this.box.tileMap = this.tileMap
     await this.box.preload()
 
     // setup goal
     this.leader = new Leader({ key: 'leader', gameRef: this.gameRef })
-    this.leader.x = (this.tileMap.roomList[0].x + 5) * this.tileMap.tileSize
-    this.leader.y = (this.tileMap.roomList[0].y + 5) * this.tileMap.tileSize
+    const randomLCoord = getWalkableRoomPos(this.tileMap.roomList[0])
+    this.leader.x = (randomLCoord.x) * this.tileMap.tileSize + this.tileMap.tileSize / 2
+    this.leader.y = (randomLCoord.y) * this.tileMap.tileSize + this.tileMap.tileSize / 2
     await this.leader.preload()
     // this.player.tileMap = this.tileMap
+
 
     // setup pickups
     this.pickups = []
     let pickupCount = 1
     for (let i = 1; i < this.tileMap.roomList.length; i++) {
       const newPickup = new Pickup({ key: `pickup-${pickupCount}`, gameRef: this.gameRef })
-      newPickup.x = (this.tileMap.roomList[i].x + getRandomInt(this.tileMap.roomList[i].w)) * this.tileMap.tileSize + this.tileMap.tileSize / 2
-      newPickup.y = (this.tileMap.roomList[i].y + getRandomInt(this.tileMap.roomList[i].h)) * this.tileMap.tileSize + this.tileMap.tileSize / 2
+      const randomCoord = getWalkableRoomPos(this.tileMap.roomList[i])
+      newPickup.x = (randomCoord.x) * this.tileMap.tileSize + this.tileMap.tileSize / 2
+      newPickup.y = (randomCoord.y) * this.tileMap.tileSize + this.tileMap.tileSize / 2
       newPickup.spawnRoom = this.tileMap.roomList[i].key
       if (getRandomInt(2) > 0) {
         newPickup.setOnPickup(() => {
@@ -254,11 +272,12 @@ export class LevelOne extends BasedLevel {
     this.baddies = []
     let baddieCount = 0
     for (let i = 1; i < this.tileMap.roomList.length; i++) {
-      for(let j = 0; j <= i/2; j++) {
+      for (let j = 0; j <= i / 2; j++) {
         const newBaddie = new Baddie({ key: `baddie-${baddieCount}`, gameRef: this.gameRef })
         await newBaddie.preload()
-        newBaddie.x = (this.tileMap.roomList[i].x + getRandomInt(this.tileMap.roomList[i].w)) * this.tileMap.tileSize + this.tileMap.tileSize / 2
-        newBaddie.y = (this.tileMap.roomList[i].y + getRandomInt(this.tileMap.roomList[i].h)) * this.tileMap.tileSize + this.tileMap.tileSize / 2
+        const randomCoord = getWalkableRoomPos(this.tileMap.roomList[i])
+        newBaddie.x = (randomCoord.x) * this.tileMap.tileSize + this.tileMap.tileSize / 2
+        newBaddie.y = (randomCoord.y) * this.tileMap.tileSize + this.tileMap.tileSize / 2
         newBaddie.spawnRoom = this.tileMap.roomList[i].key
         this.baddies.push(newBaddie)
         baddieCount++
@@ -269,8 +288,9 @@ export class LevelOne extends BasedLevel {
     this.bossBaddie = new Boss({ key: `baddie-${baddieCount}`, gameRef: this.gameRef })
     await this.bossBaddie.preload()
     const lastRoomIndex = this.tileMap.roomList.length - 1
-    this.bossBaddie.x = (this.tileMap.roomList[lastRoomIndex].x + 5) * this.tileMap.tileSize
-    this.bossBaddie.y = (this.tileMap.roomList[lastRoomIndex].y + 5) * this.tileMap.tileSize
+    const randomCoord = getWalkableRoomPos(this.tileMap.roomList[lastRoomIndex])
+    this.bossBaddie.x = (randomCoord.x) * this.tileMap.tileSize + this.tileMap.tileSize / 2
+    this.bossBaddie.y = (randomCoord.y) * this.tileMap.tileSize + this.tileMap.tileSize / 2
     this.bossBaddie.spawnRoom = this.tileMap.roomList[lastRoomIndex].key
     // this.baddies.push(bossBaddie)
 
@@ -338,7 +358,7 @@ export class LevelOne extends BasedLevel {
     })
 
     this.bossBaddie.update()
-    if(this.bossBaddie.healthBar.current > 0) {
+    if (this.bossBaddie.healthBar.current > 0) {
       this.tileMap.addOccupant(this.bossBaddie)
     }
 
@@ -348,7 +368,7 @@ export class LevelOne extends BasedLevel {
         this.tileMap.addOccupant(baddie)
       }
     })
-    
+
     this.tileMap.addOccupant(this.bossBaddie.weaponHitBox())
 
     this.tileMap.addOccupant(this.box)
@@ -390,8 +410,7 @@ export class LevelOne extends BasedLevel {
       this.player.switchMode(this.player.mode === 'melee' ? 'shoot' : 'melee')
     }
 
-    if(pressedKeys['KeyK']) {
-      // console.log(this.baddies)
+    if (pressedKeys['KeyK']) {
       console.log(this.bossBaddie)
       console.log(this.bossBaddie.cleanDistanceToTarget(this.player))
     }
@@ -428,7 +447,7 @@ export class LevelOne extends BasedLevel {
   }
 
   handleSounds() {
-    if(!this.gameRef.soundPlayer.enabled) { return }
+    if (!this.gameRef.soundPlayer.enabled) { return }
     if (!this.bossRoom && this.tileMap.visitedRooms[this.bossRoomTag]) {
       this.bossRoom = true
       this.activeSound.soundRef.stop()
@@ -484,16 +503,16 @@ export class LevelOne extends BasedLevel {
 
       rotateDraw({
         c: this.gameRef.ctx,
-        x: this.moveKnob.width/2 - 48,
-        y: this.gameRef.gameHeight -40 ,
+        x: this.moveKnob.width / 2 - 48,
+        y: this.gameRef.gameHeight - 40,
         a: 0
       }, () => {
         drawImage(this.moveSprite)
       })
       rotateDraw({
         c: this.gameRef.ctx,
-        x: this.aimKnob.x + this.moveKnob.width/2 - 48,
-        y: this.gameRef.gameHeight -40 ,
+        x: this.aimKnob.x + this.moveKnob.width / 2 - 48,
+        y: this.gameRef.gameHeight - 40,
         a: 0
       }, () => {
         drawImage(this.aimSprite)
@@ -504,7 +523,7 @@ export class LevelOne extends BasedLevel {
       rotateDraw({
         c: this.gameRef.ctx,
         x: 60,
-        y: this.gameRef.gameHeight - 120 ,
+        y: this.gameRef.gameHeight - 120,
         a: 0
       }, () => {
         drawImage(this.moveSprite)
@@ -512,7 +531,7 @@ export class LevelOne extends BasedLevel {
       rotateDraw({
         c: this.gameRef.ctx,
         x: 60,
-        y: this.gameRef.gameHeight - 80 ,
+        y: this.gameRef.gameHeight - 80,
         a: 0
       }, () => {
         drawImage(this.wasdSprite)
@@ -521,7 +540,7 @@ export class LevelOne extends BasedLevel {
       rotateDraw({
         c: this.gameRef.ctx,
         x: 60,
-        y: this.gameRef.gameHeight - 40 ,
+        y: this.gameRef.gameHeight - 40,
         a: 0
       }, () => {
         drawImage(this.arrowSprite)
@@ -594,8 +613,8 @@ export class LevelOne extends BasedLevel {
       drawImage(this.healthSprite)
     })
 
-    if(this.player.healthBar.current > 0){
-      const p = this.player.healthBar.current/this.player.healthBar.max
+    if (this.player.healthBar.current > 0) {
+      const p = this.player.healthBar.current / this.player.healthBar.max
       drawBox({
         c: this.gameRef.ctx,
         x: 90,
@@ -607,8 +626,8 @@ export class LevelOne extends BasedLevel {
       })
     }
 
-    if(this.player.poopHealthBar.current > 0){
-      const p = this.player.poopHealthBar.current/this.player.poopHealthBar.max
+    if (this.player.poopHealthBar.current > 0) {
+      const p = this.player.poopHealthBar.current / this.player.poopHealthBar.max
       drawBox({
         c: this.gameRef.ctx,
         x: 106,
@@ -626,9 +645,9 @@ export class LevelOne extends BasedLevel {
         y: 40,
         a: 0
       }, () => {
-          this.gameRef.ctx.globalAlpha = this.player.poopHealthBar.current / this.player.poopHealthBar.max
-          drawImage(this.flingSprite)
-          this.gameRef.ctx.globalAlpha = 1
+        this.gameRef.ctx.globalAlpha = this.player.poopHealthBar.current / this.player.poopHealthBar.max
+        drawImage(this.flingSprite)
+        this.gameRef.ctx.globalAlpha = 1
       })
       rotateDraw({
         c: this.gameRef.ctx,
@@ -660,9 +679,7 @@ export class LevelOne extends BasedLevel {
       }
     })
 
-    // if(this.bossBaddie.healthBar.current > 0) {
-      this.bossBaddie.draw()
-    // }
+    this.bossBaddie.draw()
 
     this.pickups.map(pickup => {
       if (pickup.active) {

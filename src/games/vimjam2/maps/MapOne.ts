@@ -28,7 +28,7 @@ export class MapOne extends BasedObject {
 
   visitedRooms: any = {}
 
-  generateRoomCount: number = 6
+  generateRoomCount: number = 3//6
 
   async preload() {
 
@@ -315,6 +315,10 @@ export class MapOne extends BasedObject {
             if (getRandomInt(80) > 75) {
               this.tileMap[i][j].sx = 1
               this.tileMap[i][j].sy = 1
+            } else if (getRandomInt(80) > 75) {
+              this.tileMap[i][j].sx = getRandomInt(3)
+              this.tileMap[i][j].sy = 6
+              this.tileMap[i][j].walkable = false
             }
           }
 

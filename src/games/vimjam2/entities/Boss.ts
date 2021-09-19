@@ -1,7 +1,7 @@
 import Baddie from "./Baddie";
 import BossMonkeySprite from '../../../assets/vimjam2/BigMonkey_noHand.png'
 // import BossMonkeySprite from '../../../assets/vimjam2/BigMonkey.png'
-import { createSprite, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
+import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import Hurt1 from '../../../assets/vimjam2/monkey-1.mp3'
 import Hurt2 from '../../../assets/vimjam2/monkey-2.mp3'
 import Hurt3 from '../../../assets/vimjam2/monkey-3.mp3'
@@ -76,15 +76,13 @@ export default class Boss extends Baddie {
       this.gameRef.soundPlayer.playSound(this.ressurectionYell)
       this.speed += .1
       this.deathTimer += 1000
-      this.chasing = true
-      this.pathList = []
     }
   }
 
   weaponHitBox() {
     return {
-      x: this.meleeWeapon.hitBox.x + this.meleeWeapon.x,
-      y: this.meleeWeapon.hitBox.y + this.meleeWeapon.y,
+      x: this.meleeWeapon.hitBox.x + this.meleeWeapon.x + this.meleeWeapon.handPos.x,
+      y: this.meleeWeapon.hitBox.y + this.meleeWeapon.y + this.meleeWeapon.handPos.y,
       entityTag: 'baddieWeapon',
       objectKey: `${this.objectKey}-weapon`,
       radius: this.meleeWeapon.hitBoxRadius,
@@ -139,6 +137,7 @@ export default class Boss extends Baddie {
     if (this.healthBar.current === 0) {
       if (this.dead === false) {
         this.pathList = []
+        this.chasing = false
         this.dead = true
         this.deathTime = this.gameRef.lastUpdate
       }
@@ -162,13 +161,7 @@ export default class Boss extends Baddie {
   }
 
   draw() {
-    // drawCircle({
-    //   c: this.gameRef.ctx,
-    //   x: this.x + this.gameRef.cameraPos.x,
-    //   y: this.y + this.gameRef.cameraPos.y,
-    //   radius: this.radius,
-    //   fillColor: this.color
-    // })
+
 
     rotateDraw({
       c: this.gameRef.ctx,
@@ -186,5 +179,13 @@ export default class Boss extends Baddie {
     this.meleeWeapon.draw()
 
     this.healthBar.current > 0 && this.healthBar.current < this.health && this.healthBar.draw()
+
+    // this.chasing && drawCircle({
+    //   c: this.gameRef.ctx,
+    //   x: this.x + this.gameRef.cameraPos.x,
+    //   y: this.y + this.gameRef.cameraPos.y,
+    //   radius: this.radius,
+    //   fillColor: this.color
+    // })
   }
 }

@@ -47,8 +47,8 @@ export default class Leader extends BasedObject {
 
     rotateDraw({
       c: this.gameRef.ctx,
-      x: this.gameRef.cameraPos.x + this.x + (this.sprite.flipX ? this.radius : -this.radius),
-      y: this.gameRef.cameraPos.y + this.y - this.radius,
+      x: this.gameRef.cameraPos.x + this.x + (this.sprite.flipX ? this.sprite.dWidth/2 : -this.sprite.dWidth/2),
+      y: this.gameRef.cameraPos.y + this.y - this.sprite.dHeight/2,
       a: 0
     }, () => {
       // this.sprite.flipX = this.velocity.x < 0
@@ -59,7 +59,7 @@ export default class Leader extends BasedObject {
       drawText({
         c: this.gameRef.ctx,
         x: this.x + this.gameRef.cameraPos.x,
-        y: this.y + this.gameRef.cameraPos.y - this.radius - 16,
+        y: this.y + this.gameRef.cameraPos.y - this.sprite.dHeight/2 - 16,
         align:'center',
         fillColor: '#000',
         strokeColor: '#fff',
