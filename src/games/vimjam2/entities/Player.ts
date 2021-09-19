@@ -23,6 +23,7 @@ export default class Player extends BasedObject {
 
   color: string = '#ce192b'
   objectKey: string = 'player'
+  entityTag: string = 'player'
 
   target: XYCoordinateType = { x: 0, y: 0 }
 
@@ -195,9 +196,15 @@ export default class Player extends BasedObject {
               occupants[oc].onPickup()
             }
 
+            if(occupants[oc].entityTag === 'baddieWeapon' && occupants[oc].entityTag.active) {
+              if (distanceBetween(this, occupants[oc]) < this.radius + occupants[oc].radius) {
+                this.damage(-15, occupants[oc], 32)
+              }
+            }
+
             if (occupants[oc].entityTag === 'baddie' && occupants[oc].healthBar.current > 0) {
               if (distanceBetween(this, occupants[oc]) < this.radius + occupants[oc].radius) {
-                this.damage(-5, occupants[oc], 16)
+                this.damage(-4, occupants[oc], 16)
               }
               const meleeHitBox = {
                 x: this.meleeWeapon.x + this.meleeWeapon.hitBox.x,

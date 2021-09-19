@@ -6,7 +6,9 @@ import Leader from "../entities/Leader";
 import Player from "../entities/Player";
 import PushBox from "../entities/Pushbox";
 import { MapOne } from "../maps/MapOne";
-import BgMusic from '../../../assets/vimjam2/good-new-diddyPERFOMANCE.mp3'
+// import BgMusic from '../../../assets/vimjam2/good-new-diddyPERFOMANCE.mp3'
+// import BgMusic from '../../../assets/vimjam2/falling in space again.mp3'
+import BgMusic from '../../../assets/vimjam2/Talking Chill bruh FINAL.mp3'
 import BgMusic2 from '../../../assets/vimjam2/Deep space.mp3'
 import { Pickup } from "../entities/Pickup";
 import { BasedButton } from "../../../engine/BasedButton";
@@ -328,23 +330,28 @@ export class LevelOne extends BasedLevel {
 
     this.tileMap.removeOccupant(this.box)
     this.box.update()
-    this.tileMap.addOccupant(this.box)
 
     this.tileMap.removeOccupant(this.bossBaddie)
+    this.tileMap.removeOccupant(this.bossBaddie.weaponHitBox())
+    this.baddies.map(baddie => {
+      this.tileMap.removeOccupant(baddie)
+    })
+
     this.bossBaddie.update()
     if(this.bossBaddie.healthBar.current > 0) {
       this.tileMap.addOccupant(this.bossBaddie)
     }
 
     this.baddies.map(baddie => {
-      this.tileMap.removeOccupant(baddie)
-    })
-    this.baddies.map(baddie => {
       if (baddie.healthBar.current > 0) {
         baddie.update()
         this.tileMap.addOccupant(baddie)
       }
     })
+    
+    this.tileMap.addOccupant(this.bossBaddie.weaponHitBox())
+
+    this.tileMap.addOccupant(this.box)
 
     this.updateCamera()
 
@@ -381,6 +388,12 @@ export class LevelOne extends BasedLevel {
     }
     if (pressedKeys['KeyX']) {
       this.player.switchMode(this.player.mode === 'melee' ? 'shoot' : 'melee')
+    }
+
+    if(pressedKeys['KeyK']) {
+      // console.log(this.baddies)
+      console.log(this.bossBaddie)
+      console.log(this.bossBaddie.cleanDistanceToTarget(this.player))
     }
 
     this.moveKnob.update()

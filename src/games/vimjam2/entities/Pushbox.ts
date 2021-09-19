@@ -2,6 +2,7 @@ import { BasedObject } from "../../../engine/BasedObject";
 import { createSprite, drawBox, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { distanceBetween, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import BananaCrateSpriteUrl from '../../../assets/vimjam2/bananaCrate.png'
+import DragSound from '../../../assets/vimjam2/drag-2.mp3'
 
 export default class PushBox extends BasedObject {
 
@@ -22,6 +23,10 @@ export default class PushBox extends BasedObject {
 
   velocity: XYCoordinateType = { x: 0, y: 0 }
 
+  dragSound: any;
+  lastSound: number = 0
+  soundTimeDiff: number = 500
+
   sprite: any;
 
   async preload() {
@@ -40,9 +45,19 @@ export default class PushBox extends BasedObject {
       lastUpdate: 0,
       updateDiff: 1000/60 * 10
     })
+
+    this.dragSound = await this.gameRef.soundPlayer.loadSound(DragSound)
+
   }
   initialize() { }
   update() { }
+
+  handleDragNoise() {
+    if (this.lastSound + this.soundTimeDiff < this.gameRef.lastUpdate) {
+      this.gameRef.soundPlayer.playSound(this.dragSound)
+      this.lastSound = this.gameRef.lastUpdate
+    }
+  }
 
   moveTo(moveTarget: { x: number, y: number, active?: boolean }, arriveFn: () => void = () => undefined) {
     const dt = distanceBetween(this, moveTarget)
@@ -70,6 +85,7 @@ export default class PushBox extends BasedObject {
       ) {
         this.y -= this.velocity.y
       }
+      this.handleDragNoise()
     } else {
       this.velocity = { x: 0, y: 0 }
       arriveFn()

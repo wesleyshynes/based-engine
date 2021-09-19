@@ -65,6 +65,10 @@ export default class Baddie extends BasedObject {
   }
 
   initialize() {
+    this.baddieDefaultInitialize()
+  }
+
+  baddieDefaultInitialize() {
     this.healthBar = new HealthBar({ key: `baddie-health-${this.objectKey}`, gameRef: this.gameRef })
     this.healthBar.width = this.radius * 2
     this.healthBar.yOffset = -this.radius / 2 - 20
@@ -89,8 +93,9 @@ export default class Baddie extends BasedObject {
 
   chaseTarget() {
     const distanceToTarget = distanceBetween(this, this.target)
-    const cleanDistance = this.cleanDistanceToTarget()
-    if ((this.pathList.length <= 0 && !this.chasing) || ((distanceToTarget > 300 || !cleanDistance) && this.chasing === true)) {
+    // const cleanDistance = this.cleanDistanceToTarget()
+    if ((this.pathList.length <= 0 && !this.chasing) || ((distanceToTarget > 300) && this.chasing === true)) {
+    // if ((this.pathList.length <= 0 && !this.chasing)) {
       this.chasing = false
       const mapClone = this.tileMap.pfGrid.clone()
       const { x, y } = this.tileMap.getMapCoord(this)
@@ -100,23 +105,20 @@ export default class Baddie extends BasedObject {
         this.pathList = [[x1, y1]]
       }
       this.getNextActiveTarget()
-    } else if (distanceToTarget <= 300 && cleanDistance) {
+    // } else if (distanceToTarget <= 300 && cleanDistance) {
+    } else if (distanceToTarget <= 300) {
       this.activeTarget = this.target
-      if (this.chasing === false) {
+      // if (this.chasing === false) {
         this.chasing = true
         this.pathList = []
-      }
+      // }
     }
     this.checkRoom()
 
     this.moveTo({
       x: this.activeTarget.x,
       y: this.activeTarget.y,
-    }, () => {
-      if (!this.chasing) {
-        this.getNextActiveTarget()
-      }
-    })
+    }, () => {this.onTargetCallBack()})
   }
 
   cleanDistanceToTarget() {
@@ -125,6 +127,7 @@ export default class Baddie extends BasedObject {
         x: (this.x + this.target.x) / 2,
         y: (this.y + this.target.y) / 2
       })).walkable)
+    // return true
   }
 
   checkRoom() {
@@ -143,13 +146,15 @@ export default class Baddie extends BasedObject {
         mapClone.setWalkableAt(nt.x, nt.y, false)
         const { x, y } = this.tileMap.getMapCoord(this.tileMap.getMapCoord(this))
         const { x: x1, y: y1 } = this.tileMap.getMapCoord(this.tileMap.getMapCoord(this.target))
-        // console.log(x,y,x1,y1)
         this.pathList = this.finder.findPath(x, y, x1, y1, mapClone)
-        // console.log(this.pathList)
-        // console.log('Chasing False')
-        this.getNextActiveTarget()
+        // if(this.pathList.length) {
+          this.getNextActiveTarget()
+        // } else {
+        //   this.pathList = this.finder.findPath(x, y, x + getRandomInt(3)-2, y + getRandomInt(3) - 2, mapClone)
+        //   this.getNextActiveTarget()
+        // }
       }
-      this.lastRoomCheck = this.gameRef.lastUpdate
+      this.lastRoomCheck = this.gameRef.lastUpdate + getRandomInt(300)
     }
   }
 
@@ -163,11 +168,22 @@ export default class Baddie extends BasedObject {
         y: this.y + pushSpot.y,
         // speed: recoil,
         distance: recoil
-      })
+      }, () => this.onTargetCallBack())
       this.gameRef.soundPlayer.playSound(this.noises[getRandomInt(3)])
       return true
     }
     return false
+  }
+
+  onTargetCallBack() {
+    if (!this.chasing) {
+      this.getNextActiveTarget()
+    }
+    // else {
+    //   this.pathList = []
+    //   this.chasing = true;
+    //   this.activeTarget = this.target
+    // }
   }
 
   moveTo(moveTarget: { x: number, y: number, active?: boolean, speed?: number, distance?: number }, arriveFn: () => void = () => undefined) {
