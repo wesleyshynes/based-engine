@@ -136,6 +136,35 @@ export function drawCircle(settings: {
   }
 }
 
+export function drawEllipse(settings: {
+  c: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radiusX: number,
+  radiusY: number,
+  startAngle?: number,
+  endAngle?: number,
+  fillColor?: string,
+  strokeWidth?: number,
+  strokeColor?: string
+}) {
+  const {
+    c, x, y, radiusX, radiusY, startAngle, endAngle, fillColor, strokeWidth, strokeColor
+  } = settings
+  c.beginPath()
+  c.ellipse(x, y, radiusX, radiusY, 0, startAngle ? degToRad(startAngle) : 0, endAngle ? degToRad(endAngle) : 2 * Math.PI)
+  if (fillColor) {
+    c.fillStyle = fillColor
+    c.fill()
+  }
+  if (strokeWidth && strokeColor) {
+    c.strokeStyle = strokeColor
+    c.lineWidth = strokeWidth
+    c.stroke()
+  }
+}
+
+
 export function drawBox(settings: {
   c: CanvasRenderingContext2D,
   x: number,

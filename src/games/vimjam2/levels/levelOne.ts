@@ -15,7 +15,7 @@ import { BasedButton } from "../../../engine/BasedButton";
 
 import PoopSprite from '../../../assets/vimjam2/poop-sprite.png'
 import StickMelee from '../../../assets/vimjam2/Stick_melee.png'
-import { createSprite, drawBox, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
+import { createSprite, drawBox, drawCircle, drawEllipse, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import Boss from "../entities/Boss";
 
 import MoveText from '../../../assets/vimjam2/MOVE_2x.png'
@@ -676,6 +676,64 @@ export class LevelOne extends BasedLevel {
     }
   }
 
+  drawShadows() {
+    this.gameRef.ctx.globalAlpha = .3
+    drawEllipse({
+      c: this.gameRef.ctx,
+      x: this.gameRef.cameraPos.x + this.leader.x,
+      y: this.gameRef.cameraPos.y + this.leader.y + this.leader.sprite.dHeight/2,
+      radiusX: this.leader.radius,
+      radiusY: this.leader.radius/2,
+      fillColor: 'black'
+    })
+
+    drawEllipse({
+      c: this.gameRef.ctx,
+      x: this.gameRef.cameraPos.x + this.player.x,
+      y: this.gameRef.cameraPos.y + this.player.y + this.player.radius,
+      radiusX: this.player.radius,
+      radiusY: this.player.radius/3,
+      fillColor: 'black'
+    })
+
+    this.pickups.map(pickup => {
+      if (pickup.active) {
+        drawEllipse({
+          c: this.gameRef.ctx,
+          x: this.gameRef.cameraPos.x + pickup.x,
+          y: this.gameRef.cameraPos.y + pickup.y + pickup.radius,
+          radiusX: pickup.radius,
+          radiusY: pickup.radius/3,
+          fillColor: 'black'
+        })
+      }
+    })
+
+    this.baddies.map(baddie => {
+      if (baddie.healthBar.current > 0) {
+        drawEllipse({
+          c: this.gameRef.ctx,
+          x: this.gameRef.cameraPos.x + baddie.x,
+          y: this.gameRef.cameraPos.y + baddie.y + baddie.radius,
+          radiusX: baddie.radius,
+          radiusY: baddie.radius/3,
+          fillColor: 'black'
+        })
+      }
+    })
+
+    drawEllipse({
+      c: this.gameRef.ctx,
+      x: this.gameRef.cameraPos.x + this.bossBaddie.x,
+      y: this.gameRef.cameraPos.y + this.bossBaddie.y + (this.bossBaddie.dead ? 0 : this.bossBaddie.sprite.dHeight/2),
+      radiusX: this.bossBaddie.radius,
+      radiusY: this.bossBaddie.dead ? this.bossBaddie.radius : this.bossBaddie.radius/2,
+      fillColor: 'black'
+    })
+
+    this.gameRef.ctx.globalAlpha = 1
+  }
+
   draw() {
     this.gameRef.ctx.beginPath()
     this.gameRef.ctx.rect(0, 0, this.gameRef.gameWidth, this.gameRef.gameHeight)
@@ -684,10 +742,18 @@ export class LevelOne extends BasedLevel {
 
     this.tileMap.draw()
 
-    this.player.draw()
-    this.box.draw()
+    this.drawShadows()
 
     this.leader.draw()
+
+    this.pickups.map(pickup => {
+      if (pickup.active) {
+        pickup.draw()
+      }
+    })
+
+    this.player.draw()
+    this.box.draw()
 
     this.baddies.map(baddie => {
       if (baddie.healthBar.current > 0) {
@@ -697,11 +763,6 @@ export class LevelOne extends BasedLevel {
 
     this.bossBaddie.draw()
 
-    this.pickups.map(pickup => {
-      if (pickup.active) {
-        pickup.draw()
-      }
-    })
 
     this.drawInterface()
 

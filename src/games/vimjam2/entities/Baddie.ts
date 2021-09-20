@@ -5,7 +5,8 @@ import PF from 'pathfinding';
 import { HealthBar } from "../ui/HealthBar";
 import BadMonkeySprite from '../../../assets/vimjam2/monkeyEnemySprite.png'
 // import BadMonkeySprite from '../../../assets/vimjam2/Monkey_Enemey.png'
-import BadPigSprite from '../../../assets/vimjam2/Pig_Enemey_2.png'
+import BadPigSprite from '../../../assets/vimjam2/pigEnemySprite.png'
+// import BadPigSprite from '../../../assets/vimjam2/Pig_Enemey_2.png'
 import Hurt1 from '../../../assets/vimjam2/monkey-1.mp3'
 import Hurt2 from '../../../assets/vimjam2/monkey-2.mp3'
 import Hurt3 from '../../../assets/vimjam2/monkey-3.mp3'
@@ -44,8 +45,8 @@ export default class Baddie extends BasedObject {
   async preload() {
     this.sprite = await createSprite({
       c: this.gameRef.ctx,
-      sprite: BadMonkeySprite,
-      // sprite: this.spritePool[getRandomInt(2)],
+      // sprite: BadMonkeySprite,
+      sprite: this.spritePool[getRandomInt(2)],
       sx: 0,
       sy: 0,
       sWidth: 32,
