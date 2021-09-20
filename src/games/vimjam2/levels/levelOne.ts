@@ -331,10 +331,11 @@ export class LevelOne extends BasedLevel {
       gameRef: this.gameRef,
     })
     this.swapWeaponBtn.fillColor = '#ce192b'
-    this.swapWeaponBtn.x = this.gameRef.gameWidth - 100
-    this.swapWeaponBtn.y = 40
+    this.swapWeaponBtn.x = this.gameRef.gameWidth - 116
+    this.swapWeaponBtn.y = 0
+    this.swapWeaponBtn.height = 90
     this.swapWeaponBtn.buttonText = 'swap'
-    this.swapWeaponBtn.width = 80
+    this.swapWeaponBtn.width = 100
     this.swapWeaponBtn.clickFunction = () => {
       this.player.switchMode(this.player.mode === 'melee' ? 'shoot' : 'melee')
     }
@@ -509,7 +510,7 @@ export class LevelOne extends BasedLevel {
 
   onResize() {
     this.positionKnobs()
-    this.swapWeaponBtn.x = this.gameRef.gameWidth - 100
+    this.swapWeaponBtn.x = this.gameRef.gameWidth - 116
   }
 
   drawInterface() {
@@ -638,7 +639,7 @@ export class LevelOne extends BasedLevel {
         width: 72 * p,
         height: 8,
         // fillColor: 'red'
-        fillColor: p < .5 ? 'red' : p < .8 ? 'orange' : 'green'
+        fillColor: p < .5 ? 'red' : p < .8 ? 'orange' : 'yellow'
       })
     }
 
@@ -650,7 +651,7 @@ export class LevelOne extends BasedLevel {
         y: 42,
         width: 56 * p,
         height: 8,
-        fillColor: 'brown'
+        fillColor: '#d89b6d'
       })
     }
 
@@ -763,9 +764,8 @@ export class LevelOne extends BasedLevel {
 
     this.bossBaddie.draw()
 
-
     this.drawInterface()
-
+    // this.swapWeaponBtn.draw()
   }
 
   tearDown() {

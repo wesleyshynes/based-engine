@@ -4,6 +4,11 @@ import { angleBetween, distanceBetween, getRandomInt, pointOnCircle, relativeMul
 import PF from 'pathfinding';
 import { HealthBar } from "../ui/HealthBar";
 import BadMonkeySprite from '../../../assets/vimjam2/monkeyEnemySprite.png'
+import BadMonkeySprite1 from '../../../assets/vimjam2/monkeyEnemySprites_1.png'
+import BadMonkeySprite2 from '../../../assets/vimjam2/monkeyEnemySprites_2.png'
+import BadMonkeySprite3 from '../../../assets/vimjam2/monkeyEnemySprites_3.png'
+import BadMonkeySprite4 from '../../../assets/vimjam2/monkeyEnemySprites_4.png'
+import BadMonkeySprite5 from '../../../assets/vimjam2/monkeyEnemySprites_5.png'
 // import BadMonkeySprite from '../../../assets/vimjam2/Monkey_Enemey.png'
 import BadPigSprite from '../../../assets/vimjam2/pigEnemySprite.png'
 // import BadPigSprite from '../../../assets/vimjam2/Pig_Enemey_2.png'
@@ -38,7 +43,18 @@ export default class Baddie extends BasedObject {
   health: number = 100;
 
   sprite: any;
-  spritePool: any[] = [BadMonkeySprite, BadPigSprite];
+  spritePool: any[] = [
+    BadPigSprite,
+    BadPigSprite,
+    BadPigSprite,
+    BadPigSprite,
+    BadMonkeySprite,
+    BadMonkeySprite1,
+    BadMonkeySprite2,
+    BadMonkeySprite3,
+    BadMonkeySprite4,
+    BadMonkeySprite5,
+  ];
   noises: any[] = [];
   noisePool: any[] = [Hurt1, Hurt2, Hurt3]
 
@@ -46,7 +62,7 @@ export default class Baddie extends BasedObject {
     this.sprite = await createSprite({
       c: this.gameRef.ctx,
       // sprite: BadMonkeySprite,
-      sprite: this.spritePool[getRandomInt(2)],
+      sprite: this.spritePool[getRandomInt(this.spritePool.length)],
       sx: 0,
       sy: 0,
       sWidth: 32,
