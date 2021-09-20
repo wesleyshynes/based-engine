@@ -1,5 +1,4 @@
 @import 'reset.scss';
-@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
 #game-container {
     position: fixed;
@@ -16,8 +15,6 @@
     overflow-y: hidden;
     flex-direction: column;
     font-family: sans-serif;
-    // font-family: 'VT323', monospace, sans-serif;
-    // font-size: 1.2em;
     -webkit-user-select: none;
     -moz-user-select: none;
 
@@ -74,5 +71,4 @@ body {
   background: #336b22;
   -webkit-user-select: none;
   -moz-user-select: none;
-  // font-family: 'VT323', monospace;
 }
