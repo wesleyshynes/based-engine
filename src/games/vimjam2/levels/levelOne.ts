@@ -427,10 +427,10 @@ export class LevelOne extends BasedLevel {
       this.player.switchMode(this.player.mode === 'melee' ? 'shoot' : 'melee')
     }
 
-    if (pressedKeys['KeyK']) {
-      console.log(this.bossBaddie)
-      console.log(this.bossBaddie.cleanDistanceToTarget(this.player))
-    }
+    // if (pressedKeys['KeyK']) {
+    //   console.log(this.bossBaddie)
+    //   console.log(this.bossBaddie.cleanDistanceToTarget(this.player))
+    // }
 
     this.moveKnob.update()
     if (this.moveKnob.knobActive) {

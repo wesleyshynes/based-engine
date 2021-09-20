@@ -222,10 +222,10 @@ export class MapOne extends BasedObject {
       rooms.push(newRoom)
     }
 
-    console.log('top', top)
-    console.log('bottom', bottom)
-    console.log('left', left)
-    console.log('right', right)
+    // console.log('top', top)
+    // console.log('bottom', bottom)
+    // console.log('left', left)
+    // console.log('right', right)
 
 
     this.roomList = rooms.map((room: any) => {
@@ -269,12 +269,12 @@ export class MapOne extends BasedObject {
     }
     this.tileMap = newMap
 
-    console.log(this.roomList)
-    console.log(this.width, this.height)
-    console.log(this.width/this.tileSize, this.height/this.tileSize)
+    // console.log(this.roomList)
+    // console.log(this.width, this.height)
+    // console.log(this.width/this.tileSize, this.height/this.tileSize)
 
     this.roomList.map((room, idx) => {
-      console.log('mapping', idx, room)
+      // console.log('mapping', idx, room)
       let yPos = 0
       const maxX = room.w - 1
       const maxY = room.h - 1
