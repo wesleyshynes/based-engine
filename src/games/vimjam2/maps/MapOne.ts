@@ -28,7 +28,7 @@ export class MapOne extends BasedObject {
 
   visitedRooms: any = {}
 
-  generateRoomCount: number = 3//6
+  generateRoomCount: number = 6
 
   async preload() {
 
