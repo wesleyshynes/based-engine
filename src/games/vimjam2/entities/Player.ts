@@ -196,7 +196,7 @@ export default class Player extends BasedObject {
               occupants[oc].onPickup()
             }
 
-            if(occupants[oc].entityTag === 'baddieWeapon' && occupants[oc].entityTag.active) {
+            if(occupants[oc].entityTag === 'baddieWeapon' && occupants[oc].active) {
               if (distanceBetween(this, occupants[oc]) < this.radius + occupants[oc].radius) {
                 this.damage(-15, occupants[oc], 32)
               }

@@ -241,31 +241,34 @@ export class LevelOne extends BasedLevel {
     this.pickups = []
     let pickupCount = 1
     for (let i = 1; i < this.tileMap.roomList.length; i++) {
-      const newPickup = new Pickup({ key: `pickup-${pickupCount}`, gameRef: this.gameRef })
-      const randomCoord = getWalkableRoomPos(this.tileMap.roomList[i])
-      newPickup.x = (randomCoord.x) * this.tileMap.tileSize + this.tileMap.tileSize / 2
-      newPickup.y = (randomCoord.y) * this.tileMap.tileSize + this.tileMap.tileSize / 2
-      newPickup.spawnRoom = this.tileMap.roomList[i].key
-      if (getRandomInt(2) > 0) {
-        newPickup.setOnPickup(() => {
-          this.player.healthBar.tick(25, true)
-          newPickup.active = false
-          newPickup.playPickupNoise()
-        })
-        newPickup.spriteChoice = 1
-        newPickup.pickupColor = 'yellow'
-      } else {
-        newPickup.setOnPickup(() => {
-          this.player.poopHealthBar.tick(50, true)
-          newPickup.active = false
-          newPickup.playPickupNoise()
-        })
+      for (let j = 0; j <= i / 2; j++) {
+        const newPickup = new Pickup({ key: `pickup-${pickupCount}`, gameRef: this.gameRef })
+        const randomCoord = getWalkableRoomPos(this.tileMap.roomList[i])
+        newPickup.x = (randomCoord.x) * this.tileMap.tileSize + this.tileMap.tileSize / 2
+        newPickup.y = (randomCoord.y) * this.tileMap.tileSize + this.tileMap.tileSize / 2
+        newPickup.spawnRoom = this.tileMap.roomList[i].key
+        if (getRandomInt(2) > 0) {
+          newPickup.setOnPickup(() => {
+            this.player.healthBar.tick(25, true)
+            newPickup.active = false
+            newPickup.playPickupNoise()
+          })
+          newPickup.spriteChoice = 1
+          newPickup.pickupColor = 'yellow'
+        } else {
+          newPickup.setOnPickup(() => {
+            this.player.poopHealthBar.tick(50, true)
+            newPickup.active = false
+            newPickup.playPickupNoise()
+          })
+        }
+        await newPickup.preload()
+        newPickup.active = true
+        this.tileMap.addOccupant(newPickup)
+        this.pickups.push(newPickup)
+        pickupCount++
       }
-      await newPickup.preload()
-      newPickup.active = true
-      this.tileMap.addOccupant(newPickup)
-      this.pickups.push(newPickup)
-      pickupCount++
+
     }
 
     //setup enemies
@@ -341,6 +344,7 @@ export class LevelOne extends BasedLevel {
   update() {
 
     this.handleSounds()
+    this.leader.update()
 
     // this.tileMap.removeOccupant(this.player)
     this.movePlayer()
@@ -374,6 +378,18 @@ export class LevelOne extends BasedLevel {
     this.tileMap.addOccupant(this.box)
 
     this.updateCamera()
+
+    if(distanceBetween(this.leader, this.player) < 300) {
+      this.leader.message = 'Bring Bananas!'
+    } else {
+      this.leader.message = ''
+    }
+
+    if(distanceBetween(this.leader, this.box) < 300) {
+      this.leader.message = 'Hurry!'
+    } else if (distanceBetween(this.leader, this.box) < 500) {
+      this.leader.message = 'Almost Here!'
+    }
 
     // win condition
     if (distanceBetween(this.leader, this.box) < this.leader.radius + this.box.radius) {

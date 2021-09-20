@@ -1,5 +1,6 @@
 import Baddie from "./Baddie";
-import BossMonkeySprite from '../../../assets/vimjam2/BigMonkey_noHand.png'
+import BossMonkeySprite from '../../../assets/vimjam2/KINGMonkeySpriteSheet.png'
+// import BossMonkeySprite from '../../../assets/vimjam2/BigMonkey_noHand.png'
 // import BossMonkeySprite from '../../../assets/vimjam2/BigMonkey.png'
 import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine/libs/drawHelpers";
 import Hurt1 from '../../../assets/vimjam2/monkey-1.mp3'
@@ -23,7 +24,7 @@ export default class Boss extends Baddie {
   ressurectionYell: any;
 
   meleeWeapon: any;
-  swingCoolDown: number = 500
+  swingCoolDown: number = 1000
   lastSwing: number = 0
   swingTarget: any;
 
@@ -50,6 +51,7 @@ export default class Boss extends Baddie {
     })
 
     this.meleeWeapon = new MeleeWeapon({ key: 'melee-weapon-boss', gameRef: this.gameRef })
+    // this.meleeWeapon.radius = 60
     this.meleeWeapon.radius = 36
     await this.meleeWeapon.preload()
 
@@ -81,8 +83,8 @@ export default class Boss extends Baddie {
 
   weaponHitBox() {
     return {
-      x: this.meleeWeapon.hitBox.x + this.meleeWeapon.x + this.meleeWeapon.handPos.x,
-      y: this.meleeWeapon.hitBox.y + this.meleeWeapon.y + this.meleeWeapon.handPos.y,
+      x: this.meleeWeapon.hitBox.x + this.meleeWeapon.x,// + this.meleeWeapon.handPos.x,
+      y: this.meleeWeapon.hitBox.y + this.meleeWeapon.y,// + this.meleeWeapon.handPos.y,
       entityTag: 'baddieWeapon',
       objectKey: `${this.objectKey}-weapon`,
       radius: this.meleeWeapon.hitBoxRadius,
@@ -97,6 +99,24 @@ export default class Boss extends Baddie {
         y: this.y + (getRandomInt(2) > 0 ? -300 : 300),
       }
       this.lastSwing = this.gameRef.lastUpdate
+    }
+  }
+
+  updateSprite() {
+    if (this.sprite.lastUpdate + this.sprite.updateDiff < this.gameRef.lastUpdate) {
+      this.sprite.frame++
+      if (this.sprite.frame > 1) {
+        this.sprite.frame = 0
+      }
+      this.sprite.lastUpdate = this.gameRef.lastUpdate
+
+      if(Math.abs(this.velocity.x) > 0 || Math.abs(this.velocity.y) > 0) {
+        this.sprite.sy = this.sprite.dHeight
+      } else {
+        this.sprite.sy = this.sprite.frame * this.sprite.dHeight
+      }
+
+      this.sprite.sx = this.sprite.frame * this.sprite.dWidth
     }
   }
 
@@ -144,6 +164,7 @@ export default class Boss extends Baddie {
       this.handleRessurection()
       return
     }
+    this.updateSprite()
     if (!this.tileMap.visitedRooms[this.spawnRoom] && this.healthBar.current === this.healthBar.max) {
       return
     }
@@ -177,6 +198,14 @@ export default class Boss extends Baddie {
       this.drawArm({x: 22, y: -8})
     }
     this.meleeWeapon.draw()
+
+    // drawCircle({
+    //   c: this.gameRef.ctx,
+    //   x: this.gameRef.cameraPos.x + this.weaponHitBox().x,
+    //   y: this.gameRef.cameraPos.y + this.weaponHitBox().y,
+    //   radius: this.meleeWeapon.hitBoxRadius,
+    //   fillColor: 'red'
+    // })
 
     this.healthBar.current > 0 && this.healthBar.current < this.health && this.healthBar.draw()
 

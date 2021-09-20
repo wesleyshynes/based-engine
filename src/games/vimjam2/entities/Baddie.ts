@@ -3,7 +3,8 @@ import { createSprite, drawCircle, drawImage, rotateDraw } from "../../../engine
 import { angleBetween, distanceBetween, getRandomInt, pointOnCircle, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import PF from 'pathfinding';
 import { HealthBar } from "../ui/HealthBar";
-import BadMonkeySprite from '../../../assets/vimjam2/Monkey_Enemey.png'
+import BadMonkeySprite from '../../../assets/vimjam2/monkeyEnemySprite.png'
+// import BadMonkeySprite from '../../../assets/vimjam2/Monkey_Enemey.png'
 import BadPigSprite from '../../../assets/vimjam2/Pig_Enemey_2.png'
 import Hurt1 from '../../../assets/vimjam2/monkey-1.mp3'
 import Hurt2 from '../../../assets/vimjam2/monkey-2.mp3'
@@ -43,7 +44,8 @@ export default class Baddie extends BasedObject {
   async preload() {
     this.sprite = await createSprite({
       c: this.gameRef.ctx,
-      sprite: this.spritePool[getRandomInt(2)],
+      sprite: BadMonkeySprite,
+      // sprite: this.spritePool[getRandomInt(2)],
       sx: 0,
       sy: 0,
       sWidth: 32,
@@ -81,10 +83,10 @@ export default class Baddie extends BasedObject {
   }
 
   update() {
+    this.updateSprite()
     if (!this.tileMap.visitedRooms[this.spawnRoom] && this.healthBar.current === this.healthBar.max) {
       return
     }
-
     this.chaseTarget()
 
     this.healthBar.x = this.x
@@ -225,6 +227,31 @@ export default class Baddie extends BasedObject {
         x: (px * this.tileMap.tileSize) + Math.floor(this.tileMap.tileSize / 2),
         y: (py * this.tileMap.tileSize) + Math.floor(this.tileMap.tileSize / 2)
       }
+    }
+  }
+
+  updateSprite() {
+    if (this.sprite.lastUpdate + this.sprite.updateDiff < this.gameRef.lastUpdate) {
+      this.sprite.frame++
+      if (this.sprite.frame > 3) {
+        this.sprite.frame = 0
+      }
+      this.sprite.lastUpdate = this.gameRef.lastUpdate
+
+
+      if (Math.abs(this.velocity.x) > Math.abs(this.velocity.y)) {
+        this.sprite.sy = this.sprite.dHeight * 2
+        this.sprite.flipX = this.velocity.x < 0
+      } else if (Math.abs(this.velocity.y)) {
+        this.sprite.flipX = false
+        if (this.velocity.y > 0) {
+          this.sprite.sy = 0
+        } else {
+          this.sprite.sy = this.sprite.dHeight
+        }
+      }
+
+      this.sprite.sx = this.sprite.frame * this.sprite.dWidth
     }
   }
 
