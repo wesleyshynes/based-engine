@@ -6,6 +6,7 @@ import { radToDeg } from "../../../engine/libs/mathHelpers";
 export class LevelOne extends BasedLevel {
   physics: any
   boxA: any
+  boxAColor: string = 'red'
   boxB: any
   ground: any
   async preload() {}
@@ -14,9 +15,12 @@ export class LevelOne extends BasedLevel {
     this.physics = Physics.Engine.create()
     this.physics.world.gravity.y = 0
     this.boxA = Physics.Bodies.rectangle(100, 100, 40, 40, {
-      density: 100
+      density: 100,
+      label: 'boxA'
     });
-    this.boxB = Physics.Bodies.rectangle(130, 50, 40, 40);
+    this.boxB = Physics.Bodies.rectangle(130, 50, 40, 40, {
+      label: 'boxB'
+    });
     this.ground = Physics.Bodies.rectangle(0, 380, 810, 60, { isStatic: true });
     const physicsGroup: any = [this.boxA, this.boxB, this.ground]
     // Physics.Composite.create()
@@ -26,6 +30,24 @@ export class LevelOne extends BasedLevel {
       y: .1
     })
     // Physics.Composite.add(this.physics, physicsGroup)
+    Physics.Events.on( this.physics ,'collisionStart', (event: any) => {
+        event.pairs.map((pair:any) => {
+          const {bodyA, bodyB} = pair
+          console.log(bodyA, bodyB)
+          if(bodyA.label === 'boxA' || bodyB.label === 'boxA') {
+            this.boxAColor = 'orange'
+          }
+        })
+    })
+    Physics.Events.on( this.physics ,'collisionEnd', (event: any) => {
+        event.pairs.map((pair:any) => {
+          const {bodyA, bodyB} = pair
+          console.log(bodyA, bodyB)
+          if(bodyA.label === 'boxA' || bodyB.label === 'boxA') {
+            this.boxAColor = 'red'
+          }
+        })
+    })
   }
 
   handleKeys() {
@@ -94,7 +116,8 @@ export class LevelOne extends BasedLevel {
         y: -20,
         width: 40,
         height: 40,
-        fillColor: 'red'
+        fillColor: this.boxAColor,
+        // fillColor: 'red',
       })
     })
 
