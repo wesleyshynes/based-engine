@@ -1,6 +1,6 @@
 import { BasedLevel } from "../../../engine/BasedLevel";
 import * as Physics from 'matter-js'
-import { drawBox, rotateDraw } from "../../../engine/libs/drawHelpers";
+import { drawBox, drawCircle, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { radToDeg } from "../../../engine/libs/mathHelpers";
 
 export class LevelOne extends BasedLevel {
@@ -8,21 +8,45 @@ export class LevelOne extends BasedLevel {
   boxA: any
   boxAColor: string = 'red'
   boxB: any
+  ballA: any
   ground: any
+  sensor: any
+  itemRef: any = {}
   async preload() {}
 
   initialize() {
     this.physics = Physics.Engine.create()
     this.physics.world.gravity.y = 0
     this.boxA = Physics.Bodies.rectangle(100, 100, 40, 40, {
-      density: 100,
+      density: 1,
       label: 'boxA'
     });
+    this.itemRef[this.boxA.id] = {
+      props: {
+        color: 'red',
+        touch: 0,
+        collisionStartHandler: (ref: any, ref2: any) => {
+          ref.props.touch++
+          ref.props.color = ref.props.touch > 0 ? 'orange' : 'red'
+        },
+        collisionEndHandler: (ref: any, ref2: any) => {
+          ref.props.touch--
+          ref.props.color = ref.props.touch > 0 ? 'orange' : 'red'
+        }
+      },
+      bod: this.boxA
+    }
     this.boxB = Physics.Bodies.rectangle(130, 50, 40, 40, {
+      inertia: Infinity,
+      density: 5,
       label: 'boxB'
     });
+    this.ballA = Physics.Bodies.circle(300,300,20,{
+      label: 'ballA',
+    });
     this.ground = Physics.Bodies.rectangle(0, 380, 810, 60, { isStatic: true });
-    const physicsGroup: any = [this.boxA, this.boxB, this.ground]
+    this.sensor = Physics.Bodies.rectangle(400, 380, 810, 60, { isStatic: true, isSensor: true });
+    const physicsGroup: any = [this.boxA, this.boxB, this.ballA, this.ground, this.sensor]
     // Physics.Composite.create()
     Physics.Composite.add(this.physics.world, physicsGroup)
     Physics.Body.applyForce(this.boxB, this.boxB.position, {
@@ -33,18 +57,36 @@ export class LevelOne extends BasedLevel {
     Physics.Events.on( this.physics ,'collisionStart', (event: any) => {
         event.pairs.map((pair:any) => {
           const {bodyA, bodyB} = pair
-          console.log(bodyA, bodyB)
-          if(bodyA.label === 'boxA' || bodyB.label === 'boxA') {
-            this.boxAColor = 'orange'
+          console.log('==== COLLISION START ====')
+          // console.log(bodyA, bodyB)
+          // if(bodyA.label === 'boxA' || bodyB.label === 'boxA') {
+          //   this.boxAColor = 'orange'
+          // }
+          const aHand = this.itemRef[bodyA.id]
+          const bHand = this.itemRef[bodyB.id]
+          if(aHand && aHand.props.collisionStartHandler) {
+            aHand.props.collisionStartHandler(aHand, bHand)
+          }
+          if(bHand && bHand.props.collisionStartHandler) {
+            aHand.props.collisionStartHandler(bHand, aHand)
           }
         })
     })
     Physics.Events.on( this.physics ,'collisionEnd', (event: any) => {
         event.pairs.map((pair:any) => {
           const {bodyA, bodyB} = pair
+          console.log('==== COLLISION END ====')
           console.log(bodyA, bodyB)
-          if(bodyA.label === 'boxA' || bodyB.label === 'boxA') {
-            this.boxAColor = 'red'
+          // if(bodyA.label === 'boxA' || bodyB.label === 'boxA') {
+          //   this.boxAColor = 'red'
+          // }
+          const aHand = this.itemRef[bodyA.id]
+          const bHand = this.itemRef[bodyB.id]
+          if(aHand && aHand.props.collisionEndHandler) {
+            aHand.props.collisionEndHandler(aHand, bHand)
+          }
+          if(bHand && bHand.props.collisionEndHandler) {
+            aHand.props.collisionEndHandler(bHand, aHand)
           }
         })
     })
@@ -103,6 +145,23 @@ export class LevelOne extends BasedLevel {
   draw() {
     this.drawBg()
 
+    drawBox({
+      c: this.gameRef.ctx,
+      x: this.sensor.position.x - 405,
+      y: this.sensor.position.y - 30,
+      width: 810,
+      height: 60,
+      fillColor: 'white'
+    })
+
+    drawCircle({
+      c: this.gameRef.ctx,
+      x: this.ballA.position.x,
+      y: this.ballA.position.y,
+      radius: 20,
+      fillColor: 'yellow'
+    })
+
     rotateDraw({
       c: this.gameRef.ctx,
       x: this.boxA.position.x,
@@ -116,7 +175,7 @@ export class LevelOne extends BasedLevel {
         y: -20,
         width: 40,
         height: 40,
-        fillColor: this.boxAColor,
+        fillColor: this.itemRef[this.boxA.id].props.color,
         // fillColor: 'red',
       })
     })
