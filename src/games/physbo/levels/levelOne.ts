@@ -1,10 +1,14 @@
 import { BasedLevel } from "../../../engine/BasedLevel";
 import * as Physics from 'matter-js'
 import { drawBox, drawCircle, rotateDraw } from "../../../engine/libs/drawHelpers";
-import { radToDeg } from "../../../engine/libs/mathHelpers";
+import { degToRad, radToDeg } from "../../../engine/libs/mathHelpers";
+import PhysBox from "../entities/PhysBox";
 
 export class LevelOne extends BasedLevel {
   physics: any
+
+  player: any;
+
   boxA: any
   boxAColor: string = 'red'
   boxB: any
@@ -17,6 +21,20 @@ export class LevelOne extends BasedLevel {
   initialize() {
     this.physics = Physics.Engine.create()
     this.physics.world.gravity.y = 0
+
+    this.player = new PhysBox({key: 'player', gameRef: this.gameRef})
+    this.player.x = 50
+    this.player.y = 200
+    this.player.width = 100
+    this.player.height = 10
+    this.player.bodyOptions = {
+      label: 'playerBox',
+      density: 10000
+    }
+    this.player.bodyCenter = {x: -20, y: 0}
+    this.player.initialize()
+    Physics.Composite.add(this.physics.world, this.player.body)
+
     this.boxA = Physics.Bodies.rectangle(100, 100, 40, 40, {
       density: 1,
       label: 'boxA'
@@ -38,7 +56,7 @@ export class LevelOne extends BasedLevel {
     }
     this.boxB = Physics.Bodies.rectangle(130, 50, 40, 40, {
       inertia: Infinity,
-      density: 5,
+      density: .2,
       label: 'boxB'
     });
     this.ballA = Physics.Bodies.circle(300,300,20,{
@@ -64,11 +82,11 @@ export class LevelOne extends BasedLevel {
           // }
           const aHand = this.itemRef[bodyA.id]
           const bHand = this.itemRef[bodyB.id]
-          if(aHand && aHand.props.collisionStartHandler) {
+          if(aHand && aHand.props && aHand.props.collisionStartHandler) {
             aHand.props.collisionStartHandler(aHand, bHand)
           }
-          if(bHand && bHand.props.collisionStartHandler) {
-            aHand.props.collisionStartHandler(bHand, aHand)
+          if(bHand && bHand.props && bHand.props.collisionStartHandler) {
+            bHand.props.collisionStartHandler(bHand, aHand)
           }
         })
     })
@@ -76,17 +94,17 @@ export class LevelOne extends BasedLevel {
         event.pairs.map((pair:any) => {
           const {bodyA, bodyB} = pair
           console.log('==== COLLISION END ====')
-          console.log(bodyA, bodyB)
+          // console.log(bodyA, bodyB)
           // if(bodyA.label === 'boxA' || bodyB.label === 'boxA') {
           //   this.boxAColor = 'red'
           // }
           const aHand = this.itemRef[bodyA.id]
           const bHand = this.itemRef[bodyB.id]
-          if(aHand && aHand.props.collisionEndHandler) {
+          if(aHand && aHand.props && aHand.props.collisionEndHandler) {
             aHand.props.collisionEndHandler(aHand, bHand)
           }
-          if(bHand && bHand.props.collisionEndHandler) {
-            aHand.props.collisionEndHandler(bHand, aHand)
+          if(bHand && bHand.props && bHand.props.collisionEndHandler) {
+            bHand.props.collisionEndHandler(bHand, aHand)
           }
         })
     })
@@ -95,6 +113,9 @@ export class LevelOne extends BasedLevel {
   handleKeys() {
     const pressedKeys = this.gameRef.pressedKeys
     const speedFactor = 1
+
+    const playerRotate = degToRad(25 * this.gameRef.diffMulti)
+    let playerRotateSpeed = 0
 
     let moveX = 0
     let moveY = 0
@@ -111,16 +132,23 @@ export class LevelOne extends BasedLevel {
     if (pressedKeys['KeyS'] || pressedKeys['ArrowDown']) {
       moveY += speedFactor
     }
-    // if (pressedKeys['KeyX']) {
-    //   this.player.switchMode(this.player.mode === 'melee' ? 'shoot' : 'melee')
-    // }
+    if (pressedKeys['KeyX']) {
+      playerRotateSpeed += .2
+      // Physics.Body.setAngle(this.player.body, this.player.body.angle + playerRotate)
+    }
+    if (pressedKeys['KeyC']) {
+      playerRotateSpeed -= .1
+      // Physics.Body.setAngle(this.player.body, this.player.body.angle - playerRotate)
+    }
 
     // Physics.Body.applyForce(this.boxB, this.boxB.position, {
     //   x: moveX,
     //   y: moveY
     // })
+    Physics.Body.setAngularVelocity(this.player.body, playerRotateSpeed)
+    // Physics.Body.setAngularVelocity(this.player.body, playerRotateSpeed ? Math.PI/playerRotateSpeed : 0)
 
-    Physics.Body.setVelocity(this.boxB, {
+    Physics.Body.setVelocity(this.player.body, {
       x: moveX,
       y: moveY
     })
@@ -195,6 +223,8 @@ export class LevelOne extends BasedLevel {
         fillColor: 'blue'
       })
     })
+
+    this.player.draw()
 
     drawBox({
       c: this.gameRef.ctx,
