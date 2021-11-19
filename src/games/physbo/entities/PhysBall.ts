@@ -1,5 +1,5 @@
 import { BasedObject } from "../../../engine/BasedObject";
-import * as Physics from 'matter-js'
+import Physics from 'matter-js';
 import { drawCircle, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { radToDeg, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 

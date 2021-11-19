@@ -1,6 +1,5 @@
 import { BasedLevel } from "../../../engine/BasedLevel";
-import * as Physics from 'matter-js'
-import { drawBox, drawCircle, rotateDraw } from "../../../engine/libs/drawHelpers";
+import Physics from 'matter-js';
 import { degToRad, normalizeVector, radToDeg } from "../../../engine/libs/mathHelpers";
 import PhysBox from "../entities/PhysBox";
 import PhysBall from "../entities/PhysBall";
