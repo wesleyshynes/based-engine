@@ -28,21 +28,22 @@ export class LevelOne extends BasedLevel {
 
   initialize() {
     this.physics = Physics.Engine.create()
-    this.physics.world.gravity.y = 0
+    this.physics.world.gravity.y = 10
 
     this.player = new PhysBox({key: 'player', gameRef: this.gameRef})
     this.player.x = 50
     this.player.y = 200
     this.player.width = 100
     this.player.height = 10
+    this.player.grounded = true
     this.player.bodyOptions = {
       label: 'playerBox',
-      density: 10000
+      density: 10
     }
     this.player.bodyCenter = {x: -20, y: 0}
     this.player.collisionStartFn = (o:any) => {
       this.player.color = 'red'
-      console.log('FUCK')
+      this.player.grounded = true
     }
     this.player.collisionEndFn = (o: any) => {
       this.player.color = 'blue'
@@ -121,7 +122,7 @@ export class LevelOne extends BasedLevel {
     let playerRotateSpeed = 0
 
     let moveX = 0
-    let moveY = 0
+    let moveY = this.player.body.velocity.y
 
     if (pressedKeys['KeyA'] || pressedKeys['ArrowLeft']) {
       moveX -= speedFactor
@@ -129,11 +130,13 @@ export class LevelOne extends BasedLevel {
     if (pressedKeys['KeyD'] || pressedKeys['ArrowRight']) {
       moveX += speedFactor
     }
-    if (pressedKeys['KeyW'] || pressedKeys['ArrowUp']) {
-      moveY -= speedFactor
+    if ((pressedKeys['KeyW'] || pressedKeys['ArrowUp']) && this.player.grounded) {
+      moveY = -10
+      // moveY = Math.max(moveY - speedFactor, -20)
+      this.player.grounded = false
     }
-    if (pressedKeys['KeyS'] || pressedKeys['ArrowDown']) {
-      moveY += speedFactor
+    if ((pressedKeys['KeyS'] || pressedKeys['ArrowDown'])) {
+      moveY = Math.min(moveY + speedFactor, 20)
     }
     if (pressedKeys['KeyX']) {
       playerRotateSpeed -= .1
@@ -144,17 +147,21 @@ export class LevelOne extends BasedLevel {
       // Physics.Body.setAngle(this.player.body, this.player.body.angle - playerRotate)
     }
 
-    // Physics.Body.applyForce(this.boxB, this.boxB.position, {
+    // Physics.Body.applyForce(this.player.body, this.player.body.position, {
     //   x: moveX,
     //   y: moveY
     // })
     Physics.Body.setAngularVelocity(this.player.body, playerRotateSpeed)
     // Physics.Body.setAngularVelocity(this.player.body, playerRotateSpeed ? Math.PI/playerRotateSpeed : 0)
 
-    Physics.Body.setVelocity(this.player.body, normalizeVector({
+    // Physics.Body.setVelocity(this.player.body, normalizeVector({
+    //   x: moveX,
+    //   y: moveY
+    // },3))
+    Physics.Body.setVelocity(this.player.body, {
       x: moveX,
       y: moveY
-    },3))
+    })
 
 
   }
