@@ -82,10 +82,10 @@ export function subtractVectors(v1: XYCoordinateType, v2: XYCoordinateType) {
   }
 }
 
-export function normalizeVector(v: XYCoordinateType) {
-  const length = Math.sqrt(v.x*v.x+v.y*v.y); //calculating length
+export function normalizeVector(v: XYCoordinateType, m: number = 1) {
+  const length = v.x && v.y ? Math.sqrt(v.x*v.x+v.y*v.y) : 1; //calculating length
   return {
-    x: v.x/length,
-    y: v.y/length
+    x: v.x/length * m,
+    y: v.y/length * m
   }
 }

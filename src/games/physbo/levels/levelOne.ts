@@ -1,21 +1,29 @@
 import { BasedLevel } from "../../../engine/BasedLevel";
 import * as Physics from 'matter-js'
 import { drawBox, drawCircle, rotateDraw } from "../../../engine/libs/drawHelpers";
-import { degToRad, radToDeg } from "../../../engine/libs/mathHelpers";
+import { degToRad, normalizeVector, radToDeg } from "../../../engine/libs/mathHelpers";
 import PhysBox from "../entities/PhysBox";
+import PhysBall from "../entities/PhysBall";
 
 export class LevelOne extends BasedLevel {
   physics: any
 
   player: any;
+  boxes: any[] = [];
+  level: any[] = [];
+  // boxA: any
+  // boxAColor: string = 'red'
+  // boxB: any
 
-  boxA: any
-  boxAColor: string = 'red'
-  boxB: any
   ballA: any
   ground: any
   sensor: any
   itemRef: any = {}
+
+
+  levelWidth: number = 2000
+  levelHeight: number = 2000
+
   async preload() {}
 
   initialize() {
@@ -32,80 +40,75 @@ export class LevelOne extends BasedLevel {
       density: 10000
     }
     this.player.bodyCenter = {x: -20, y: 0}
-    this.player.initialize()
-    Physics.Composite.add(this.physics.world, this.player.body)
-
-    this.boxA = Physics.Bodies.rectangle(100, 100, 40, 40, {
-      density: 1,
-      label: 'boxA'
-    });
-    this.itemRef[this.boxA.id] = {
-      props: {
-        color: 'red',
-        touch: 0,
-        collisionStartHandler: (ref: any, ref2: any) => {
-          ref.props.touch++
-          ref.props.color = ref.props.touch > 0 ? 'orange' : 'red'
-        },
-        collisionEndHandler: (ref: any, ref2: any) => {
-          ref.props.touch--
-          ref.props.color = ref.props.touch > 0 ? 'orange' : 'red'
-        }
-      },
-      bod: this.boxA
+    this.player.collisionStartFn = (o:any) => {
+      this.player.color = 'red'
+      console.log('FUCK')
     }
-    this.boxB = Physics.Bodies.rectangle(130, 50, 40, 40, {
-      inertia: Infinity,
-      density: .2,
-      label: 'boxB'
-    });
-    this.ballA = Physics.Bodies.circle(300,300,20,{
-      label: 'ballA',
-    });
-    this.ground = Physics.Bodies.rectangle(0, 380, 810, 60, { isStatic: true });
-    this.sensor = Physics.Bodies.rectangle(400, 380, 810, 60, { isStatic: true, isSensor: true });
-    const physicsGroup: any = [this.boxA, this.boxB, this.ballA, this.ground, this.sensor]
-    // Physics.Composite.create()
-    Physics.Composite.add(this.physics.world, physicsGroup)
-    Physics.Body.applyForce(this.boxB, this.boxB.position, {
-      x: 0,
-      y: .1
+    this.player.collisionEndFn = (o: any) => {
+      this.player.color = 'blue'
+    }
+    this.player.initialize()
+    this.addToWorld(this.player.body)
+
+    this.boxes = [
+      {x: 100, y: 100, w: 40, h: 40, o: { density: 1, label: 'boxA'}},
+      {x: 130, y: 70, w: 40, h: 40, o: { density: 1, label: 'boxB', inertia: Infinity}},
+    ].map( (spec, idx) => {
+      const tempBody = new PhysBox({ key: `box${idx}`, gameRef: this.gameRef})
+      tempBody.x = spec.x
+      tempBody.y = spec.y
+      tempBody.width = spec.w
+      tempBody.height = spec.h
+      tempBody.bodyOptions = spec.o
+      tempBody.initialize()
+      this.addToWorld(tempBody.body)
+      return tempBody
     })
-    // Physics.Composite.add(this.physics, physicsGroup)
+
+    this.ballA = new PhysBall({key: 'ballA', gameRef: this.gameRef})
+    this.ballA.x = 300
+    this.ballA.y = 300
+    this.ballA.initialize()
+    this.addToWorld(this.ballA.body)
+
+    this.level = [
+      {x: 0, y: 380, w: 400, h: 60, c: 'red', o: { label: 'ground', isStatic: true}},
+
+      {x: 1000, y: 0, w: 2000, h: 60, c: 'brown', o: { label: 'wallTop', isStatic: true}},
+      {x: 0, y: 970, w: 60, h: 2000, c: 'brown', o: { label: 'wallLeft', isStatic: true}},
+      {x: 2000, y: 970, w: 60, h: 2000, c: 'brown', o: { label: 'wallRight', isStatic: true}},
+      {x: 1000, y: 2000, w: 2000, h: 60, c: 'brown', o: { label: 'wallBottom', isStatic: true}},
+
+      {x: 400, y: 380, w: 400, h: 60, c: 'white', o: { label: 'sensorSample', isStatic: true, isSensor: true}},
+    ].map( (spec, idx) => {
+      const tempBody = new PhysBox({ key: `box${idx}`, gameRef: this.gameRef})
+      tempBody.x = spec.x
+      tempBody.y = spec.y
+      tempBody.width = spec.w
+      tempBody.height = spec.h
+      tempBody.bodyOptions = spec.o
+      tempBody.color = spec.c
+      tempBody.initialize()
+      this.addToWorld(tempBody.body)
+      return tempBody
+    })
+
     Physics.Events.on( this.physics ,'collisionStart', (event: any) => {
         event.pairs.map((pair:any) => {
           const {bodyA, bodyB} = pair
-          console.log('==== COLLISION START ====')
-          // console.log(bodyA, bodyB)
-          // if(bodyA.label === 'boxA' || bodyB.label === 'boxA') {
-          //   this.boxAColor = 'orange'
-          // }
-          const aHand = this.itemRef[bodyA.id]
-          const bHand = this.itemRef[bodyB.id]
-          if(aHand && aHand.props && aHand.props.collisionStartHandler) {
-            aHand.props.collisionStartHandler(aHand, bHand)
-          }
-          if(bHand && bHand.props && bHand.props.collisionStartHandler) {
-            bHand.props.collisionStartHandler(bHand, aHand)
-          }
+          // bodyA && bodyA.plugin && bodyA.plugin.collisionStart && bodyA.plugin.collisionStart(bodyB)
+          // bodyB && bodyB.plugin && bodyB.plugin.collisionStart && bodyB.plugin.collisionStart(bodyA)
+          bodyA.plugin.collisionStart(bodyB)
+          bodyB.plugin.collisionStart(bodyA)
         })
     })
     Physics.Events.on( this.physics ,'collisionEnd', (event: any) => {
         event.pairs.map((pair:any) => {
           const {bodyA, bodyB} = pair
-          console.log('==== COLLISION END ====')
-          // console.log(bodyA, bodyB)
-          // if(bodyA.label === 'boxA' || bodyB.label === 'boxA') {
-          //   this.boxAColor = 'red'
-          // }
-          const aHand = this.itemRef[bodyA.id]
-          const bHand = this.itemRef[bodyB.id]
-          if(aHand && aHand.props && aHand.props.collisionEndHandler) {
-            aHand.props.collisionEndHandler(aHand, bHand)
-          }
-          if(bHand && bHand.props && bHand.props.collisionEndHandler) {
-            bHand.props.collisionEndHandler(bHand, aHand)
-          }
+          // bodyA && bodyA.plugin && bodyA.plugin.collisionEnd && bodyA.plugin.collisionEnd(bodyB)
+          // bodyB && bodyB.plugin && bodyB.plugin.collisionEnd && bodyB.plugin.collisionEnd(bodyA)
+          bodyA.plugin.collisionEnd(bodyB)
+          bodyB.plugin.collisionEnd(bodyA)
         })
     })
   }
@@ -133,11 +136,11 @@ export class LevelOne extends BasedLevel {
       moveY += speedFactor
     }
     if (pressedKeys['KeyX']) {
-      playerRotateSpeed += .2
+      playerRotateSpeed -= .1
       // Physics.Body.setAngle(this.player.body, this.player.body.angle + playerRotate)
     }
     if (pressedKeys['KeyC']) {
-      playerRotateSpeed -= .1
+      playerRotateSpeed += .1
       // Physics.Body.setAngle(this.player.body, this.player.body.angle - playerRotate)
     }
 
@@ -148,17 +151,43 @@ export class LevelOne extends BasedLevel {
     Physics.Body.setAngularVelocity(this.player.body, playerRotateSpeed)
     // Physics.Body.setAngularVelocity(this.player.body, playerRotateSpeed ? Math.PI/playerRotateSpeed : 0)
 
-    Physics.Body.setVelocity(this.player.body, {
+    Physics.Body.setVelocity(this.player.body, normalizeVector({
       x: moveX,
       y: moveY
-    })
+    },3))
 
 
+  }
+
+  addToWorld(bodyRef: any) {
+    Physics.Composite.add(this.physics.world, bodyRef)
   }
 
   update() {
     this.handleKeys()
     Physics.Engine.update(this.physics, this.gameRef.updateDiff)
+    this.updateCamera()
+  }
+
+  updateCamera() {
+    const cameraTarget = this.player.body.position
+    this.gameRef.cameraPos = {
+      x: -(cameraTarget.x - this.gameRef.gameWidth / 2),
+      y: -(cameraTarget.y - this.gameRef.gameHeight / 2)
+    }
+    if (this.gameRef.gameWidth < this.levelWidth) {
+      if (this.gameRef.cameraPos.x > 0) this.gameRef.cameraPos.x = 0
+      if (this.gameRef.cameraPos.x - this.gameRef.gameWidth < this.levelWidth * -1) this.gameRef.cameraPos.x = -(this.levelWidth - this.gameRef.gameWidth)
+    } else {
+      this.gameRef.cameraPos.x = (this.gameRef.gameWidth - this.levelWidth) / 2
+    }
+
+    if (this.gameRef.gameHeight < this.levelHeight) {
+      if (this.gameRef.cameraPos.y > 0) this.gameRef.cameraPos.y = 0
+      if (this.gameRef.cameraPos.y - this.gameRef.gameHeight < this.levelHeight * -1) this.gameRef.cameraPos.y = -(this.levelHeight - this.gameRef.gameHeight)
+    } else {
+      this.gameRef.cameraPos.y = (this.gameRef.gameHeight - this.levelHeight) / 2
+    }
   }
 
   onResize() {}
@@ -173,67 +202,18 @@ export class LevelOne extends BasedLevel {
   draw() {
     this.drawBg()
 
-    drawBox({
-      c: this.gameRef.ctx,
-      x: this.sensor.position.x - 405,
-      y: this.sensor.position.y - 30,
-      width: 810,
-      height: 60,
-      fillColor: 'white'
+    this.level.forEach(b => {
+      b.draw()
     })
 
-    drawCircle({
-      c: this.gameRef.ctx,
-      x: this.ballA.position.x,
-      y: this.ballA.position.y,
-      radius: 20,
-      fillColor: 'yellow'
+    this.boxes.forEach(b => {
+      b.draw()
     })
 
-    rotateDraw({
-      c: this.gameRef.ctx,
-      x: this.boxA.position.x,
-      y: this.boxA.position.y,
-      a: radToDeg(this.boxA.angle)
-    }, () => {
-
-      drawBox({
-        c: this.gameRef.ctx,
-        x: -20,
-        y: -20,
-        width: 40,
-        height: 40,
-        fillColor: this.itemRef[this.boxA.id].props.color,
-        // fillColor: 'red',
-      })
-    })
-
-    rotateDraw({
-      c: this.gameRef.ctx,
-      x: this.boxB.position.x,
-      y: this.boxB.position.y,
-      a: radToDeg(this.boxB.angle)
-    }, () => {
-      drawBox({
-        c: this.gameRef.ctx,
-        x: -20,
-        y: -20,
-        width: 40,
-        height: 40,
-        fillColor: 'blue'
-      })
-    })
+    this.ballA.draw()
 
     this.player.draw()
 
-    drawBox({
-      c: this.gameRef.ctx,
-      x: this.ground.position.x - 405,
-      y: this.ground.position.y - 30,
-      width: 810,
-      height: 60,
-      fillColor: 'brown'
-    })
   }
 
   tearDown() {}
