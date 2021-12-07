@@ -6,10 +6,11 @@ import { radToDeg, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 export default class PhysBall extends BasedObject {
   x: number = 0
   y: number = 0
-  radius: number = 20;
+  radius: number = 15;
   color: string = 'blue'
   bodyOptions: any = {
-    label: 'asdfgh'
+    label: 'asdfgh',
+    restitution: 0.8
   }
   body: any;
   bodyCenter: XYCoordinateType = {x: 0, y: 0}
