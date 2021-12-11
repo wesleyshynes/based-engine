@@ -3,10 +3,14 @@ import Physics from 'matter-js';
 import PhysBox from "../entities/PhysBox";
 import PhysBall from "../entities/PhysBall";
 import { normalizeVector } from "../../../engine/libs/mathHelpers";
+import { drawText } from "../../../engine/libs/drawHelpers";
 
 export class StandardLevel extends BasedLevel {
   physics: any
   level: any[] = [];
+
+  lastPhysicsUpdate: number = 0;
+  physicsRate: number = 1000/60
 
   ballA: any
   lastShot: number = 0
@@ -24,6 +28,8 @@ export class StandardLevel extends BasedLevel {
   initialize() {
     this.physics = Physics.Engine.create()
     this.physics.world.gravity.y = 0
+    console.log(this.physics)
+    // this.physics.timing.timeScale = 60/250
 
     this.ballA = new PhysBall({key: 'ballA', gameRef: this.gameRef})
     this.ballA.x = 300
@@ -109,6 +115,8 @@ export class StandardLevel extends BasedLevel {
 
     let moveX = 0
     let moveY = 0
+    const multiplier = this.gameRef.fps/60
+    const velocityO = 60/this.gameRef.fps
     if (pressedKeys['KeyA'] || pressedKeys['ArrowLeft']) {
       moveX -= speedFactor
     }
@@ -129,15 +137,33 @@ export class StandardLevel extends BasedLevel {
       return
     }
 
+    if(this.gameRef.mouseInfo.mouseDown && this.lastShot + 300 < this.gameRef.lastUpdate) {
+      const nv = normalizeVector({
+        x: this.gameRef.mouseInfo.x - this.ballA.body.position.x - this.gameRef.cameraPos.x,
+        y: this.gameRef.mouseInfo.y - this.ballA.body.position.y - this.gameRef.cameraPos.y
+      },
+         40)
+         console.log(this.gameRef.cameraPos, this.ballA.body.position, this.gameRef.mouseInfo, nv)
+      Physics.Body.setVelocity(this.ballA.body, nv)
+      this.lastShot = this.gameRef.lastUpdate
+    }
+
     if((Math.abs(moveX) || Math.abs(moveY))) {
       if (pressedKeys['KeyC']) {
         if (Math.abs(this.ballA.body.velocity.y) < 0.001 && Math.abs(this.ballA.body.velocity.x) < 0.001 && this.lastShot + 300 < this.gameRef.lastUpdate) {
-          Physics.Body.applyForce(this.ballA.body,{x: this.ballA.body.position.x, y: this.ballA.body.position.y},normalizeVector({x: moveX, y: moveY}))  }
+          const nv = normalizeVector({x: moveX, y: moveY}, 40)
+          console.log(nv, this.gameRef.updateDiff, this.gameRef.fps, this.gameRef.diffMulti)
+          console.log(multiplier, 1/multiplier, velocityO)
+          Physics.Body.setVelocity(this.ballA.body, nv)
+          // Physics.Body.applyForce(this.ballA.body,{x: this.ballA.body.position.x, y: this.ballA.body.position.y}, nv)
           this.lastShot = this.gameRef.lastUpdate
+        } else {
+          console.log(this.ballA.body.velocity)
+        }
       } else {
         Physics.Body.setVelocity(this.ballA.body, {
-          x: moveX,
-          y: moveY
+          x: moveX * 10,
+          y: moveY * 10
         })
       }
     }
@@ -149,8 +175,21 @@ export class StandardLevel extends BasedLevel {
 
   update() {
     this.handleKeys()
-    Physics.Engine.update(this.physics, this.gameRef.updateDiff)
+    this.handlePhysics()
     this.updateCamera()
+  }
+
+  handlePhysics() {
+    if(this.gameRef.fps < 61) {
+      Physics.Engine.update(this.physics, this.gameRef.updateDiff)
+      this.lastPhysicsUpdate = this.gameRef.lastUpdate
+    } else {
+      if(this.gameRef.lastUpdate - this.lastPhysicsUpdate >= this.physicsRate ) {
+        // Physics.Engine.update(this.physics, this.gameRef.updateDiff)
+        Physics.Engine.update(this.physics, this.gameRef.lastUpdate - this.lastPhysicsUpdate)
+        this.lastPhysicsUpdate = this.gameRef.lastUpdate
+      }
+    }
   }
 
   updateCamera() {
@@ -184,6 +223,7 @@ export class StandardLevel extends BasedLevel {
   }
 
   draw() {
+
     this.drawBg()
 
     this.level.forEach(b => {
@@ -196,6 +236,19 @@ export class StandardLevel extends BasedLevel {
 
     this.ballA.color = Math.abs(this.ballA.body.velocity.y) < 0.001 && Math.abs(this.ballA.body.velocity.x) < 0.001 ? 'blue' : 'orange'
     this.ballA.draw()
+
+    drawText({
+      c: this.gameRef.ctx,
+      x: 30,
+      y: 60,
+      align: 'left',
+      fontSize: 16,
+      fontFamily: 'sans-serif',
+      fillColor: '#fff',
+      text: `FPS: ${Math.round(this.gameRef.fps)}`
+    })
+
+
   }
 
   tearDown() {}

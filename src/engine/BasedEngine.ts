@@ -56,6 +56,7 @@ export class BasedGame implements BasedGameType {
   lastUpdate: number = Date.now()
   updateDiff: number = Date.now()
   updateTick: number = 1000 / 60
+  fps: number = 0
   diffMulti: number = this.updateDiff / this.updateTick
 
   keyBoardEnabled: boolean = false
@@ -183,7 +184,9 @@ export class BasedGame implements BasedGameType {
 
   tick() {
     this.updateDiff = Date.now() - this.lastUpdate
+    this.fps = 1/(this.updateDiff/1000)
     this.diffMulti = this.updateDiff / this.updateTick
+    // this.diffMulti = this.updateDiff / this.fps
     this.lastUpdate = Date.now()
   }
 
