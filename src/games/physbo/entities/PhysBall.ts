@@ -9,9 +9,10 @@ export default class PhysBall extends BasedObject {
   radius: number = 15;
   color: string = 'blue'
   bodyOptions: any = {
-    label: 'asdfgh',
+    label: 'ball',
     restitution: 0.8
   }
+  active: boolean = false
   body: any;
   bodyCenter: XYCoordinateType = {x: 0, y: 0}
   collisionStartFn: (o: any) => void = (o: any) => null;

@@ -10,7 +10,8 @@ export default class PhysBox extends BasedObject {
   height: number = 40;
   color: string = 'blue'
   bodyOptions: any = {
-    label: 'asdfgh'
+    label: 'asdfgh',
+    restitution: 0.8
   }
   body: any;
   bodyCenter: XYCoordinateType = {x: 0, y: 0}

@@ -20,6 +20,9 @@ export class StandardLevel extends BasedLevel {
   balls: any[] = []
   ballSize: number = 15;
 
+  testHole: any
+  testHoleSize: number = 20
+
   levelWidth: number = 2000
   levelHeight: number = 2000
 
@@ -35,18 +38,46 @@ export class StandardLevel extends BasedLevel {
     this.ballA.x = 300
     this.ballA.y = 800
     this.ballA.radius = this.ballSize
+    this.ballA.bodyOptions.label = 'cue'
+    this.ballA.color = 'white'
     this.ballA.initialize()
     this.addToWorld(this.ballA.body)
 
+    this.testHole = new PhysBall({key: 'testHole', gameRef: this.gameRef})
+    this.testHole.x = 400
+    this.testHole.y = 400
+    this.testHole.radius = this.testHoleSize
+    this.testHole.color = 'black'
+    this.testHole.onCollisionStart = (otherBody: any) => {
+      console.log(otherBody)
+      if(otherBody.label === 'ball') {
+        this.removeFromWorld(otherBody)
+        this.balls.forEach(ball => {
+          if(ball.body.id === otherBody.id) {
+            ball.active = false
+          }
+        })
+      }
+      if(otherBody.label === 'cue') {
+        // otherBody.position.x = 300
+        // otherBody.position.y = 800
+        Physics.Body.setPosition(otherBody, {x: 300, y: 800})
+        Physics.Body.setVelocity(otherBody, {x:0, y: 0})
+      }
+    }
+    this.testHole.bodyOptions = {label: 'hole', isStatic: true, isSensor: true}
+    this.testHole.initialize()
+    this.addToWorld(this.testHole.body)
+
     this.level = [
-      {x: 0, y: 380, w: 400, h: 160, c: 'red', o: { label: 'ground', isStatic: true}},
+      // {x: 0, y: 380, w: 400, h: 160, c: 'red', o: { label: 'ground', isStatic: true}},
 
-      {x: 1000, y: 0, w: 2000, h: 160, c: 'brown', o: { label: 'wallTop', isStatic: true}},
-      {x: 0, y: 970, w: 160, h: 2000, c: 'brown', o: { label: 'wallLeft', isStatic: true}},
-      {x: 2000, y: 970, w: 160, h: 2000, c: 'brown', o: { label: 'wallRight', isStatic: true}},
-      {x: 1000, y: 2000, w: 2000, h: 160, c: 'brown', o: { label: 'wallBottom', isStatic: true}},
+      {x: 440, y: 0, w: 880, h: 160, c: 'brown', o: { label: 'wallTop', isStatic: true}},
+      {x: 0, y: 500, w: 160, h: 1000, c: 'brown', o: { label: 'wallLeft', isStatic: true}},
+      {x: 800, y: 500, w: 160, h: 1000, c: 'brown', o: { label: 'wallRight', isStatic: true}},
+      {x: 440, y: 1000, w: 880, h: 160, c: 'brown', o: { label: 'wallBottom', isStatic: true}},
 
-      {x: 400, y: 380, w: 400, h: 60, c: 'white', o: { label: 'sensorSample', isStatic: true, isSensor: true}},
+      // {x: 400, y: 380, w: 400, h: 60, c: 'white', o: { label: 'sensorSample', isStatic: true, isSensor: true}},
     ].map( (spec, idx) => {
       const tempBody = new PhysBox({ key: `box${idx}`, gameRef: this.gameRef})
       tempBody.x = spec.x
@@ -83,9 +114,10 @@ export class StandardLevel extends BasedLevel {
       tempBody.x = 200 + (this.ballSize * 2) * (idx%ballLayout[idx].x) + this.ballSize*ballLayout[idx].y
       console.log(tempBody.x)
       tempBody.y = 100 + (this.ballSize*2)*(ballLayout[idx].y)
-      tempBody.color = 'red'
+      tempBody.color = `rgba(${idx/15 * 100 + 100},${200 - idx/15 * 100},${idx/15 * 100 + 100},1)`
       tempBody.initialize()
       this.addToWorld(tempBody.body)
+      tempBody.active = true
       return tempBody
     })
 
@@ -152,13 +184,13 @@ export class StandardLevel extends BasedLevel {
       if (pressedKeys['KeyC']) {
         if (Math.abs(this.ballA.body.velocity.y) < 0.001 && Math.abs(this.ballA.body.velocity.x) < 0.001 && this.lastShot + 300 < this.gameRef.lastUpdate) {
           const nv = normalizeVector({x: moveX, y: moveY}, 40)
-          console.log(nv, this.gameRef.updateDiff, this.gameRef.fps, this.gameRef.diffMulti)
-          console.log(multiplier, 1/multiplier, velocityO)
+          // console.log(nv, this.gameRef.updateDiff, this.gameRef.fps, this.gameRef.diffMulti)
+          // console.log(multiplier, 1/multiplier, velocityO)
           Physics.Body.setVelocity(this.ballA.body, nv)
           // Physics.Body.applyForce(this.ballA.body,{x: this.ballA.body.position.x, y: this.ballA.body.position.y}, nv)
           this.lastShot = this.gameRef.lastUpdate
         } else {
-          console.log(this.ballA.body.velocity)
+          // console.log(this.ballA.body.velocity)
         }
       } else {
         Physics.Body.setVelocity(this.ballA.body, {
@@ -171,6 +203,10 @@ export class StandardLevel extends BasedLevel {
 
   addToWorld(bodyRef: any) {
     Physics.Composite.add(this.physics.world, bodyRef)
+  }
+
+  removeFromWorld(bodyRef: any) {
+    Physics.Composite.remove(this.physics.world, bodyRef)
   }
 
   update() {
@@ -230,11 +266,17 @@ export class StandardLevel extends BasedLevel {
       b.draw()
     })
 
+    this.testHole.draw()
+    let ballCount = 0
     this.balls.forEach(b => {
-      b.draw()
+      if(b.active){
+        b.draw()
+      } else {
+        ballCount++
+      }
     })
 
-    this.ballA.color = Math.abs(this.ballA.body.velocity.y) < 0.001 && Math.abs(this.ballA.body.velocity.x) < 0.001 ? 'blue' : 'orange'
+    // this.ballA.color = Math.abs(this.ballA.body.velocity.y) < 0.001 && Math.abs(this.ballA.body.velocity.x) < 0.001 ? 'blue' : 'orange'
     this.ballA.draw()
 
     drawText({
@@ -246,6 +288,17 @@ export class StandardLevel extends BasedLevel {
       fontFamily: 'sans-serif',
       fillColor: '#fff',
       text: `FPS: ${Math.round(this.gameRef.fps)}`
+    })
+
+    drawText({
+      c: this.gameRef.ctx,
+      x: 30,
+      y: this.gameRef.gameHeight - 80,
+      align: 'left',
+      fontSize: 16,
+      fontFamily: 'sans-serif',
+      fillColor: '#fff',
+      text: `BALLS LEFT: ${this.balls.length - ballCount}`
     })
 
 
