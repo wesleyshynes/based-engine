@@ -22,6 +22,8 @@ export class StandardLevel extends BasedLevel {
 
   testHole: any
   testHoleSize: number = 20
+  pockets: any[] = []
+  pocketSize: number = 20
 
   levelWidth: number = 2000
   levelHeight: number = 2000
@@ -43,6 +45,36 @@ export class StandardLevel extends BasedLevel {
     this.ballA.initialize()
     this.addToWorld(this.ballA.body)
 
+    this.pockets = [
+      { x: 100, y: 100 },
+      { x: 700, y: 100 },
+    ].map((spec, idx) => {
+      const tempPocket = new PhysBall({key: `pocket${idx}`, gameRef: this.gameRef})
+      tempPocket.x = spec.x
+      tempPocket.y = spec.y
+      tempPocket.radius = this.pocketSize
+      tempPocket.color = 'black'
+      tempPocket.onCollisionStart = (otherBody: any) => {
+        console.log(otherBody)
+        if(otherBody.label === 'ball') {
+          this.removeFromWorld(otherBody)
+          this.balls.forEach(ball => {
+            if(ball.body.id === otherBody.id) {
+              ball.active = false
+            }
+          })
+        }
+        if(otherBody.label === 'cue') {
+          Physics.Body.setPosition(otherBody, {x: 300, y: 800})
+          Physics.Body.setVelocity(otherBody, {x:0, y: 0})
+        }
+      }
+      tempPocket.bodyOptions = {label: 'hole', isStatic: true, isSensor: true}
+      tempPocket.initialize()
+      this.addToWorld(tempPocket.body)
+      return tempPocket
+    })
+
     this.testHole = new PhysBall({key: 'testHole', gameRef: this.gameRef})
     this.testHole.x = 400
     this.testHole.y = 400
@@ -59,8 +91,6 @@ export class StandardLevel extends BasedLevel {
         })
       }
       if(otherBody.label === 'cue') {
-        // otherBody.position.x = 300
-        // otherBody.position.y = 800
         Physics.Body.setPosition(otherBody, {x: 300, y: 800})
         Physics.Body.setVelocity(otherBody, {x:0, y: 0})
       }
@@ -71,12 +101,10 @@ export class StandardLevel extends BasedLevel {
 
     this.level = [
       // {x: 0, y: 380, w: 400, h: 160, c: 'red', o: { label: 'ground', isStatic: true}},
-
       {x: 440, y: 0, w: 880, h: 160, c: 'brown', o: { label: 'wallTop', isStatic: true}},
       {x: 0, y: 500, w: 160, h: 1000, c: 'brown', o: { label: 'wallLeft', isStatic: true}},
       {x: 800, y: 500, w: 160, h: 1000, c: 'brown', o: { label: 'wallRight', isStatic: true}},
       {x: 440, y: 1000, w: 880, h: 160, c: 'brown', o: { label: 'wallBottom', isStatic: true}},
-
       // {x: 400, y: 380, w: 400, h: 60, c: 'white', o: { label: 'sensorSample', isStatic: true, isSensor: true}},
     ].map( (spec, idx) => {
       const tempBody = new PhysBox({ key: `box${idx}`, gameRef: this.gameRef})
@@ -263,6 +291,10 @@ export class StandardLevel extends BasedLevel {
     this.drawBg()
 
     this.level.forEach(b => {
+      b.draw()
+    })
+
+    this.pockets.forEach(b => {
       b.draw()
     })
 
