@@ -20,8 +20,6 @@ export class StandardLevel extends BasedLevel {
   balls: any[] = []
   ballSize: number = 15;
 
-  testHole: any
-  testHoleSize: number = 20
   pockets: any[] = []
   pocketSize: number = 20
 
@@ -48,6 +46,10 @@ export class StandardLevel extends BasedLevel {
     this.pockets = [
       { x: 100, y: 100 },
       { x: 700, y: 100 },
+      { x: 100, y: 500 },
+      { x: 700, y: 500 },
+      { x: 100, y: 900 },
+      { x: 700, y: 900 },
     ].map((spec, idx) => {
       const tempPocket = new PhysBall({key: `pocket${idx}`, gameRef: this.gameRef})
       tempPocket.x = spec.x
@@ -74,30 +76,6 @@ export class StandardLevel extends BasedLevel {
       this.addToWorld(tempPocket.body)
       return tempPocket
     })
-
-    this.testHole = new PhysBall({key: 'testHole', gameRef: this.gameRef})
-    this.testHole.x = 400
-    this.testHole.y = 400
-    this.testHole.radius = this.testHoleSize
-    this.testHole.color = 'black'
-    this.testHole.onCollisionStart = (otherBody: any) => {
-      console.log(otherBody)
-      if(otherBody.label === 'ball') {
-        this.removeFromWorld(otherBody)
-        this.balls.forEach(ball => {
-          if(ball.body.id === otherBody.id) {
-            ball.active = false
-          }
-        })
-      }
-      if(otherBody.label === 'cue') {
-        Physics.Body.setPosition(otherBody, {x: 300, y: 800})
-        Physics.Body.setVelocity(otherBody, {x:0, y: 0})
-      }
-    }
-    this.testHole.bodyOptions = {label: 'hole', isStatic: true, isSensor: true}
-    this.testHole.initialize()
-    this.addToWorld(this.testHole.body)
 
     this.level = [
       // {x: 0, y: 380, w: 400, h: 160, c: 'red', o: { label: 'ground', isStatic: true}},
@@ -298,7 +276,6 @@ export class StandardLevel extends BasedLevel {
       b.draw()
     })
 
-    this.testHole.draw()
     let ballCount = 0
     this.balls.forEach(b => {
       if(b.active){
