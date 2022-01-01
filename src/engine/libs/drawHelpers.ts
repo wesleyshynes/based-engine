@@ -25,8 +25,6 @@ export function rotateDraw(settings: {
 
     // we’re done with the rotating so restore the unrotated context
     c.restore();
-
-
 }
 
 export function drawImage(settings: {

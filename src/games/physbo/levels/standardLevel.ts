@@ -4,6 +4,7 @@ import PhysBox from "../entities/PhysBox";
 import PhysBall from "../entities/PhysBall";
 import { normalizeVector } from "../../../engine/libs/mathHelpers";
 import { drawText } from "../../../engine/libs/drawHelpers";
+import PhysPoly from "../entities/PhysPoly";
 
 export class StandardLevel extends BasedLevel {
   physics: any
@@ -23,6 +24,8 @@ export class StandardLevel extends BasedLevel {
   pockets: any[] = []
   pocketSize: number = 20
 
+  bouncePad: any;
+
   levelWidth: number = 2000
   levelHeight: number = 2000
 
@@ -34,8 +37,17 @@ export class StandardLevel extends BasedLevel {
     console.log(this.physics)
     // this.physics.timing.timeScale = 60/250
 
+    this.bouncePad = new PhysPoly({key: 'bouncePadA', gameRef: this.gameRef})
+    this.bouncePad.x = 120
+    this.bouncePad.y = 80
+    this.bouncePad.bodyOptions = { label: 'bouncePadA', isStatic: true}
+    this.bouncePad.initialize()
+    Physics.Body.setPosition(this.bouncePad.body, {x: 120, y: 80})
+    this.addToWorld(this.bouncePad.body)
+    console.log(this.bouncePad.body)
+
     this.ballA = new PhysBall({key: 'ballA', gameRef: this.gameRef})
-    this.ballA.x = 300
+    this.ballA.x = 400
     this.ballA.y = 800
     this.ballA.radius = this.ballSize
     this.ballA.bodyOptions.label = 'cue'
@@ -117,9 +129,9 @@ export class StandardLevel extends BasedLevel {
     this.balls = (new Array(15)).fill(0).map((x,idx) => {
       const tempBody = new PhysBall({key: `ball-${idx}`, gameRef: this.gameRef})
       tempBody.radius = this.ballSize
-      tempBody.x = 200 + (this.ballSize * 2) * (idx%ballLayout[idx].x) + this.ballSize*ballLayout[idx].y
+      tempBody.x = 320 + (this.ballSize * 2) * (idx%ballLayout[idx].x) + this.ballSize*ballLayout[idx].y
       console.log(tempBody.x)
-      tempBody.y = 100 + (this.ballSize*2)*(ballLayout[idx].y)
+      tempBody.y = 200 + (this.ballSize*2)*(ballLayout[idx].y)
       tempBody.color = `rgba(${idx/15 * 100 + 100},${200 - idx/15 * 100},${idx/15 * 100 + 100},1)`
       tempBody.initialize()
       this.addToWorld(tempBody.body)
@@ -271,6 +283,8 @@ export class StandardLevel extends BasedLevel {
     this.level.forEach(b => {
       b.draw()
     })
+
+    this.bouncePad.draw()
 
     this.pockets.forEach(b => {
       b.draw()
