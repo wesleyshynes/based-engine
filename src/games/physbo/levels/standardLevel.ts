@@ -2,9 +2,29 @@ import { BasedLevel } from "../../../engine/BasedLevel";
 import Physics from 'matter-js';
 import PhysBox from "../entities/PhysBox";
 import PhysBall from "../entities/PhysBall";
-import { normalizeVector } from "../../../engine/libs/mathHelpers";
+import { degToRad, normalizeVector } from "../../../engine/libs/mathHelpers";
 import { drawText } from "../../../engine/libs/drawHelpers";
 import PhysPoly from "../entities/PhysPoly";
+
+const generatePad = (width: number = 560, height: number = 40, chamfer: number = 20) => {
+  return [
+    {x: 0, y: 0},
+    {x: width, y: 0},
+    {x: width, y: height/2},
+    {x: width - chamfer, y: height},
+    {x: chamfer, y: height},
+    {x: 0, y: height/2},
+  ]
+}
+
+const lo = [
+  {x: 0, y: 0},
+  {x: 560, y: 0},
+  {x: 560, y: 20},
+  {x: 540, y: 40},
+  {x: 20, y: 40},
+  {x: 0, y: 20},
+]
 
 export class StandardLevel extends BasedLevel {
   physics: any
@@ -25,6 +45,7 @@ export class StandardLevel extends BasedLevel {
   pocketSize: number = 20
 
   bouncePad: any;
+  bouncePads: any[] = [];
 
   levelWidth: number = 2000
   levelHeight: number = 2000
@@ -37,14 +58,46 @@ export class StandardLevel extends BasedLevel {
     console.log(this.physics)
     // this.physics.timing.timeScale = 60/250
 
-    this.bouncePad = new PhysPoly({key: 'bouncePadA', gameRef: this.gameRef})
-    this.bouncePad.x = 120
-    this.bouncePad.y = 80
-    this.bouncePad.bodyOptions = { label: 'bouncePadA', isStatic: true}
-    this.bouncePad.initialize()
-    Physics.Body.setPosition(this.bouncePad.body, {x: 120, y: 80})
-    this.addToWorld(this.bouncePad.body)
-    console.log(this.bouncePad.body)
+    // this.bouncePad = new PhysPoly({key: 'bouncePadA', gameRef: this.gameRef})
+    // this.bouncePad.x = 120
+    // this.bouncePad.y = 80
+    // this.bouncePad.bodyOptions = { label: 'bouncePadA', isStatic: true}
+    // this.bouncePad.initialize()
+    // Physics.Body.setPosition(this.bouncePad.body, {x: 120, y: 80})
+    // this.addToWorld(this.bouncePad.body)
+    // console.log(this.bouncePad.body)
+
+    this.bouncePads = [{
+        x: 120,
+        y: 80,
+        a: 0,
+        v: generatePad()
+      },
+      {
+        x: 680,
+        y: 920,
+        a: 180,
+        v: generatePad()
+      },
+      {
+        x: 720,
+        y: 120,
+        a: 90,
+        v: generatePad(360)
+      },
+    ].map((spec, idx) => {
+      const tempPad = new PhysPoly({key: `bouncePad-${idx}`, gameRef: this.gameRef})
+      tempPad.x = spec.x
+      tempPad.y = spec.y
+      tempPad.angle = spec.a
+      tempPad.vertices = spec.v
+      tempPad.bodyOptions = { label: 'bouncePadA', isStatic: true}
+      tempPad.initialize()
+      Physics.Body.setPosition(tempPad.body, {x: tempPad.x, y: tempPad.y})
+      Physics.Body.setAngle(tempPad.body, degToRad(tempPad.angle))
+      this.addToWorld(tempPad.body)
+      return tempPad
+    })
 
     this.ballA = new PhysBall({key: 'ballA', gameRef: this.gameRef})
     this.ballA.x = 400
@@ -284,9 +337,13 @@ export class StandardLevel extends BasedLevel {
       b.draw()
     })
 
-    this.bouncePad.draw()
+    // this.bouncePad.draw()
 
     this.pockets.forEach(b => {
+      b.draw()
+    })
+
+    this.bouncePads.forEach(b => {
       b.draw()
     })
 

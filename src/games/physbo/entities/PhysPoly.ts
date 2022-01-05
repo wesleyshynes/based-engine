@@ -1,12 +1,13 @@
 import { BasedObject } from "../../../engine/BasedObject";
 import Physics from 'matter-js';
 import { rotateDraw } from "../../../engine/libs/drawHelpers";
-import { XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { radToDeg, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 
 export default class PhysPoly extends BasedObject {
   x: number = 0
   y: number = 0
   color: string = 'orange'
+  angle: number = 0
 
   vertices: XYCoordinateType[] = [
     {x: 0, y: 0},
@@ -62,7 +63,8 @@ export default class PhysPoly extends BasedObject {
       y: this.body.position.y + this.gameRef.cameraPos.y,
       // x: this.x + this.gameRef.cameraPos.x,
       // y: this.y + this.gameRef.cameraPos.y,
-      a: 0//radToDeg(this.body.angle)
+      a: radToDeg(this.body.angle)
+      // a: 0//radToDeg(this.body.angle)
     }, () => {
 
       const {ctx} = this.gameRef
