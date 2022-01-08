@@ -7,7 +7,7 @@ import { drawText } from "../../../engine/libs/drawHelpers";
 import PhysPoly from "../entities/PhysPoly";
 import { boxCollision } from "../../../engine/libs/collisionHelpers";
 import PoolBreak from '../../../assets/pool/pool-break-1.mp3'
-import BallsHitting from '../../../assets/pool/balls-hitting-1.mp3'
+import BallsHitting from '../../../assets/pool/balls-hitting-2.mp3'
 import BallInPocket from '../../../assets/pool/ball-in-pocket.mp3'
 import BallRailBounce from '../../../assets/pool/ball-rail-bounce-1.mp3'
 
@@ -144,7 +144,9 @@ export class StandardLevel extends BasedLevel {
     this.ballA.color = 'white'
     this.ballA.onCollisionStart = (otherBody: any) => {
       if(otherBody.label === 'ball') {
-        this.gameRef.soundPlayer.playSound(this.ballsHiting)
+        if(Math.abs(otherBody.force.x) + Math.abs(otherBody.force.y) > .5) {
+          this.gameRef.soundPlayer.playSound(this.ballsHiting)
+        }
       }
     }
     this.ballA.initialize()
@@ -232,7 +234,9 @@ export class StandardLevel extends BasedLevel {
       tempBody.color = `rgba(${idx/15 * 100 + 100},${200 - idx/15 * 100},${idx/15 * 100 + 100},1)`
       tempBody.onCollisionStart = (otherBody: any) => {
         if(otherBody.label === 'ball' || otherBody.label === 'cue') {
-          this.gameRef.soundPlayer.playSound(this.ballsHiting)
+          if(Math.abs(otherBody.force.x) + Math.abs(otherBody.force.y) > .5) {
+            this.gameRef.soundPlayer.playSound(this.ballsHiting)
+          }
         }
       }
       tempBody.initialize()
