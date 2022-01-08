@@ -6,6 +6,11 @@ import { degToRad, normalizeVector } from "../../../engine/libs/mathHelpers";
 import { drawText } from "../../../engine/libs/drawHelpers";
 import PhysPoly from "../entities/PhysPoly";
 import { boxCollision } from "../../../engine/libs/collisionHelpers";
+import PoolBreak from '../../../assets/pool/pool-break-1.mp3'
+import BallsHitting from '../../../assets/pool/balls-hitting-1.mp3'
+import BallInPocket from '../../../assets/pool/ball-in-pocket.mp3'
+import BallRailBounce from '../../../assets/pool/ball-rail-bounce-1.mp3'
+
 
 const generatePad = (width: number = 520, height: number = 50, chamfer: number = 30) => {
   return [
@@ -34,6 +39,12 @@ export class StandardLevel extends BasedLevel {
   lastPhysicsUpdate: number = 0;
   physicsRate: number = 1000/60
 
+  // SOUNDS
+  ballHit: any
+  ballsHiting: any
+  ballInPocket: any
+  ballRailBounce: any
+
   ballA: any
   lastShot: number = 0
   // ground: any
@@ -58,7 +69,12 @@ export class StandardLevel extends BasedLevel {
     h: 1000
   }
 
-  async preload() {}
+  async preload() {
+    this.ballHit = await this.gameRef.soundPlayer.loadSound(PoolBreak)
+    this.ballsHiting = await this.gameRef.soundPlayer.loadSound(BallsHitting)
+    this.ballInPocket = await this.gameRef.soundPlayer.loadSound(BallInPocket)
+    this.ballRailBounce = await this.gameRef.soundPlayer.loadSound(BallRailBounce)
+  }
 
   initialize() {
     this.physics = Physics.Engine.create()
@@ -108,6 +124,11 @@ export class StandardLevel extends BasedLevel {
       tempPad.angle = spec.a
       tempPad.vertices = spec.v
       tempPad.bodyOptions = { label: 'bouncePadA', isStatic: true}
+      tempPad.onCollisionStart = (otherBody: any) => {
+        if(otherBody.label === 'ball' || otherBody.label === 'cue') {
+          this.gameRef.soundPlayer.playSound(this.ballRailBounce)
+        }
+      }
       tempPad.initialize()
       Physics.Body.setPosition(tempPad.body, {x: tempPad.x, y: tempPad.y})
       Physics.Body.setAngle(tempPad.body, degToRad(tempPad.angle))
@@ -121,6 +142,11 @@ export class StandardLevel extends BasedLevel {
     this.ballA.radius = this.ballSize
     this.ballA.bodyOptions.label = 'cue'
     this.ballA.color = 'white'
+    this.ballA.onCollisionStart = (otherBody: any) => {
+      if(otherBody.label === 'ball') {
+        this.gameRef.soundPlayer.playSound(this.ballsHiting)
+      }
+    }
     this.ballA.initialize()
     this.addToWorld(this.ballA.body)
 
@@ -140,6 +166,7 @@ export class StandardLevel extends BasedLevel {
       tempPocket.onCollisionStart = (otherBody: any) => {
         console.log(otherBody)
         if(otherBody.label === 'ball') {
+          this.gameRef.soundPlayer.playSound(this.ballInPocket)
           this.removeFromWorld(otherBody)
           this.balls.forEach(ball => {
             if(ball.body.id === otherBody.id) {
@@ -148,6 +175,7 @@ export class StandardLevel extends BasedLevel {
           })
         }
         if(otherBody.label === 'cue') {
+          this.gameRef.soundPlayer.playSound(this.ballInPocket)
           Physics.Body.setPosition(otherBody, {x: 400, y: 700})
           Physics.Body.setVelocity(otherBody, {x:0, y: 0})
         }
@@ -202,6 +230,11 @@ export class StandardLevel extends BasedLevel {
       console.log(tempBody.x)
       tempBody.y = 200 + (this.ballSize*2)*(ballLayout[idx].y)
       tempBody.color = `rgba(${idx/15 * 100 + 100},${200 - idx/15 * 100},${idx/15 * 100 + 100},1)`
+      tempBody.onCollisionStart = (otherBody: any) => {
+        if(otherBody.label === 'ball' || otherBody.label === 'cue') {
+          this.gameRef.soundPlayer.playSound(this.ballsHiting)
+        }
+      }
       tempBody.initialize()
       this.addToWorld(tempBody.body)
       tempBody.active = true
@@ -282,6 +315,7 @@ export class StandardLevel extends BasedLevel {
          40)
          console.log(this.gameRef.cameraPos, this.ballA.body.position, this.gameRef.mouseInfo, nv)
       Physics.Body.setVelocity(this.ballA.body, nv)
+      this.gameRef.soundPlayer.playSound(this.ballHit)
       this.lastShot = this.gameRef.lastUpdate
     }
 
