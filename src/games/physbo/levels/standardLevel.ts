@@ -5,8 +5,9 @@ import PhysBall from "../entities/PhysBall";
 import { degToRad, normalizeVector } from "../../../engine/libs/mathHelpers";
 import { drawText } from "../../../engine/libs/drawHelpers";
 import PhysPoly from "../entities/PhysPoly";
+import { boxCollision } from "../../../engine/libs/collisionHelpers";
 
-const generatePad = (width: number = 560, height: number = 40, chamfer: number = 20) => {
+const generatePad = (width: number = 520, height: number = 50, chamfer: number = 30) => {
   return [
     {x: 0, y: 0},
     {x: width, y: 0},
@@ -40,15 +41,22 @@ export class StandardLevel extends BasedLevel {
   itemRef: any = {}
   balls: any[] = []
   ballSize: number = 15;
+  activeBalls: number = 0;
 
   pockets: any[] = []
-  pocketSize: number = 20
+  pocketSize: number = 30
 
-  bouncePad: any;
   bouncePads: any[] = [];
 
   levelWidth: number = 2000
   levelHeight: number = 2000
+
+  levelBounds: any = {
+    x: 0,
+    y: 0,
+    w: 800,
+    h: 1000
+  }
 
   async preload() {}
 
@@ -56,35 +64,43 @@ export class StandardLevel extends BasedLevel {
     this.physics = Physics.Engine.create()
     this.physics.world.gravity.y = 0
     console.log(this.physics)
-    // this.physics.timing.timeScale = 60/250
-
-    // this.bouncePad = new PhysPoly({key: 'bouncePadA', gameRef: this.gameRef})
-    // this.bouncePad.x = 120
-    // this.bouncePad.y = 80
-    // this.bouncePad.bodyOptions = { label: 'bouncePadA', isStatic: true}
-    // this.bouncePad.initialize()
-    // Physics.Body.setPosition(this.bouncePad.body, {x: 120, y: 80})
-    // this.addToWorld(this.bouncePad.body)
-    // console.log(this.bouncePad.body)
 
     this.bouncePads = [{
-        x: 120,
+        x: 140,
         y: 80,
         a: 0,
-        v: generatePad()
+        v: generatePad(520, 50, 30)
       },
       {
-        x: 680,
+        x: 660,
         y: 920,
         a: 180,
-        v: generatePad()
+        v: generatePad(520, 50, 30)
       },
       {
         x: 720,
-        y: 120,
+        y: 140,
         a: 90,
-        v: generatePad(360)
+        v: generatePad(330, 50, 20)
       },
+      {
+        x: 720,
+        y: 530,
+        a: 90,
+        v: generatePad(330, 50, 20)
+      },
+      {
+        x: 80,
+        y: 470,
+        a: 270,
+        v: generatePad(330, 50, 20)
+      },
+      {
+        x: 80,
+        y: 860,
+        a: 270,
+        v: generatePad(330, 50, 20)
+      }
     ].map((spec, idx) => {
       const tempPad = new PhysPoly({key: `bouncePad-${idx}`, gameRef: this.gameRef})
       tempPad.x = spec.x
@@ -101,7 +117,7 @@ export class StandardLevel extends BasedLevel {
 
     this.ballA = new PhysBall({key: 'ballA', gameRef: this.gameRef})
     this.ballA.x = 400
-    this.ballA.y = 800
+    this.ballA.y = 700
     this.ballA.radius = this.ballSize
     this.ballA.bodyOptions.label = 'cue'
     this.ballA.color = 'white'
@@ -109,12 +125,12 @@ export class StandardLevel extends BasedLevel {
     this.addToWorld(this.ballA.body)
 
     this.pockets = [
-      { x: 100, y: 100 },
-      { x: 700, y: 100 },
+      { x: 110, y: 110 },
+      { x: 690, y: 110 },
       { x: 100, y: 500 },
       { x: 700, y: 500 },
-      { x: 100, y: 900 },
-      { x: 700, y: 900 },
+      { x: 110, y: 890 },
+      { x: 690, y: 890 },
     ].map((spec, idx) => {
       const tempPocket = new PhysBall({key: `pocket${idx}`, gameRef: this.gameRef})
       tempPocket.x = spec.x
@@ -132,7 +148,7 @@ export class StandardLevel extends BasedLevel {
           })
         }
         if(otherBody.label === 'cue') {
-          Physics.Body.setPosition(otherBody, {x: 300, y: 800})
+          Physics.Body.setPosition(otherBody, {x: 400, y: 700})
           Physics.Body.setVelocity(otherBody, {x:0, y: 0})
         }
       }
@@ -182,7 +198,7 @@ export class StandardLevel extends BasedLevel {
     this.balls = (new Array(15)).fill(0).map((x,idx) => {
       const tempBody = new PhysBall({key: `ball-${idx}`, gameRef: this.gameRef})
       tempBody.radius = this.ballSize
-      tempBody.x = 320 + (this.ballSize * 2) * (idx%ballLayout[idx].x) + this.ballSize*ballLayout[idx].y
+      tempBody.x = 325 + (this.ballSize * 2) * (idx%ballLayout[idx].x) + this.ballSize*ballLayout[idx].y
       console.log(tempBody.x)
       tempBody.y = 200 + (this.ballSize*2)*(ballLayout[idx].y)
       tempBody.color = `rgba(${idx/15 * 100 + 100},${200 - idx/15 * 100},${idx/15 * 100 + 100},1)`
@@ -195,8 +211,6 @@ export class StandardLevel extends BasedLevel {
     Physics.Events.on( this.physics ,'collisionStart', (event: any) => {
         event.pairs.map((pair:any) => {
           const {bodyA, bodyB} = pair
-          // bodyA && bodyA.plugin && bodyA.plugin.collisionStart && bodyA.plugin.collisionStart(bodyB)
-          // bodyB && bodyB.plugin && bodyB.plugin.collisionStart && bodyB.plugin.collisionStart(bodyA)
           bodyA.plugin.collisionStart(bodyB)
           bodyB.plugin.collisionStart(bodyA)
         })
@@ -204,12 +218,33 @@ export class StandardLevel extends BasedLevel {
     Physics.Events.on( this.physics ,'collisionEnd', (event: any) => {
         event.pairs.map((pair:any) => {
           const {bodyA, bodyB} = pair
-          // bodyA && bodyA.plugin && bodyA.plugin.collisionEnd && bodyA.plugin.collisionEnd(bodyB)
-          // bodyB && bodyB.plugin && bodyB.plugin.collisionEnd && bodyB.plugin.collisionEnd(bodyA)
           bodyA.plugin.collisionEnd(bodyB)
           bodyB.plugin.collisionEnd(bodyA)
         })
     })
+  }
+
+  checkGame() {
+    const cueBox = {
+      x: this.ballA.body.position.x - this.ballSize,
+      y: this.ballA.body.position.y - this.ballSize,
+      w: this.ballSize * 2,
+      h: this.ballSize * 2
+    }
+    if(!boxCollision(cueBox, this.levelBounds)) {
+      Physics.Body.setPosition(this.ballA.body, {x: 400, y: 700})
+      Physics.Body.setVelocity(this.ballA.body, {x:0, y: 0})
+    }
+    this.activeBalls = 0
+    this.balls.map(x => {
+      if(x.active) {
+        this.activeBalls++
+      }
+    })
+    if(this.activeBalls === 0) {
+      alert('you win')
+      this.initialize()
+    }
   }
 
   handleKeys() {
@@ -218,8 +253,7 @@ export class StandardLevel extends BasedLevel {
 
     let moveX = 0
     let moveY = 0
-    const multiplier = this.gameRef.fps/60
-    const velocityO = 60/this.gameRef.fps
+
     if (pressedKeys['KeyA'] || pressedKeys['ArrowLeft']) {
       moveX -= speedFactor
     }
@@ -255,8 +289,6 @@ export class StandardLevel extends BasedLevel {
       if (pressedKeys['KeyC']) {
         if (Math.abs(this.ballA.body.velocity.y) < 0.001 && Math.abs(this.ballA.body.velocity.x) < 0.001 && this.lastShot + 300 < this.gameRef.lastUpdate) {
           const nv = normalizeVector({x: moveX, y: moveY}, 40)
-          // console.log(nv, this.gameRef.updateDiff, this.gameRef.fps, this.gameRef.diffMulti)
-          // console.log(multiplier, 1/multiplier, velocityO)
           Physics.Body.setVelocity(this.ballA.body, nv)
           // Physics.Body.applyForce(this.ballA.body,{x: this.ballA.body.position.x, y: this.ballA.body.position.y}, nv)
           this.lastShot = this.gameRef.lastUpdate
@@ -284,12 +316,13 @@ export class StandardLevel extends BasedLevel {
     this.handleKeys()
     this.handlePhysics()
     this.updateCamera()
+    this.checkGame()
   }
 
   handlePhysics() {
     if(this.gameRef.fps < 61) {
       Physics.Engine.update(this.physics, this.gameRef.updateDiff)
-      this.lastPhysicsUpdate = this.gameRef.lastUpdate
+      // this.lastPhysicsUpdate = this.gameRef.lastUpdate
     } else {
       if(this.gameRef.lastUpdate - this.lastPhysicsUpdate >= this.physicsRate ) {
         // Physics.Engine.update(this.physics, this.gameRef.updateDiff)
@@ -347,16 +380,12 @@ export class StandardLevel extends BasedLevel {
       b.draw()
     })
 
-    let ballCount = 0
     this.balls.forEach(b => {
       if(b.active){
         b.draw()
-      } else {
-        ballCount++
       }
     })
 
-    // this.ballA.color = Math.abs(this.ballA.body.velocity.y) < 0.001 && Math.abs(this.ballA.body.velocity.x) < 0.001 ? 'blue' : 'orange'
     this.ballA.draw()
 
     drawText({
@@ -378,7 +407,7 @@ export class StandardLevel extends BasedLevel {
       fontSize: 16,
       fontFamily: 'sans-serif',
       fillColor: '#fff',
-      text: `BALLS LEFT: ${this.balls.length - ballCount}`
+      text: `BALLS LEFT: ${this.activeBalls}`
     })
 
 
