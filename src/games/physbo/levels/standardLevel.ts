@@ -2,7 +2,7 @@ import { BasedLevel } from "../../../engine/BasedLevel";
 import Physics from 'matter-js';
 import PhysBox from "../entities/PhysBox";
 import PhysBall from "../entities/PhysBall";
-import { degToRad, normalizeVector } from "../../../engine/libs/mathHelpers";
+import { degToRad, normalizeVector, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { drawText } from "../../../engine/libs/drawHelpers";
 import PhysPoly from "../entities/PhysPoly";
 import { boxCollision } from "../../../engine/libs/collisionHelpers";
@@ -10,6 +10,7 @@ import PoolBreak from '../../../assets/pool/pool-break-1.mp3'
 import BallsHitting from '../../../assets/pool/balls-hitting-2.mp3'
 import BallInPocket from '../../../assets/pool/ball-in-pocket.mp3'
 import BallRailBounce from '../../../assets/pool/ball-rail-bounce-1.mp3'
+import { TouchKnob } from "../../../engine/controls/TouchKnob";
 
 
 const generatePad = (width: number = 520, height: number = 50, chamfer: number = 30) => {
@@ -59,8 +60,8 @@ export class StandardLevel extends BasedLevel {
 
   bouncePads: any[] = [];
 
-  levelWidth: number = 2000
-  levelHeight: number = 2000
+  levelWidth: number = 800
+  levelHeight: number = 1000
 
   levelBounds: any = {
     x: 0,
@@ -68,6 +69,16 @@ export class StandardLevel extends BasedLevel {
     w: 800,
     h: 1000
   }
+
+  freeCam: XYCoordinateType = {
+    x: 0,
+    y: 0
+  }
+  lastCamMove: number = 0
+  cameraFocus: any = 'cue'
+
+  // Interface stuff
+  aimKnob: any;
 
   async preload() {
     this.ballHit = await this.gameRef.soundPlayer.loadSound(PoolBreak)
@@ -259,6 +270,10 @@ export class StandardLevel extends BasedLevel {
           bodyB.plugin.collisionEnd(bodyA)
         })
     })
+
+    // UI
+    this.aimKnob = new TouchKnob({ key: 'aim-knob', gameRef: this.gameRef })
+    this.positionKnobs()
   }
 
   checkGame() {
@@ -286,7 +301,7 @@ export class StandardLevel extends BasedLevel {
 
   handleKeys() {
     const pressedKeys = this.gameRef.pressedKeys
-    const speedFactor = 1
+    const speedFactor = 10
 
     let moveX = 0
     let moveY = 0
@@ -311,7 +326,13 @@ export class StandardLevel extends BasedLevel {
       return
     }
 
-    if(this.gameRef.mouseInfo.mouseDown && this.lastShot + 300 < this.gameRef.lastUpdate) {
+    this.aimKnob.update()
+    if(this.aimKnob.knobActive) {
+      moveX += (this.aimKnob.knobCoord.x / this.aimKnob.maxOffset) * speedFactor
+      moveY += (this.aimKnob.knobCoord.y / this.aimKnob.maxOffset) * speedFactor
+    }
+
+    if(!this.aimKnob.knobActive && this.gameRef.mouseInfo.mouseDown && this.lastShot + 300 < this.gameRef.lastUpdate) {
       const nv = normalizeVector({
         x: this.gameRef.mouseInfo.x - this.ballA.body.position.x - this.gameRef.cameraPos.x,
         y: this.gameRef.mouseInfo.y - this.ballA.body.position.y - this.gameRef.cameraPos.y
@@ -321,24 +342,32 @@ export class StandardLevel extends BasedLevel {
       Physics.Body.setVelocity(this.ballA.body, nv)
       this.gameRef.soundPlayer.playSound(this.ballHit)
       this.lastShot = this.gameRef.lastUpdate
+      this.cameraFocus = 'cue'
     }
 
     if((Math.abs(moveX) || Math.abs(moveY))) {
-      if (pressedKeys['KeyC']) {
-        if (Math.abs(this.ballA.body.velocity.y) < 0.001 && Math.abs(this.ballA.body.velocity.x) < 0.001 && this.lastShot + 300 < this.gameRef.lastUpdate) {
-          const nv = normalizeVector({x: moveX, y: moveY}, 40)
-          Physics.Body.setVelocity(this.ballA.body, nv)
-          // Physics.Body.applyForce(this.ballA.body,{x: this.ballA.body.position.x, y: this.ballA.body.position.y}, nv)
-          this.lastShot = this.gameRef.lastUpdate
-        } else {
-          // console.log(this.ballA.body.velocity)
+      if(this.cameraFocus !== 'free') {
+        this.freeCam = {
+          x: this.ballA.body.position.x,
+          y: this.ballA.body.position.y
         }
-      } else {
-        Physics.Body.setVelocity(this.ballA.body, {
-          x: moveX * 10,
-          y: moveY * 10
-        })
+        this.cameraFocus = 'free'
       }
+      this.freeCam.x += moveX * this.gameRef.diffMulti
+      if(this.freeCam.x < 0) this.freeCam.x = 0
+      if(this.freeCam.x > this.levelWidth) this.freeCam.x = this.levelWidth
+      this.freeCam.y += moveY * this.gameRef.diffMulti
+      if(this.freeCam.y < 0) this.freeCam.y = 0
+      if(this.freeCam.y > this.levelWidth) this.freeCam.y = this.levelHeight
+
+      this.lastCamMove = this.gameRef.lastUpdate
+      // console.log(this.freeCam)
+    } else if (this.cameraFocus === 'free' && this.lastCamMove + 3000 < this.gameRef.lastUpdate) {
+      if(this.freeCam.x < this.ballA.body.position.x - 1) this.freeCam.x += 1 * this.gameRef.diffMulti
+      if(this.freeCam.x > this.ballA.body.position.x + 1) this.freeCam.x -= 1 * this.gameRef.diffMulti
+
+      if(this.freeCam.y < this.ballA.body.position.y - 1) this.freeCam.y += 1 * this.gameRef.diffMulti
+      if(this.freeCam.y > this.ballA.body.position.y + 1) this.freeCam.y -= 1 * this.gameRef.diffMulti
     }
   }
 
@@ -371,7 +400,7 @@ export class StandardLevel extends BasedLevel {
   }
 
   updateCamera() {
-    const cameraTarget = this.ballA.body.position
+    const cameraTarget = this.cameraFocus === 'cue' ? this.ballA.body.position : this.freeCam
     this.gameRef.cameraPos = {
       x: -(cameraTarget.x - this.gameRef.gameWidth / 2),
       y: -(cameraTarget.y - this.gameRef.gameHeight / 2)
@@ -391,7 +420,20 @@ export class StandardLevel extends BasedLevel {
     }
   }
 
-  onResize() {}
+  positionKnobs() {
+    // this.moveKnob.width = this.moveKnob.width > this.gameRef.gameWidth / 2 ? this.gameRef.gameWidth / 2 - 5 : this.moveKnob.width
+    // this.moveKnob.x = 0
+    // this.moveKnob.y = this.gameRef.gameHeight - this.moveKnob.height
+
+    this.aimKnob.width = this.aimKnob.width > this.gameRef.gameWidth / 2 ? this.gameRef.gameWidth / 2 - 5 : this.aimKnob.width
+    this.aimKnob.x = this.gameRef.gameWidth - this.aimKnob.width
+    this.aimKnob.y = this.gameRef.gameHeight - this.aimKnob.height
+  }
+
+  onResize() {
+    this.positionKnobs()
+    // this.swapWeaponBtn.x = this.gameRef.gameWidth - 116
+  }
 
   drawBg() {
     this.gameRef.ctx.beginPath()
@@ -448,7 +490,7 @@ export class StandardLevel extends BasedLevel {
       text: `BALLS LEFT: ${this.activeBalls}`
     })
 
-
+    this.aimKnob.draw()
   }
 
   tearDown() {}
