@@ -3,7 +3,7 @@ import Physics from 'matter-js';
 import PhysBox from "../entities/PhysBox";
 import PhysBall from "../entities/PhysBall";
 import { degToRad, normalizeVector, XYCoordinateType } from "../../../engine/libs/mathHelpers";
-import { drawLine, drawText } from "../../../engine/libs/drawHelpers";
+import { drawBox, drawLine, drawText } from "../../../engine/libs/drawHelpers";
 import PhysPoly from "../entities/PhysPoly";
 import { boxCollision } from "../../../engine/libs/collisionHelpers";
 import PoolBreak from '../../../assets/pool/pool-break-1.mp3'
@@ -38,6 +38,13 @@ const lo = [
 export class StandardLevel extends BasedLevel {
   physics: any
   level: any[] = [];
+  levelColor = '#222'
+  levelDecor: any[] = [
+    {x: 80, y: 80, w: 640, h: 25, c: this.levelColor},
+    {x: 80, y: 80, w: 25, h: 840, c: this.levelColor},
+    {x: 695, y: 80, w: 25, h: 840, c: this.levelColor},
+    {x: 80, y: 895, w: 640, h: 25, c: this.levelColor},
+  ];
 
   lastPhysicsUpdate: number = 0;
   physicsRate: number = 1000/60
@@ -136,6 +143,7 @@ export class StandardLevel extends BasedLevel {
       const tempPad = new PhysPoly({key: `bouncePad-${idx}`, gameRef: this.gameRef})
       tempPad.x = spec.x
       tempPad.y = spec.y
+      tempPad.color = '#333'
       tempPad.angle = spec.a
       tempPad.vertices = spec.v
       tempPad.bodyOptions = { label: 'bouncePadA', isStatic: true}
@@ -206,10 +214,10 @@ export class StandardLevel extends BasedLevel {
 
     this.level = [
       // {x: 0, y: 380, w: 400, h: 160, c: 'red', o: { label: 'ground', isStatic: true}},
-      {x: 440, y: 0, w: 880, h: 160, c: 'brown', o: { label: 'wallTop', isStatic: true}},
-      {x: 0, y: 500, w: 160, h: 1000, c: 'brown', o: { label: 'wallLeft', isStatic: true}},
-      {x: 800, y: 500, w: 160, h: 1000, c: 'brown', o: { label: 'wallRight', isStatic: true}},
-      {x: 440, y: 1000, w: 880, h: 160, c: 'brown', o: { label: 'wallBottom', isStatic: true}},
+      {x: 440, y: 0, w: 880, h: 160, c: this.levelColor, o: { label: 'wallTop', isStatic: true}},
+      {x: 0, y: 500, w: 160, h: 1000, c: this.levelColor, o: { label: 'wallLeft', isStatic: true}},
+      {x: 800, y: 500, w: 160, h: 1000, c: this.levelColor, o: { label: 'wallRight', isStatic: true}},
+      {x: 440, y: 1000, w: 880, h: 160, c: this.levelColor, o: { label: 'wallBottom', isStatic: true}},
       // {x: 400, y: 380, w: 400, h: 60, c: 'white', o: { label: 'sensorSample', isStatic: true, isSensor: true}},
     ].map( (spec, idx) => {
       const tempBody = new PhysBox({ key: `box${idx}`, gameRef: this.gameRef})
@@ -281,7 +289,9 @@ export class StandardLevel extends BasedLevel {
       key: `shoot-button`,
       gameRef: this.gameRef,
     })
-    this.shootButton.fillColor = '#ce192b'
+    this.shootButton.fillColor = 'red'
+    this.shootButton.hoverColor = 'black'
+    this.shootButton.textColor = 'white'
     this.shootButton.x = 30
     this.shootButton.y = this.gameRef.gameHeight - 120
     this.shootButton.height = 90
@@ -484,8 +494,21 @@ export class StandardLevel extends BasedLevel {
 
     this.drawBg()
 
+
+
     this.level.forEach(b => {
       b.draw()
+    })
+
+    this.levelDecor.forEach(b => {
+      drawBox({
+        c: this.gameRef.ctx,
+        x: b.x + this.gameRef.cameraPos.x,
+        y: b.y + this.gameRef.cameraPos.y,
+        width: b.w,
+        height: b.h,
+        fillColor: b.c
+      })
     })
 
     // this.bouncePad.draw()
