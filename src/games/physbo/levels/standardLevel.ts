@@ -13,6 +13,8 @@ import BallRailBounce from '../../../assets/pool/ball-rail-bounce-1.mp3'
 import { TouchKnob } from "../../../engine/controls/TouchKnob";
 import { ShotTarget } from "../entities/ShotTarget";
 import { BasedButton } from "../../../engine/BasedButton";
+import { PowerBar } from "../ui/PowerBar";
+import TextContainer from "../ui/TextContainer";
 
 
 const generatePad = (width: number = 520, height: number = 50, chamfer: number = 30) => {
@@ -89,7 +91,12 @@ export class StandardLevel extends BasedLevel {
   // Interface stuff
   moveKnob: any;
   shootButton: any;
-  aimTarget: any
+  aimTarget: any;
+  powerMeter: any;
+  powerGain: number = 1;
+  phase: string = 'aim'
+
+  textBox: any;
 
   async preload() {
     this.ballHit = await this.gameRef.soundPlayer.loadSound(PoolBreak)
@@ -308,6 +315,16 @@ export class StandardLevel extends BasedLevel {
 
     this.aimTarget = new ShotTarget({key: 'aim-target', gameRef: this.gameRef})
 
+    this.powerMeter = new PowerBar({ key: 'power-meter', gameRef: this.gameRef})
+    this.powerMeter.x = this.gameRef.gameWidth/2
+    this.powerMeter.y = 50;
+
+    this.lastShot = this.gameRef.lastUpdate
+    this.phase = 'aim'
+
+    this.textBox = new TextContainer({key: 'text-container', gameRef: this.gameRef})
+    this.textBox.setText('Sally sells seashells by the seashore, she also likes to go out whoring at night')
+    this.textBox.y = 150
   }
 
   checkGame() {
@@ -364,6 +381,13 @@ export class StandardLevel extends BasedLevel {
     this.shootButton.update()
     this.moveKnob.update()
 
+    if(this.phase === 'power') {
+      const ticked = this.powerMeter.tick(this.powerGain)
+      if(ticked) {
+        this.powerGain = this.powerMeter.current === this.powerMeter.max ? -Math.abs(this.powerGain) : this.powerMeter.current === 0 ? Math.abs(this.powerGain) : this.powerGain
+      }
+    }
+
     if(this.moveKnob.knobActive) {
       moveX += (this.moveKnob.knobCoord.x / this.moveKnob.maxOffset) * speedFactor
       moveY += (this.moveKnob.knobCoord.y / this.moveKnob.maxOffset) * speedFactor
@@ -405,15 +429,24 @@ export class StandardLevel extends BasedLevel {
 
   shootBall() {
     if(!this.moveKnob.knobActive && this.aimTarget.active && this.lastShot + 300 < this.gameRef.lastUpdate) {
-      const nv = normalizeVector({
-        x: this.aimTarget.x - this.ballA.body.position.x,
-        y: this.aimTarget.y - this.ballA.body.position.y
-      }, 40)
-      Physics.Body.setVelocity(this.ballA.body, nv)
-      this.gameRef.soundPlayer.playSound(this.ballHit)
-      this.lastShot = this.gameRef.lastUpdate
-      this.cameraFocus = 'cue'
-      this.aimTarget.clearTarget()
+
+      if(this.phase === 'aim') {
+        this.powerMeter.current = 1
+        this.powerMeter.powerGain = Math.abs(this.powerGain)
+        this.lastShot = this.gameRef.lastUpdate
+        this.phase = 'power'
+      } else {
+        const nv = normalizeVector({
+          x: this.aimTarget.x - this.ballA.body.position.x,
+          y: this.aimTarget.y - this.ballA.body.position.y
+        }, 60 * this.powerMeter.current/this.powerMeter.max)
+        Physics.Body.setVelocity(this.ballA.body, nv)
+        this.gameRef.soundPlayer.playSound(this.ballHit)
+        this.lastShot = this.gameRef.lastUpdate
+        this.cameraFocus = 'cue'
+        this.aimTarget.clearTarget()
+        this.phase = 'aim'
+      }
     }
   }
 
@@ -542,34 +575,38 @@ export class StandardLevel extends BasedLevel {
 
     this.ballA.draw()
 
-
-    drawText({
-      c: this.gameRef.ctx,
-      x: 30,
-      y: 60,
-      align: 'left',
-      fontSize: 16,
-      fontFamily: 'sans-serif',
-      fillColor: '#fff',
-      text: `FPS: ${Math.round(this.gameRef.fps)}`
-    })
-
-    drawText({
-      c: this.gameRef.ctx,
-      x: 30,
-      y: 40,
-      // y: this.gameRef.gameHeight - 80,
-      align: 'left',
-      fontSize: 16,
-      fontFamily: 'sans-serif',
-      fillColor: '#fff',
-      text: `BALLS LEFT: ${this.activeBalls}`
-    })
-
     this.moveKnob.draw()
     if(this.aimTarget.active){
       this.shootButton.draw()
     }
+    if(this.phase === 'power') {
+      this.powerMeter.draw()
+    } else {
+      drawText({
+        c: this.gameRef.ctx,
+        x: 30,
+        y: 60,
+        align: 'left',
+        fontSize: 16,
+        fontFamily: 'sans-serif',
+        fillColor: '#fff',
+        text: `FPS: ${Math.round(this.gameRef.fps)}`
+      })
+
+      drawText({
+        c: this.gameRef.ctx,
+        x: 30,
+        y: 40,
+        // y: this.gameRef.gameHeight - 80,
+        align: 'left',
+        fontSize: 16,
+        fontFamily: 'sans-serif',
+        fillColor: '#fff',
+        text: `BALLS LEFT: ${this.activeBalls}`
+      })
+    }
+
+    this.textBox.draw()
   }
 
   tearDown() {}
