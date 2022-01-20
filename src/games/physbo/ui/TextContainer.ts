@@ -6,41 +6,74 @@ export default class TextContainer extends BasedObject {
   textToDisplay: string = 'DEMO TEXT';
   paginatedText: string[] = [];
 
-  fontSize: number = 16;
-  lineHeight: number = 20;
+  fontSize: number = 18;
+  lineHeight: number = 24;
   fontFamily: string = 'sans-serif';
+  fontWeight: string | number = 900;
+  fontStyle: string;
   fillColor: string = 'black';
   strokeColor: string = 'white';
-  strokeWidth: number = 2;
-  align: 'center' |  'left' | 'right' = 'left'
+  strokeWidth: number = 0;
+  align: 'center' | 'left' | 'right' = 'left'
 
-  containerWidth: number = 200;
+  containerWidth: number = 400;
   containerHeight: number = 200;
 
   x: number = 0;
   y: number = 0;
 
-  async preload() {}
-  initialize() {}
-  update() {}
+  async preload() { }
+  initialize() { }
+  update() { }
 
   setText(textToSet: string) {
     this.gameRef.ctx.textAlign = this.align
-    this.gameRef.ctx.font = `${this.fontSize}px ${this.fontFamily}`
-    const textSize = Math.ceil(this.gameRef.ctx.measureText('M').width)
-    this.paginatedText = []
+    this.gameRef.ctx.font = `${this.fontStyle ? this.fontStyle + ' ' : ''}${this.fontWeight ? this.fontWeight + ' ' : ''}${this.fontSize}px ${this.fontFamily}`
+    // const textSize = Math.ceil(this.gameRef.ctx.measureText('M').width)
+    const safeSize = Math.ceil(this.gameRef.ctx.measureText('M').width)
+    const textLength = (t: string) => Math.ceil(this.gameRef.ctx.measureText(t).width)
     let currentLine = ''
-    const maxLineLength = Math.floor(this.containerWidth/textSize)
+    this.paginatedText = []
+    // const maxLineLength = Math.floor(this.containerWidth/textSize)
+
     this.textToDisplay = textToSet
-    this.textToDisplay.split('').map(x => {
-      if(currentLine.length <= maxLineLength) {
-        currentLine += x
+    this.textToDisplay.split(' ').map(word => {
+      // const availableLineLength = maxLineLength - currentLine.length
+      const currentLineLength = textLength(currentLine)
+      const wordLength = textLength(' ' + word)
+      if (currentLineLength + wordLength < this.containerWidth) {
+        currentLine += ' ' + word
+      } else if (wordLength > this.containerWidth) {
+        if (this.containerWidth - currentLineLength < 6 * safeSize) {
+          this.paginatedText.push(currentLine.trim())
+          currentLine = ''
+        } else {
+          currentLine += ' '
+        }
+        word.split('').map(letter => {
+          const activeLineLength = textLength(currentLine)
+          const availableLineSpace = this.containerWidth - activeLineLength
+          if (availableLineSpace <= safeSize) {
+            this.paginatedText.push(currentLine.trim())
+            currentLine = letter
+          } else if (availableLineSpace > safeSize && availableLineSpace <= safeSize * 2) {
+            currentLine += '-'
+            this.paginatedText.push(currentLine.trim())
+            currentLine = letter
+          } else {
+            currentLine += letter
+          }
+        })
+        if (currentLine.length > 0) {
+          currentLine += ' '
+        }
       } else {
         this.paginatedText.push(currentLine.trim())
-        currentLine = x
+        currentLine = word
       }
     })
-    if(currentLine.length > 0) {
+
+    if (currentLine.length > 0) {
       this.paginatedText.push(currentLine.trim())
     }
   }
@@ -49,19 +82,21 @@ export default class TextContainer extends BasedObject {
     this.paginatedText.map((x, idx) => {
       drawText({
         c: this.gameRef.ctx,
-        x: this.x,
-        y: this.y + idx*this.lineHeight,
+        x: this.x + (this.align === 'center' ? this.containerWidth / 2 : 0),
+        y: this.y + idx * this.lineHeight,
         fillColor: this.fillColor,
         align: this.align,
         text: x,
         strokeWidth: this.strokeWidth,
         strokeColor: this.strokeColor,
         fontFamily: this.fontFamily,
-        fontSize: this.fontSize
+        fontSize: this.fontSize,
+        weight: this.fontWeight,
+        style: this.fontStyle
       })
     })
   }
 
-  tearDown() {}
+  tearDown() { }
 
 }

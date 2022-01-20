@@ -202,7 +202,7 @@ export function drawText(settings: {
   fontFamily: string,
   fontSize: number,
   style?: string,
-  weight?: string
+  weight?: string | number
 }) {
   const {
        c,

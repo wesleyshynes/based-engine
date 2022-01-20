@@ -323,8 +323,9 @@ export class StandardLevel extends BasedLevel {
     this.phase = 'aim'
 
     this.textBox = new TextContainer({key: 'text-container', gameRef: this.gameRef})
-    this.textBox.setText('Sally sells seashells by the seashore, she also likes to go out whoring at night')
+    this.textBox.setText('Sally sells seashells by the seashore, she also likes superlongwordthatshouldbebrokenupbecauseitiswaytoolongtofitononeline to go out whoring at night')
     this.textBox.y = 150
+    this.textBox.x = 80
   }
 
   checkGame() {
@@ -605,6 +606,17 @@ export class StandardLevel extends BasedLevel {
         text: `BALLS LEFT: ${this.activeBalls}`
       })
     }
+
+    drawBox({
+      c: this.gameRef.ctx,
+      x: this.textBox.x - 20,
+      y: this.textBox.y - 20 - 18,
+      width: this.textBox.containerWidth + 40,
+      height: this.textBox.containerHeight + 40,
+      strokeWidth: 2,
+      strokeColor: 'red',
+      fillColor: 'white'
+    })
 
     this.textBox.draw()
   }

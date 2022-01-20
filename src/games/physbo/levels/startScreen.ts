@@ -112,7 +112,7 @@ export class StartScreen extends BasedLevel {
 
   update() {
     this.updateBg()
-    this.handleSounds()
+    // this.handleSounds()
     if(this.gameRef.lastUpdate > this.levelLoadedTime + this.levelLoadedDelay) {
       this.startButton.update()
       this.soundButton.update()
