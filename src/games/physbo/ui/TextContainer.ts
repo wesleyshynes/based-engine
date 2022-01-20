@@ -1,5 +1,6 @@
+import { BasedButton } from "../../../engine/BasedButton";
 import { BasedObject } from "../../../engine/BasedObject";
-import { drawText } from "../../../engine/libs/drawHelpers";
+import { drawBox, drawText } from "../../../engine/libs/drawHelpers";
 
 export default class TextContainer extends BasedObject {
 
@@ -19,12 +20,61 @@ export default class TextContainer extends BasedObject {
   containerWidth: number = 400;
   containerHeight: number = 200;
 
+  width: number = 400;
+  height: number = 200;
+
   x: number = 0;
   y: number = 0;
 
+  active: boolean = true;
+
+  closeFunction: any = () => {}
+
+  closeButton: any;
+
   async preload() { }
-  initialize() { }
-  update() { }
+  initialize() {
+    this.closeButton = new BasedButton({key: 'close-button', gameRef: this.gameRef})
+    this.closeButton.width = 100
+    this.closeButton.height = 50
+    this.closeButton.buttonText = 'Close'
+    this.closeButton.clickFunction = () => {
+      this.handleCloseFunction()
+    }
+    this.closeButton.x = this.x + this.containerWidth - 20 - this.closeButton.width
+    this.closeButton.y = this.y + this.containerHeight - 20 - this.closeButton.height
+
+    this.onResize()
+  }
+
+  update() {
+    if(this.active) {
+      this.closeButton.update()
+    }
+  }
+
+  handleCloseFunction() {
+    this.active = false
+    this.closeFunction()
+  }
+
+  onResize() {
+    if(this.width > this.gameRef.gameWidth - 60) {
+      this.containerWidth = this.gameRef.gameWidth - 60
+    } else {
+      this.containerWidth = this.width
+    }
+
+    this.x = this.gameRef.gameWidth/2 - this.containerWidth/2
+
+    this.setText(this.textToDisplay)
+    this.setCloseButtonPosition()
+  }
+
+  setCloseButtonPosition() {
+    this.closeButton.x = this.x + this.containerWidth - 20 - this.closeButton.width
+    this.closeButton.y = this.y + this.containerHeight - 20 - this.closeButton.height
+  }
 
   setText(textToSet: string) {
     this.gameRef.ctx.textAlign = this.align
@@ -76,25 +126,42 @@ export default class TextContainer extends BasedObject {
     if (currentLine.length > 0) {
       this.paginatedText.push(currentLine.trim())
     }
+
+    this.containerHeight = this.paginatedText.length * this.lineHeight + 40 + (this.closeButton && this.closeButton.height ? this.closeButton.height : 0)
   }
 
   draw() {
-    this.paginatedText.map((x, idx) => {
-      drawText({
+    if(this.active) {
+      drawBox({
         c: this.gameRef.ctx,
-        x: this.x + (this.align === 'center' ? this.containerWidth / 2 : 0),
-        y: this.y + idx * this.lineHeight,
-        fillColor: this.fillColor,
-        align: this.align,
-        text: x,
-        strokeWidth: this.strokeWidth,
-        strokeColor: this.strokeColor,
-        fontFamily: this.fontFamily,
-        fontSize: this.fontSize,
-        weight: this.fontWeight,
-        style: this.fontStyle
+        x: this.x - 20,
+        y: this.y - 20 - 18,
+        width: this.containerWidth + 40,
+        height: this.containerHeight + 40,
+        strokeWidth: 2,
+        strokeColor: 'red',
+        fillColor: 'white'
       })
-    })
+
+      this.paginatedText.map((x, idx) => {
+        drawText({
+          c: this.gameRef.ctx,
+          x: this.x + (this.align === 'center' ? this.containerWidth / 2 : 0),
+          y: this.y + idx * this.lineHeight,
+          fillColor: this.fillColor,
+          align: this.align,
+          text: x,
+          strokeWidth: this.strokeWidth,
+          strokeColor: this.strokeColor,
+          fontFamily: this.fontFamily,
+          fontSize: this.fontSize,
+          weight: this.fontWeight,
+          style: this.fontStyle
+        })
+      })
+
+      this.closeButton.draw()
+    }
   }
 
   tearDown() { }

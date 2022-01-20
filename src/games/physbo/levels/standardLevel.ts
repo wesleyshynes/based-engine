@@ -324,8 +324,13 @@ export class StandardLevel extends BasedLevel {
 
     this.textBox = new TextContainer({key: 'text-container', gameRef: this.gameRef})
     this.textBox.setText('Sally sells seashells by the seashore, she also likes superlongwordthatshouldbebrokenupbecauseitiswaytoolongtofitononeline to go out whoring at night')
-    this.textBox.y = 150
+    this.textBox.y = 80
     this.textBox.x = 80
+    this.textBox.active = false
+    this.textBox.closeFunction = () => {
+      this.gameRef.loadLevel('start-screen')
+    }
+    this.textBox.initialize()
   }
 
   checkGame() {
@@ -346,8 +351,9 @@ export class StandardLevel extends BasedLevel {
       }
     })
     if(this.activeBalls === 0) {
-      alert('you win')
-      this.initialize()
+      // alert('you win')
+      // this.initialize()
+      this.textBox.active = true
     }
   }
 
@@ -377,6 +383,11 @@ export class StandardLevel extends BasedLevel {
       //   y: 0
       // })
       // return
+    }
+
+    this.textBox.update()
+    if(this.textBox.active) {
+      return
     }
 
     this.shootButton.update()
@@ -514,6 +525,7 @@ export class StandardLevel extends BasedLevel {
 
   onResize() {
     this.positionKnobs()
+    this.textBox.onResize()
     // this.swapWeaponBtn.x = this.gameRef.gameWidth - 116
   }
 
@@ -606,17 +618,6 @@ export class StandardLevel extends BasedLevel {
         text: `BALLS LEFT: ${this.activeBalls}`
       })
     }
-
-    drawBox({
-      c: this.gameRef.ctx,
-      x: this.textBox.x - 20,
-      y: this.textBox.y - 20 - 18,
-      width: this.textBox.containerWidth + 40,
-      height: this.textBox.containerHeight + 40,
-      strokeWidth: 2,
-      strokeColor: 'red',
-      fillColor: 'white'
-    })
 
     this.textBox.draw()
   }
