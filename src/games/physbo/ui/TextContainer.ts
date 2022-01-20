@@ -68,12 +68,14 @@ export default class TextContainer extends BasedObject {
     this.x = this.gameRef.gameWidth/2 - this.containerWidth/2
 
     this.setText(this.textToDisplay)
-    this.setCloseButtonPosition()
+    // this.setCloseButtonPosition()
   }
 
   setCloseButtonPosition() {
-    this.closeButton.x = this.x + this.containerWidth - 20 - this.closeButton.width
-    this.closeButton.y = this.y + this.containerHeight - 20 - this.closeButton.height
+    if(this.closeButton) {
+      this.closeButton.x = this.x + this.containerWidth - 20 - this.closeButton.width
+      this.closeButton.y = this.y + this.containerHeight - 20 - this.closeButton.height      
+    }
   }
 
   setText(textToSet: string) {
@@ -128,6 +130,7 @@ export default class TextContainer extends BasedObject {
     }
 
     this.containerHeight = this.paginatedText.length * this.lineHeight + 40 + (this.closeButton && this.closeButton.height ? this.closeButton.height : 0)
+    this.setCloseButtonPosition()
   }
 
   draw() {

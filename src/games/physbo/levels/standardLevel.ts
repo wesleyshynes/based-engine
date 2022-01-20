@@ -28,15 +28,6 @@ const generatePad = (width: number = 520, height: number = 50, chamfer: number =
   ]
 }
 
-const lo = [
-  {x: 0, y: 0},
-  {x: 560, y: 0},
-  {x: 560, y: 20},
-  {x: 540, y: 40},
-  {x: 20, y: 40},
-  {x: 0, y: 20},
-]
-
 export class StandardLevel extends BasedLevel {
   physics: any
   level: any[] = [];
@@ -94,7 +85,8 @@ export class StandardLevel extends BasedLevel {
   aimTarget: any;
   powerMeter: any;
   powerGain: number = 1;
-  phase: string = 'aim'
+  phase: string = 'aim';
+  activeAim: boolean = false;
 
   textBox: any;
 
@@ -211,6 +203,13 @@ export class StandardLevel extends BasedLevel {
           Physics.Body.setPosition(otherBody, {x: 400, y: 700})
           Physics.Body.setVelocity(otherBody, {x:0, y: 0})
           this.cameraFocus = 'cue'
+          if(this.textBox) {
+            this.textBox.setText('You Scratched!')
+            this.textBox.closeFunction = () => {
+              this.lastShot = this.gameRef.lastUpdate
+            }
+            this.textBox.active = true
+          }
         }
       }
       tempPocket.bodyOptions = {label: 'hole', isStatic: true, isSensor: true}
@@ -327,9 +326,7 @@ export class StandardLevel extends BasedLevel {
     this.textBox.y = 80
     this.textBox.x = 80
     this.textBox.active = false
-    this.textBox.closeFunction = () => {
-      this.gameRef.loadLevel('start-screen')
-    }
+    this.textBox.closeFunction = () => {}
     this.textBox.initialize()
   }
 
@@ -353,6 +350,10 @@ export class StandardLevel extends BasedLevel {
     if(this.activeBalls === 0) {
       // alert('you win')
       // this.initialize()
+      this.textBox.setText('Congratulations, You win!')
+      this.textBox.closeFunction = () => {
+        this.gameRef.loadLevel('start-screen')
+      }
       this.textBox.active = true
     }
   }
@@ -378,11 +379,6 @@ export class StandardLevel extends BasedLevel {
     }
     if (pressedKeys['KeyX']) {
       this.shootBall()
-      // Physics.Body.setVelocity(this.ballA.body, {
-      //   x: 0,
-      //   y: 0
-      // })
-      // return
     }
 
     this.textBox.update()
@@ -390,8 +386,10 @@ export class StandardLevel extends BasedLevel {
       return
     }
 
-    this.shootButton.update()
-    this.moveKnob.update()
+    if(!this.activeAim) {
+      this.shootButton.update()
+      this.moveKnob.update()
+    }
 
     if(this.phase === 'power') {
       const ticked = this.powerMeter.tick(this.powerGain)
@@ -410,7 +408,22 @@ export class StandardLevel extends BasedLevel {
         x: this.gameRef.mouseInfo.x - this.gameRef.cameraPos.x,
         y: this.gameRef.mouseInfo.y - this.gameRef.cameraPos.y
       })
-      // console.log(this.aimTarget)
+
+      if(this.gameRef.mouseInfo.x < 40) {
+        moveX -= speedFactor
+      }
+      if(this.gameRef.mouseInfo.x > this.gameRef.gameWidth - 40) {
+        moveX += speedFactor
+      }
+      if(this.gameRef.mouseInfo.y < 40) {
+        moveY -= speedFactor
+      }
+      if(this.gameRef.mouseInfo.y > this.gameRef.gameHeight - 40) {
+        moveY += speedFactor
+      }
+      this.activeAim = true
+    } else {
+      this.activeAim = false
     }
 
     if((Math.abs(moveX) || Math.abs(moveY))) {
@@ -512,10 +525,6 @@ export class StandardLevel extends BasedLevel {
   }
 
   positionKnobs() {
-    // this.moveKnob.width = this.moveKnob.width > this.gameRef.gameWidth / 2 ? this.gameRef.gameWidth / 2 - 5 : this.moveKnob.width
-    // this.moveKnob.x = 0
-    // this.moveKnob.y = this.gameRef.gameHeight - this.moveKnob.height
-
     this.shootButton.y = this.gameRef.gameHeight - 120
 
     this.moveKnob.width = this.moveKnob.width > this.gameRef.gameWidth / 2 ? this.gameRef.gameWidth / 2 - 5 : this.moveKnob.width
@@ -526,7 +535,7 @@ export class StandardLevel extends BasedLevel {
   onResize() {
     this.positionKnobs()
     this.textBox.onResize()
-    // this.swapWeaponBtn.x = this.gameRef.gameWidth - 116
+    this.powerMeter.x = this.gameRef.gameWidth/2
   }
 
   drawBg() {
@@ -588,8 +597,10 @@ export class StandardLevel extends BasedLevel {
 
     this.ballA.draw()
 
-    this.moveKnob.draw()
-    if(this.aimTarget.active){
+    if(!this.activeAim) {
+      this.moveKnob.draw()
+    }
+    if(this.aimTarget.active && !this.activeAim){
       this.shootButton.draw()
     }
     if(this.phase === 'power') {
