@@ -2,8 +2,8 @@ import { BasedLevel } from "../../../engine/BasedLevel";
 import Physics from 'matter-js';
 import PhysBox from "../entities/PhysBox";
 import PhysBall from "../entities/PhysBall";
-import { degToRad, normalizeVector, XYCoordinateType } from "../../../engine/libs/mathHelpers";
-import { drawBox, drawLine, drawText } from "../../../engine/libs/drawHelpers";
+import { degToRad, normalizeVector, radToDeg, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { drawBox, drawCircle, drawLine, drawText, rotateDraw } from "../../../engine/libs/drawHelpers";
 import PhysPoly from "../entities/PhysPoly";
 import { boxCollision } from "../../../engine/libs/collisionHelpers";
 import PoolBreak from '../../../assets/pool/pool-break-1.mp3'
@@ -87,6 +87,8 @@ export class StandardLevel extends BasedLevel {
   powerGain: number = 1;
   phase: string = 'aim';
   activeAim: boolean = false;
+
+  miniMapActive: boolean = false;
 
   textBox: any;
 
@@ -220,10 +222,10 @@ export class StandardLevel extends BasedLevel {
 
     this.level = [
       // {x: 0, y: 380, w: 400, h: 160, c: 'red', o: { label: 'ground', isStatic: true}},
-      {x: 440, y: 0, w: 880, h: 160, c: this.levelColor, o: { label: 'wallTop', isStatic: true}},
+      {x: 400, y: 0, w: 960, h: 160, c: this.levelColor, o: { label: 'wallTop', isStatic: true}},
       {x: 0, y: 500, w: 160, h: 1000, c: this.levelColor, o: { label: 'wallLeft', isStatic: true}},
       {x: 800, y: 500, w: 160, h: 1000, c: this.levelColor, o: { label: 'wallRight', isStatic: true}},
-      {x: 440, y: 1000, w: 880, h: 160, c: this.levelColor, o: { label: 'wallBottom', isStatic: true}},
+      {x: 400, y: 1000, w: 960, h: 160, c: this.levelColor, o: { label: 'wallBottom', isStatic: true}},
       // {x: 400, y: 380, w: 400, h: 60, c: 'white', o: { label: 'sensorSample', isStatic: true, isSensor: true}},
     ].map( (spec, idx) => {
       const tempBody = new PhysBox({ key: `box${idx}`, gameRef: this.gameRef})
@@ -404,23 +406,45 @@ export class StandardLevel extends BasedLevel {
     }
 
     if(!this.moveKnob.knobActive && !this.shootButton.hovered && this.gameRef.mouseInfo.mouseDown && this.lastShot + 300 < this.gameRef.lastUpdate) {
-      this.aimTarget.setTarget({
-        x: this.gameRef.mouseInfo.x - this.gameRef.cameraPos.x,
-        y: this.gameRef.mouseInfo.y - this.gameRef.cameraPos.y
-      })
 
-      if(this.gameRef.mouseInfo.x < 40) {
-        moveX -= speedFactor
+      if(this.miniMapActive) {
+        let sf = 0.2
+        if(this.gameRef.gameWidth > this.gameRef.gameHeight) {
+          sf = this.gameRef.gameHeight/this.levelBounds.h
+        } else {
+          sf = this.gameRef.gameWidth/this.levelBounds.w
+        }
+        const miniOffset = {
+          x: this.gameRef.gameWidth/2 - (this.levelBounds.w/2 * sf),
+          y: this.gameRef.gameHeight/2 - (this.levelBounds.h/2 * sf)
+        }
+        this.aimTarget.setTarget({
+          x: (this.gameRef.mouseInfo.x - miniOffset.x)/sf,
+          y: (this.gameRef.mouseInfo.y - miniOffset.y)/sf
+        })
+      } else {
+        this.aimTarget.setTarget({
+          x: this.gameRef.mouseInfo.x - this.gameRef.cameraPos.x,
+          y: this.gameRef.mouseInfo.y - this.gameRef.cameraPos.y
+        })
+
+        if(this.gameRef.mouseInfo.x < 40) {
+          moveX -= speedFactor
+        }
+        if(this.gameRef.mouseInfo.x > this.gameRef.gameWidth - 40) {
+          moveX += speedFactor
+        }
+        if(this.gameRef.mouseInfo.y < 40) {
+          moveY -= speedFactor
+        }
+        if(this.gameRef.mouseInfo.y > this.gameRef.gameHeight - 40) {
+          moveY += speedFactor
+        }
       }
-      if(this.gameRef.mouseInfo.x > this.gameRef.gameWidth - 40) {
-        moveX += speedFactor
-      }
-      if(this.gameRef.mouseInfo.y < 40) {
-        moveY -= speedFactor
-      }
-      if(this.gameRef.mouseInfo.y > this.gameRef.gameHeight - 40) {
-        moveY += speedFactor
-      }
+
+
+
+
       this.activeAim = true
     } else {
       this.activeAim = false
@@ -545,12 +569,141 @@ export class StandardLevel extends BasedLevel {
     this.gameRef.ctx.fill()
   }
 
-  draw() {
+  drawMiniMap() {
+    let sf = 0.2
 
-    this.drawBg()
+    if(this.gameRef.gameWidth > this.gameRef.gameHeight) {
+      sf = this.gameRef.gameHeight/this.levelBounds.h
+    } else {
+      sf = this.gameRef.gameWidth/this.levelBounds.w
+    }
 
+    const miniOffset = {
+      x: this.gameRef.gameWidth/2 - (this.levelBounds.w/2 * sf),
+      y: this.gameRef.gameHeight/2 - (this.levelBounds.h/2 * sf)
+    }
 
+    drawBox({
+      c: this.gameRef.ctx,
+      x: 0 + miniOffset.x,
+      y: 0 + miniOffset.y,
+      width: this.levelBounds.w * sf,
+      height: this.levelBounds.h * sf,
+      fillColor: 'green'
+    })
 
+    this.level.forEach(b => {
+      rotateDraw({
+        c: this.gameRef.ctx,
+        x: b.body.position.x * sf + miniOffset.x,
+        y: b.body.position.y * sf + miniOffset.y,
+        a: radToDeg(b.body.angle)
+      }, () => {
+
+        drawBox({
+          c: this.gameRef.ctx,
+          x: (-(b.width/2) - b.bodyCenter.x) * sf,
+          y: (-(b.height/2) - b.bodyCenter.y) * sf,
+          width: b.width  * sf,
+          height: b.height * sf,
+          fillColor: b.color,
+          // fillColor: 'red',
+        })
+      })
+    })
+
+    this.levelDecor.forEach(b => {
+      drawBox({
+        c: this.gameRef.ctx,
+        x: b.x * sf + miniOffset.x,
+        y: b.y * sf + miniOffset.y,
+        width: b.w * sf,
+        height: b.h * sf,
+        fillColor: '#333'
+      })
+    })
+
+    this.pockets.forEach(b => {
+      drawCircle({
+        c: this.gameRef.ctx,
+        x: b.x * sf + miniOffset.x,
+        y: b.y * sf + miniOffset.y,
+        radius: b.radius * sf,
+        fillColor: 'black'
+      })
+    })
+
+    this.bouncePads.forEach(b => {
+      rotateDraw({
+        c: this.gameRef.ctx,
+        x: b.body.position.x * sf + miniOffset.x,
+        y: b.body.position.y * sf + miniOffset.y,
+        a: radToDeg(b.body.angle)
+        // a: 0//radToDeg(this.body.angle)
+      }, () => {
+
+        const {ctx} = this.gameRef
+        ctx.fillStyle = b.color;
+        ctx.beginPath();
+        // start line
+        ctx.moveTo(b.vertices[0].x * sf, b.vertices[0].y * sf);
+
+        for (let i = 1; i < b.vertices.length; i++) {
+          ctx.lineTo(b.vertices[i].x * sf, b.vertices[i].y * sf);
+        }
+
+        // go to start
+        ctx.lineTo(b.vertices[0].x * sf, b.vertices[0].y * sf);
+
+        ctx.closePath();
+        ctx.fill();
+
+      })
+    })
+
+    this.balls.forEach(b => {
+      if(b.active){
+        drawCircle({
+          c: this.gameRef.ctx,
+          x: b.body.position.x * sf + miniOffset.x,
+          y: b.body.position.y * sf + miniOffset.y,
+          radius: b.radius * sf,
+          fillColor: 'orange'
+        })
+      }
+    })
+
+    if(this.aimTarget.active) {
+      drawLine({
+        c: this.gameRef.ctx,
+        x: this.ballA.body.position.x * sf + miniOffset.x,
+        y: this.ballA.body.position.y * sf + miniOffset.y,
+        toX: this.aimTarget.x * sf + miniOffset.x,
+        toY: this.aimTarget.y * sf + miniOffset.y,
+        strokeColor: 'red',
+        strokeWidth: 1
+      })
+
+      drawCircle({
+        c: this.gameRef.ctx,
+        x: this.aimTarget.x * sf + miniOffset.x,
+        y: this.aimTarget.y * sf + miniOffset.y,
+        radius: this.aimTarget.radius * sf,
+        fillColor: 'red'
+      })
+    }
+
+    drawCircle({
+      c: this.gameRef.ctx,
+      x: this.ballA.body.position.x * sf + miniOffset.x,
+      y: this.ballA.body.position.y * sf + miniOffset.y,
+      radius: this.ballA.radius * sf,
+      fillColor: 'white'
+    })
+
+  }
+
+  drawFullLevel() {
     this.level.forEach(b => {
       b.draw()
     })
@@ -597,7 +750,20 @@ export class StandardLevel extends BasedLevel {
 
     this.ballA.draw()
 
-    if(!this.activeAim) {
+  }
+
+  draw() {
+
+    this.drawBg()
+
+
+    if(this.miniMapActive) {
+      this.drawMiniMap()
+    } else {
+      this.drawFullLevel()
+    }
+
+    if(!this.activeAim && !this.miniMapActive) {
       this.moveKnob.draw()
     }
     if(this.aimTarget.active && !this.activeAim){
@@ -629,6 +795,7 @@ export class StandardLevel extends BasedLevel {
         text: `BALLS LEFT: ${this.activeBalls}`
       })
     }
+
 
     this.textBox.draw()
   }
