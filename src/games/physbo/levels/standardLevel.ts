@@ -88,6 +88,8 @@ export class StandardLevel extends BasedLevel {
   phase: string = 'aim';
   activeAim: boolean = false;
 
+  miniMapButton: any;
+
   miniMapActive: boolean = false;
 
   textBox: any;
@@ -104,7 +106,8 @@ export class StandardLevel extends BasedLevel {
     this.physics.world.gravity.y = 0
     // console.log(this.physics)
 
-    this.bouncePads = [{
+    this.bouncePads = [
+      {
         x: 140,
         y: 80,
         a: 0,
@@ -300,14 +303,41 @@ export class StandardLevel extends BasedLevel {
     this.shootButton.fillColor = 'red'
     this.shootButton.hoverColor = 'black'
     this.shootButton.textColor = 'white'
+    this.shootButton.buttonText = 'SHOOT'
+    this.shootButton.height = 90
+    this.shootButton.width = 100
     this.shootButton.x = 30
     this.shootButton.y = this.gameRef.gameHeight - 120
-    this.shootButton.height = 90
-    this.shootButton.buttonText = 'SHOOT'
-    this.shootButton.width = 100
     this.shootButton.clickFunction = () => {
       this.shootBall()
     }
+
+    this.miniMapButton = new BasedButton({ key: 'mini-map-button', gameRef: this.gameRef})
+    this.miniMapButton.fillColor = 'red'
+    this.miniMapButton.hoverColor = 'black'
+    this.miniMapButton.textColor = 'white'
+    this.miniMapButton.buttonText = 'TABLE'
+    this.miniMapButton.height = 40
+    this.miniMapButton.width = 60
+    this.miniMapButton.x = this.gameRef.gameWidth - 80
+    this.miniMapButton.y = 20
+    this.miniMapButton.clickFunction = () => {
+      this.miniMapActive = !this.miniMapActive
+      this.lastShot = this.gameRef.lastUpdate
+      if(!this.miniMapActive) {
+        this.miniMapButton.buttonText = 'TABLE'
+        if(this.aimTarget.active) {
+          this.freeCam.x = this.aimTarget.x
+          this.freeCam.y = this.aimTarget.y
+          this.cameraFocus = 'freeCam'
+        } else {
+          this.cameraFocus = 'cue'
+        }
+      } else {
+        this.miniMapButton.buttonText = 'ZOOM'
+      }
+    }
+
 
     this.moveKnob = new TouchKnob({ key: 'move-knob', gameRef: this.gameRef })
     this.moveKnob.height = 160
@@ -391,6 +421,7 @@ export class StandardLevel extends BasedLevel {
     if(!this.activeAim) {
       this.shootButton.update()
       this.moveKnob.update()
+      this.miniMapButton.update()
     }
 
     if(this.phase === 'power') {
@@ -405,7 +436,8 @@ export class StandardLevel extends BasedLevel {
       moveY += (this.moveKnob.knobCoord.y / this.moveKnob.maxOffset) * speedFactor
     }
 
-    if(!this.moveKnob.knobActive && !this.shootButton.hovered && this.gameRef.mouseInfo.mouseDown && this.lastShot + 300 < this.gameRef.lastUpdate) {
+    if(!this.moveKnob.knobActive && !this.shootButton.hovered && !this.miniMapButton.hovered &&
+      this.gameRef.mouseInfo.mouseDown && this.lastShot + 300 < this.gameRef.lastUpdate) {
 
       if(this.miniMapActive) {
         let sf = 0.2
@@ -441,9 +473,6 @@ export class StandardLevel extends BasedLevel {
           moveY += speedFactor
         }
       }
-
-
-
 
       this.activeAim = true
     } else {
@@ -550,6 +579,8 @@ export class StandardLevel extends BasedLevel {
 
   positionKnobs() {
     this.shootButton.y = this.gameRef.gameHeight - 120
+
+    this.miniMapButton.x = this.gameRef.gameWidth - 80
 
     this.moveKnob.width = this.moveKnob.width > this.gameRef.gameWidth / 2 ? this.gameRef.gameWidth / 2 - 5 : this.moveKnob.width
     this.moveKnob.x = this.gameRef.gameWidth - this.moveKnob.width
@@ -766,8 +797,11 @@ export class StandardLevel extends BasedLevel {
     if(!this.activeAim && !this.miniMapActive) {
       this.moveKnob.draw()
     }
-    if(this.aimTarget.active && !this.activeAim){
-      this.shootButton.draw()
+    if(!this.activeAim){
+      this.miniMapButton.draw()
+      if(this.aimTarget.active) {
+        this.shootButton.draw()
+      }
     }
     if(this.phase === 'power') {
       this.powerMeter.draw()
