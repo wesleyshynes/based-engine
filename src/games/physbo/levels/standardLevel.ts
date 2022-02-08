@@ -15,6 +15,7 @@ import { ShotTarget } from "../entities/ShotTarget";
 import { BasedButton } from "../../../engine/BasedButton";
 import { PowerBar } from "../ui/PowerBar";
 import TextContainer from "../ui/TextContainer";
+import BilliardBall from "../entities/BilliardBall";
 
 
 const generatePad = (width: number = 520, height: number = 50, chamfer: number = 30) => {
@@ -99,6 +100,24 @@ export class StandardLevel extends BasedLevel {
     this.ballsHiting = await this.gameRef.soundPlayer.loadSound(BallsHitting)
     this.ballInPocket = await this.gameRef.soundPlayer.loadSound(BallInPocket)
     this.ballRailBounce = await this.gameRef.soundPlayer.loadSound(BallRailBounce)
+
+    // SETUP DIFFERENT SPRITES AND ADD THEM TO VARIABLES
+    // this.sprite = await createSprite({
+    //   c: this.gameRef.ctx,
+    //   sprite: MonkeySpriteUrl,
+    //   sx: 0,
+    //   sy: 0,
+    //   sWidth: 56,
+    //   sHeight: 56,
+    //   dx: 0,
+    //   dy: 0,
+    //   dWidth: 56,
+    //   dHeight: 56,
+    //   frame: 0,
+    //   lastUpdate: 0,
+    //   updateDiff: 1000 / 60 * 10
+    // })
+
   }
 
   initialize() {
@@ -244,29 +263,34 @@ export class StandardLevel extends BasedLevel {
     })
 
     const ballLayout = [
-      {x: 5, y: 0},
-      {x: 5, y: 0},
-      {x: 5, y: 0},
-      {x: 5, y: 0},
-      {x: 5, y: 0},
-      {x: 4, y: 1},
-      {x: 4, y: 1},
-      {x: 4, y: 1},
-      {x: 4, y: 1},
-      {x: 3, y: 2},
-      {x: 3, y: 2},
-      {x: 3, y: 2},
-      {x: 2, y: 3},
-      {x: 2, y: 3},
-      {x: 1, y: 4},
+      {x: 5, y: 0, type: 'stripe', color: 'purple', number: 12},
+      {x: 5, y: 0, type: 'solid', color: 'red', number: 3},
+      {x: 5, y: 0, type: 'stripe', color: 'orange', number: 13},
+      {x: 5, y: 0, type: 'stripe', color: 'brown', number: 15},
+      {x: 5, y: 0, type: 'solid', color: 'green', number: 9},
+      {x: 4, y: 1, type: 'solid', color: 'purple', number: 4},
+      {x: 4, y: 1, type: 'stripe', color: 'green', number: 14},
+      {x: 4, y: 1, type: 'solid', color: 'brown', number: 7},
+      {x: 4, y: 1, type: 'stripe', color: 'yellow', number: 6},
+      {x: 3, y: 2, type: 'stripe', color: 'blue', number: 10},
+      {x: 3, y: 2, type: 'solid', color: 'black', number: 8},
+      {x: 3, y: 2, type: 'solid', color: 'blue', number: 2},
+      {x: 2, y: 3, type: 'solid', color: 'orange', number: 5},
+      {x: 2, y: 3, type: 'stripe', color: 'red', number: 11},
+      {x: 1, y: 4, type: 'solid', color: 'yellow', number: 1},
     ]
     this.balls = (new Array(15)).fill(0).map((x,idx) => {
-      const tempBody = new PhysBall({key: `ball-${idx}`, gameRef: this.gameRef})
+      const tempBody = new BilliardBall({key: `ball-${idx}`, gameRef: this.gameRef})
+      // const tempBody = new PhysBall({key: `ball-${idx}`, gameRef: this.gameRef})
+      tempBody.ballNumber = `${ballLayout[idx].number}`
+      // tempBody.ballNumber = `${idx}`
       tempBody.radius = this.ballSize
       tempBody.x = 325 + (this.ballSize * 2) * (idx%ballLayout[idx].x) + this.ballSize*ballLayout[idx].y
       console.log(tempBody.x)
       tempBody.y = 200 + (this.ballSize*2)*(ballLayout[idx].y)
-      tempBody.color = `rgba(${idx/15 * 100 + 100},${200 - idx/15 * 100},${idx/15 * 100 + 100},1)`
+      tempBody.color = ballLayout[idx].color
+      tempBody.ballType = ballLayout[idx].type
+      // tempBody.color = `rgba(${idx/15 * 100 + 100},${200 - idx/15 * 100},${idx/15 * 100 + 100},1)`
       tempBody.onCollisionStart = (otherBody: any) => {
         if(otherBody.label === 'ball' || otherBody.label === 'cue') {
           if(Math.abs(otherBody.force.x) + Math.abs(otherBody.force.y) > .5) {
@@ -620,7 +644,7 @@ export class StandardLevel extends BasedLevel {
       y: 0 + miniOffset.y,
       width: this.levelBounds.w * sf,
       height: this.levelBounds.h * sf,
-      fillColor: 'green'
+      fillColor: '#777'
     })
 
     this.level.forEach(b => {
@@ -694,13 +718,14 @@ export class StandardLevel extends BasedLevel {
 
     this.balls.forEach(b => {
       if(b.active){
-        drawCircle({
-          c: this.gameRef.ctx,
-          x: b.body.position.x * sf + miniOffset.x,
-          y: b.body.position.y * sf + miniOffset.y,
-          radius: b.radius * sf,
-          fillColor: 'orange'
-        })
+        // drawCircle({
+        //   c: this.gameRef.ctx,
+        //   x: b.body.position.x * sf + miniOffset.x,
+        //   y: b.body.position.y * sf + miniOffset.y,
+        //   radius: b.radius * sf,
+        //   fillColor: 'orange'
+        // })
+        b.draw(sf, miniOffset)
       }
     })
 

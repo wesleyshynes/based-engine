@@ -17,6 +17,7 @@ export default class PhysBall extends BasedObject {
   bodyCenter: XYCoordinateType = {x: 0, y: 0}
   collisionStartFn: (o: any) => void = (o: any) => null;
   collisionEndFn: (o: any) => void = (o: any) => null;
+  
   async preload() { }
   initialize() {
     this.body = Physics.Bodies.circle(this.x, this.y, this.radius, {
