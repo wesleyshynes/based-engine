@@ -92,6 +92,7 @@ export class StandardLevel extends BasedLevel {
   miniMapButton: any;
 
   miniMapActive: boolean = false;
+  // scaleFactor: number = 1;
 
   textBox: any;
 
@@ -463,25 +464,9 @@ export class StandardLevel extends BasedLevel {
     if(!this.moveKnob.knobActive && !this.shootButton.hovered && !this.miniMapButton.hovered &&
       this.gameRef.mouseInfo.mouseDown && this.lastShot + 300 < this.gameRef.lastUpdate) {
 
-      if(this.miniMapActive) {
-        let sf = 0.2
-        if(this.gameRef.gameWidth > this.gameRef.gameHeight) {
-          sf = this.gameRef.gameHeight/this.levelBounds.h
-        } else {
-          sf = this.gameRef.gameWidth/this.levelBounds.w
-        }
-        const miniOffset = {
-          x: this.gameRef.gameWidth/2 - (this.levelBounds.w/2 * sf),
-          y: this.gameRef.gameHeight/2 - (this.levelBounds.h/2 * sf)
-        }
         this.aimTarget.setTarget({
-          x: (this.gameRef.mouseInfo.x - miniOffset.x)/sf,
-          y: (this.gameRef.mouseInfo.y - miniOffset.y)/sf
-        })
-      } else {
-        this.aimTarget.setTarget({
-          x: this.gameRef.mouseInfo.x - this.gameRef.cameraPos.x,
-          y: this.gameRef.mouseInfo.y - this.gameRef.cameraPos.y
+          x: (this.gameRef.mouseInfo.x - this.gameRef.cameraPos.x)/this.gameRef.cameraZoom,
+          y: (this.gameRef.mouseInfo.y - this.gameRef.cameraPos.y)/this.gameRef.cameraZoom
         })
 
         if(this.gameRef.mouseInfo.x < 40) {
@@ -496,7 +481,7 @@ export class StandardLevel extends BasedLevel {
         if(this.gameRef.mouseInfo.y > this.gameRef.gameHeight - 40) {
           moveY += speedFactor
         }
-      }
+      // }
 
       this.activeAim = true
     } else {
@@ -581,6 +566,20 @@ export class StandardLevel extends BasedLevel {
   }
 
   updateCamera() {
+
+    if(this.miniMapActive) {
+      if(this.gameRef.gameWidth > this.gameRef.gameHeight) {
+        this.gameRef.cameraZoom = this.gameRef.gameHeight/this.levelBounds.h
+      } else {
+        this.gameRef.cameraZoom = this.gameRef.gameWidth/this.levelBounds.w
+      }
+      this.gameRef.cameraPos = {
+        x: this.gameRef.gameWidth/2 - (this.levelBounds.w/2 * this.gameRef.cameraZoom),
+        y: this.gameRef.gameHeight/2 - (this.levelBounds.h/2 * this.gameRef.cameraZoom)
+      }
+      return
+    }
+    this.gameRef.cameraZoom = 1
     const cameraTarget = this.cameraFocus === 'cue' ? this.ballA.body.position : this.freeCam
     this.gameRef.cameraPos = {
       x: -(cameraTarget.x - this.gameRef.gameWidth / 2),
@@ -624,56 +623,28 @@ export class StandardLevel extends BasedLevel {
     this.gameRef.ctx.fill()
   }
 
-  drawMiniMap() {
-    let sf = 0.2
-
-    if(this.gameRef.gameWidth > this.gameRef.gameHeight) {
-      sf = this.gameRef.gameHeight/this.levelBounds.h
-    } else {
-      sf = this.gameRef.gameWidth/this.levelBounds.w
-    }
-
-    const miniOffset = {
-      x: this.gameRef.gameWidth/2 - (this.levelBounds.w/2 * sf),
-      y: this.gameRef.gameHeight/2 - (this.levelBounds.h/2 * sf)
-    }
+  drawLevel() {
 
     drawBox({
       c: this.gameRef.ctx,
-      x: 0 + miniOffset.x,
-      y: 0 + miniOffset.y,
-      width: this.levelBounds.w * sf,
-      height: this.levelBounds.h * sf,
+      x: 0 + this.gameRef.cameraPos.x,
+      y: 0 + this.gameRef.cameraPos.y,
+      width: this.levelBounds.w * this.gameRef.cameraZoom,
+      height: this.levelBounds.h * this.gameRef.cameraZoom,
       fillColor: '#777'
     })
 
     this.level.forEach(b => {
-      rotateDraw({
-        c: this.gameRef.ctx,
-        x: b.body.position.x * sf + miniOffset.x,
-        y: b.body.position.y * sf + miniOffset.y,
-        a: radToDeg(b.body.angle)
-      }, () => {
-
-        drawBox({
-          c: this.gameRef.ctx,
-          x: (-(b.width/2) - b.bodyCenter.x) * sf,
-          y: (-(b.height/2) - b.bodyCenter.y) * sf,
-          width: b.width  * sf,
-          height: b.height * sf,
-          fillColor: b.color,
-          // fillColor: 'red',
-        })
-      })
+      b.draw()
     })
 
     this.levelDecor.forEach(b => {
       drawBox({
         c: this.gameRef.ctx,
-        x: b.x * sf + miniOffset.x,
-        y: b.y * sf + miniOffset.y,
-        width: b.w * sf,
-        height: b.h * sf,
+        x: b.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+        y: b.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+        width: b.w * this.gameRef.cameraZoom,
+        height: b.h * this.gameRef.cameraZoom,
         fillColor: '#333'
       })
     })
@@ -681,104 +652,11 @@ export class StandardLevel extends BasedLevel {
     this.pockets.forEach(b => {
       drawCircle({
         c: this.gameRef.ctx,
-        x: b.x * sf + miniOffset.x,
-        y: b.y * sf + miniOffset.y,
-        radius: b.radius * sf,
+        x: b.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+        y: b.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+        radius: b.radius * this.gameRef.cameraZoom,
         fillColor: 'black'
       })
-    })
-
-    this.bouncePads.forEach(b => {
-      rotateDraw({
-        c: this.gameRef.ctx,
-        x: b.body.position.x * sf + miniOffset.x,
-        y: b.body.position.y * sf + miniOffset.y,
-        a: radToDeg(b.body.angle)
-        // a: 0//radToDeg(this.body.angle)
-      }, () => {
-
-        const {ctx} = this.gameRef
-        ctx.fillStyle = b.color;
-        ctx.beginPath();
-        // start line
-        ctx.moveTo(b.vertices[0].x * sf, b.vertices[0].y * sf);
-
-        for (let i = 1; i < b.vertices.length; i++) {
-          ctx.lineTo(b.vertices[i].x * sf, b.vertices[i].y * sf);
-        }
-
-        // go to start
-        ctx.lineTo(b.vertices[0].x * sf, b.vertices[0].y * sf);
-
-        ctx.closePath();
-        ctx.fill();
-
-      })
-    })
-
-    this.balls.forEach(b => {
-      if(b.active){
-        // drawCircle({
-        //   c: this.gameRef.ctx,
-        //   x: b.body.position.x * sf + miniOffset.x,
-        //   y: b.body.position.y * sf + miniOffset.y,
-        //   radius: b.radius * sf,
-        //   fillColor: 'orange'
-        // })
-        b.draw(sf, miniOffset)
-      }
-    })
-
-    if(this.aimTarget.active) {
-      drawLine({
-        c: this.gameRef.ctx,
-        x: this.ballA.body.position.x * sf + miniOffset.x,
-        y: this.ballA.body.position.y * sf + miniOffset.y,
-        toX: this.aimTarget.x * sf + miniOffset.x,
-        toY: this.aimTarget.y * sf + miniOffset.y,
-        strokeColor: 'red',
-        strokeWidth: 1
-      })
-
-      drawCircle({
-        c: this.gameRef.ctx,
-        x: this.aimTarget.x * sf + miniOffset.x,
-        y: this.aimTarget.y * sf + miniOffset.y,
-        radius: this.aimTarget.radius * sf,
-        fillColor: 'red'
-      })
-    }
-
-    drawCircle({
-      c: this.gameRef.ctx,
-      x: this.ballA.body.position.x * sf + miniOffset.x,
-      y: this.ballA.body.position.y * sf + miniOffset.y,
-      radius: this.ballA.radius * sf,
-      fillColor: 'white'
-    })
-
-  }
-
-  drawFullLevel() {
-    this.level.forEach(b => {
-      b.draw()
-    })
-
-    this.levelDecor.forEach(b => {
-      drawBox({
-        c: this.gameRef.ctx,
-        x: b.x + this.gameRef.cameraPos.x,
-        y: b.y + this.gameRef.cameraPos.y,
-        width: b.w,
-        height: b.h,
-        fillColor: b.c
-      })
-    })
-
-    // this.bouncePad.draw()
-
-    this.pockets.forEach(b => {
-      b.draw()
     })
 
     this.bouncePads.forEach(b => {
@@ -794,30 +672,31 @@ export class StandardLevel extends BasedLevel {
     if(this.aimTarget.active) {
       drawLine({
         c: this.gameRef.ctx,
-        x: this.ballA.body.position.x + this.gameRef.cameraPos.x,
-        y: this.ballA.body.position.y + this.gameRef.cameraPos.y,
-        toX: this.aimTarget.x + this.gameRef.cameraPos.x,
-        toY: this.aimTarget.y + this.gameRef.cameraPos.y,
+        x: this.ballA.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+        y: this.ballA.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+        toX: this.aimTarget.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+        toY: this.aimTarget.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
         strokeColor: 'red',
-        strokeWidth: 3
+        strokeWidth: 1
       })
-      this.aimTarget.draw()
+
+      drawCircle({
+        c: this.gameRef.ctx,
+        x: this.aimTarget.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+        y: this.aimTarget.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+        radius: this.aimTarget.radius * this.gameRef.cameraZoom,
+        fillColor: 'red'
+      })
     }
 
     this.ballA.draw()
-
   }
 
   draw() {
 
     this.drawBg()
 
-
-    if(this.miniMapActive) {
-      this.drawMiniMap()
-    } else {
-      this.drawFullLevel()
-    }
+    this.drawLevel()
 
     if(!this.activeAim && !this.miniMapActive) {
       this.moveKnob.draw()

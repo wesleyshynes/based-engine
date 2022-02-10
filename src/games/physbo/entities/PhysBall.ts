@@ -17,7 +17,7 @@ export default class PhysBall extends BasedObject {
   bodyCenter: XYCoordinateType = {x: 0, y: 0}
   collisionStartFn: (o: any) => void = (o: any) => null;
   collisionEndFn: (o: any) => void = (o: any) => null;
-  
+
   async preload() { }
   initialize() {
     this.body = Physics.Bodies.circle(this.x, this.y, this.radius, {
@@ -44,8 +44,8 @@ export default class PhysBall extends BasedObject {
   draw() {
     rotateDraw({
       c: this.gameRef.ctx,
-      x: this.body.position.x + this.gameRef.cameraPos.x,
-      y: this.body.position.y + this.gameRef.cameraPos.y,
+      x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+      y: this.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
       a: radToDeg(this.body.angle)
     }, () => {
 
@@ -53,7 +53,7 @@ export default class PhysBall extends BasedObject {
         c: this.gameRef.ctx,
         x: -this.bodyCenter.x,
         y: -this.bodyCenter.y,
-        radius: this.radius,
+        radius: this.radius * this.gameRef.cameraZoom,
         fillColor: this.color,
         // fillColor: 'red',
       })

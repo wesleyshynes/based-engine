@@ -59,8 +59,10 @@ export default class PhysPoly extends BasedObject {
   draw() {
     rotateDraw({
       c: this.gameRef.ctx,
-      x: this.body.position.x + this.gameRef.cameraPos.x,
-      y: this.body.position.y + this.gameRef.cameraPos.y,
+      x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+      y: this.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+      // x: this.body.position.x + this.gameRef.cameraPos.x,
+      // y: this.body.position.y + this.gameRef.cameraPos.y,
       // x: this.x + this.gameRef.cameraPos.x,
       // y: this.y + this.gameRef.cameraPos.y,
       a: radToDeg(this.body.angle)
@@ -71,14 +73,14 @@ export default class PhysPoly extends BasedObject {
       ctx.fillStyle = this.color;
       ctx.beginPath();
       // start line
-      ctx.moveTo(this.vertices[0].x, this.vertices[0].y);
+      ctx.moveTo(this.vertices[0].x * this.gameRef.cameraZoom, this.vertices[0].y * this.gameRef.cameraZoom);
 
       for (let i = 1; i < this.vertices.length; i++) {
-        ctx.lineTo(this.vertices[i].x, this.vertices[i].y);
+        ctx.lineTo(this.vertices[i].x * this.gameRef.cameraZoom, this.vertices[i].y * this.gameRef.cameraZoom);
       }
 
       // go to start
-      ctx.lineTo(this.vertices[0].x, this.vertices[0].y);
+      ctx.lineTo(this.vertices[0].x * this.gameRef.cameraZoom, this.vertices[0].y * this.gameRef.cameraZoom);
 
       ctx.closePath();
       ctx.fill();

@@ -52,6 +52,7 @@ export class BasedGame implements BasedGameType {
   gameHeight: number;
 
   cameraPos: XYCoordinateType = {x: 0, y: 0}
+  cameraZoom: number = 1
 
   lastUpdate: number = Date.now()
   updateDiff: number = Date.now()

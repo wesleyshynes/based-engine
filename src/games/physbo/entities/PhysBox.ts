@@ -47,17 +47,19 @@ export default class PhysBox extends BasedObject {
   draw() {
     rotateDraw({
       c: this.gameRef.ctx,
-      x: this.body.position.x + this.gameRef.cameraPos.x,
-      y: this.body.position.y + this.gameRef.cameraPos.y,
+      x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+      y: this.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+      // x: this.body.position.x + this.gameRef.cameraPos.x,
+      // y: this.body.position.y + this.gameRef.cameraPos.y,
       a: radToDeg(this.body.angle)
     }, () => {
 
       drawBox({
         c: this.gameRef.ctx,
-        x: -(this.width/2) - this.bodyCenter.x,
-        y: -(this.height/2) - this.bodyCenter.y,
-        width: this.width,
-        height: this.height,
+        x: (-(this.width/2) - this.bodyCenter.x) * this.gameRef.cameraZoom,
+        y: (-(this.height/2) - this.bodyCenter.y) * this.gameRef.cameraZoom,
+        width: this.width * this.gameRef.cameraZoom,
+        height: this.height * this.gameRef.cameraZoom,
         fillColor: this.color,
         // fillColor: 'red',
       })

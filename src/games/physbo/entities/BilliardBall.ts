@@ -6,11 +6,11 @@ export default class BilliardBall extends PhysBall {
   ballNumber: string = '99';
   ballType: string = 'solid';
 
-  draw(scale = 1, offset = this.gameRef.cameraPos) {
+  draw() {
     rotateDraw({
       c: this.gameRef.ctx,
-      x: this.body.position.x * scale + offset.x,
-      y: this.body.position.y * scale + offset.y,
+      x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+      y: this.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
       a: radToDeg(this.body.angle)
     }, () => {
 
@@ -18,7 +18,7 @@ export default class BilliardBall extends PhysBall {
         c: this.gameRef.ctx,
         x: -this.bodyCenter.x,
         y: -this.bodyCenter.y,
-        radius: this.radius * scale,
+        radius: this.radius * this.gameRef.cameraZoom,
         fillColor: this.color,
         // fillColor: 'red',
       })
@@ -27,7 +27,7 @@ export default class BilliardBall extends PhysBall {
         c: this.gameRef.ctx,
         x: -this.bodyCenter.x,
         y: -this.bodyCenter.y,
-        radius: 7 * scale,
+        radius: 7 * this.gameRef.cameraZoom,
         fillColor: 'white',
         // fillColor: 'red',
       })
@@ -37,8 +37,8 @@ export default class BilliardBall extends PhysBall {
           c: this.gameRef.ctx,
           x: 0,
           y: 0,
-          radiusX: this.radius * scale,
-          radiusY: this.radius * scale,
+          radiusX: this.radius * this.gameRef.cameraZoom,
+          radiusY: this.radius * this.gameRef.cameraZoom,
           startAngle: 45,
           endAngle: 135,
           fillColor: 'white'
@@ -48,8 +48,8 @@ export default class BilliardBall extends PhysBall {
           c: this.gameRef.ctx,
           x: 0,
           y: 0,
-          radiusX: this.radius * scale,
-          radiusY: this.radius * scale,
+          radiusX: this.radius * this.gameRef.cameraZoom,
+          radiusY: this.radius * this.gameRef.cameraZoom,
           startAngle: 225,
           endAngle: 315,
           fillColor: 'white'
@@ -59,12 +59,12 @@ export default class BilliardBall extends PhysBall {
       drawText({
         c: this.gameRef.ctx,
         x: 0,
-        y: 3 * scale,
+        y: 3 * this.gameRef.cameraZoom,
         fillColor: 'black',
         align: 'center',
         text: this.ballNumber,
         fontFamily: 'sans-serif',
-        fontSize: 10 * scale,
+        fontSize: 10 * this.gameRef.cameraZoom,
       })
 
     })
