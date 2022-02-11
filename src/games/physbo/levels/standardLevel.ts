@@ -370,6 +370,11 @@ export class StandardLevel extends BasedLevel {
     this.positionKnobs()
 
     this.aimTarget = new ShotTarget({key: 'aim-target', gameRef: this.gameRef})
+    // this.aimTarget.setTarget(this.balls[this.balls.length-1].body.position)
+
+    this.freeCam.x = this.balls[this.balls.length-1].body.position.x
+    this.freeCam.y = this.balls[this.balls.length-1].body.position.y
+    this.cameraFocus = 'free'
 
     this.powerMeter = new PowerBar({ key: 'power-meter', gameRef: this.gameRef})
     this.powerMeter.x = this.gameRef.gameWidth/2
