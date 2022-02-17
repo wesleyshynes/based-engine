@@ -1,10 +1,28 @@
-import { drawCircle, drawEllipse, drawText, rotateDraw } from "../../../engine/libs/drawHelpers";
-import { radToDeg } from "../../../engine/libs/mathHelpers";
+import { drawBox, drawCircle, drawEllipse, drawText, rotateDraw } from "../../../engine/libs/drawHelpers";
+import { radToDeg, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import PhysBall from "./PhysBall";
 
 export default class BilliardBall extends PhysBall {
   ballNumber: string = '99';
   ballType: string = 'solid';
+
+  rollOffset: XYCoordinateType = {
+    x: 0,
+    y: 0
+  }
+
+  updateRollOffset() {
+    const rollMax = 15
+    // this.rollOffset.x = (this.rollOffset.x + this.body.velocity.x)
+    // if(Math.abs(this.rollOffset.x) >= rollMax) {
+    //   this.rollOffset.x = this.rollOffset.x >= 0 ? -rollMax + (this.rollOffset.x)%rollMax : rollMax - (this.rollOffset.x)%rollMax
+    // }
+    this.rollOffset.y = (this.rollOffset.y + (Math.max(this.body.velocity.y) > Math.max(this.body.velocity.x) ? this.body.velocity.y : this.body.velocity.x))
+    // this.rollOffset.y = (this.rollOffset.y + (this.body.velocity.y + this.body.velocity.x)/2)
+    if(Math.abs(this.rollOffset.y) >= rollMax) {
+      this.rollOffset.y = this.rollOffset.y >= 0 ? -rollMax + (this.rollOffset.y)%rollMax : rollMax - (this.rollOffset.y)%rollMax
+    }
+  }
 
   draw() {
     rotateDraw({
@@ -14,58 +32,125 @@ export default class BilliardBall extends PhysBall {
       a: radToDeg(this.body.angle)
     }, () => {
 
+      this.gameRef.ctx.beginPath()
+      this.gameRef.ctx.arc(0, 0, 15 * this.gameRef.cameraZoom, 0, Math.PI * 2);
+      this.gameRef.ctx.clip()
+
+
+      // Ball background
       drawCircle({
         c: this.gameRef.ctx,
-        x: -this.bodyCenter.x,
-        y: -this.bodyCenter.y,
+        x: this.bodyCenter.x,
+        y: this.bodyCenter.y,
         radius: this.radius * this.gameRef.cameraZoom,
         fillColor: this.color,
-        // fillColor: 'red',
       })
 
-      drawCircle({
-        c: this.gameRef.ctx,
-        x: -this.bodyCenter.x,
-        y: -this.bodyCenter.y,
-        radius: 7 * this.gameRef.cameraZoom,
-        fillColor: 'white',
-        // fillColor: 'red',
-      })
-
+      // Ball Stripes
       if(this.ballType === 'stripe') {
-        drawEllipse({
+        // drawEllipse({
+        //   c: this.gameRef.ctx,
+        //   x: 0,
+        //   y: 0,
+        //   radiusX: this.radius * this.gameRef.cameraZoom,
+        //   radiusY: this.radius * this.gameRef.cameraZoom,
+        //   startAngle: 45,
+        //   endAngle: 135,
+        //   fillColor: 'white'
+        // })
+        //
+        // drawEllipse({
+        //   c: this.gameRef.ctx,
+        //   x: 0,
+        //   y: 0,
+        //   radiusX: this.radius * this.gameRef.cameraZoom,
+        //   radiusY: this.radius * this.gameRef.cameraZoom,
+        //   startAngle: 225,
+        //   endAngle: 315,
+        //   fillColor: 'white'
+        // })
+
+        drawBox({
           c: this.gameRef.ctx,
-          x: 0,
-          y: 0,
-          radiusX: this.radius * this.gameRef.cameraZoom,
-          radiusY: this.radius * this.gameRef.cameraZoom,
-          startAngle: 45,
-          endAngle: 135,
+          x: - 30,
+          y: this.rollOffset.y - 20,
+          width: 60,
+          height: 10,
           fillColor: 'white'
         })
 
-        drawEllipse({
+        drawBox({
           c: this.gameRef.ctx,
-          x: 0,
-          y: 0,
-          radiusX: this.radius * this.gameRef.cameraZoom,
-          radiusY: this.radius * this.gameRef.cameraZoom,
-          startAngle: 225,
-          endAngle: 315,
+          x: - 30,
+          y: this.rollOffset.y + 10,
+          width: 60,
+          height: 10,
           fillColor: 'white'
         })
       }
 
-      drawText({
+      // Ball number background
+      drawCircle({
         c: this.gameRef.ctx,
-        x: 0,
-        y: 3 * this.gameRef.cameraZoom,
-        fillColor: 'black',
-        align: 'center',
-        text: this.ballNumber,
-        fontFamily: 'sans-serif',
-        fontSize: 10 * this.gameRef.cameraZoom,
+        x: this.rollOffset.x,
+        y: this.rollOffset.y,
+        // x: this.bodyCenter.x,
+        // y: this.bodyCenter.y,
+        radius: 7 * this.gameRef.cameraZoom,
+        fillColor: 'white',
       })
+
+      drawCircle({
+        c: this.gameRef.ctx,
+        x: -this.rollOffset.x,
+        y: this.rollOffset.y >= 0 ? this.rollOffset.y - 30 : this.rollOffset.y + 30,
+        // x: this.bodyCenter.x,
+        // y: this.bodyCenter.y,
+        radius: 7 * this.gameRef.cameraZoom,
+        fillColor: 'white',
+      })
+
+      // drawEllipse({
+      //   c: this.gameRef.ctx,
+      //   x: this.rollOffset.x,
+      //   y: this.rollOffset.y,
+      //   // x: this.bodyCenter.x,
+      //   // y: this.bodyCenter.y,
+      //   radiusX: Math.abs(7 - Math.abs(this.rollOffset.x/10)*3) * this.gameRef.cameraZoom,
+      //   radiusY: Math.abs(7 - Math.abs(this.rollOffset.y/10)*3) * this.gameRef.cameraZoom,
+      //   fillColor: 'white',
+      // })
+
+
+
+      // Ball Number
+      if(Math.abs(this.rollOffset.x) < 18 && Math.abs(this.rollOffset.y) < 18 ) {
+        drawText({
+          c: this.gameRef.ctx,
+          x: this.rollOffset.x,
+          y: (this.rollOffset.y + 3) * this.gameRef.cameraZoom,
+          // x: 0,
+          // y: 3 * this.gameRef.cameraZoom,
+          fillColor: 'black',
+          align: 'center',
+          text: this.ballNumber,
+          fontFamily: 'sans-serif',
+          fontSize: 10 * this.gameRef.cameraZoom,
+        })
+
+        drawText({
+          c: this.gameRef.ctx,
+          x: -this.rollOffset.x,
+          y: ((this.rollOffset.y >= 0 ? this.rollOffset.y - 30 : this.rollOffset.y + 30) + 3) * this.gameRef.cameraZoom,
+          // x: 0,
+          // y: 3 * this.gameRef.cameraZoom,
+          fillColor: 'black',
+          align: 'center',
+          text: this.ballNumber,
+          fontFamily: 'sans-serif',
+          fontSize: 10 * this.gameRef.cameraZoom,
+        })
+      }
 
     })
   }

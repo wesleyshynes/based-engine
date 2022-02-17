@@ -560,6 +560,9 @@ export class StandardLevel extends BasedLevel {
   handlePhysics() {
     if(this.gameRef.fps < 61) {
       Physics.Engine.update(this.physics, this.gameRef.updateDiff)
+      this.balls.map(x => {
+        x.updateRollOffset()
+      })
       // this.lastPhysicsUpdate = this.gameRef.lastUpdate
     } else {
       if(this.gameRef.lastUpdate - this.lastPhysicsUpdate >= this.physicsRate ) {
