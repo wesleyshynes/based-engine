@@ -19,7 +19,7 @@ export default class BilliardBall extends PhysBall {
     // }
     // this.rollOffset.y = (this.rollOffset.y + (Math.max(this.body.velocity.y) > Math.max(this.body.velocity.x) ? this.body.velocity.y : this.body.velocity.x))
     // this.rollOffset.y = (this.rollOffset.y + (this.body.velocity.y + this.body.velocity.x)/2)
-    
+
     this.rollOffset.x = (this.rollOffset.x + this.body.velocity.x)%360
     const rollMax = 15
     this.rollOffset.y = (this.rollOffset.y + this.body.velocity.y)
@@ -76,23 +76,43 @@ export default class BilliardBall extends PhysBall {
         //   fillColor: 'white'
         // })
 
-        drawBox({
+        drawEllipse({
           c: this.gameRef.ctx,
-          x: -30 * this.gameRef.cameraZoom,
-          y: (this.rollOffset.y - 20) * this.gameRef.cameraZoom,
-          width: 60 * this.gameRef.cameraZoom,
-          height: 10 * this.gameRef.cameraZoom,
-          fillColor: 'white'
+          x: 0,
+          y: (this.rollOffset.y - 15) * this.gameRef.cameraZoom,
+          radiusX: 15 * this.gameRef.cameraZoom,
+          // radiusX: (15 - Math.abs(this.rollOffset.y)/4) * this.gameRef.cameraZoom,
+          radiusY: 7 * this.gameRef.cameraZoom,
+          fillColor: 'white',
         })
 
-        drawBox({
+        drawEllipse({
           c: this.gameRef.ctx,
-          x: -30 * this.gameRef.cameraZoom,
-          y: (this.rollOffset.y + 10) * this.gameRef.cameraZoom,
-          width: 60 * this.gameRef.cameraZoom,
-          height: 10 * this.gameRef.cameraZoom,
-          fillColor: 'white'
+          x: 0,
+          y: (this.rollOffset.y + 15) * this.gameRef.cameraZoom,
+          radiusX: 15 * this.gameRef.cameraZoom,
+          // radiusX: (15 - Math.abs(this.rollOffset.y)/4) * this.gameRef.cameraZoom,
+          radiusY: 7 * this.gameRef.cameraZoom,
+          fillColor: 'white',
         })
+
+        // drawBox({
+        //   c: this.gameRef.ctx,
+        //   x: -30 * this.gameRef.cameraZoom,
+        //   y: (this.rollOffset.y - 20) * this.gameRef.cameraZoom,
+        //   width: 60 * this.gameRef.cameraZoom,
+        //   height: 10 * this.gameRef.cameraZoom,
+        //   fillColor: 'white'
+        // })
+
+        // drawBox({
+        //   c: this.gameRef.ctx,
+        //   x: -30 * this.gameRef.cameraZoom,
+        //   y: (this.rollOffset.y + 10) * this.gameRef.cameraZoom,
+        //   width: 60 * this.gameRef.cameraZoom,
+        //   height: 10 * this.gameRef.cameraZoom,
+        //   fillColor: 'white'
+        // })
       }
 
       // Ball number background
