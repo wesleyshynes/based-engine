@@ -1,5 +1,5 @@
 import { drawBox, drawCircle, drawEllipse, drawText, rotateDraw } from "../../../engine/libs/drawHelpers";
-import { radToDeg, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { radToDeg, relativeMultiplier, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import PhysBall from "./PhysBall";
 
 export default class BilliardBall extends PhysBall {
@@ -12,16 +12,22 @@ export default class BilliardBall extends PhysBall {
   }
 
   updateRollOffset() {
-    const rollMax = 15
     // this.rollOffset.x = (this.rollOffset.x + this.body.velocity.x)
     // if(Math.abs(this.rollOffset.x) >= rollMax) {
     //   this.rollOffset.x = this.rollOffset.x >= 0 ? -rollMax + (this.rollOffset.x)%rollMax : rollMax - (this.rollOffset.x)%rollMax
+    //   this.rollOffset.y = -this.rollOffset.y
     // }
-    this.rollOffset.y = (this.rollOffset.y + (Math.max(this.body.velocity.y) > Math.max(this.body.velocity.x) ? this.body.velocity.y : this.body.velocity.x))
+    // this.rollOffset.y = (this.rollOffset.y + (Math.max(this.body.velocity.y) > Math.max(this.body.velocity.x) ? this.body.velocity.y : this.body.velocity.x))
     // this.rollOffset.y = (this.rollOffset.y + (this.body.velocity.y + this.body.velocity.x)/2)
+    
+    this.rollOffset.x = (this.rollOffset.x + this.body.velocity.x)%360
+    const rollMax = 15
+    this.rollOffset.y = (this.rollOffset.y + this.body.velocity.y)
     if(Math.abs(this.rollOffset.y) >= rollMax) {
       this.rollOffset.y = this.rollOffset.y >= 0 ? -rollMax + (this.rollOffset.y)%rollMax : rollMax - (this.rollOffset.y)%rollMax
+      // this.rollOffset.x = -this.rollOffset.x
     }
+
   }
 
   draw() {
@@ -29,7 +35,7 @@ export default class BilliardBall extends PhysBall {
       c: this.gameRef.ctx,
       x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
       y: this.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-      a: radToDeg(this.body.angle)
+      a: radToDeg(this.body.angle - this.rollOffset.x/20)
     }, () => {
 
       this.gameRef.ctx.beginPath()
@@ -72,19 +78,19 @@ export default class BilliardBall extends PhysBall {
 
         drawBox({
           c: this.gameRef.ctx,
-          x: - 30,
-          y: this.rollOffset.y - 20,
-          width: 60,
-          height: 10,
+          x: -30 * this.gameRef.cameraZoom,
+          y: (this.rollOffset.y - 20) * this.gameRef.cameraZoom,
+          width: 60 * this.gameRef.cameraZoom,
+          height: 10 * this.gameRef.cameraZoom,
           fillColor: 'white'
         })
 
         drawBox({
           c: this.gameRef.ctx,
-          x: - 30,
-          y: this.rollOffset.y + 10,
-          width: 60,
-          height: 10,
+          x: -30 * this.gameRef.cameraZoom,
+          y: (this.rollOffset.y + 10) * this.gameRef.cameraZoom,
+          width: 60 * this.gameRef.cameraZoom,
+          height: 10 * this.gameRef.cameraZoom,
           fillColor: 'white'
         })
       }
@@ -92,20 +98,26 @@ export default class BilliardBall extends PhysBall {
       // Ball number background
       drawCircle({
         c: this.gameRef.ctx,
-        x: this.rollOffset.x,
-        y: this.rollOffset.y,
+        // x: this.rollOffset.x * this.gameRef.cameraZoom,
+        x: 0,
+        y: this.rollOffset.y * this.gameRef.cameraZoom,
         // x: this.bodyCenter.x,
         // y: this.bodyCenter.y,
         radius: 7 * this.gameRef.cameraZoom,
         fillColor: 'white',
       })
 
+      // distance from ballspot to center
+      // const dz = Math.sqrt(this.rollOffset.x**2 + this.rollOffset.y**2)
+      // const nd = 30 - dz
+      // const nx = -(this.rollOffset.x * (nd/dz) * relativeMultiplier(this.rollOffset.x) )
+      // const ny = -(this.rollOffset.y * (nd/dz) * relativeMultiplier(this.rollOffset.y) )
+
       drawCircle({
         c: this.gameRef.ctx,
-        x: -this.rollOffset.x,
-        y: this.rollOffset.y >= 0 ? this.rollOffset.y - 30 : this.rollOffset.y + 30,
-        // x: this.bodyCenter.x,
-        // y: this.bodyCenter.y,
+        // x: -this.rollOffset.x * this.gameRef.cameraZoom,
+        x: 0,
+        y: (this.rollOffset.y >= 0 ? this.rollOffset.y - 30 : this.rollOffset.y + 30) * this.gameRef.cameraZoom,
         radius: 7 * this.gameRef.cameraZoom,
         fillColor: 'white',
       })
@@ -124,10 +136,11 @@ export default class BilliardBall extends PhysBall {
 
 
       // Ball Number
-      if(Math.abs(this.rollOffset.x) < 18 && Math.abs(this.rollOffset.y) < 18 ) {
+      // if(Math.abs(this.rollOffset.x) < 18 && Math.abs(this.rollOffset.y) < 18 ) {
         drawText({
           c: this.gameRef.ctx,
-          x: this.rollOffset.x,
+          x: 0,
+          // x: this.rollOffset.x * this.gameRef.cameraZoom,
           y: (this.rollOffset.y + 3) * this.gameRef.cameraZoom,
           // x: 0,
           // y: 3 * this.gameRef.cameraZoom,
@@ -140,7 +153,8 @@ export default class BilliardBall extends PhysBall {
 
         drawText({
           c: this.gameRef.ctx,
-          x: -this.rollOffset.x,
+          // x: -this.rollOffset.x * this.gameRef.cameraZoom,
+          x: 0,
           y: ((this.rollOffset.y >= 0 ? this.rollOffset.y - 30 : this.rollOffset.y + 30) + 3) * this.gameRef.cameraZoom,
           // x: 0,
           // y: 3 * this.gameRef.cameraZoom,
@@ -150,7 +164,7 @@ export default class BilliardBall extends PhysBall {
           fontFamily: 'sans-serif',
           fontSize: 10 * this.gameRef.cameraZoom,
         })
-      }
+      // }
 
     })
   }
