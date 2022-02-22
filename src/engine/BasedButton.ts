@@ -24,7 +24,7 @@ export class BasedButton extends BasedObject {
   fontFamily: string = 'sans-serif'
 
   clickFunction: () => void = () => null
-  holdFunction: () => void = () => null
+  holdFunction: () => void = null// () => null
 
   lastSwitch: number = 0
   switchDelay: number = 300
@@ -50,7 +50,7 @@ export class BasedButton extends BasedObject {
 
     if(this.hovered && this.gameRef.mouseInfo.mouseDown) {
       this.focused = true
-      this.holdFunction()
+      this.holdFunction && this.holdFunction()
     } else if (this.hovered && this.focused && !this.gameRef.mouseInfo.mouseDown) {
       this.clickFunction()
       this.focused = false
@@ -63,6 +63,7 @@ export class BasedButton extends BasedObject {
     // if(!this.hovered){
       if (this.gameRef.touchInfo.length > 0) {
         // let touchFound: any = {}
+        let touchFound = false
         this.gameRef.touchInfo.forEach(t => {
           const x1 = this.x
           const y1 = this.y
@@ -71,15 +72,26 @@ export class BasedButton extends BasedObject {
           const { x, y } = t
           const hovered = x > x1 && x < x2 && y > y1 && y < y2
           if(hovered) {
-            // touchFound = {...t}
-            // this.hovered = true
-            // this.touchId = t.id
-            if(this.lastSwitch + this.switchDelay < this.gameRef.lastUpdate) {
+            if(this.holdFunction) {
+              touchFound = true
+              this.hovered = true
+              this.touchId = t.id
+              this.holdFunction()
+            } else if (this.lastSwitch + this.switchDelay < this.gameRef.lastUpdate) {
               this.clickFunction()
               this.lastSwitch = this.gameRef.lastUpdate
             }
           }
         })
+        if(!touchFound && this.hovered) {
+          this.hovered = false
+          this.touchId = ''
+          this.clickFunction()
+        }
+      } else if (this.hovered) {
+        this.clickFunction()
+        this.hovered = false
+        this.touchId = ''
       }
     // }
     // else {

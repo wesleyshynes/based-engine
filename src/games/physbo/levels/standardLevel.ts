@@ -336,6 +336,9 @@ export class StandardLevel extends BasedLevel {
     this.shootButton.clickFunction = () => {
       this.shootBall()
     }
+    this.shootButton.holdFunction = () => {
+      this.chargeBall()
+    }
 
     this.miniMapButton = new BasedButton({ key: 'mini-map-button', gameRef: this.gameRef})
     this.miniMapButton.fillColor = 'red'
@@ -516,6 +519,17 @@ export class StandardLevel extends BasedLevel {
 
       if(this.freeCam.y < this.ballA.body.position.y - 1) this.freeCam.y += 1 * this.gameRef.diffMulti
       if(this.freeCam.y > this.ballA.body.position.y + 1) this.freeCam.y -= 1 * this.gameRef.diffMulti
+    }
+  }
+
+  chargeBall() {
+    if(!this.moveKnob.knobActive && this.aimTarget.active && this.lastShot + 300 < this.gameRef.lastUpdate) {
+      if(this.phase === 'aim') {
+        this.powerMeter.current = 1
+        this.powerMeter.powerGain = Math.abs(this.powerGain)
+        this.lastShot = this.gameRef.lastUpdate
+        this.phase = 'power'
+      }
     }
   }
 
