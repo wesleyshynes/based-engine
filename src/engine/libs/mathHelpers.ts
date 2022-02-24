@@ -83,7 +83,7 @@ export function subtractVectors(v1: XYCoordinateType, v2: XYCoordinateType) {
 }
 
 export function normalizeVector(v: XYCoordinateType, m: number = 1) {
-  const length = v.x && v.y ? Math.sqrt(v.x*v.x+v.y*v.y) : 1; //calculating length
+  const length = v.x && v.y ? Math.sqrt(v.x*v.x+v.y*v.y) : Math.abs(Math.abs(v.x) > Math.abs(v.y) ? v.x : v.y); //calculating length
   return {
     x: v.x/length * m,
     y: v.y/length * m

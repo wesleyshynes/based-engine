@@ -286,8 +286,8 @@ export class StandardLevel extends BasedLevel {
       tempBody.ballNumber = `${ballLayout[idx].number}`
       // tempBody.ballNumber = `${idx}`
       tempBody.radius = this.ballSize
-      tempBody.x = 325 + (this.ballSize * 2) * (idx%ballLayout[idx].x) + this.ballSize*ballLayout[idx].y
-      console.log(tempBody.x)
+      tempBody.x = 340 + (this.ballSize * 2) * (idx%ballLayout[idx].x) + this.ballSize*ballLayout[idx].y
+      // console.log(tempBody.x)
       tempBody.y = 200 + (this.ballSize*2)*(ballLayout[idx].y)
       tempBody.color = ballLayout[idx].color
       tempBody.ballType = ballLayout[idx].type
@@ -407,15 +407,24 @@ export class StandardLevel extends BasedLevel {
       Physics.Body.setVelocity(this.ballA.body, {x:0, y: 0})
     }
     this.activeBalls = 0
+    let eightBallSunk = false
     this.balls.map(x => {
       if(x.active) {
         this.activeBalls++
+      } else if(x.ballNumber === '8') {
+        eightBallSunk = true
       }
     })
     if(this.activeBalls === 0) {
-      // alert('you win')
-      // this.initialize()
+      // win condition
       this.textBox.setText('Congratulations, You win!')
+      this.textBox.closeFunction = () => {
+        this.gameRef.loadLevel('start-screen')
+      }
+      this.textBox.active = true
+    } else if (eightBallSunk) {
+      // lose condition
+      this.textBox.setText('You lose!')
       this.textBox.closeFunction = () => {
         this.gameRef.loadLevel('start-screen')
       }
@@ -535,7 +544,6 @@ export class StandardLevel extends BasedLevel {
 
   shootBall() {
     if(!this.moveKnob.knobActive && this.aimTarget.active && this.lastShot + 300 < this.gameRef.lastUpdate) {
-
       if(this.phase === 'aim') {
         this.powerMeter.current = 1
         this.powerMeter.powerGain = Math.abs(this.powerGain)
@@ -546,6 +554,7 @@ export class StandardLevel extends BasedLevel {
           x: this.aimTarget.x - this.ballA.body.position.x,
           y: this.aimTarget.y - this.ballA.body.position.y
         }, 60 * this.powerMeter.current/this.powerMeter.max)
+        console.log(nv)
         Physics.Body.setVelocity(this.ballA.body, nv)
         this.gameRef.soundPlayer.playSound(this.ballHit)
         this.lastShot = this.gameRef.lastUpdate
@@ -714,12 +723,7 @@ export class StandardLevel extends BasedLevel {
     this.ballA.draw()
   }
 
-  draw() {
-
-    this.drawBg()
-
-    this.drawLevel()
-
+  drawInterface() {
     if(!this.activeAim && !this.miniMapActive) {
       this.moveKnob.draw()
     }
@@ -756,8 +760,13 @@ export class StandardLevel extends BasedLevel {
       })
     }
 
-
     this.textBox.draw()
+  }
+
+  draw() {
+    this.drawBg()
+    this.drawLevel()
+    this.drawInterface()
   }
 
   tearDown() {}
