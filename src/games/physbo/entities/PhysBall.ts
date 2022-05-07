@@ -1,6 +1,6 @@
 import { BasedObject } from "../../../engine/BasedObject";
 import Physics from 'matter-js';
-import { drawCircle, rotateDraw } from "../../../engine/libs/drawHelpers";
+import { drawCircle, drawEllipse, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { radToDeg, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 
 export default class PhysBall extends BasedObject {
@@ -59,5 +59,31 @@ export default class PhysBall extends BasedObject {
       })
     })
   }
+
+  drawShadows() {
+    this.gameRef.ctx.globalAlpha = .3
+
+    rotateDraw({
+      c: this.gameRef.ctx,
+      x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+      y: (this.body.position.y + this.radius*.75) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+      a: 0
+    }, () => {
+
+      drawEllipse({
+        c: this.gameRef.ctx,
+        x: -this.bodyCenter.x,
+        y: -this.bodyCenter.y,
+        radiusX: this.radius * this.gameRef.cameraZoom*1.1,
+        radiusY: (this.radius * this.gameRef.cameraZoom)*.75,
+        fillColor: 'black'
+      })
+    })
+
+    this.gameRef.ctx.globalAlpha = 1
+  }
+
+
+
   tearDown() { }
 }

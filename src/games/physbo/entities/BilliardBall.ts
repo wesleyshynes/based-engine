@@ -185,7 +185,31 @@ export default class BilliardBall extends PhysBall {
           fontSize: 10 * this.gameRef.cameraZoom,
         })
       // }
+    })
+    // ball shine
 
+    drawCircle({
+      c: this.gameRef.ctx,
+      x: (this.body.position.x + 5) * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+      y: (this.body.position.y - 5) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+      radius: 7 * this.gameRef.cameraZoom,
+      fillColor: 'rgba(255,255,255,0.1)',
+    })
+
+    drawCircle({
+      c: this.gameRef.ctx,
+      x: (this.body.position.x + 5) * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+      y: (this.body.position.y - 5) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+      radius: 5 * this.gameRef.cameraZoom,
+      fillColor: 'rgba(255,255,255,0.2)',
+    })
+
+    drawCircle({
+      c: this.gameRef.ctx,
+      x: (this.body.position.x + 5) * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+      y: (this.body.position.y - 5) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+      radius: 2 * this.gameRef.cameraZoom,
+      fillColor: 'rgba(255,255,255,0.3)',
     })
   }
 }

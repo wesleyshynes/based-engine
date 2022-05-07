@@ -2,8 +2,8 @@ import { BasedLevel } from "../../../engine/BasedLevel";
 import Physics from 'matter-js';
 import PhysBox from "../entities/PhysBox";
 import PhysBall from "../entities/PhysBall";
-import { degToRad, normalizeVector, radToDeg, XYCoordinateType } from "../../../engine/libs/mathHelpers";
-import { drawBox, drawCircle, drawLine, drawText, rotateDraw } from "../../../engine/libs/drawHelpers";
+import { degToRad, normalizeVector, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { drawBox, drawCircle, drawEllipse, drawLine, drawText } from "../../../engine/libs/drawHelpers";
 import PhysPoly from "../entities/PhysPoly";
 import { boxCollision } from "../../../engine/libs/collisionHelpers";
 import PoolBreak from '../../../assets/pool/pool-break-1.mp3'
@@ -16,23 +16,13 @@ import { BasedButton } from "../../../engine/BasedButton";
 import { PowerBar } from "../ui/PowerBar";
 import TextContainer from "../ui/TextContainer";
 import BilliardBall from "../entities/BilliardBall";
-
-
-const generatePad = (width: number = 520, height: number = 50, chamfer: number = 30) => {
-  return [
-    {x: 0, y: 0},
-    {x: width, y: 0},
-    {x: width, y: height/2},
-    {x: width - chamfer, y: height},
-    {x: chamfer, y: height},
-    {x: 0, y: height/2},
-  ]
-}
+import { getTimeStamp } from "../../../engine/libs/interfaceHelpers";
+import { Ball_Layout_15, Ball_Layout_9, Standard_Bounce_Pads, Standard_Level, Standard_Pockets } from "../constants/levelConstants";
 
 export class StandardLevel extends BasedLevel {
   physics: any
   level: any[] = [];
-  levelColor = '#222'
+  levelColor = '#402118'//'#222'
   levelDecor: any[] = [
     {x: 80, y: 80, w: 640, h: 25, c: this.levelColor},
     {x: 80, y: 80, w: 25, h: 840, c: this.levelColor},
@@ -77,6 +67,7 @@ export class StandardLevel extends BasedLevel {
     x: 0,
     y: 0
   }
+
   lastCamMove: number = 0
   cameraFocus: any = 'cue'
 
@@ -85,7 +76,7 @@ export class StandardLevel extends BasedLevel {
   shootButton: any;
   aimTarget: any;
   powerMeter: any;
-  powerGain: number = 1;
+  powerGain: number = 2;
   phase: string = 'aim';
   activeAim: boolean = false;
 
@@ -132,44 +123,7 @@ export class StandardLevel extends BasedLevel {
     this.physics.world.gravity.y = 0
     // console.log(this.physics)
 
-    this.bouncePads = [
-      {
-        x: 140,
-        y: 80,
-        a: 0,
-        v: generatePad(520, 50, 30)
-      },
-      {
-        x: 660,
-        y: 920,
-        a: 180,
-        v: generatePad(520, 50, 30)
-      },
-      {
-        x: 720,
-        y: 140,
-        a: 90,
-        v: generatePad(330, 50, 20)
-      },
-      {
-        x: 720,
-        y: 530,
-        a: 90,
-        v: generatePad(330, 50, 20)
-      },
-      {
-        x: 80,
-        y: 470,
-        a: 270,
-        v: generatePad(330, 50, 20)
-      },
-      {
-        x: 80,
-        y: 860,
-        a: 270,
-        v: generatePad(330, 50, 20)
-      }
-    ].map((spec, idx) => {
+    this.bouncePads = Standard_Bounce_Pads.map((spec, idx) => {
       const tempPad = new PhysPoly({key: `bouncePad-${idx}`, gameRef: this.gameRef})
       tempPad.x = spec.x
       tempPad.y = spec.y
@@ -205,14 +159,7 @@ export class StandardLevel extends BasedLevel {
     this.ballA.initialize()
     this.addToWorld(this.ballA.body)
 
-    this.pockets = [
-      { x: 110, y: 110 },
-      { x: 690, y: 110 },
-      { x: 100, y: 500 },
-      { x: 700, y: 500 },
-      { x: 110, y: 890 },
-      { x: 690, y: 890 },
-    ].map((spec, idx) => {
+    this.pockets = Standard_Pockets.map((spec, idx) => {
       const tempPocket = new PhysBall({key: `pocket${idx}`, gameRef: this.gameRef})
       tempPocket.x = spec.x
       tempPocket.y = spec.y
@@ -251,51 +198,25 @@ export class StandardLevel extends BasedLevel {
       return tempPocket
     })
 
-    this.level = [
-      // {x: 0, y: 380, w: 400, h: 160, c: 'red', o: { label: 'ground', isStatic: true}},
-      {x: 400, y: 0, w: 960, h: 160, c: this.levelColor, o: { label: 'wallTop', isStatic: true}},
-      {x: 0, y: 500, w: 160, h: 1000, c: this.levelColor, o: { label: 'wallLeft', isStatic: true}},
-      {x: 800, y: 500, w: 160, h: 1000, c: this.levelColor, o: { label: 'wallRight', isStatic: true}},
-      {x: 400, y: 1000, w: 960, h: 160, c: this.levelColor, o: { label: 'wallBottom', isStatic: true}},
-      // {x: 400, y: 380, w: 400, h: 60, c: 'white', o: { label: 'sensorSample', isStatic: true, isSensor: true}},
-    ].map( (spec, idx) => {
+    this.level = Standard_Level.map( (spec, idx) => {
       const tempBody = new PhysBox({ key: `box${idx}`, gameRef: this.gameRef})
       tempBody.x = spec.x
       tempBody.y = spec.y
       tempBody.width = spec.w
       tempBody.height = spec.h
       tempBody.bodyOptions = spec.o
-      tempBody.color = spec.c
+      tempBody.color = this.levelColor
       tempBody.initialize()
       this.addToWorld(tempBody.body)
       return tempBody
     })
 
-    const ballLayout = [
-      {x: 5, y: 0, type: 'stripe', color: 'purple', number: 12},
-      {x: 5, y: 0, type: 'solid', color: 'red', number: 3},
-      {x: 5, y: 0, type: 'stripe', color: 'orange', number: 13},
-      {x: 5, y: 0, type: 'stripe', color: 'brown', number: 15},
-      {x: 5, y: 0, type: 'solid', color: 'green', number: 9},
-      {x: 4, y: 1, type: 'solid', color: 'purple', number: 4},
-      {x: 4, y: 1, type: 'stripe', color: 'green', number: 14},
-      {x: 4, y: 1, type: 'solid', color: 'brown', number: 7},
-      {x: 4, y: 1, type: 'stripe', color: 'yellow', number: 6},
-      {x: 3, y: 2, type: 'stripe', color: 'blue', number: 10},
-      {x: 3, y: 2, type: 'solid', color: 'black', number: 8},
-      {x: 3, y: 2, type: 'solid', color: 'blue', number: 2},
-      {x: 2, y: 3, type: 'solid', color: 'orange', number: 5},
-      {x: 2, y: 3, type: 'stripe', color: 'red', number: 11},
-      {x: 1, y: 4, type: 'solid', color: 'yellow', number: 1},
-    ]
+    const ballLayout = this.gameRef.basedObjectRefs.gameOptions.mode === 'standard' ? Ball_Layout_15 : Ball_Layout_9
     this.balls = (new Array(ballLayout.length)).fill(0).map((x,idx) => {
       const tempBody = new BilliardBall({key: `ball-${idx}`, gameRef: this.gameRef})
-      // const tempBody = new PhysBall({key: `ball-${idx}`, gameRef: this.gameRef})
       tempBody.ballNumber = `${ballLayout[idx].number}`
-      // tempBody.ballNumber = `${idx}`
       tempBody.radius = this.ballSize
-      tempBody.x = 340 + (this.ballSize * 2) * (idx%ballLayout[idx].x) + this.ballSize*ballLayout[idx].y
-      // console.log(tempBody.x)
+      tempBody.x = 340 + (this.ballSize * 2) * (ballLayout[idx].x) + this.ballSize*(ballLayout[idx].y%2)
       tempBody.y = 200 + (this.ballSize*2)*(ballLayout[idx].y)
       tempBody.color = ballLayout[idx].color
       tempBody.ballType = ballLayout[idx].type
@@ -337,10 +258,10 @@ export class StandardLevel extends BasedLevel {
     this.shootButton.hoverColor = 'black'
     this.shootButton.textColor = 'white'
     this.shootButton.buttonText = 'SHOOT'
-    this.shootButton.height = 90
-    this.shootButton.width = 100
+    this.shootButton.height = 50
+    this.shootButton.width = 80
     this.shootButton.x = 30
-    this.shootButton.y = this.gameRef.gameHeight - 120
+    this.shootButton.y = this.gameRef.gameHeight - 80
     this.shootButton.clickFunction = () => {
       this.shootBall()
     }
@@ -373,7 +294,6 @@ export class StandardLevel extends BasedLevel {
         this.miniMapButton.buttonText = 'ZOOM'
       }
     }
-
 
     this.moveKnob = new TouchKnob({ key: 'move-knob', gameRef: this.gameRef })
     this.moveKnob.height = 160
@@ -432,7 +352,7 @@ export class StandardLevel extends BasedLevel {
       if(this.winTime === 0) {
         this.winTime = this.gameRef.lastUpdate - this.startTime
       }
-      this.textBox.setText(`Congratulations, You win! Your time was: ${this.getTimeStamp(this.winTime)}`)
+      this.textBox.setText(`Congratulations, You win! Your time was: ${getTimeStamp(this.winTime)}`)
       this.textBox.closeFunction = () => {
         this.gameRef.loadLevel('start-screen')
       }
@@ -445,14 +365,6 @@ export class StandardLevel extends BasedLevel {
       }
       this.textBox.active = true
     }
-  }
-
-  getTimeStamp(timeInMilli: number) {
-    const currentTime = timeInMilli
-    const minutes = Math.floor(currentTime/60000)
-    const seconds = Math.floor((currentTime%60000)/1000)
-    const millis = currentTime - (minutes*60000) - (seconds*1000)
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}:${millis < 100 ? 0 : ''}${millis < 10 ? 0 : ''}${millis}`
   }
 
   handleKeys() {
@@ -655,7 +567,7 @@ export class StandardLevel extends BasedLevel {
   }
 
   positionKnobs() {
-    this.shootButton.y = this.gameRef.gameHeight - 120
+    this.shootButton.y = this.gameRef.gameHeight - 80
 
     this.miniMapButton.x = this.gameRef.gameWidth - 80
 
@@ -673,7 +585,7 @@ export class StandardLevel extends BasedLevel {
   drawBg() {
     this.gameRef.ctx.beginPath()
     this.gameRef.ctx.rect(0, 0, this.gameRef.gameWidth, this.gameRef.gameHeight)
-    this.gameRef.ctx.fillStyle = '#777'
+    this.gameRef.ctx.fillStyle = '#4d204e'
     this.gameRef.ctx.fill()
   }
 
@@ -685,7 +597,7 @@ export class StandardLevel extends BasedLevel {
       y: 0 + this.gameRef.cameraPos.y,
       width: this.levelBounds.w * this.gameRef.cameraZoom,
       height: this.levelBounds.h * this.gameRef.cameraZoom,
-      fillColor: '#777'
+      fillColor: '#0c6640' // '#777'
     })
 
     this.level.forEach(b => {
@@ -704,17 +616,18 @@ export class StandardLevel extends BasedLevel {
     })
 
     this.pockets.forEach(b => {
-      drawCircle({
-        c: this.gameRef.ctx,
-        x: b.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-        y: b.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-        radius: b.radius * this.gameRef.cameraZoom,
-        fillColor: 'black'
-      })
+      b.draw()
     })
 
     this.bouncePads.forEach(b => {
       b.draw()
+    })
+
+    this.ballA.drawShadows()
+    this.balls.forEach(b => {
+      if(b.active){
+        b.drawShadows()
+      }
     })
 
     this.balls.forEach(b => {
@@ -780,7 +693,7 @@ export class StandardLevel extends BasedLevel {
         fontSize: 16,
         fontFamily: 'sans-serif',
         fillColor: '#fff',
-        text: `TIME: ${this.getTimeStamp(this.gameRef.lastUpdate - this.startTime)}`
+        text: `TIME: ${getTimeStamp(this.gameRef.lastUpdate - this.startTime)}`
       })
 
       // drawText({

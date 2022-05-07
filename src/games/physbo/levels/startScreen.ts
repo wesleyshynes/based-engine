@@ -7,6 +7,7 @@ import BgMusic from '../../../assets/vimjam2/steakuy.mp3'
 export class StartScreen extends BasedLevel {
 
   startButton: any;
+  gameModeButton: any;
   soundButton: any;
   creditsButton: any;
 
@@ -44,6 +45,11 @@ export class StartScreen extends BasedLevel {
   }
 
   initialize() {
+
+    this.gameRef.basedObjectRefs.gameOptions = {
+      mode: 'standard'
+    }
+
     this.startButton = new BasedButton({
       key: `start-button`,
       gameRef: this.gameRef,
@@ -57,6 +63,22 @@ export class StartScreen extends BasedLevel {
     this.startButton.width = this.gameRef.gameWidth - 200
     this.startButton.clickFunction = () => {
       this.gameRef.loadLevel('standard-level')
+    }
+
+    this.gameModeButton = new BasedButton({
+      key: `game-mode-button`,
+      gameRef: this.gameRef,
+    })
+    this.gameModeButton.fillColor = 'red'
+    this.gameModeButton.hoverColor = 'black'
+    this.gameModeButton.textColor = 'white'
+    this.gameModeButton.x = 100
+    this.gameModeButton.y = this.gameRef.gameHeight - 300
+    this.gameModeButton.buttonText = this.gameRef.basedObjectRefs.gameOptions.mode.toUpperCase()
+    this.gameModeButton.width = this.gameRef.gameWidth - 200
+    this.gameModeButton.clickFunction = () => {
+      this.gameRef.basedObjectRefs.gameOptions.mode = this.gameRef.basedObjectRefs.gameOptions.mode === 'standard' ? '9ball' : 'standard'
+      this.gameModeButton.buttonText = this.gameRef.basedObjectRefs.gameOptions.mode.toUpperCase()
     }
 
     // CREDITS BUTTON
@@ -114,6 +136,7 @@ export class StartScreen extends BasedLevel {
     this.updateBg()
     // this.handleSounds()
     if(this.gameRef.lastUpdate > this.levelLoadedTime + this.levelLoadedDelay) {
+      this.gameModeButton.update()
       this.startButton.update()
       this.soundButton.update()
       this.creditsButton.update()
@@ -123,6 +146,10 @@ export class StartScreen extends BasedLevel {
   updateBg() {}
 
   onResize() {
+
+    this.gameModeButton.y = this.gameRef.gameHeight - 300
+    this.gameModeButton.width = this.gameRef.gameWidth - 200
+
     this.startButton.y = this.gameRef.gameHeight - 200
     this.startButton.width = this.gameRef.gameWidth - 200
 
@@ -143,6 +170,7 @@ export class StartScreen extends BasedLevel {
 
     this.drawBg()
 
+    this.gameModeButton.draw()
     this.startButton.draw()
     this.soundButton.draw()
     this.creditsButton.draw()
