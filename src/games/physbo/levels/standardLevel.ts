@@ -96,6 +96,10 @@ export class StandardLevel extends BasedLevel {
 
   textBox: any;
 
+  // SCORE RELATED STUFF
+  startTime: number = 0
+  winTime: number = 0
+
   async preload() {
     this.ballHit = await this.gameRef.soundPlayer.loadSound(PoolBreak)
     this.ballsHiting = await this.gameRef.soundPlayer.loadSound(BallsHitting)
@@ -122,7 +126,9 @@ export class StandardLevel extends BasedLevel {
   }
 
   initialize() {
-    this.physics = Physics.Engine.create()
+    this.physics = Physics.Engine.create({
+      constraintIterations: 50
+    })
     this.physics.world.gravity.y = 0
     // console.log(this.physics)
 
@@ -210,7 +216,8 @@ export class StandardLevel extends BasedLevel {
       const tempPocket = new PhysBall({key: `pocket${idx}`, gameRef: this.gameRef})
       tempPocket.x = spec.x
       tempPocket.y = spec.y
-      tempPocket.radius = this.pocketSize
+      tempPocket.radius = this.pocketSize - 10
+      // tempPocket.radius = this.pocketSize - 5
       tempPocket.color = 'black'
       tempPocket.onCollisionStart = (otherBody: any) => {
         console.log(otherBody)
@@ -239,6 +246,7 @@ export class StandardLevel extends BasedLevel {
       }
       tempPocket.bodyOptions = {label: 'hole', isStatic: true, isSensor: true}
       tempPocket.initialize()
+      tempPocket.radius = this.pocketSize
       this.addToWorld(tempPocket.body)
       return tempPocket
     })
@@ -280,7 +288,7 @@ export class StandardLevel extends BasedLevel {
       {x: 2, y: 3, type: 'stripe', color: 'red', number: 11},
       {x: 1, y: 4, type: 'solid', color: 'yellow', number: 1},
     ]
-    this.balls = (new Array(15)).fill(0).map((x,idx) => {
+    this.balls = (new Array(ballLayout.length)).fill(0).map((x,idx) => {
       const tempBody = new BilliardBall({key: `ball-${idx}`, gameRef: this.gameRef})
       // const tempBody = new PhysBall({key: `ball-${idx}`, gameRef: this.gameRef})
       tempBody.ballNumber = `${ballLayout[idx].number}`
@@ -393,6 +401,10 @@ export class StandardLevel extends BasedLevel {
     this.textBox.active = false
     this.textBox.closeFunction = () => {}
     this.textBox.initialize()
+
+    // SCORE INITIALIZATION
+    this.startTime = this.gameRef.lastUpdate
+    this.winTime = 0
   }
 
   checkGame() {
@@ -417,7 +429,10 @@ export class StandardLevel extends BasedLevel {
     })
     if(this.activeBalls === 0) {
       // win condition
-      this.textBox.setText('Congratulations, You win!')
+      if(this.winTime === 0) {
+        this.winTime = this.gameRef.lastUpdate - this.startTime
+      }
+      this.textBox.setText(`Congratulations, You win! Your time was: ${this.getTimeStamp(this.winTime)}`)
       this.textBox.closeFunction = () => {
         this.gameRef.loadLevel('start-screen')
       }
@@ -430,6 +445,14 @@ export class StandardLevel extends BasedLevel {
       }
       this.textBox.active = true
     }
+  }
+
+  getTimeStamp(timeInMilli: number) {
+    const currentTime = timeInMilli
+    const minutes = Math.floor(currentTime/60000)
+    const seconds = Math.floor((currentTime%60000)/1000)
+    const millis = currentTime - (minutes*60000) - (seconds*1000)
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}:${millis < 100 ? 0 : ''}${millis < 10 ? 0 : ''}${millis}`
   }
 
   handleKeys() {
@@ -553,8 +576,8 @@ export class StandardLevel extends BasedLevel {
         const nv = normalizeVector({
           x: this.aimTarget.x - this.ballA.body.position.x,
           y: this.aimTarget.y - this.ballA.body.position.y
-        }, 60 * this.powerMeter.current/this.powerMeter.max)
-        console.log(nv)
+        }, 50 * this.powerMeter.current/this.powerMeter.max)
+        // console.log(nv)
         Physics.Body.setVelocity(this.ballA.body, nv)
         this.gameRef.soundPlayer.playSound(this.ballHit)
         this.lastShot = this.gameRef.lastUpdate
@@ -739,17 +762,6 @@ export class StandardLevel extends BasedLevel {
       drawText({
         c: this.gameRef.ctx,
         x: 30,
-        y: 60,
-        align: 'left',
-        fontSize: 16,
-        fontFamily: 'sans-serif',
-        fillColor: '#fff',
-        text: `FPS: ${Math.round(this.gameRef.fps)}`
-      })
-
-      drawText({
-        c: this.gameRef.ctx,
-        x: 30,
         y: 40,
         // y: this.gameRef.gameHeight - 80,
         align: 'left',
@@ -758,6 +770,29 @@ export class StandardLevel extends BasedLevel {
         fillColor: '#fff',
         text: `BALLS LEFT: ${this.activeBalls}`
       })
+
+      drawText({
+        c: this.gameRef.ctx,
+        x: 30,
+        y: 60,
+        // y: this.gameRef.gameHeight - 80,
+        align: 'left',
+        fontSize: 16,
+        fontFamily: 'sans-serif',
+        fillColor: '#fff',
+        text: `TIME: ${this.getTimeStamp(this.gameRef.lastUpdate - this.startTime)}`
+      })
+
+      // drawText({
+      //   c: this.gameRef.ctx,
+      //   x: 30,
+      //   y: 80,
+      //   align: 'left',
+      //   fontSize: 16,
+      //   fontFamily: 'sans-serif',
+      //   fillColor: '#fff',
+      //   text: `FPS: ${Math.round(this.gameRef.fps)}`
+      // })
     }
 
     this.textBox.draw()
