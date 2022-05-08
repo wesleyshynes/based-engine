@@ -1,7 +1,7 @@
 import { BasedButton } from "../../../engine/BasedButton";
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { createSprite, drawImage, drawText, rotateDraw } from "../../../engine/libs/drawHelpers"
-import BgMusic from '../../../assets/vimjam2/steakuy.mp3'
+import BgMusic from '../../../assets/pool/music/Bauchamp_-_148_jucky.mp3'
 // import GameLogo from '../../../assets/vimjam2/monkey-meltdown-logo.png'
 
 export class StartScreen extends BasedLevel {
@@ -134,7 +134,7 @@ export class StartScreen extends BasedLevel {
 
   update() {
     this.updateBg()
-    // this.handleSounds()
+    this.handleSounds()
     if(this.gameRef.lastUpdate > this.levelLoadedTime + this.levelLoadedDelay) {
       this.gameModeButton.update()
       this.startButton.update()

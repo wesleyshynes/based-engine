@@ -3,7 +3,7 @@ import Physics from 'matter-js';
 import PhysBox from "../entities/PhysBox";
 import PhysBall from "../entities/PhysBall";
 import { degToRad, normalizeVector, XYCoordinateType } from "../../../engine/libs/mathHelpers";
-import { drawBox, drawCircle, drawEllipse, drawLine, drawText } from "../../../engine/libs/drawHelpers";
+import { drawBox, drawCircle, drawLine, drawText } from "../../../engine/libs/drawHelpers";
 import PhysPoly from "../entities/PhysPoly";
 import { boxCollision } from "../../../engine/libs/collisionHelpers";
 import PoolBreak from '../../../assets/pool/pool-break-1.mp3'
@@ -18,6 +18,8 @@ import TextContainer from "../ui/TextContainer";
 import BilliardBall from "../entities/BilliardBall";
 import { getTimeStamp } from "../../../engine/libs/interfaceHelpers";
 import { Ball_Layout_15, Ball_Layout_9, Standard_Bounce_Pads, Standard_Level, Standard_Pockets } from "../constants/levelConstants";
+import BgMusic from '../../../assets/pool/music/Twin-Musicom-64-Sundays.mp3'
+import LoseMusic from '../../../assets/pool/music/Monplaisir_-_12_-_Weird_serious_jingle_of_death.mp3'
 
 export class StandardLevel extends BasedLevel {
   physics: any
@@ -38,6 +40,14 @@ export class StandardLevel extends BasedLevel {
   ballsHiting: any
   ballInPocket: any
   ballRailBounce: any
+
+  // MUSIC
+  activeSound: any = {
+    playing: false,
+    soundRef: null,
+  }
+  bgSong: any;
+  loseSong: any;
 
   ballA: any
   lastShot: number = 0
@@ -90,12 +100,19 @@ export class StandardLevel extends BasedLevel {
   // SCORE RELATED STUFF
   startTime: number = 0
   winTime: number = 0
+  gameState: string = 'playing'
 
   async preload() {
+    this.gameRef.drawLoading('Ball Noises')
     this.ballHit = await this.gameRef.soundPlayer.loadSound(PoolBreak)
     this.ballsHiting = await this.gameRef.soundPlayer.loadSound(BallsHitting)
     this.ballInPocket = await this.gameRef.soundPlayer.loadSound(BallInPocket)
     this.ballRailBounce = await this.gameRef.soundPlayer.loadSound(BallRailBounce)
+
+    this.gameRef.drawLoading('Snazzy Music')
+    this.bgSong =  await this.gameRef.soundPlayer.loadSound(BgMusic)
+    this.loseSong =  await this.gameRef.soundPlayer.loadSound(LoseMusic)
+    this.activeSound.playing = false
 
     // SETUP DIFFERENT SPRITES AND ADD THEM TO VARIABLES
     // this.sprite = await createSprite({
@@ -117,6 +134,8 @@ export class StandardLevel extends BasedLevel {
   }
 
   initialize() {
+    this.gameState = 'playing'
+
     this.physics = Physics.Engine.create({
       constraintIterations: 50
     })
@@ -359,7 +378,12 @@ export class StandardLevel extends BasedLevel {
       this.textBox.active = true
     } else if (eightBallSunk) {
       // lose condition
+      if(this.gameState !== 'lose') {
+        this.activeSound.soundRef.stop()
+      }
+      this.gameState = 'lose'
       this.textBox.setText('You lose!')
+
       this.textBox.closeFunction = () => {
         this.gameRef.loadLevel('start-screen')
       }
@@ -509,10 +533,21 @@ export class StandardLevel extends BasedLevel {
   }
 
   update() {
+    this.handleSounds()
     this.handleKeys()
     this.handlePhysics()
     this.updateCamera()
     this.checkGame()
+  }
+
+  handleSounds() {
+    if(!this.gameRef.soundPlayer.enabled) { return }
+    if(this.activeSound.playing == false) {
+      this.activeSound.soundRef = this.gameRef.soundPlayer.playSound(this.gameState === 'lose' ? this.loseSong : this.bgSong, () => {
+        this.activeSound.playing = false
+      })
+      this.activeSound.playing = true
+    }
   }
 
   handlePhysics() {
@@ -696,6 +731,7 @@ export class StandardLevel extends BasedLevel {
         text: `TIME: ${getTimeStamp(this.gameRef.lastUpdate - this.startTime)}`
       })
 
+      // const cameraTarget = this.cameraFocus === 'cue' ? this.ballA.body.position : this.freeCam
       // drawText({
       //   c: this.gameRef.ctx,
       //   x: 30,
@@ -704,7 +740,20 @@ export class StandardLevel extends BasedLevel {
       //   fontSize: 16,
       //   fontFamily: 'sans-serif',
       //   fillColor: '#fff',
-      //   text: `FPS: ${Math.round(this.gameRef.fps)}`
+      //   text: `T: ${Math.floor(cameraTarget.x)}, ${Math.floor(cameraTarget.y)}`
+      //   // text: `FPS: ${Math.round(this.gameRef.fps)}`
+      // })
+      //
+      // drawText({
+      //   c: this.gameRef.ctx,
+      //   x: 30,
+      //   y: 100,
+      //   align: 'left',
+      //   fontSize: 16,
+      //   fontFamily: 'sans-serif',
+      //   fillColor: '#fff',
+      //   text: `T: ${Math.floor(this.gameRef.cameraPos.x)}, ${Math.floor(this.gameRef.cameraPos.y)}`
+      //   // text: `FPS: ${Math.round(this.gameRef.fps)}`
       // })
     }
 
@@ -717,6 +766,10 @@ export class StandardLevel extends BasedLevel {
     this.drawInterface()
   }
 
-  tearDown() {}
+  tearDown() {
+    if(this.activeSound.playing && this.activeSound.soundRef){
+      this.activeSound.soundRef.stop()
+    }
+  }
 
 }
