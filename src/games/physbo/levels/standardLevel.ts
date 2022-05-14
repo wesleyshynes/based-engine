@@ -318,8 +318,18 @@ export class StandardLevel extends BasedLevel {
     }
 
     this.sliderControl = new SliderControl({key: 'slider-control', gameRef: this.gameRef})
-    this.sliderControl.x = this.gameRef.gameWidth/2
-    this.sliderControl.y = this.gameRef.gameHeight - 200
+    this.sliderControl.direction = 'vertical'
+    this.sliderControl.width = 30
+    this.sliderControl.height = 100
+    this.sliderControl.btnWidth = 30
+    this.sliderControl.btnHeight = 30
+    this.sliderControl.x = this.gameRef.gameWidth - 45
+    // this.sliderControl.x = this.gameRef.gameWidth/2 this.gameRef.gameWidth - 60
+    this.sliderControl.y = this.gameRef.gameHeight/2
+    // this.sliderControl.y = this.gameRef.gameHeight - 200
+    this.sliderControl.tickFunction = () => {
+      this.lastShot = this.gameRef.lastUpdate
+    }
     this.sliderControl.initialize()
 
     this.moveKnob = new TouchKnob({ key: 'move-knob', gameRef: this.gameRef })
@@ -435,7 +445,6 @@ export class StandardLevel extends BasedLevel {
       this.shootButton.update()
       this.moveKnob.update()
       this.miniMapButton.update()
-
       this.sliderControl.update()
     }
 
@@ -595,7 +604,10 @@ export class StandardLevel extends BasedLevel {
       }
       return
     }
-    this.gameRef.cameraZoom = this.gameZoom
+
+    this.gameRef.cameraZoom = this.sliderControl.value
+    // this.gameRef.cameraZoom = this.gameZoom
+
     const cameraTarget = this.cameraFocus === 'cue' ? this.ballA.body.position : this.freeCam
     this.gameRef.cameraPos = {
       x: this.gameRef.gameWidth/2 - (cameraTarget.x * this.gameRef.cameraZoom),
@@ -623,6 +635,10 @@ export class StandardLevel extends BasedLevel {
     this.moveKnob.width = this.moveKnob.width > this.gameRef.gameWidth / 2 ? this.gameRef.gameWidth / 2 - 5 : this.moveKnob.width
     this.moveKnob.x = this.gameRef.gameWidth - this.moveKnob.width
     this.moveKnob.y = this.gameRef.gameHeight - this.moveKnob.height
+
+    this.sliderControl.x = this.gameRef.gameWidth - 45
+    this.sliderControl.y = this.gameRef.gameHeight/2
+    this.sliderControl.onResize()
   }
 
   onResize() {
@@ -711,6 +727,7 @@ export class StandardLevel extends BasedLevel {
   drawInterface() {
     if(!this.activeAim && !this.miniMapActive) {
       this.moveKnob.draw()
+      this.sliderControl.draw()
     }
     if(!this.activeAim){
       this.miniMapButton.draw()
@@ -770,8 +787,6 @@ export class StandardLevel extends BasedLevel {
       //   // text: `FPS: ${Math.round(this.gameRef.fps)}`
       // })
     }
-
-    this.sliderControl.draw()
 
     this.textBox.draw()
   }
