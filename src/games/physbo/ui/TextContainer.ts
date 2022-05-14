@@ -12,11 +12,13 @@ export default class TextContainer extends BasedObject {
   fontFamily: string = 'sans-serif';
   fontWeight: string | number = 900;
   fontStyle: string;
-  fillColor: string = 'black';
-  strokeColor: string = 'white';
+  fontFillColor: string = 'black';
+  fontStrokeColor: string = 'white';
   strokeWidth: number = 0;
   align: 'center' | 'left' | 'right' = 'left'
 
+  containerFillColor: 'white'
+  containerBorderColor: 'white'
   containerWidth: number = 400;
   containerHeight: number = 200;
 
@@ -74,7 +76,7 @@ export default class TextContainer extends BasedObject {
   setCloseButtonPosition() {
     if(this.closeButton) {
       this.closeButton.x = this.x + this.containerWidth - 20 - this.closeButton.width
-      this.closeButton.y = this.y + this.containerHeight - 20 - this.closeButton.height      
+      this.closeButton.y = this.y + this.containerHeight - 20 - this.closeButton.height
     }
   }
 
@@ -142,8 +144,8 @@ export default class TextContainer extends BasedObject {
         width: this.containerWidth + 40,
         height: this.containerHeight + 40,
         strokeWidth: 2,
-        strokeColor: 'red',
-        fillColor: 'white'
+        strokeColor: this.containerBorderColor,
+        fillColor: this.containerFillColor
       })
 
       this.paginatedText.map((x, idx) => {
@@ -151,11 +153,11 @@ export default class TextContainer extends BasedObject {
           c: this.gameRef.ctx,
           x: this.x + (this.align === 'center' ? this.containerWidth / 2 : 0),
           y: this.y + idx * this.lineHeight,
-          fillColor: this.fillColor,
+          fillColor: this.fontFillColor,
           align: this.align,
           text: x,
           strokeWidth: this.strokeWidth,
-          strokeColor: this.strokeColor,
+          strokeColor: this.fontStrokeColor,
           fontFamily: this.fontFamily,
           fontSize: this.fontSize,
           weight: this.fontWeight,

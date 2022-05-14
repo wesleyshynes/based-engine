@@ -20,6 +20,7 @@ import { getTimeStamp } from "../../../engine/libs/interfaceHelpers";
 import { Ball_Layout_15, Ball_Layout_9, Standard_Bounce_Pads, Standard_Level, Standard_Pockets } from "../constants/levelConstants";
 import BgMusic from '../../../assets/pool/music/Twin-Musicom-64-Sundays.mp3'
 import LoseMusic from '../../../assets/pool/music/Monplaisir_-_12_-_Weird_serious_jingle_of_death.mp3'
+import { SliderControl } from "../../../engine/controls/SliderControl";
 
 export class StandardLevel extends BasedLevel {
   physics: any
@@ -80,8 +81,10 @@ export class StandardLevel extends BasedLevel {
 
   lastCamMove: number = 0
   cameraFocus: any = 'cue'
+  gameZoom: number = 1
 
   // Interface stuff
+  sliderControl: any;
   moveKnob: any;
   shootButton: any;
   aimTarget: any;
@@ -314,6 +317,11 @@ export class StandardLevel extends BasedLevel {
       }
     }
 
+    this.sliderControl = new SliderControl({key: 'slider-control', gameRef: this.gameRef})
+    this.sliderControl.x = this.gameRef.gameWidth/2
+    this.sliderControl.y = this.gameRef.gameHeight - 200
+    this.sliderControl.initialize()
+
     this.moveKnob = new TouchKnob({ key: 'move-knob', gameRef: this.gameRef })
     this.moveKnob.height = 160
     this.moveKnob.width = 160
@@ -339,6 +347,10 @@ export class StandardLevel extends BasedLevel {
     this.textBox.x = 80
     this.textBox.active = false
     this.textBox.closeFunction = () => {}
+    this.textBox.fontFillColor = 'white'
+    this.textBox.fontStrokeColor = 'black'
+    this.textBox.containerFillColor = 'black'
+    this.textBox.containerBorderColor = 'black'
     this.textBox.initialize()
 
     // SCORE INITIALIZATION
@@ -423,6 +435,8 @@ export class StandardLevel extends BasedLevel {
       this.shootButton.update()
       this.moveKnob.update()
       this.miniMapButton.update()
+
+      this.sliderControl.update()
     }
 
     if(this.phase === 'power') {
@@ -437,7 +451,7 @@ export class StandardLevel extends BasedLevel {
       moveY += (this.moveKnob.knobCoord.y / this.moveKnob.maxOffset) * speedFactor
     }
 
-    if(!this.moveKnob.knobActive && !this.shootButton.hovered && !this.miniMapButton.hovered &&
+    if(!this.sliderControl.hovered && !this.moveKnob.knobActive && !this.shootButton.hovered && !this.miniMapButton.hovered &&
       this.gameRef.mouseInfo.mouseDown && this.lastShot + 300 < this.gameRef.lastUpdate) {
 
         this.aimTarget.setTarget({
@@ -514,6 +528,7 @@ export class StandardLevel extends BasedLevel {
           y: this.aimTarget.y - this.ballA.body.position.y
         }, 50 * this.powerMeter.current/this.powerMeter.max)
         // console.log(nv)
+        // Physics.Body.applyForce(this.ballA.body, this.ballA.body.position , nv)
         Physics.Body.setVelocity(this.ballA.body, nv)
         this.gameRef.soundPlayer.playSound(this.ballHit)
         this.lastShot = this.gameRef.lastUpdate
@@ -580,24 +595,23 @@ export class StandardLevel extends BasedLevel {
       }
       return
     }
-    this.gameRef.cameraZoom = 1
+    this.gameRef.cameraZoom = this.gameZoom
     const cameraTarget = this.cameraFocus === 'cue' ? this.ballA.body.position : this.freeCam
     this.gameRef.cameraPos = {
-      x: -(cameraTarget.x - this.gameRef.gameWidth / 2),
-      y: -(cameraTarget.y - this.gameRef.gameHeight / 2)
+      x: this.gameRef.gameWidth/2 - (cameraTarget.x * this.gameRef.cameraZoom),
+      y: this.gameRef.gameHeight/2 - (cameraTarget.y * this.gameRef.cameraZoom)
     }
-    if (this.gameRef.gameWidth < this.levelWidth) {
+    if (this.gameRef.gameWidth < this.levelWidth * this.gameRef.cameraZoom) {
       if (this.gameRef.cameraPos.x > 0) this.gameRef.cameraPos.x = 0
-      if (this.gameRef.cameraPos.x - this.gameRef.gameWidth < this.levelWidth * -1) this.gameRef.cameraPos.x = -(this.levelWidth - this.gameRef.gameWidth)
+      if (this.gameRef.cameraPos.x - this.gameRef.gameWidth < this.levelWidth * this.gameRef.cameraZoom * -1) this.gameRef.cameraPos.x = -(this.levelWidth * this.gameRef.cameraZoom - this.gameRef.gameWidth)
     } else {
-      this.gameRef.cameraPos.x = (this.gameRef.gameWidth - this.levelWidth) / 2
+      this.gameRef.cameraPos.x = (this.gameRef.gameWidth - this.levelWidth * this.gameRef.cameraZoom) / 2
     }
-
-    if (this.gameRef.gameHeight < this.levelHeight) {
+    if (this.gameRef.gameHeight < this.levelHeight * this.gameRef.cameraZoom) {
       if (this.gameRef.cameraPos.y > 0) this.gameRef.cameraPos.y = 0
-      if (this.gameRef.cameraPos.y - this.gameRef.gameHeight < this.levelHeight * -1) this.gameRef.cameraPos.y = -(this.levelHeight - this.gameRef.gameHeight)
+      if (this.gameRef.cameraPos.y - this.gameRef.gameHeight < this.levelHeight * -1 * this.gameRef.cameraZoom) this.gameRef.cameraPos.y = -(this.levelHeight * this.gameRef.cameraZoom - this.gameRef.gameHeight)
     } else {
-      this.gameRef.cameraPos.y = (this.gameRef.gameHeight - this.levelHeight) / 2
+      this.gameRef.cameraPos.y = (this.gameRef.gameHeight - this.levelHeight * this.gameRef.cameraZoom) / 2
     }
   }
 
@@ -756,6 +770,8 @@ export class StandardLevel extends BasedLevel {
       //   // text: `FPS: ${Math.round(this.gameRef.fps)}`
       // })
     }
+
+    this.sliderControl.draw()
 
     this.textBox.draw()
   }
