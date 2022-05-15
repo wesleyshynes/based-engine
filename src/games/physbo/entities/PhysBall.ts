@@ -10,7 +10,7 @@ export default class PhysBall extends BasedObject {
   color: string = 'blue'
   bodyOptions: any = {
     label: 'ball',
-    restitution: 0.8
+    restitution: 0.8,
   }
   active: boolean = false
   body: any;
