@@ -1,6 +1,6 @@
 import { BasedLevel } from "./BasedLevel";
 import { BasedSounds } from "./BasedSounds";
-import { drawText } from "./libs/drawHelpers";
+import { drawBox, drawText } from "./libs/drawHelpers";
 import { getClickPosition, getTouchArray, getTouchPosition, XYCoordinateType } from "./libs/mathHelpers";
 
 export interface gameSettings {
@@ -215,19 +215,19 @@ export class BasedGame implements BasedGameType {
     this.levels[this.activeLevel].draw()
   }
 
-  drawLoading(loadingThing?: string) {
+  drawLoading(loadingThing?: string, percentage?: number) {
     this.ctx.beginPath()
     this.ctx.rect(0, 0, this.gameWidth, this.gameHeight)
-    this.ctx.fillStyle = '#eee'
+    this.ctx.fillStyle = '#000'
     this.ctx.fill()
 
     drawText({
       c: this.ctx,
       x: (this.gameWidth)/2,
-      y: 100,
+      y: (this.gameHeight)/2 - 50,
       align:'center',
-      fillColor: '#000',
-      strokeColor: '#fff',
+      fillColor: '#fff',
+      strokeColor: '#000',
       strokeWidth: 3,
       style: '',
       weight: '500',
@@ -239,16 +239,34 @@ export class BasedGame implements BasedGameType {
     drawText({
       c: this.ctx,
       x: (this.gameWidth)/2,
-      y: 150,
+      y: this.gameHeight/2,
       align:'center',
-      fillColor: '#000',
-      strokeColor: '#fff',
+      fillColor: '#fff',
+      strokeColor: '#000',
       strokeWidth: 3,
       style: '',
       weight: '500',
       fontFamily: 'sans-serif',
       fontSize: 20,
       text: loadingThing ? loadingThing : this.currentlyLoading
+    })
+
+    drawBox({
+      c: this.ctx,
+      x: (this.gameWidth)/2 - 75,
+      y: (this.gameHeight)/2 + 50,
+      width: 150,
+      height: 20,
+      fillColor: '#333',
+    })
+
+    drawBox({
+      c: this.ctx,
+      x: (this.gameWidth)/2 - 75,
+      y: (this.gameHeight)/2 + 50,
+      width: 150 * (percentage ? percentage : 0),
+      height: 20,
+      fillColor: '#fff',
     })
   }
 

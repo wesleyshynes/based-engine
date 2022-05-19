@@ -39,7 +39,7 @@ export class StartScreen extends BasedLevel {
     //   frame: 0,
     // })
 
-    this.gameRef.drawLoading('Music')
+    this.gameRef.drawLoading('Music', .5)
     this.bgSong =  await this.gameRef.soundPlayer.loadSound(BgMusic)
     this.activeSound.playing = false
   }

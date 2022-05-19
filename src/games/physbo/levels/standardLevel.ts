@@ -108,14 +108,18 @@ export class StandardLevel extends BasedLevel {
   gameState: string = 'playing'
 
   async preload() {
-    this.gameRef.drawLoading('Ball Noises')
+    this.gameRef.drawLoading('Pool Break', .1)
     this.ballHit = await this.gameRef.soundPlayer.loadSound(PoolBreak)
+    this.gameRef.drawLoading('Ball Noises', .2)
     this.ballsHiting = await this.gameRef.soundPlayer.loadSound(BallsHitting)
+    this.gameRef.drawLoading('Pocket Noises', .3)
     this.ballInPocket = await this.gameRef.soundPlayer.loadSound(BallInPocket)
+    this.gameRef.drawLoading('Rail Bounces', .4)
     this.ballRailBounce = await this.gameRef.soundPlayer.loadSound(BallRailBounce)
 
-    this.gameRef.drawLoading('Snazzy Music')
+    this.gameRef.drawLoading('Snazzy Music', .7)
     this.bgSong =  await this.gameRef.soundPlayer.loadSound(BgMusic)
+    this.gameRef.drawLoading('The Pool Hall', .9)
     this.loseSong =  await this.gameRef.soundPlayer.loadSound(LoseMusic)
     this.activeSound.playing = false
 
