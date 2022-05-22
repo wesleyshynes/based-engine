@@ -146,7 +146,7 @@ export class StandardLevel extends BasedLevel {
     this.gameState = 'playing'
 
     this.physics = Physics.Engine.create({
-      constraintIterations: 50
+      constraintIterations: 10
     })
     this.physics.world.gravity.y = 0
     // console.log(this.physics)
@@ -554,9 +554,10 @@ export class StandardLevel extends BasedLevel {
         const nv = normalizeVector({
           x: this.aimTarget.x - this.ballA.body.position.x,
           y: this.aimTarget.y - this.ballA.body.position.y
-        }, 40 * this.powerMeter.current/this.powerMeter.max)
-        // Physics.Body.applyForce(this.ballA.body, this.ballA.body.position, nv)
-        Physics.Body.setVelocity(this.ballA.body, nv)
+        }, .03 * this.powerMeter.current/this.powerMeter.max)
+        // }, 40 * this.powerMeter.current/this.powerMeter.max)
+        Physics.Body.applyForce(this.ballA.body, this.ballA.body.position, nv)
+        // Physics.Body.setVelocity(this.ballA.body, nv)
         this.gameRef.soundPlayer.playSound(this.ballHit)
         this.lastShot = this.gameRef.lastUpdate
         this.cameraFocus = 'cue'
@@ -598,12 +599,16 @@ export class StandardLevel extends BasedLevel {
       this.balls.map(x => {
         x.updateRollOffset()
       })
-      // this.lastPhysicsUpdate = this.gameRef.lastUpdate
+      this.lastPhysicsUpdate = this.gameRef.lastUpdate
     } else {
+      // console.log('not 60', Math.floor(this.gameRef.fps))
       if(this.gameRef.lastUpdate - this.lastPhysicsUpdate >= this.physicsRate ) {
         // Physics.Engine.update(this.physics, this.gameRef.updateDiff)
         Physics.Engine.update(this.physics, this.gameRef.lastUpdate - this.lastPhysicsUpdate)
         this.lastPhysicsUpdate = this.gameRef.lastUpdate
+        this.balls.map(x => {
+          x.updateRollOffset()
+        })
       }
     }
   }
@@ -803,9 +808,9 @@ export class StandardLevel extends BasedLevel {
       //   fontSize: 16,
       //   fontFamily: 'sans-serif',
       //   fillColor: '#fff',
-      //   text: `T: ${this.cameraFocus}`
+      //   // text: `T: ${this.cameraFocus}`
       //   // text: `T: ${Math.floor(this.gameRef.cameraPos.x)}, ${Math.floor(this.gameRef.cameraPos.y)}`
-      //   // text: `FPS: ${Math.round(this.gameRef.fps)}`
+      //   text: `FPS: ${Math.round(this.gameRef.fps)}`
       // })
       if(this.fastestBall) {
         drawText({
