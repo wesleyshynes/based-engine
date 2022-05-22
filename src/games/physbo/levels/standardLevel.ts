@@ -3,7 +3,7 @@ import Physics from 'matter-js';
 import PhysBox from "../entities/PhysBox";
 import PhysBall from "../entities/PhysBall";
 import { degToRad, normalizeVector, XYCoordinateType } from "../../../engine/libs/mathHelpers";
-import { drawBox, drawCircle, drawLine, drawText } from "../../../engine/libs/drawHelpers";
+import { createSprite, drawBox, drawCircle, drawImage, drawLine, drawText } from "../../../engine/libs/drawHelpers";
 import PhysPoly from "../entities/PhysPoly";
 import { boxCollision } from "../../../engine/libs/collisionHelpers";
 import PoolBreak from '../../../assets/pool/pool-break-1.mp3'
@@ -20,6 +20,8 @@ import { getTimeStamp } from "../../../engine/libs/interfaceHelpers";
 import { Ball_Layout_15, Ball_Layout_9, Standard_Bounce_Pads, Standard_Level, Standard_Pockets } from "../constants/levelConstants";
 import BgMusic from '../../../assets/pool/music/Twin-Musicom-64-Sundays.mp3'
 import LoseMusic from '../../../assets/pool/music/Monplaisir_-_12_-_Weird_serious_jingle_of_death.mp3'
+import FeltSpriteUrl from '../../../assets/pool/pool-felt.jpg'
+import TableTopSpriteUrl from '../../../assets/pool/table-top.png'
 import { SliderControl } from "../../../engine/controls/SliderControl";
 
 export class StandardLevel extends BasedLevel {
@@ -102,6 +104,10 @@ export class StandardLevel extends BasedLevel {
 
   textBox: any;
 
+  // GRAPHICS RELATED
+  poolFeltSprite: any;
+  tableTopSprite: any;
+
   // SCORE RELATED STUFF
   startTime: number = 0
   winTime: number = 0
@@ -117,39 +123,57 @@ export class StandardLevel extends BasedLevel {
     this.gameRef.drawLoading('Rail Bounces', .4)
     this.ballRailBounce = await this.gameRef.soundPlayer.loadSound(BallRailBounce)
 
-    this.gameRef.drawLoading('Snazzy Music', .7)
+    this.gameRef.drawLoading('Snazzy Music', .6)
     this.bgSong =  await this.gameRef.soundPlayer.loadSound(BgMusic)
-    this.gameRef.drawLoading('The Pool Hall', .9)
+    this.gameRef.drawLoading('The Pool Hall', .7)
     this.loseSong =  await this.gameRef.soundPlayer.loadSound(LoseMusic)
     this.activeSound.playing = false
 
+    this.gameRef.drawLoading('Turning on Lights', .8)
     // SETUP DIFFERENT SPRITES AND ADD THEM TO VARIABLES
-    // this.sprite = await createSprite({
-    //   c: this.gameRef.ctx,
-    //   sprite: MonkeySpriteUrl,
-    //   sx: 0,
-    //   sy: 0,
-    //   sWidth: 56,
-    //   sHeight: 56,
-    //   dx: 0,
-    //   dy: 0,
-    //   dWidth: 56,
-    //   dHeight: 56,
-    //   frame: 0,
-    //   lastUpdate: 0,
-    //   updateDiff: 1000 / 60 * 10
-    // })
+    this.poolFeltSprite = await createSprite({
+      c: this.gameRef.ctx,
+      sprite: FeltSpriteUrl,
+      sx: 0,
+      sy: 0,
+      sWidth: 800,
+      sHeight: 1000,
+      dx: 0,
+      dy: 0,
+      dWidth: 800,
+      dHeight: 1000,
+      frame: 0,
+      lastUpdate: 0,
+      updateDiff: 1000 / 60 * 10
+    })
+
+    this.gameRef.drawLoading('Racking Balls', .8)
+    this.tableTopSprite = await createSprite({
+      c: this.gameRef.ctx,
+      sprite: TableTopSpriteUrl,
+      sx: 0,
+      sy: 0,
+      sWidth: 800,
+      sHeight: 1000,
+      dx: 0,
+      dy: 0,
+      dWidth: 800,
+      dHeight: 1000,
+      frame: 0,
+      lastUpdate: 0,
+      updateDiff: 1000 / 60 * 10
+    })
 
   }
 
   initialize() {
     this.gameState = 'playing'
 
-    this.physics = Physics.Engine.create({
-      constraintIterations: 10
-    })
+    // this.physics = Physics.Engine.create({
+    //   constraintIterations: 10
+    // })
+    this.physics = Physics.Engine.create()
     this.physics.world.gravity.y = 0
-    // console.log(this.physics)
 
     this.bouncePads = Standard_Bounce_Pads.map((spec, idx) => {
       const tempPad = new PhysPoly({key: `bouncePad-${idx}`, gameRef: this.gameRef})
@@ -252,6 +276,11 @@ export class StandardLevel extends BasedLevel {
       tempBody.color = ballLayout[idx].color
       tempBody.ballType = ballLayout[idx].type
       // tempBody.color = `rgba(${idx/15 * 100 + 100},${200 - idx/15 * 100},${idx/15 * 100 + 100},1)`
+      console.log(tempBody.ballNumber)
+      console.log({
+        x: tempBody.x,
+        y: tempBody.y
+      })
       tempBody.onCollisionStart = (otherBody: any) => {
         if(otherBody.label === 'ball' || otherBody.label === 'cue') {
           if(Math.abs(otherBody.force.x) + Math.abs(otherBody.force.y) > .5) {
@@ -594,23 +623,21 @@ export class StandardLevel extends BasedLevel {
   }
 
   handlePhysics() {
-    if(this.gameRef.fps < 61) {
-      Physics.Engine.update(this.physics, this.gameRef.updateDiff)
-      this.balls.map(x => {
-        x.updateRollOffset()
-      })
-      this.lastPhysicsUpdate = this.gameRef.lastUpdate
-    } else {
-      // console.log('not 60', Math.floor(this.gameRef.fps))
-      if(this.gameRef.lastUpdate - this.lastPhysicsUpdate >= this.physicsRate ) {
-        // Physics.Engine.update(this.physics, this.gameRef.updateDiff)
+    // if(this.gameRef.fps < 61) {
+    //   Physics.Engine.update(this.physics, this.gameRef.updateDiff)
+    //   this.balls.map(x => {
+    //     x.updateRollOffset()
+    //   })
+    //   this.lastPhysicsUpdate = this.gameRef.lastUpdate
+    // } else {
+    //   if(this.gameRef.lastUpdate - this.lastPhysicsUpdate >= 61 ) {
         Physics.Engine.update(this.physics, this.gameRef.lastUpdate - this.lastPhysicsUpdate)
         this.lastPhysicsUpdate = this.gameRef.lastUpdate
         this.balls.map(x => {
           x.updateRollOffset()
         })
-      }
-    }
+      // }
+    // }
   }
 
   updateCamera() {
@@ -636,15 +663,25 @@ export class StandardLevel extends BasedLevel {
       x: this.gameRef.gameWidth/2 - (cameraTarget.x * this.gameRef.cameraZoom),
       y: this.gameRef.gameHeight/2 - (cameraTarget.y * this.gameRef.cameraZoom)
     }
+    // Camera X position
     if (this.gameRef.gameWidth < this.levelWidth * this.gameRef.cameraZoom) {
-      if (this.gameRef.cameraPos.x > 0) this.gameRef.cameraPos.x = 0
-      if (this.gameRef.cameraPos.x - this.gameRef.gameWidth < this.levelWidth * this.gameRef.cameraZoom * -1) this.gameRef.cameraPos.x = -(this.levelWidth * this.gameRef.cameraZoom - this.gameRef.gameWidth)
+      if (this.gameRef.cameraPos.x > 0){
+        this.gameRef.cameraPos.x = 0
+      }
+      if (this.gameRef.cameraPos.x - this.gameRef.gameWidth < this.levelWidth * this.gameRef.cameraZoom * -1) {
+        this.gameRef.cameraPos.x = -(this.levelWidth * this.gameRef.cameraZoom - this.gameRef.gameWidth)
+      }
     } else {
       this.gameRef.cameraPos.x = (this.gameRef.gameWidth - this.levelWidth * this.gameRef.cameraZoom) / 2
     }
+    // Camera Y Position
     if (this.gameRef.gameHeight < this.levelHeight * this.gameRef.cameraZoom) {
-      if (this.gameRef.cameraPos.y > 0) this.gameRef.cameraPos.y = 0
-      if (this.gameRef.cameraPos.y - this.gameRef.gameHeight < this.levelHeight * -1 * this.gameRef.cameraZoom) this.gameRef.cameraPos.y = -(this.levelHeight * this.gameRef.cameraZoom - this.gameRef.gameHeight)
+      if (this.gameRef.cameraPos.y > 0){
+        this.gameRef.cameraPos.y = 0
+      }
+      if (this.gameRef.cameraPos.y - this.gameRef.gameHeight < this.levelHeight * -1 * this.gameRef.cameraZoom){
+        this.gameRef.cameraPos.y = -(this.levelHeight * this.gameRef.cameraZoom - this.gameRef.gameHeight)
+      }
     } else {
       this.gameRef.cameraPos.y = (this.gameRef.gameHeight - this.levelHeight * this.gameRef.cameraZoom) / 2
     }
@@ -679,37 +716,45 @@ export class StandardLevel extends BasedLevel {
 
   drawLevel() {
 
-    drawBox({
-      c: this.gameRef.ctx,
-      x: 0 + this.gameRef.cameraPos.x,
-      y: 0 + this.gameRef.cameraPos.y,
-      width: this.levelBounds.w * this.gameRef.cameraZoom,
-      height: this.levelBounds.h * this.gameRef.cameraZoom,
-      fillColor: '#0c6640' // '#777'
+    // drawBox({
+    //   c: this.gameRef.ctx,
+    //   x: 0 + this.gameRef.cameraPos.x,
+    //   y: 0 + this.gameRef.cameraPos.y,
+    //   width: this.levelBounds.w * this.gameRef.cameraZoom,
+    //   height: this.levelBounds.h * this.gameRef.cameraZoom,
+    //   fillColor: '#0c6640' // '#777'
+    // })
+
+    drawImage({
+      ...this.poolFeltSprite,
+      dx: 0 + this.gameRef.cameraPos.x,
+      dy: 0 + this.gameRef.cameraPos.y,
+      dWidth: this.levelBounds.w * this.gameRef.cameraZoom,
+      dHeight: this.levelBounds.h * this.gameRef.cameraZoom
     })
 
-    this.level.forEach(b => {
-      b.draw()
-    })
+    // this.level.forEach(b => {
+    //   b.draw()
+    // })
 
-    this.levelDecor.forEach(b => {
-      drawBox({
-        c: this.gameRef.ctx,
-        x: b.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-        y: b.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-        width: b.w * this.gameRef.cameraZoom,
-        height: b.h * this.gameRef.cameraZoom,
-        fillColor: '#333'
-      })
-    })
+    // this.levelDecor.forEach(b => {
+    //   drawBox({
+    //     c: this.gameRef.ctx,
+    //     x: b.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+    //     y: b.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+    //     width: b.w * this.gameRef.cameraZoom,
+    //     height: b.h * this.gameRef.cameraZoom,
+    //     fillColor: '#333'
+    //   })
+    // })
 
     this.pockets.forEach(b => {
       b.draw()
     })
 
-    this.bouncePads.forEach(b => {
-      b.draw()
-    })
+    // this.bouncePads.forEach(b => {
+    //   b.draw()
+    // })
 
     if(this.ballA.active) {
       this.ballA.drawShadows()
@@ -723,6 +768,14 @@ export class StandardLevel extends BasedLevel {
       if(b.active){
         b.draw()
       }
+    })
+
+    drawImage({
+      ...this.tableTopSprite,
+      dx: 0 + this.gameRef.cameraPos.x,
+      dy: 0 + this.gameRef.cameraPos.y,
+      dWidth: this.levelBounds.w * this.gameRef.cameraZoom,
+      dHeight: this.levelBounds.h * this.gameRef.cameraZoom
     })
 
     if(this.aimTarget.active) {

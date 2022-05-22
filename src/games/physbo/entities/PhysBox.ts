@@ -49,8 +49,6 @@ export default class PhysBox extends BasedObject {
       c: this.gameRef.ctx,
       x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
       y: this.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-      // x: this.body.position.x + this.gameRef.cameraPos.x,
-      // y: this.body.position.y + this.gameRef.cameraPos.y,
       a: radToDeg(this.body.angle)
     }, () => {
 
@@ -61,7 +59,6 @@ export default class PhysBox extends BasedObject {
         width: this.width * this.gameRef.cameraZoom,
         height: this.height * this.gameRef.cameraZoom,
         fillColor: this.color,
-        // fillColor: 'red',
       })
     })
   }
