@@ -724,19 +724,11 @@ export class StandardLevel extends BasedLevel {
     //   height: this.levelBounds.h * this.gameRef.cameraZoom,
     //   fillColor: '#0c6640' // '#777'
     // })
-
-    drawImage({
-      ...this.poolFeltSprite,
-      dx: 0 + this.gameRef.cameraPos.x,
-      dy: 0 + this.gameRef.cameraPos.y,
-      dWidth: this.levelBounds.w * this.gameRef.cameraZoom,
-      dHeight: this.levelBounds.h * this.gameRef.cameraZoom
-    })
-
+    //
     // this.level.forEach(b => {
     //   b.draw()
     // })
-
+    //
     // this.levelDecor.forEach(b => {
     //   drawBox({
     //     c: this.gameRef.ctx,
@@ -748,13 +740,18 @@ export class StandardLevel extends BasedLevel {
     //   })
     // })
 
+    // Green Felt
+    drawImage({
+      ...this.poolFeltSprite,
+      dx: 0 + this.gameRef.cameraPos.x,
+      dy: 0 + this.gameRef.cameraPos.y,
+      dWidth: this.levelBounds.w * this.gameRef.cameraZoom,
+      dHeight: this.levelBounds.h * this.gameRef.cameraZoom
+    })
+
     this.pockets.forEach(b => {
       b.draw()
     })
-
-    // this.bouncePads.forEach(b => {
-    //   b.draw()
-    // })
 
     if(this.ballA.active) {
       this.ballA.drawShadows()
@@ -770,6 +767,11 @@ export class StandardLevel extends BasedLevel {
       }
     })
 
+    // this.bouncePads.forEach(b => {
+    //   b.draw()
+    // })
+
+    // TABLE TOP
     drawImage({
       ...this.tableTopSprite,
       dx: 0 + this.gameRef.cameraPos.x,
