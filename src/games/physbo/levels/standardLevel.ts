@@ -580,11 +580,11 @@ export class StandardLevel extends BasedLevel {
         this.lastShot = this.gameRef.lastUpdate
         this.phase = 'power'
       } else {
+        const forceAmount = .03
         const nv = normalizeVector({
           x: this.aimTarget.x - this.ballA.body.position.x,
           y: this.aimTarget.y - this.ballA.body.position.y
-        }, .03 * this.powerMeter.current/this.powerMeter.max)
-        // }, 40 * this.powerMeter.current/this.powerMeter.max)
+        }, forceAmount * this.powerMeter.current/this.powerMeter.max)
         Physics.Body.applyForce(this.ballA.body, this.ballA.body.position, nv)
         // Physics.Body.setVelocity(this.ballA.body, nv)
         this.gameRef.soundPlayer.playSound(this.ballHit)
@@ -623,21 +623,21 @@ export class StandardLevel extends BasedLevel {
   }
 
   handlePhysics() {
-    // if(this.gameRef.fps < 61) {
-    //   Physics.Engine.update(this.physics, this.gameRef.updateDiff)
-    //   this.balls.map(x => {
-    //     x.updateRollOffset()
-    //   })
-    //   this.lastPhysicsUpdate = this.gameRef.lastUpdate
-    // } else {
-    //   if(this.gameRef.lastUpdate - this.lastPhysicsUpdate >= 61 ) {
+    if(this.gameRef.fps < 90) {
+      Physics.Engine.update(this.physics, this.gameRef.updateDiff)
+      this.balls.map(x => {
+        x.updateRollOffset()
+      })
+      this.lastPhysicsUpdate = this.gameRef.lastUpdate
+    } else {
+      if(this.gameRef.lastUpdate - this.lastPhysicsUpdate >= this.physicsRate ) {
         Physics.Engine.update(this.physics, this.gameRef.lastUpdate - this.lastPhysicsUpdate)
         this.lastPhysicsUpdate = this.gameRef.lastUpdate
         this.balls.map(x => {
           x.updateRollOffset()
         })
-      // }
-    // }
+      }
+    }
   }
 
   updateCamera() {
@@ -853,18 +853,18 @@ export class StandardLevel extends BasedLevel {
         // text: `FPS: ${Math.round(this.gameRef.fps)}`
       })
       //
-      // drawText({
-      //   c: this.gameRef.ctx,
-      //   x: 30,
-      //   y: 100,
-      //   align: 'left',
-      //   fontSize: 16,
-      //   fontFamily: 'sans-serif',
-      //   fillColor: '#fff',
-      //   // text: `T: ${this.cameraFocus}`
-      //   // text: `T: ${Math.floor(this.gameRef.cameraPos.x)}, ${Math.floor(this.gameRef.cameraPos.y)}`
-      //   text: `FPS: ${Math.round(this.gameRef.fps)}`
-      // })
+      drawText({
+        c: this.gameRef.ctx,
+        x: 30,
+        y: 100,
+        align: 'left',
+        fontSize: 16,
+        fontFamily: 'sans-serif',
+        fillColor: '#fff',
+        // text: `T: ${this.cameraFocus}`
+        // text: `T: ${Math.floor(this.gameRef.cameraPos.x)}, ${Math.floor(this.gameRef.cameraPos.y)}`
+        text: `FPS: ${Math.round(this.gameRef.fps)}`
+      })
       if(this.fastestBall) {
         drawText({
           c: this.gameRef.ctx,
