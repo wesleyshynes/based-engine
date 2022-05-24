@@ -623,8 +623,10 @@ export class StandardLevel extends BasedLevel {
   }
 
   handlePhysics() {
-    if(this.gameRef.fps < 90) {
-      Physics.Engine.update(this.physics, this.gameRef.updateDiff)
+    if(this.gameRef.fps < 65) {
+      const tick = (this.physicsRate/this.gameRef.updateDiff) * this.gameRef.updateDiff
+      Physics.Engine.update(this.physics, tick)
+      // Physics.Engine.update(this.physics, this.gameRef.updateDiff)
       this.balls.map(x => {
         x.updateRollOffset()
       })
