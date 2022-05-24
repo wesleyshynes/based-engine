@@ -879,14 +879,27 @@ export class StandardLevel extends BasedLevel {
           text: `Balls in motion.`
           // text: `FPS: ${Math.round(this.gameRef.fps)}`
         })
-      } else if (!this.aimTarget.active) {
+      } else if (!this.aimTarget.active && this.gameRef.lastUpdate - 300 > this.lastShot) {
         drawText({
           c: this.gameRef.ctx,
-          x: this.gameRef.gameWidth/2,
-          y: this.gameRef.gameHeight - 30,
+          x: this.gameRef.gameWidth/2 + 1,
+          y: this.gameRef.gameHeight/2 + 1,
           align: 'center',
           fontSize: 24,
           fontFamily: 'sans-serif',
+          weight: 'bold',
+          fillColor: '#000',
+          text: `Take aim.`
+          // text: `FPS: ${Math.round(this.gameRef.fps)}`
+        })
+        drawText({
+          c: this.gameRef.ctx,
+          x: this.gameRef.gameWidth/2,
+          y: this.gameRef.gameHeight/2,
+          align: 'center',
+          fontSize: 24,
+          fontFamily: 'sans-serif',
+          weight: 'bold',
           fillColor: '#fff',
           text: `Take aim.`
           // text: `FPS: ${Math.round(this.gameRef.fps)}`
