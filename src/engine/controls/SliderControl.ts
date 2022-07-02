@@ -28,6 +28,10 @@ export class SliderControl extends BasedObject {
   tickAmount: number = 0.25;
   tickFunction: () => void = () => null
 
+  bgColor: string = 'rgba(255,255,255,0.5)'
+  btnColor: string = 'rgba(0,0,0,0.5)'
+  knobColor: string = 'rgba(0,0,0,0.5)'
+
   direction: 'horizontal' | 'vertical' = 'horizontal'
 
   async preload() { }
@@ -37,6 +41,7 @@ export class SliderControl extends BasedObject {
     this.increaseBtn.width = this.btnWidth
     this.increaseBtn.height = this.btnHeight
     this.increaseBtn.buttonText = '+'
+    this.increaseBtn.fillColor = this.btnColor
     this.increaseBtn.clickFunction = () => {
       this.tick(this.tickAmount)
     }
@@ -45,6 +50,7 @@ export class SliderControl extends BasedObject {
     this.decreaseBtn.width = this.btnWidth
     this.decreaseBtn.height = this.btnHeight
     this.decreaseBtn.buttonText = '-'
+    this.decreaseBtn.fillColor = this.btnColor
     this.decreaseBtn.clickFunction = () => {
       this.tick(-this.tickAmount)
     }
@@ -97,7 +103,7 @@ export class SliderControl extends BasedObject {
       y: this.y - this.height/2,
       width: this.width,
       height: this.height,
-      fillColor: 'white'
+      fillColor: this.bgColor
     })
 
     // knobby thing
@@ -108,7 +114,7 @@ export class SliderControl extends BasedObject {
         y: this.y - (this.knobOffSet/2) - this.height/2,
         width: this.knobThickness,
         height: this.height + this.knobOffSet,
-        fillColor: '#ccc'
+        fillColor: this.knobColor
       })
     } else {
       drawBox({
@@ -117,7 +123,7 @@ export class SliderControl extends BasedObject {
         y: this.y - ((this.value - this.minValue)/(this.maxValue - this.minValue) * this.height) - (this.knobThickness/2) + this.height/2,
         width: this.width + this.knobOffSet,
         height: this.knobThickness,
-        fillColor: '#ccc'
+        fillColor: this.knobColor
       })
     }
 

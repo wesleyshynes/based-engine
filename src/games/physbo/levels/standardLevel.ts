@@ -82,6 +82,13 @@ export class StandardLevel extends BasedLevel {
     y: 0
   }
 
+  cameraShake: XYCoordinateType = {
+    x: 0,
+    y: 0
+  }
+  shakeCount: number = 0
+  shakeAmount: number = 0
+
   lastCamMove: number = 0
   cameraFocus: any = 'cue'
   gameZoom: number = 1
@@ -100,7 +107,7 @@ export class StandardLevel extends BasedLevel {
 
   miniMapButton: any;
 
-  miniMapActive: boolean = false;
+  miniMapActive: boolean = true;
   // scaleFactor: number = 1;
 
   textBox: any;
@@ -114,6 +121,8 @@ export class StandardLevel extends BasedLevel {
   startTime: number = 0
   winTime: number = 0
   gameState: string = 'playing'
+
+  toastMessages: { text: string, duration: number }[] = []
 
   async preload() {
     this.gameRef.drawLoading('Pool Break', .1)
@@ -221,16 +230,21 @@ export class StandardLevel extends BasedLevel {
     this.ballA.color = 'white'
     this.ballA.onCollisionStart = (otherBody: any) => {
       if (otherBody.label === 'ball') {
-        if (Math.abs(otherBody.force.x) + Math.abs(otherBody.force.y) > .5) {
+        const hitForce = Math.abs(otherBody.angularVelocity)
+        if (hitForce > 0.03) {
+          this.shakeCamera()
+        }
+        if (hitForce > 0.004) {
           this.gameRef.soundPlayer.playSound(this.ballsHiting)
         }
+
       }
     }
     this.ballA.initialize()
     this.addToWorld(this.ballA.body)
 
     this.pockets = Standard_Pockets.map((spec, idx) => {
-      const tempPocket = new PhysBall({ key: `pocket${idx}`, gameRef: this.gameRef })
+      const tempPocket: PhysBall = new PhysBall({ key: `pocket${idx}`, gameRef: this.gameRef })
       tempPocket.x = spec.x
       tempPocket.y = spec.y
       tempPocket.radius = this.pocketSize - 10
@@ -239,8 +253,10 @@ export class StandardLevel extends BasedLevel {
       tempPocket.onCollisionStart = (otherBody: any) => {
         console.log(otherBody)
         if (otherBody.label === 'ball') {
+          this.addToast('Ball Sunk!')
           this.gameRef.soundPlayer.playSound(this.ballInPocket)
           Physics.Body.setVelocity(otherBody, { x: 0, y: 0 })
+          this.shakeCamera()
           this.removeFromWorld(otherBody)
           this.balls.forEach(ball => {
             if (ball.body.id === otherBody.id) {
@@ -254,14 +270,16 @@ export class StandardLevel extends BasedLevel {
           this.removeFromWorld(otherBody)
           Physics.Body.setPosition(otherBody, { x: 400, y: 700 })
           Physics.Body.setVelocity(otherBody, { x: 0, y: 0 })
+          this.shakeCamera()
           this.cameraFocus = 'cue'
-          if (this.textBox) {
-            this.textBox.setText('You Scratched!')
-            this.textBox.closeFunction = () => {
-              this.lastShot = this.gameRef.lastUpdate
-            }
-            this.textBox.active = true
-          }
+          // if (this.textBox) {
+          //   this.textBox.setText('You Scratched!')
+          //   this.textBox.closeFunction = () => {
+          //     this.lastShot = this.gameRef.lastUpdate
+          //   }
+          //   this.textBox.active = true
+          // }
+          this.addToast('Scratched!')
         }
       }
       tempPocket.bodyOptions = { label: 'hole', isStatic: true, isSensor: true }
@@ -286,7 +304,7 @@ export class StandardLevel extends BasedLevel {
 
     const ballLayout = this.gameRef.basedObjectRefs.gameOptions.mode === 'standard' ? Ball_Layout_15 : Ball_Layout_9
     this.balls = (new Array(ballLayout.length)).fill(0).map((x, idx) => {
-      const tempBody = new BilliardBall({ key: `ball-${idx}`, gameRef: this.gameRef })
+      const tempBody: BilliardBall = new BilliardBall({ key: `ball-${idx}`, gameRef: this.gameRef })
       tempBody.ballNumber = `${ballLayout[idx].number}`
       tempBody.radius = this.ballSize
       tempBody.x = 340 + (this.ballSize * 2) * (ballLayout[idx].x) + this.ballSize * (ballLayout[idx].y % 2)
@@ -294,14 +312,13 @@ export class StandardLevel extends BasedLevel {
       tempBody.color = ballLayout[idx].color
       tempBody.ballType = ballLayout[idx].type
       // tempBody.color = `rgba(${idx/15 * 100 + 100},${200 - idx/15 * 100},${idx/15 * 100 + 100},1)`
-      console.log(tempBody.ballNumber)
-      console.log({
-        x: tempBody.x,
-        y: tempBody.y
-      })
       tempBody.onCollisionStart = (otherBody: any) => {
         if (otherBody.label === 'ball' || otherBody.label === 'cue') {
-          if (Math.abs(otherBody.force.x) + Math.abs(otherBody.force.y) > .5) {
+          const hitForce = Math.abs(otherBody.angularVelocity)
+          if (hitForce > 0.03) {
+            this.shakeCamera()
+          }
+          if (hitForce > 0.004) {
             this.gameRef.soundPlayer.playSound(this.ballsHiting)
           }
         }
@@ -348,19 +365,19 @@ export class StandardLevel extends BasedLevel {
     }
 
     this.miniMapButton = new BasedButton({ key: 'mini-map-button', gameRef: this.gameRef })
-    this.miniMapButton.fillColor = 'red'
+    this.miniMapButton.fillColor = 'rgba(0,0,0,0.5)'
     this.miniMapButton.hoverColor = 'black'
     this.miniMapButton.textColor = 'white'
-    this.miniMapButton.buttonText = 'TABLE'
-    this.miniMapButton.height = 40
-    this.miniMapButton.width = 60
-    this.miniMapButton.x = this.gameRef.gameWidth - 80
+    this.miniMapButton.buttonText = 'Zoom In'
+    this.miniMapButton.height = 25
+    this.miniMapButton.width = 105
+    this.miniMapButton.x = this.gameRef.gameWidth - 125
     this.miniMapButton.y = 20
     this.miniMapButton.clickFunction = () => {
       this.miniMapActive = !this.miniMapActive
       this.lastShot = this.gameRef.lastUpdate
       if (!this.miniMapActive) {
-        this.miniMapButton.buttonText = 'TABLE'
+        this.miniMapButton.buttonText = 'View Table'
         if (this.aimTarget.active) {
           this.freeCam.x = this.aimTarget.x
           this.freeCam.y = this.aimTarget.y
@@ -369,17 +386,18 @@ export class StandardLevel extends BasedLevel {
           this.cameraFocus = 'cue'
         }
       } else {
-        this.miniMapButton.buttonText = 'ZOOM'
+        this.miniMapButton.buttonText = 'Zoom In'
       }
     }
 
     this.sliderControl = new SliderControl({ key: 'slider-control', gameRef: this.gameRef })
     this.sliderControl.direction = 'vertical'
-    this.sliderControl.width = 30
+    this.sliderControl.width = 10
     this.sliderControl.height = 100
-    this.sliderControl.btnWidth = 30
-    this.sliderControl.btnHeight = 30
-    this.sliderControl.x = this.gameRef.gameWidth - 45
+    this.sliderControl.btnWidth = 10
+    this.sliderControl.btnHeight = 10
+    this.sliderControl.btnColor = 'rgb(0,0,0,0)'
+    this.sliderControl.x = this.gameRef.gameWidth - 20
     this.sliderControl.y = this.gameRef.gameHeight / 2
     this.sliderControl.tickFunction = () => {
       this.lastShot = this.gameRef.lastUpdate
@@ -399,7 +417,9 @@ export class StandardLevel extends BasedLevel {
 
     this.powerMeter = new PowerBar({ key: 'power-meter', gameRef: this.gameRef })
     this.powerMeter.x = this.gameRef.gameWidth / 2
-    this.powerMeter.y = 50;
+    this.powerMeter.y = 37.5;
+    this.powerMeter.height = 10;
+
 
     this.lastShot = this.gameRef.lastUpdate
     this.phase = 'aim'
@@ -434,14 +454,15 @@ export class StandardLevel extends BasedLevel {
       Physics.Body.setVelocity(this.ballA.body, { x: 0, y: 0 })
     }
     this.activeBalls = 0
-    this.fastestBall = this.ballA.active && this.ballA.body.angularVelocity > 0.001 ? this.ballA : null
+    this.fastestBall = this.ballA.active && Math.abs(this.ballA.body.angularVelocity) > 0.001 ? this.ballA : null
     let eightBallSunk = false
     this.balls.map(x => {
       if (x.active) {
         this.activeBalls++
-        if (!this.fastestBall && x.body.angularVelocity > 0.001) {
+        const ballSpeed = Math.abs(x.body.angularVelocity)
+        if (!this.fastestBall && ballSpeed > 0.001) {
           this.fastestBall = x
-        } else if (this.fastestBall && x.body.angularVelocity > this.fastestBall.angularVelocity) {
+        } else if (this.fastestBall && ballSpeed > Math.abs(this.fastestBall.angularVelocity)) {
           this.fastestBall = x
         }
       } else if (x.ballNumber === '8') {
@@ -509,7 +530,7 @@ export class StandardLevel extends BasedLevel {
 
     if (!this.activeAim) {
       this.shootButton.update()
-      this.moveKnob.update()
+      // this.moveKnob.update()
       this.miniMapButton.update()
       this.sliderControl.update()
     }
@@ -610,6 +631,7 @@ export class StandardLevel extends BasedLevel {
         this.cameraFocus = 'cue'
         this.aimTarget.clearTarget()
         this.phase = 'aim'
+        this.shakeCamera(100)
       }
     }
   }
@@ -628,6 +650,7 @@ export class StandardLevel extends BasedLevel {
     this.handlePhysics()
     this.updateCamera()
     this.checkGame()
+    this.handleToasts()
   }
 
   handleSounds() {
@@ -660,7 +683,49 @@ export class StandardLevel extends BasedLevel {
     }
   }
 
+  addToast(text: string, duration: number = 2000) {
+    this.toastMessages.push({
+      text: text,
+      duration: duration,
+    })
+  }
+
+  handleToasts() {
+    if (this.toastMessages.length > 0) {
+      this.toastMessages = this.toastMessages.map(x => {
+        return {
+          ...x,
+          duration: x.duration - this.gameRef.updateDiff
+        }
+      }).filter(x => {
+        return x.duration > 0
+      })
+    }
+  }
+
+  shakeCamera(amount: number = 50) {
+    this.shakeCount = amount
+  }
+
+  handleCameraShake() {
+    if (this.shakeCount <= 0) {
+      this.cameraShake.x = 0
+      this.cameraShake.y = 0
+      this.shakeCount = 0
+    } else {
+      this.cameraShake.x = this.cameraShake.x ? -this.cameraShake.x : 2
+      this.cameraShake.y = this.cameraShake.y ? -this.cameraShake.y : 2
+      this.shakeCamera(this.shakeCount - this.gameRef.updateDiff)
+    }
+  }
+
   updateCamera() {
+
+    this.handleCameraShake()
+    const camShakeAmount = {
+      x: this.shakeCount ? this.cameraShake.x : 0,
+      y: this.shakeCount ? this.cameraShake.y : 0
+    }
 
     if (this.miniMapActive || !this.ballA.active) {
       if (this.gameRef.gameWidth > this.gameRef.gameHeight) {
@@ -669,8 +734,8 @@ export class StandardLevel extends BasedLevel {
         this.gameRef.cameraZoom = this.gameRef.gameWidth / this.levelBounds.w
       }
       this.gameRef.cameraPos = {
-        x: this.gameRef.gameWidth / 2 - (this.levelBounds.w / 2 * this.gameRef.cameraZoom),
-        y: this.gameRef.gameHeight / 2 - (this.levelBounds.h / 2 * this.gameRef.cameraZoom)
+        x: this.gameRef.gameWidth / 2 - (this.levelBounds.w / 2 * this.gameRef.cameraZoom) + camShakeAmount.x,
+        y: this.gameRef.gameHeight / 2 - (this.levelBounds.h / 2 * this.gameRef.cameraZoom) + camShakeAmount.y
       }
       return
     }
@@ -705,18 +770,20 @@ export class StandardLevel extends BasedLevel {
     } else {
       this.gameRef.cameraPos.y = (this.gameRef.gameHeight - this.levelHeight * this.gameRef.cameraZoom) / 2
     }
+    this.gameRef.cameraPos.x += camShakeAmount.x
+    this.gameRef.cameraPos.y += camShakeAmount.y
   }
 
   positionKnobs() {
     this.shootButton.y = this.gameRef.gameHeight - 80
 
-    this.miniMapButton.x = this.gameRef.gameWidth - 80
+    this.miniMapButton.x = this.gameRef.gameWidth - 125
 
     this.moveKnob.width = this.moveKnob.width > this.gameRef.gameWidth / 2 ? this.gameRef.gameWidth / 2 - 5 : this.moveKnob.width
     this.moveKnob.x = this.gameRef.gameWidth - this.moveKnob.width
     this.moveKnob.y = this.gameRef.gameHeight - this.moveKnob.height
 
-    this.sliderControl.x = this.gameRef.gameWidth - 45
+    this.sliderControl.x = this.gameRef.gameWidth - 30
     this.sliderControl.y = this.gameRef.gameHeight / 2
     this.sliderControl.onResize()
   }
@@ -821,7 +888,7 @@ export class StandardLevel extends BasedLevel {
         const powerOffsetDistance = 60 * powerOffset
         drawImage({
           ...this.poolStickSprite,
-          dx: (-25 * this.gameRef.cameraZoom)/2,
+          dx: (-25 * this.gameRef.cameraZoom) / 2,
           dy: (20 + powerOffsetDistance) * this.gameRef.cameraZoom,
           dWidth: 25 * this.gameRef.cameraZoom,
           dHeight: 450 * this.gameRef.cameraZoom
@@ -843,7 +910,7 @@ export class StandardLevel extends BasedLevel {
 
   drawInterface() {
     if (!this.activeAim && !this.miniMapActive) {
-      this.moveKnob.draw()
+      // this.moveKnob.draw()
       this.sliderControl.draw()
     }
     if (!this.activeAim) {
@@ -857,20 +924,20 @@ export class StandardLevel extends BasedLevel {
     } else {
       drawText({
         c: this.gameRef.ctx,
-        x: 30,
-        y: 40,
+        x: 20,
+        y: 30,
         // y: this.gameRef.gameHeight - 80,
         align: 'left',
         fontSize: 16,
         fontFamily: 'sans-serif',
         fillColor: '#fff',
-        text: `BALLS LEFT: ${this.activeBalls}`
+        text: `BALLS: ${this.activeBalls}`
       })
 
       drawText({
         c: this.gameRef.ctx,
-        x: 30,
-        y: 60,
+        x: 20,
+        y: 50,
         // y: this.gameRef.gameHeight - 80,
         align: 'left',
         fontSize: 16,
@@ -880,47 +947,48 @@ export class StandardLevel extends BasedLevel {
       })
 
       // const cameraTarget = this.cameraFocus === 'cue' ? this.ballA.body.position : this.freeCam
-      drawText({
-        c: this.gameRef.ctx,
-        x: 30,
-        y: 80,
-        align: 'left',
-        fontSize: 16,
-        fontFamily: 'sans-serif',
-        fillColor: '#fff',
-        text: `T: ${this.fastestBall ? this.fastestBall.body.angularVelocity : 'none'}`
-        // text: `FPS: ${Math.round(this.gameRef.fps)}`
-      })
-      //
-      drawText({
-        c: this.gameRef.ctx,
-        x: 30,
-        y: 100,
-        align: 'left',
-        fontSize: 16,
-        fontFamily: 'sans-serif',
-        fillColor: '#fff',
-        // text: `T: ${this.cameraFocus}`
-        // text: `T: ${Math.floor(this.gameRef.cameraPos.x)}, ${Math.floor(this.gameRef.cameraPos.y)}`
-        text: `FPS: ${Math.round(this.gameRef.fps)}`
-      })
+      // drawText({
+      //   c: this.gameRef.ctx,
+      //   x: 30,
+      //   y: 80,
+      //   align: 'left',
+      //   fontSize: 16,
+      //   fontFamily: 'sans-serif',
+      //   fillColor: '#fff',
+      //   text: `T: ${this.fastestBall ? this.fastestBall.body.angularVelocity : 'none'}`
+      //   // text: `FPS: ${Math.round(this.gameRef.fps)}`
+      // })
+      // //
+      // drawText({
+      //   c: this.gameRef.ctx,
+      //   x: 30,
+      //   y: 100,
+      //   align: 'left',
+      //   fontSize: 16,
+      //   fontFamily: 'sans-serif',
+      //   fillColor: '#fff',
+      //   // text: `T: ${this.cameraFocus}`
+      //   // text: `T: ${Math.floor(this.gameRef.cameraPos.x)}, ${Math.floor(this.gameRef.cameraPos.y)}`
+      //   text: `FPS: ${Math.round(this.gameRef.fps)}`
+      // })
+
       if (this.fastestBall) {
         drawText({
           c: this.gameRef.ctx,
           x: this.gameRef.gameWidth / 2,
-          y: this.gameRef.gameHeight - 30,
+          y: this.gameRef.gameHeight / 2 + 50,
           align: 'center',
-          fontSize: 24,
+          fontSize: 16,
           fontFamily: 'sans-serif',
-          fillColor: '#fff',
-          text: `Balls in motion.`
+          fillColor: 'rgba(255,255,255, 0.5)',
+          text: `Balls in motion...`
           // text: `FPS: ${Math.round(this.gameRef.fps)}`
         })
       } else if (!this.aimTarget.active && this.gameRef.lastUpdate - 300 > this.lastShot) {
         drawText({
           c: this.gameRef.ctx,
           x: this.gameRef.gameWidth / 2 + 1,
-          y: this.gameRef.gameHeight / 2 + 1,
+          y: this.gameRef.gameHeight / 2 + 1 + 50,
           align: 'center',
           fontSize: 24,
           fontFamily: 'sans-serif',
@@ -932,7 +1000,7 @@ export class StandardLevel extends BasedLevel {
         drawText({
           c: this.gameRef.ctx,
           x: this.gameRef.gameWidth / 2,
-          y: this.gameRef.gameHeight / 2,
+          y: this.gameRef.gameHeight / 2 + 50,
           align: 'center',
           fontSize: 24,
           fontFamily: 'sans-serif',
@@ -944,6 +1012,34 @@ export class StandardLevel extends BasedLevel {
       }
     }
 
+    if (this.toastMessages.length) {
+      this.toastMessages.forEach((toast, idx) => {
+        const toastOpacity = toast.duration > 1000 ? 1 : toast.duration / 1000
+        const toastOffset = toast.duration > 1000 ? 0 : ((1000 - toast.duration) / 1000) * 24
+        drawText({
+          c: this.gameRef.ctx,
+          x: this.gameRef.gameWidth / 2 + 1,
+          y: 200 + (idx * 24) + 1 - toastOffset,
+          align: 'center',
+          fontSize: 24,
+          fontFamily: 'sans-serif',
+          weight: 'bold',
+          fillColor: `rgba(0,0,0,${toastOpacity})`,
+          text: toast.text
+        })
+        drawText({
+          c: this.gameRef.ctx,
+          x: this.gameRef.gameWidth / 2,
+          y: 200 + (idx * 24) - toastOffset,
+          align: 'center',
+          fontSize: 24,
+          fontFamily: 'sans-serif',
+          weight: 'bold',
+          fillColor: `rgba(255,255,255,${toastOpacity})`,
+          text: toast.text
+        })
+      })
+    }
     this.textBox.draw()
   }
 

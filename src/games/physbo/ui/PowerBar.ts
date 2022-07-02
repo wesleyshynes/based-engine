@@ -13,6 +13,8 @@ export class PowerBar extends BasedObject {
 
   lastTick: number = 0
   tickSize: number = 20
+  bgColor: string = "rgba(0,0,0,0.5)"
+  fillColors: string[] = ['green', 'yellow', 'orange', 'red']
 
   tick(amount: number, force: boolean = false) {
     if(force || this.gameRef.lastUpdate > this.lastTick + this.tickSize) {
@@ -34,11 +36,12 @@ export class PowerBar extends BasedObject {
       y: this.y - this.height + this.yOffset,
       width: this.width,
       height: this.height,
-      fillColor: 'white'
+      fillColor: this.bgColor
     })
 
     if(this.current > 0){
       const p = this.current/this.max
+      const fillAmount = Math.round(p * this.fillColors.length)
       drawBox({
         c: this.gameRef.ctx,
         // x: this.gameRef.cameraPos.x + this.x - this.width/2 + this.xOffset,
@@ -48,7 +51,7 @@ export class PowerBar extends BasedObject {
         width: this.width * this.current/this.max,
         height: this.height,
         // fillColor: 'red'
-        fillColor: p < .5 ? 'red' : p < .8 ? 'orange' : 'green'
+        fillColor: fillAmount === this.fillColors.length ? this.fillColors[this.fillColors.length-1] : this.fillColors[fillAmount]
       })
     }
   }
