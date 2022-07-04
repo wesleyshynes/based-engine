@@ -15,6 +15,7 @@
     overflow-y: hidden;
     flex-direction: column;
     font-family: sans-serif;
+    user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
 
@@ -24,6 +25,7 @@
       margin-bottom: 20px;
       max-width: 300px;
       color: white;
+      user-select: none;
       -webkit-user-select: none;
       -moz-user-select: none;
 
@@ -31,6 +33,7 @@
         font-size: 2em;
         font-weight: bold;
         line-height: 2em;
+        user-select: none;
         -webkit-user-select: none;
         -moz-user-select: none;
 
@@ -38,6 +41,7 @@
       p {
         line-height: 1.4em;
         font-size: 1em;
+        user-select: none;
         -webkit-user-select: none;
         -moz-user-select: none;
 
@@ -46,12 +50,17 @@
 
     #start-game {
       padding: 10px 20px;
-      background: #eee;
+      background: red;
       border: 1px solid #333;
       font-size: 1em;
+      color: white;
+      user-select: none;
       -webkit-user-select: none;
       -moz-user-select: none;
-
+      cursor: pointer;
+      &:hover {
+        background: orange;
+      }
     }
 
     canvas {
@@ -68,7 +77,8 @@
 
 body {
   overflow-y: hidden;
-  background: #333;
+  background: #0B0A09;
+  user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
 }

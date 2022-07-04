@@ -83,15 +83,15 @@ export class SliderControl extends BasedObject {
   positionButtons() {
     if(this.direction === 'horizontal') {
       this.increaseBtn.x = this.x + this.width/2 + this.btnOffset
-      this.increaseBtn.y = this.y - this.height/2
+      this.increaseBtn.y = this.y - (this.btnHeight/2)
 
-      this.decreaseBtn.x = this.x - this.width/2 - this.decreaseBtn.width - this.btnOffset
-      this.decreaseBtn.y = this.y - this.height/2
+      this.decreaseBtn.x = this.x - this.width/2 - this.btnHeight - this.btnOffset
+      this.decreaseBtn.y = this.y - (this.btnHeight/2)
     } else {
-      this.increaseBtn.x = this.x - this.width/2
-      this.increaseBtn.y = this.y - this.height/2 - this.increaseBtn.height - this.btnOffset
+      this.increaseBtn.x = this.x - (this.btnWidth/2)
+      this.increaseBtn.y = this.y - this.height/2 - this.btnHeight - this.btnOffset
 
-      this.decreaseBtn.x = this.x - this.width/2
+      this.decreaseBtn.x = this.x - (this.btnWidth/2)
       this.decreaseBtn.y = this.y + this.height/2 + this.btnOffset
     }
   }

@@ -29,6 +29,7 @@ export class StandardLevel extends BasedLevel {
   physics: any
   level: any[] = [];
   levelColor = '#402118'//'#222'
+  // levelColor = '#402118'//'#222'
   levelDecor: any[] = [
     { x: 80, y: 80, w: 640, h: 25, c: this.levelColor },
     { x: 80, y: 80, w: 25, h: 840, c: this.levelColor },
@@ -70,24 +71,10 @@ export class StandardLevel extends BasedLevel {
   levelWidth: number = 800
   levelHeight: number = 1000
 
-  levelBounds: any = {
-    x: 0,
-    y: 0,
-    w: 800,
-    h: 1000
-  }
-
   freeCam: XYCoordinateType = {
     x: 0,
     y: 0
   }
-
-  cameraShake: XYCoordinateType = {
-    x: 0,
-    y: 0
-  }
-  shakeCount: number = 0
-  shakeAmount: number = 0
 
   lastCamMove: number = 0
   cameraFocus: any = 'cue'
@@ -232,7 +219,7 @@ export class StandardLevel extends BasedLevel {
       if (otherBody.label === 'ball') {
         const hitForce = Math.abs(otherBody.angularVelocity)
         if (hitForce > 0.03) {
-          this.shakeCamera()
+          this.gameRef.shakeCamera()
         }
         if (hitForce > 0.004) {
           this.gameRef.soundPlayer.playSound(this.ballsHiting)
@@ -256,7 +243,7 @@ export class StandardLevel extends BasedLevel {
           this.addToast('Ball Sunk!')
           this.gameRef.soundPlayer.playSound(this.ballInPocket)
           Physics.Body.setVelocity(otherBody, { x: 0, y: 0 })
-          this.shakeCamera()
+          this.gameRef.shakeCamera()
           this.removeFromWorld(otherBody)
           this.balls.forEach(ball => {
             if (ball.body.id === otherBody.id) {
@@ -270,7 +257,7 @@ export class StandardLevel extends BasedLevel {
           this.removeFromWorld(otherBody)
           Physics.Body.setPosition(otherBody, { x: 400, y: 700 })
           Physics.Body.setVelocity(otherBody, { x: 0, y: 0 })
-          this.shakeCamera()
+          this.gameRef.shakeCamera()
           this.cameraFocus = 'cue'
           // if (this.textBox) {
           //   this.textBox.setText('You Scratched!')
@@ -290,7 +277,7 @@ export class StandardLevel extends BasedLevel {
     })
 
     this.level = Standard_Level.map((spec, idx) => {
-      const tempBody = new PhysBox({ key: `box${idx}`, gameRef: this.gameRef })
+      const tempBody: PhysBox = new PhysBox({ key: `box${idx}`, gameRef: this.gameRef })
       tempBody.x = spec.x
       tempBody.y = spec.y
       tempBody.width = spec.w
@@ -316,7 +303,7 @@ export class StandardLevel extends BasedLevel {
         if (otherBody.label === 'ball' || otherBody.label === 'cue') {
           const hitForce = Math.abs(otherBody.angularVelocity)
           if (hitForce > 0.03) {
-            this.shakeCamera()
+            this.gameRef.shakeCamera()
           }
           if (hitForce > 0.004) {
             this.gameRef.soundPlayer.playSound(this.ballsHiting)
@@ -350,13 +337,27 @@ export class StandardLevel extends BasedLevel {
       gameRef: this.gameRef,
     })
     this.shootButton.fillColor = 'red'
-    this.shootButton.hoverColor = 'black'
+    this.shootButton.hoverColor = '#473B2D'
+    this.shootButton.focusColor = '#FFA500'
     this.shootButton.textColor = 'white'
     this.shootButton.buttonText = 'SHOOT'
     this.shootButton.height = 50
     this.shootButton.width = 80
     this.shootButton.x = 30
     this.shootButton.y = this.gameRef.gameHeight - 80
+    this.shootButton.enableFillColorTransition = true
+    this.shootButton.fillColorStart = {
+      r: 255,
+      g: 0,
+      b: 0,
+      a: 1
+    }
+    this.shootButton.fillColorEnd = {
+      r: 255,
+      g: 165,
+      b: 0,
+      a: 1
+    }
     this.shootButton.clickFunction = () => {
       this.shootBall()
     }
@@ -394,8 +395,8 @@ export class StandardLevel extends BasedLevel {
     this.sliderControl.direction = 'vertical'
     this.sliderControl.width = 10
     this.sliderControl.height = 100
-    this.sliderControl.btnWidth = 10
-    this.sliderControl.btnHeight = 10
+    this.sliderControl.btnWidth = 25
+    this.sliderControl.btnHeight = 25
     this.sliderControl.btnColor = 'rgb(0,0,0,0)'
     this.sliderControl.x = this.gameRef.gameWidth - 20
     this.sliderControl.y = this.gameRef.gameHeight / 2
@@ -410,6 +411,7 @@ export class StandardLevel extends BasedLevel {
     this.positionKnobs()
 
     this.aimTarget = new ShotTarget({ key: 'aim-target', gameRef: this.gameRef })
+    this.aimTarget.aimBase = this.ballA.body.position
 
     this.freeCam.x = this.balls[this.balls.length - 1].body.position.x
     this.freeCam.y = this.balls[this.balls.length - 1].body.position.y
@@ -425,15 +427,22 @@ export class StandardLevel extends BasedLevel {
     this.phase = 'aim'
 
     this.textBox = new TextContainer({ key: 'text-container', gameRef: this.gameRef })
-    this.textBox.setText('Sally sells seashells by the seashore, she also likes superlongwordthatshouldbebrokenupbecauseitiswaytoolongtofitononeline to go out whoring at night')
+    this.textBox.setText('Click any where on the field to aim. Click and hold shoot button to charge. Release when the power gauge is at desired strength.')
     this.textBox.y = 80
     this.textBox.x = 80
-    this.textBox.active = false
-    this.textBox.closeFunction = () => { }
+    this.textBox.active = true
+    this.textBox.closeFunction = () => {
+      this.lastShot = this.gameRef.lastUpdate
+    }
     this.textBox.fontFillColor = 'white'
     this.textBox.fontStrokeColor = 'black'
-    this.textBox.containerFillColor = 'black'
-    this.textBox.containerBorderColor = 'black'
+    this.textBox.containerFillColor = 'rgba(0,0,0,0.7)'
+    this.textBox.containerBorderColor = 'rgba(0,0,0,0.7)'
+    this.textBox.closeButtonFillColor = 'red'
+    this.textBox.closeButtonFocusColor = '#FFA500'
+    this.textBox.closeButtonHoverColor = '#FFA500'
+    this.textBox.closeButtonWidth = 80
+    this.textBox.closeButtonHeight = 40
     this.textBox.initialize()
 
     // SCORE INITIALIZATION
@@ -448,7 +457,14 @@ export class StandardLevel extends BasedLevel {
       w: this.ballSize * 2,
       h: this.ballSize * 2
     }
-    if (!boxCollision(cueBox, this.levelBounds)) {
+    const levelBounds = {
+      x: 0,
+      y: 0,
+      w: this.levelWidth,
+      h: this.levelHeight
+    }
+
+    if (!boxCollision(cueBox, levelBounds)) {
       console.log(this.ballA.body)
       Physics.Body.setPosition(this.ballA.body, { x: 400, y: 700 })
       Physics.Body.setVelocity(this.ballA.body, { x: 0, y: 0 })
@@ -567,7 +583,6 @@ export class StandardLevel extends BasedLevel {
       if (this.gameRef.mouseInfo.y > this.gameRef.gameHeight - 40) {
         moveY += speedFactor
       }
-      // }
 
       this.activeAim = true
     } else {
@@ -631,7 +646,7 @@ export class StandardLevel extends BasedLevel {
         this.cameraFocus = 'cue'
         this.aimTarget.clearTarget()
         this.phase = 'aim'
-        this.shakeCamera(100)
+        this.gameRef.shakeCamera(100)
       }
     }
   }
@@ -667,7 +682,6 @@ export class StandardLevel extends BasedLevel {
     if (this.gameRef.fps < 65) {
       const tick = (this.physicsRate / this.gameRef.updateDiff) * this.gameRef.updateDiff
       Physics.Engine.update(this.physics, tick)
-      // Physics.Engine.update(this.physics, this.gameRef.updateDiff)
       this.balls.map(x => {
         x.updateRollOffset()
       })
@@ -703,75 +717,26 @@ export class StandardLevel extends BasedLevel {
     }
   }
 
-  shakeCamera(amount: number = 50) {
-    this.shakeCount = amount
-  }
-
-  handleCameraShake() {
-    if (this.shakeCount <= 0) {
-      this.cameraShake.x = 0
-      this.cameraShake.y = 0
-      this.shakeCount = 0
-    } else {
-      this.cameraShake.x = this.cameraShake.x ? -this.cameraShake.x : 2
-      this.cameraShake.y = this.cameraShake.y ? -this.cameraShake.y : 2
-      this.shakeCamera(this.shakeCount - this.gameRef.updateDiff)
-    }
-  }
-
   updateCamera() {
-
-    this.handleCameraShake()
-    const camShakeAmount = {
-      x: this.shakeCount ? this.cameraShake.x : 0,
-      y: this.shakeCount ? this.cameraShake.y : 0
-    }
+    this.gameRef.handleCameraShake()
 
     if (this.miniMapActive || !this.ballA.active) {
       if (this.gameRef.gameWidth > this.gameRef.gameHeight) {
-        this.gameRef.cameraZoom = this.gameRef.gameHeight / this.levelBounds.h
+        this.gameRef.cameraZoom = this.gameRef.gameHeight / this.levelHeight
       } else {
-        this.gameRef.cameraZoom = this.gameRef.gameWidth / this.levelBounds.w
+        this.gameRef.cameraZoom = this.gameRef.gameWidth / this.levelWidth
       }
-      this.gameRef.cameraPos = {
-        x: this.gameRef.gameWidth / 2 - (this.levelBounds.w / 2 * this.gameRef.cameraZoom) + camShakeAmount.x,
-        y: this.gameRef.gameHeight / 2 - (this.levelBounds.h / 2 * this.gameRef.cameraZoom) + camShakeAmount.y
-      }
+      this.gameRef.updateCamera({
+        x: this.levelWidth / 2,
+        y: this.levelHeight / 2
+      }, false)
       return
     }
 
     this.gameRef.cameraZoom = this.sliderControl.value
     // this.gameRef.cameraZoom = this.gameZoom
-
     const cameraTarget = this.cameraFocus === 'cue' ? this.ballA.body.position : this.freeCam
-    this.gameRef.cameraPos = {
-      x: this.gameRef.gameWidth / 2 - (cameraTarget.x * this.gameRef.cameraZoom),
-      y: this.gameRef.gameHeight / 2 - (cameraTarget.y * this.gameRef.cameraZoom)
-    }
-    // Camera X position
-    if (this.gameRef.gameWidth < this.levelWidth * this.gameRef.cameraZoom) {
-      if (this.gameRef.cameraPos.x > 0) {
-        this.gameRef.cameraPos.x = 0
-      }
-      if (this.gameRef.cameraPos.x - this.gameRef.gameWidth < this.levelWidth * this.gameRef.cameraZoom * -1) {
-        this.gameRef.cameraPos.x = -(this.levelWidth * this.gameRef.cameraZoom - this.gameRef.gameWidth)
-      }
-    } else {
-      this.gameRef.cameraPos.x = (this.gameRef.gameWidth - this.levelWidth * this.gameRef.cameraZoom) / 2
-    }
-    // Camera Y Position
-    if (this.gameRef.gameHeight < this.levelHeight * this.gameRef.cameraZoom) {
-      if (this.gameRef.cameraPos.y > 0) {
-        this.gameRef.cameraPos.y = 0
-      }
-      if (this.gameRef.cameraPos.y - this.gameRef.gameHeight < this.levelHeight * -1 * this.gameRef.cameraZoom) {
-        this.gameRef.cameraPos.y = -(this.levelHeight * this.gameRef.cameraZoom - this.gameRef.gameHeight)
-      }
-    } else {
-      this.gameRef.cameraPos.y = (this.gameRef.gameHeight - this.levelHeight * this.gameRef.cameraZoom) / 2
-    }
-    this.gameRef.cameraPos.x += camShakeAmount.x
-    this.gameRef.cameraPos.y += camShakeAmount.y
+    this.gameRef.updateCamera(cameraTarget)
   }
 
   positionKnobs() {
@@ -797,7 +762,7 @@ export class StandardLevel extends BasedLevel {
   drawBg() {
     this.gameRef.ctx.beginPath()
     this.gameRef.ctx.rect(0, 0, this.gameRef.gameWidth, this.gameRef.gameHeight)
-    this.gameRef.ctx.fillStyle = '#4d204e'
+    this.gameRef.ctx.fillStyle = '#0B0A09'
     this.gameRef.ctx.fill()
   }
 
@@ -807,8 +772,8 @@ export class StandardLevel extends BasedLevel {
     //   c: this.gameRef.ctx,
     //   x: 0 + this.gameRef.cameraPos.x,
     //   y: 0 + this.gameRef.cameraPos.y,
-    //   width: this.levelBounds.w * this.gameRef.cameraZoom,
-    //   height: this.levelBounds.h * this.gameRef.cameraZoom,
+    //   width: this.levelWidth * this.gameRef.cameraZoom,
+    //   height: this.levelHeight * this.gameRef.cameraZoom,
     //   fillColor: '#0c6640' // '#777'
     // })
     //
@@ -832,8 +797,8 @@ export class StandardLevel extends BasedLevel {
       ...this.poolFeltSprite,
       dx: 0 + this.gameRef.cameraPos.x,
       dy: 0 + this.gameRef.cameraPos.y,
-      dWidth: this.levelBounds.w * this.gameRef.cameraZoom,
-      dHeight: this.levelBounds.h * this.gameRef.cameraZoom
+      dWidth: this.levelWidth * this.gameRef.cameraZoom,
+      dHeight: this.levelHeight * this.gameRef.cameraZoom
     })
 
     this.pockets.forEach(b => {
@@ -863,21 +828,12 @@ export class StandardLevel extends BasedLevel {
       ...this.tableTopSprite,
       dx: 0 + this.gameRef.cameraPos.x,
       dy: 0 + this.gameRef.cameraPos.y,
-      dWidth: this.levelBounds.w * this.gameRef.cameraZoom,
-      dHeight: this.levelBounds.h * this.gameRef.cameraZoom
+      dWidth: this.levelWidth * this.gameRef.cameraZoom,
+      dHeight: this.levelHeight * this.gameRef.cameraZoom
     })
 
     if (this.aimTarget.active) {
-      drawLine({
-        c: this.gameRef.ctx,
-        x: this.ballA.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-        y: this.ballA.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-        toX: this.aimTarget.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-        toY: this.aimTarget.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-        strokeColor: 'red',
-        strokeWidth: 1
-      })
-
+      // draw poolstick
       rotateDraw({
         c: this.gameRef.ctx,
         x: this.ballA.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
@@ -894,14 +850,8 @@ export class StandardLevel extends BasedLevel {
           dHeight: 450 * this.gameRef.cameraZoom
         })
       })
+      this.aimTarget.draw()
 
-      drawCircle({
-        c: this.gameRef.ctx,
-        x: this.aimTarget.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-        y: this.aimTarget.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-        radius: this.aimTarget.radius * this.gameRef.cameraZoom,
-        fillColor: 'red'
-      })
     }
     if (this.ballA.active) {
       this.ballA.draw()
@@ -914,7 +864,9 @@ export class StandardLevel extends BasedLevel {
       this.sliderControl.draw()
     }
     if (!this.activeAim) {
-      this.miniMapButton.draw()
+      if (!this.textBox.active) {
+        this.miniMapButton.draw()
+      }
       if (this.aimTarget.active) {
         this.shootButton.draw()
       }
@@ -922,29 +874,31 @@ export class StandardLevel extends BasedLevel {
     if (this.phase === 'power') {
       this.powerMeter.draw()
     } else {
-      drawText({
-        c: this.gameRef.ctx,
-        x: 20,
-        y: 30,
-        // y: this.gameRef.gameHeight - 80,
-        align: 'left',
-        fontSize: 16,
-        fontFamily: 'sans-serif',
-        fillColor: '#fff',
-        text: `BALLS: ${this.activeBalls}`
-      })
 
-      drawText({
-        c: this.gameRef.ctx,
-        x: 20,
-        y: 50,
-        // y: this.gameRef.gameHeight - 80,
-        align: 'left',
-        fontSize: 16,
-        fontFamily: 'sans-serif',
-        fillColor: '#fff',
-        text: `TIME: ${getTimeStamp(this.gameRef.lastUpdate - this.startTime)}`
-      })
+      if (!this.textBox.active) {
+        drawText({
+          c: this.gameRef.ctx,
+          x: 20,
+          y: 30,
+          // y: this.gameRef.gameHeight - 80,
+          align: 'left',
+          fontSize: 16,
+          fontFamily: 'sans-serif',
+          fillColor: '#fff',
+          text: `BALLS: ${this.activeBalls}`
+        })
+        drawText({
+          c: this.gameRef.ctx,
+          x: 20,
+          y: 50,
+          // y: this.gameRef.gameHeight - 80,
+          align: 'left',
+          fontSize: 16,
+          fontFamily: 'sans-serif',
+          fillColor: '#fff',
+          text: `TIME: ${getTimeStamp(this.gameRef.lastUpdate - this.startTime)}`
+        })
+      }
 
       // const cameraTarget = this.cameraFocus === 'cue' ? this.ballA.body.position : this.freeCam
       // drawText({
@@ -982,7 +936,6 @@ export class StandardLevel extends BasedLevel {
           fontFamily: 'sans-serif',
           fillColor: 'rgba(255,255,255, 0.5)',
           text: `Balls in motion...`
-          // text: `FPS: ${Math.round(this.gameRef.fps)}`
         })
       } else if (!this.aimTarget.active && this.gameRef.lastUpdate - 300 > this.lastShot) {
         drawText({
@@ -995,7 +948,6 @@ export class StandardLevel extends BasedLevel {
           weight: 'bold',
           fillColor: '#000',
           text: `Take aim.`
-          // text: `FPS: ${Math.round(this.gameRef.fps)}`
         })
         drawText({
           c: this.gameRef.ctx,
@@ -1007,7 +959,6 @@ export class StandardLevel extends BasedLevel {
           weight: 'bold',
           fillColor: '#fff',
           text: `Take aim.`
-          // text: `FPS: ${Math.round(this.gameRef.fps)}`
         })
       }
     }

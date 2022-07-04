@@ -23,6 +23,12 @@ export class BasedButton extends BasedObject {
   fontSize: number = 16
   fontFamily: string = 'sans-serif'
 
+  fillColorStart: {r: number, g: number, b: number, a: number} = {r: 0, g: 0, b: 0, a: 1}
+  fillColorEnd: {r: number, g: number, b: number, a: number} = {r: 0, g: 0, b: 0, a: 1}
+  fillColorProgress: number = 0
+  fillColorProgressTick: number = .05
+  enableFillColorTransition: boolean = false
+
   clickFunction: () => void = () => null
   holdFunction: () => void = null// () => null
 
@@ -32,11 +38,35 @@ export class BasedButton extends BasedObject {
   touchId: string = ''
 
   initialize() { }
+
   update() {
     if(this.gameRef.touchMode) {
       this.checkTouch()
     } else {
       this.checkMouse()
+    }
+  }
+
+  handleColorTransition() {
+    if(this.enableFillColorTransition) {
+      this.fillColorProgress += this.fillColorProgressTick
+      if(this.fillColorProgress < 0) {
+        this.fillColorProgress = 0
+        this.fillColorProgressTick *= -1
+      }
+      if(this.fillColorProgress > 1) {
+        this.fillColorProgress = 1
+        this.fillColorProgressTick *= -1
+      }
+      const fillColorA = this.fillColorProgress/1
+      const fillColorB = 1 - fillColorA
+      const newFillColor = {
+        r: this.fillColorStart.r * fillColorA + this.fillColorEnd.r * fillColorB,
+        g: this.fillColorStart.g * fillColorA + this.fillColorEnd.g * fillColorB,
+        b: this.fillColorStart.b * fillColorA + this.fillColorEnd.b * fillColorB,
+        a: this.fillColorStart.a * fillColorA + this.fillColorEnd.a * fillColorB
+      }
+      this.fillColor = `rgba(${newFillColor.r}, ${newFillColor.g}, ${newFillColor.b}, ${newFillColor.a})`
     }
   }
 
@@ -110,6 +140,7 @@ export class BasedButton extends BasedObject {
   }
 
   draw() {
+    this.handleColorTransition()
     drawBox({
       c: this.gameRef.ctx,
       x: this.x,

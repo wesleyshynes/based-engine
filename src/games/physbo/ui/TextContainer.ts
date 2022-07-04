@@ -10,7 +10,7 @@ export default class TextContainer extends BasedObject {
   fontSize: number = 18;
   lineHeight: number = 24;
   fontFamily: string = 'sans-serif';
-  fontWeight: string | number = 900;
+  fontWeight: string | number = 700;
   fontStyle: string;
   fontFillColor: string = 'black';
   fontStrokeColor: string = 'white';
@@ -33,12 +33,22 @@ export default class TextContainer extends BasedObject {
   closeFunction: any = () => {}
 
   closeButton: any;
+  closeButtonWidth: number = 100
+  closeButtonHeight: number = 50
+  closeButtonFillColor: string = '#ccc'
+  closeButtonHoverColor: string = '#000'
+  closeButtonFocusColor: string = '#000'
+  closeButtonTextColor: string = '#fff'
 
   async preload() { }
   initialize() {
     this.closeButton = new BasedButton({key: 'close-button', gameRef: this.gameRef})
-    this.closeButton.width = 100
-    this.closeButton.height = 50
+    this.closeButton.width = this.closeButtonWidth
+    this.closeButton.height = this.closeButtonHeight
+    this.closeButton.fillColor = this.closeButtonFillColor
+    this.closeButton.textColor = this.closeButtonTextColor
+    this.closeButton.hoverColor = this.closeButtonHoverColor
+    this.closeButton.focusColor = this.closeButtonFocusColor
     this.closeButton.buttonText = 'Close'
     this.closeButton.clickFunction = () => {
       this.handleCloseFunction()

@@ -51,8 +51,13 @@ export class BasedGame implements BasedGameType {
   gameWidth: number;
   gameHeight: number;
 
-  cameraPos: XYCoordinateType = {x: 0, y: 0}
+  cameraPos: XYCoordinateType = { x: 0, y: 0 }
   cameraZoom: number = 1
+  cameraShake: XYCoordinateType = {
+    x: 0,
+    y: 0
+  }
+  shakeCount: number = 0
 
   lastUpdate: number = Date.now()
   updateDiff: number = Date.now()
@@ -69,7 +74,7 @@ export class BasedGame implements BasedGameType {
     mouseDown: boolean
   } = { x: -100, y: -100, mouseDown: false }
 
-  touchInfo: {x: number, y: number, id: string}[] = []
+  touchInfo: { x: number, y: number, id: string }[] = []
   touchMode: boolean = false
 
   levels: { [key: string]: BasedLevel } = {}
@@ -126,7 +131,7 @@ export class BasedGame implements BasedGameType {
     this.gameWidth = this.canvasElement.width
     this.gameHeight = this.canvasElement.height
     this.ctx = this.createContextFromElement(this.canvasElement)
-    if(this.levels[this.activeLevel].onResize) {
+    if (this.levels[this.activeLevel].onResize) {
       this.levels[this.activeLevel].onResize()
     }
   }
@@ -185,7 +190,7 @@ export class BasedGame implements BasedGameType {
 
   tick() {
     this.updateDiff = Date.now() - this.lastUpdate
-    this.fps = 1/(this.updateDiff/1000)
+    this.fps = 1 / (this.updateDiff / 1000)
     this.diffMulti = this.updateDiff / this.updateTick
     // this.diffMulti = this.updateDiff / this.fps
     this.lastUpdate = Date.now()
@@ -223,9 +228,9 @@ export class BasedGame implements BasedGameType {
 
     drawText({
       c: this.ctx,
-      x: (this.gameWidth)/2,
-      y: (this.gameHeight)/2 - 50,
-      align:'center',
+      x: (this.gameWidth) / 2,
+      y: (this.gameHeight) / 2 - 50,
+      align: 'center',
       fillColor: '#fff',
       strokeColor: '#000',
       strokeWidth: 3,
@@ -238,9 +243,9 @@ export class BasedGame implements BasedGameType {
 
     drawText({
       c: this.ctx,
-      x: (this.gameWidth)/2,
-      y: this.gameHeight/2,
-      align:'center',
+      x: (this.gameWidth) / 2,
+      y: this.gameHeight / 2,
+      align: 'center',
       fillColor: '#fff',
       strokeColor: '#000',
       strokeWidth: 3,
@@ -253,8 +258,8 @@ export class BasedGame implements BasedGameType {
 
     drawBox({
       c: this.ctx,
-      x: (this.gameWidth)/2 - 75,
-      y: (this.gameHeight)/2 + 50,
+      x: (this.gameWidth) / 2 - 75,
+      y: (this.gameHeight) / 2 + 50,
       width: 150,
       height: 20,
       fillColor: '#333',
@@ -262,8 +267,8 @@ export class BasedGame implements BasedGameType {
 
     drawBox({
       c: this.ctx,
-      x: (this.gameWidth)/2 - 75,
-      y: (this.gameHeight)/2 + 50,
+      x: (this.gameWidth) / 2 - 75,
+      y: (this.gameHeight) / 2 + 50,
       width: 150 * (percentage ? percentage : 0),
       height: 20,
       fillColor: '#fff',
@@ -290,13 +295,74 @@ export class BasedGame implements BasedGameType {
   gameLoop() {
     // console.log('game loop')
     if (this.gameActive) {
-      if(this.activeLevel === this.targetLevel && !this.pendingLevelLoad) {
+      if (this.activeLevel === this.targetLevel && !this.pendingLevelLoad) {
         this.update()
         this.draw()
         this.animFrame = window.requestAnimationFrame(this.gameLoop)
       } else {
         this.handleLevelLoad()
       }
+    }
+  }
+
+  // Other stuff
+
+  updateCamera(cameraTarget: XYCoordinateType, bound: boolean = true) {
+
+    this.cameraPos.x = this.gameWidth / 2 - (cameraTarget.x * this.cameraZoom)
+    this.cameraPos.y = this.gameHeight / 2 - (cameraTarget.y * this.cameraZoom)
+
+    if (bound) {
+      
+      let levelWidth = this.gameWidth
+      let levelHeight = this.gameHeight
+      if (this.levels[this.activeLevel] &&
+        this.levels[this.activeLevel].levelWidth &&
+        this.levels[this.activeLevel].levelHeight) {
+        levelWidth = this.levels[this.activeLevel].levelWidth
+        levelHeight = this.levels[this.activeLevel].levelHeight
+      }
+      // Camera X position
+      if (this.gameWidth < levelWidth * this.cameraZoom) {
+        if (this.cameraPos.x > 0) {
+          this.cameraPos.x = 0
+        }
+        if (this.cameraPos.x - this.gameWidth < levelWidth * this.cameraZoom * -1) {
+          this.cameraPos.x = -(levelWidth * this.cameraZoom - this.gameWidth)
+        }
+      } else {
+        this.cameraPos.x = (this.gameWidth - levelWidth * this.cameraZoom) / 2
+      }
+      // Camera Y Position
+      if (this.gameHeight < levelHeight * this.cameraZoom) {
+        if (this.cameraPos.y > 0) {
+          this.cameraPos.y = 0
+        }
+        if (this.cameraPos.y - this.gameHeight < levelHeight * -1 * this.cameraZoom) {
+          this.cameraPos.y = -(levelHeight * this.cameraZoom - this.gameHeight)
+        }
+      } else {
+        this.cameraPos.y = (this.gameHeight - levelHeight * this.cameraZoom) / 2
+      }
+    }
+
+    this.cameraPos.x += this.cameraShake.x
+    this.cameraPos.y += this.cameraShake.y
+  }
+
+  shakeCamera(amount: number = 50) {
+    this.shakeCount = amount
+  }
+
+  handleCameraShake() {
+    if (this.shakeCount <= 0) {
+      this.cameraShake.x = 0
+      this.cameraShake.y = 0
+      this.shakeCount = 0
+    } else {
+      this.cameraShake.x = this.cameraShake.x ? -this.cameraShake.x : 2
+      this.cameraShake.y = this.cameraShake.y ? -this.cameraShake.y : 2
+      this.shakeCamera(this.shakeCount - this.updateDiff)
     }
   }
 

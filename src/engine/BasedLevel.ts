@@ -4,6 +4,8 @@ import { BasedGame } from "../engine/BasedEngine";
 export interface BasedLevelType {
   levelKey: string;
   gameRef: BasedGame;
+  levelWidth: number;
+  levelHeight: number;
   preload: () => Promise<void>;
   initialize: () => void;
   update: () => void;
@@ -14,6 +16,8 @@ export interface BasedLevelType {
 export class BasedLevel {
   levelKey: string;
   gameRef: BasedGame;
+  levelWidth: number;
+  levelHeight: number;
 
   constructor(levelSettings: { key: string, gameRef: BasedGame }) {
     this.levelKey = levelSettings.key
