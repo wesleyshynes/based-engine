@@ -60,7 +60,7 @@ export class StartScreen extends BasedLevel {
     this.gameRef.basedObjectRefs.gameOptions = {
       mode: 'standard'
     }
-
+    this.gameRef.cameraZoom = 1
 
     this.rackBalls()
 
