@@ -76,6 +76,11 @@ export class StandardLevel extends BasedLevel {
     y: 0
   }
 
+  currentCamPos: XYCoordinateType = {
+    x: 0,
+    y: 0
+  }
+
   lastCamMove: number = 0
   cameraFocus: any = 'cue'
   gameZoom: number = 1
@@ -720,23 +725,56 @@ export class StandardLevel extends BasedLevel {
   updateCamera() {
     this.gameRef.handleCameraShake()
 
+    let activeTarget: XYCoordinateType = this.cameraFocus === 'cue' ? this.ballA.body.position : this.freeCam
+    let targetZoom: number = this.sliderControl.value
+    const cameraSpeed: number = 10
+    const cameraZoomSpeed: number = .01
+    let boundCam: boolean = true
+
+    let currentCamZoom: number = this.gameRef.cameraZoom
     if (this.miniMapActive || !this.ballA.active) {
-      if (this.gameRef.gameWidth > this.gameRef.gameHeight) {
-        this.gameRef.cameraZoom = this.gameRef.gameHeight / this.levelHeight
-      } else {
-        this.gameRef.cameraZoom = this.gameRef.gameWidth / this.levelWidth
-      }
-      this.gameRef.updateCamera({
+      activeTarget = {
         x: this.levelWidth / 2,
         y: this.levelHeight / 2
-      }, false)
-      return
+      }
+      if (this.gameRef.gameWidth > this.gameRef.gameHeight) {
+        targetZoom = this.gameRef.gameHeight / this.levelHeight
+      } else {
+        targetZoom = this.gameRef.gameWidth / this.levelWidth
+      }
+
+      // if(this.currentCamPos.x === activeTarget.x && this.currentCamPos.y === activeTarget.y) {
+      //   boundCam = false
+      // }  
     }
 
-    this.gameRef.cameraZoom = this.sliderControl.value
-    // this.gameRef.cameraZoom = this.gameZoom
-    const cameraTarget = this.cameraFocus === 'cue' ? this.ballA.body.position : this.freeCam
-    this.gameRef.updateCamera(cameraTarget)
+    if(this.currentCamPos.x !== activeTarget.x || this.currentCamPos.y !== activeTarget.y) {
+      const moveCam = normalizeVector({
+        x: activeTarget.x - this.currentCamPos.x,
+        y: activeTarget.y - this.currentCamPos.y
+      }, cameraSpeed * this.gameRef.diffMulti) 
+      this.currentCamPos.x += moveCam.x
+      this.currentCamPos.y += moveCam.y
+    }
+    if(Math.abs(this.currentCamPos.x - activeTarget.x) <= cameraSpeed * this.gameRef.diffMulti) {
+      this.currentCamPos.x = Math.floor(activeTarget.x)
+    }
+
+    if(Math.abs(this.currentCamPos.y - activeTarget.y) <= cameraSpeed * this.gameRef.diffMulti) {
+      this.currentCamPos.y = Math.floor(activeTarget.y)
+    }
+
+    if (currentCamZoom !== targetZoom) {
+      currentCamZoom += ((targetZoom - currentCamZoom >= 0 ? 1 : -1) * cameraZoomSpeed)*this.gameRef.diffMulti
+      if(Math.abs(currentCamZoom - targetZoom) <= .01) {
+        currentCamZoom = targetZoom
+      }
+    }
+    this.gameRef.cameraZoom = currentCamZoom
+
+    // console.log(this.currentCamPos.x, this.currentCamPos.y, activeTarget.x, activeTarget.y)
+    this.gameRef.updateCamera(this.currentCamPos, boundCam)
+
   }
 
   positionKnobs() {
