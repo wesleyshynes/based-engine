@@ -51,8 +51,8 @@ export default class PhysBall extends BasedObject {
 
       drawCircle({
         c: this.gameRef.ctx,
-        x: -this.bodyCenter.x,
-        y: -this.bodyCenter.y,
+        x: this.bodyCenter.x,
+        y: this.bodyCenter.y,
         radius: this.radius * this.gameRef.cameraZoom,
         fillColor: this.color,
         // fillColor: 'red',
@@ -72,8 +72,8 @@ export default class PhysBall extends BasedObject {
 
       drawEllipse({
         c: this.gameRef.ctx,
-        x: -this.bodyCenter.x,
-        y: -this.bodyCenter.y,
+        x: this.bodyCenter.x,
+        y: this.bodyCenter.y,
         radiusX: this.radius * this.gameRef.cameraZoom*1.1,
         radiusY: (this.radius * this.gameRef.cameraZoom)*.75,
         fillColor: 'black'
