@@ -83,7 +83,7 @@ export class StandardLevel extends BasedLevel {
 
   lastCamMove: number = 0
   cameraFocus: any = 'cue'
-  gameZoom: number = 1
+  // gameZoom: number = 1
 
   fastestBall: any = null
 
@@ -470,7 +470,6 @@ export class StandardLevel extends BasedLevel {
     }
 
     if (!boxCollision(cueBox, levelBounds)) {
-      console.log(this.ballA.body)
       Physics.Body.setPosition(this.ballA.body, { x: 400, y: 700 })
       Physics.Body.setVelocity(this.ballA.body, { x: 0, y: 0 })
     }
@@ -770,7 +769,8 @@ export class StandardLevel extends BasedLevel {
         currentCamZoom = targetZoom
       }
     }
-    this.gameRef.cameraZoom = currentCamZoom
+
+    this.gameRef.cameraZoom = Math.abs(currentCamZoom)
 
     // console.log(this.currentCamPos.x, this.currentCamPos.y, activeTarget.x, activeTarget.y)
     this.gameRef.updateCamera(this.currentCamPos, boundCam)
