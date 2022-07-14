@@ -28,6 +28,7 @@
     "@types/pathfinding": "0.0.5",
     "lodash": "^4.17.21",
     "matter-js": "^0.17.1",
-    "pathfinding": "^0.4.18"
+    "pathfinding": "^0.4.18",
+    "socket.io-client": "^4.5.1"
   }
 }

@@ -2,7 +2,8 @@ import './assets/style.scss';
 // import { startGame } from './games/walk-the-human/startGame';
 // import { startGame } from './games/blasty-man/startGame';
 // import { startGame } from './games/vimjam2/startGame';
-import { startGame } from './games/physbo/startGame';
+// import { startGame } from './games/physbo/startGame';
+import { startGame } from './games/netmo/startGame';
 
 const startBtn = document.getElementById('start-game')
 const gameDesc = document.getElementById('game-description')
