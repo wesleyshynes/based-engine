@@ -83,8 +83,8 @@ export class StandardLevel extends BasedLevel {
         })
         this.player.color = '#ff0000'
         this.player.playerName = 'YOU'
-        this.player.x = this.levelGridSize / 2
-        this.player.y = this.levelGridSize / 2
+        this.player.x = this.levelGridSize / 2 * 3
+        this.player.y = this.levelGridSize / 2 * 3
         this.player.initialize()
 
         // create the grid
@@ -144,9 +144,7 @@ export class StandardLevel extends BasedLevel {
     }
 
     checkGameCondition() {
-        const playerXPos = Math.floor(this.player.x / this.levelGridSize)
-        const playerYPos = Math.floor(this.player.y / this.levelGridSize)
-        const playerGrid = `${playerXPos}-${playerYPos}`
+        const playerGrid = this.player.getGridKey()
         if (playerGrid === this.winSpot) {
             // this.gameRef.loadLevel('start-screen')
             this.player.color = 'green'
@@ -165,12 +163,12 @@ export class StandardLevel extends BasedLevel {
         if (this.levelGrid[this.selectedGrid]) {
             this.levelGrid[this.selectedGrid].selected = true
             let validTarget = false
-            const playerXPos = Math.floor(this.player.x / this.levelGridSize)
-            const playerYPos = Math.floor(this.player.y / this.levelGridSize)
-            if (playerYPos === yMousePos && Math.abs(playerXPos - xMousePos) <= this.diceValue) {
+
+            const playerPos = this.player.getGridCoordinates()
+            if (playerPos.y === yMousePos && Math.abs(playerPos.x - xMousePos) <= this.diceValue) {
                 validTarget = true
             }
-            if (playerXPos === xMousePos && Math.abs(playerYPos - yMousePos) <= this.diceValue) {
+            if (playerPos.x === xMousePos && Math.abs(playerPos.y - yMousePos) <= this.diceValue) {
                 validTarget = true
             }
 
@@ -181,7 +179,8 @@ export class StandardLevel extends BasedLevel {
                 })
                 this.diceValue = 0
             }
-            if (this.gameRef.mouseInfo.mouseDown && this.diceValue === 0) {
+            // handle sprite tiler controls
+            if (this.spriteTiler.active && this.gameRef.mouseInfo.mouseDown && this.diceValue === 0) {
                 this.levelGrid[this.selectedGrid].tile = this.spriteTiler.getCurrentSprite()
             }
         }

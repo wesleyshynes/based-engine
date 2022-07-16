@@ -15,6 +15,8 @@ export class DicePlayer extends BasedObject {
     target: XYCoordinateType = { x: 0, y: 0 }
     onTarget: boolean = false
 
+    gridSize: number = 128
+
     async preload() { }
 
     initialize() {
@@ -31,13 +33,18 @@ export class DicePlayer extends BasedObject {
         }
     }
 
-    handleInput() {
-        // if (this.gameRef.mouseInfo.mouseDown) {
-        //     this.setTarget({
-        //         x: this.gameRef.mouseInfo.x,
-        //         y: this.gameRef.mouseInfo.y,
-        //     })
-        // }
+    handleInput() {}
+
+    getGridCoordinates() {
+        return {
+            x: Math.floor(this.x / this.gridSize),
+            y: Math.floor(this.y / this.gridSize),
+        }
+    }
+
+    getGridKey() {
+        const gridCoordinates = this.getGridCoordinates()
+        return `${gridCoordinates.x}-${gridCoordinates.y}`
     }
 
     update() {
