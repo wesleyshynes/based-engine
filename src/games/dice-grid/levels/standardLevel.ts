@@ -18,20 +18,24 @@ export class StandardLevel extends BasedLevel {
     levelWidth: number = 1000
     levelHeight: number = 1000
 
+    activePlayer: 'main' | 'enemy' = 'main'
     players: any[] = []
+    enemyPlayers: any[] = []
+    playerRef: { [key: string]: DicePlayer } = {}
+
 
     levelGrid: { [p: string]: any } = {}
-    levelGridX: number = 14
-    levelGridY: number = 10
-    levelGridSize: number = 128
+    levelGridX: number = 20
+    levelGridY: number = 20
+    levelGridSize: number = 16
 
     selectedPlayer: any;
     selectedGrid: string = ''
 
-    winSpot = `3-2`
+    winSpot = `8-7`
 
     // Camera related stuff
-    miniMapActive: boolean = true
+    miniMapActive: boolean = false
     followCam: any;
 
     // Interface stuff
@@ -76,11 +80,11 @@ export class StandardLevel extends BasedLevel {
             sHeight: 64,
             dx: 0,
             dy: 0,
-            dWidth: 64,
-            dHeight: 64,
+            dWidth: 32,
+            dHeight: 32,
             frame: 0,
             lastUpdate: 0,
-            updateDiff: 1000 / 60 * 10
+            updateDiff: 1000 / 60 * 8
         })
     }
 
@@ -94,6 +98,8 @@ export class StandardLevel extends BasedLevel {
         this.followCam = new FollowCam({ key: 'followCam', gameRef: this.gameRef })
         this.followCam.levelWidth = this.levelWidth
         this.followCam.levelHeight = this.levelHeight
+        this.followCam.zoomSetting = 2
+        this.followCam.initialize()
 
         // create the player
 
@@ -108,25 +114,59 @@ export class StandardLevel extends BasedLevel {
                 if (sampleLayout[`${x}-${y}`]) {
                     this.levelGrid[`${x}-${y}`].tile = sampleLayout[`${x}-${y}`]
                 }
+                if (x <= 1 || x >= this.levelGridX - 2 || y <= 2 || y >= this.levelGridY - 2) {
+                    this.levelGrid[`${x}-${y}`].blocked = true
+                    this.levelGrid[`${x}-${y}`].color = '#111'
+                }
             }
         }
 
         // create the players
-        for (let i = 0; i < 3; i++) {
+        this.players = [
+            { x: 3, y: 3 },
+            { x: 3, y: 4 },
+            { x: 3, y: 5 },
+            { x: 3, y: 6 },
+        ].map((e, i) => {
             const p = new DicePlayer({
                 key: `player${i}`,
                 gameRef: this.gameRef,
             })
+            p.owner = 'main'
             p.color = 'blue'
-            p.playerName = `Player ${i}`
-            p.x = (i * this.levelGridSize) + this.levelGridSize / 2
-            p.y = (i * this.levelGridSize) + this.levelGridSize / 2
+            p.playerName = `player-${i}`
+            p.x = (e.x * this.levelGridSize) + this.levelGridSize / 2
+            p.y = (e.y * this.levelGridSize) + this.levelGridSize / 2
             p.gridRef = this.levelGrid
-            p.spriteSheet = {...this.skeletonTileSheet}
+            p.spriteSheet = { ...this.skeletonTileSheet }
             p.initialize()
-            this.players.push(p)
-        }
+            this.playerRef[p.objectKey] = p
+            return p
+        })
         this.selectPlayer(this.players[0])
+
+        this.enemyPlayers = [
+            { x: 10, y: 5 },
+            { x: 10, y: 6 },
+            { x: 10, y: 7 },
+            { x: 10, y: 8 },
+        ].map((e, i) => {
+            const p = new DicePlayer({
+                key: `enemy${i}`,
+                gameRef: this.gameRef,
+            })
+            p.owner = 'enemy'
+            p.color = 'red'
+            p.playerName = `enemy-${i}`
+            p.x = (e.x * this.levelGridSize) + this.levelGridSize / 2
+            p.y = (e.y * this.levelGridSize) + this.levelGridSize / 2
+            p.gridRef = this.levelGrid
+            p.spriteSheet = { ...this.skeletonTileSheet }
+            p.initialize()
+            this.playerRef[p.objectKey] = p
+            return p
+        })
+
 
         // setup interface
         this.cameraZoomButton = new BasedButton({ gameRef: this.gameRef, key: 'cameraZoomButton' })
@@ -202,9 +242,26 @@ export class StandardLevel extends BasedLevel {
             const activeGrid = this.levelGrid[this.selectedGrid]
             activeGrid.selected = true
 
+            // handle sprite tiler controls
+            if (this.spriteTiler.active && this.gameRef.mouseInfo.mouseDown && this.diceValue === 0) {
+                if (this.spriteTiler.drawMode === 'draw') {
+                    this.levelGrid[this.selectedGrid].tile = this.spriteTiler.getCurrentSprite()
+                }
+                if (this.spriteTiler.drawMode === 'delete') {
+                    delete this.levelGrid[this.selectedGrid].tile
+                }
+            }
+
+            if (activeGrid.blocked) {
+                return
+            }
+
             if (this.diceValue === 0 && this.selectedPlayer.onTarget) {
                 if (this.gameRef.mouseInfo.mouseDown && activeGrid.occupants && Object.keys(activeGrid.occupants).length > 0) {
-                    this.selectPlayer(activeGrid.occupants[Object.keys(activeGrid.occupants)[0]])
+                    const liveOccupant = Object.keys(activeGrid.occupants).find(x => activeGrid.occupants[x].active)
+                    if (liveOccupant) {
+                        this.selectPlayer(activeGrid.occupants[liveOccupant])
+                    }
                 }
             } else {
                 let validTarget = false
@@ -222,12 +279,6 @@ export class StandardLevel extends BasedLevel {
                     })
                     this.diceValue = 0
                 }
-            }
-
-
-            // handle sprite tiler controls
-            if (this.spriteTiler.active && this.gameRef.mouseInfo.mouseDown && this.diceValue === 0) {
-                this.levelGrid[this.selectedGrid].tile = this.spriteTiler.getCurrentSprite()
             }
         }
     }
@@ -253,14 +304,17 @@ export class StandardLevel extends BasedLevel {
         if (player.objectKey !== this.selectedPlayer.objectKey) {
             return
         }
-        if (player.otherOccupantsInGrid()) { 
+        if (player.otherOccupantsInGrid()) {
             Object.keys(this.levelGrid[player.getGridKey()].occupants).forEach((playerKey) => {
-                if(playerKey === player.objectKey) {
+                if (playerKey === player.objectKey) {
                     return
                 }
                 const otherPlayer = this.levelGrid[player.getGridKey()].occupants[playerKey]
-                this.removePlayerFromGridEntry(otherPlayer)
-                otherPlayer.active = false
+                // this.removePlayerFromGridEntry(otherPlayer)
+                if (otherPlayer.active) {
+                    otherPlayer.active = false
+                    player.attack()
+                }
             })
         }
     }
@@ -281,9 +335,20 @@ export class StandardLevel extends BasedLevel {
 
         // update players
         this.players.forEach(p => {
-            if(!p.active) { return }
+            if (!p.active) {
+                p.updateSprite()
+                return
+            }
             this.playerUpdater(p)
         })
+        this.enemyPlayers.forEach(p => {
+            if (!p.active) {
+                p.updateSprite()
+                return
+            }
+            this.playerUpdater(p)
+        })
+
 
         this.updateCamera()
     }
@@ -305,6 +370,8 @@ export class StandardLevel extends BasedLevel {
         // draw the level
         const gridMulti = this.levelGridSize * this.gameRef.cameraZoom
 
+        const playersOnScreen: string[] = []
+
         for (let x = 0; x < this.levelGridX; x++) {
             for (let y = 0; y < this.levelGridY; y++) {
                 const gridKey = `${x}-${y}`
@@ -319,10 +386,10 @@ export class StandardLevel extends BasedLevel {
                         // draw the box
                         drawBox({
                             c: this.gameRef.ctx,
-                            x: drawX,
-                            y: drawY,
-                            width: gridMulti,
-                            height: gridMulti,
+                            x: Math.floor(drawX),
+                            y: Math.floor(drawY),
+                            width: Math.ceil(gridMulti),
+                            height: Math.ceil(gridMulti),
                             fillColor: grid.color,
                         })
 
@@ -350,7 +417,7 @@ export class StandardLevel extends BasedLevel {
 
                         // draw valid spot marker
                         let validSpot = false
-                        if (this.diceValue > 0) {
+                        if (this.diceValue > 0 && !grid.blocked) {
                             const playerXPos = Math.floor(this.selectedPlayer.x / this.levelGridSize)
                             const playerYPos = Math.floor(this.selectedPlayer.y / this.levelGridSize)
                             if (playerYPos === y && Math.abs(playerXPos - x) <= this.diceValue) {
@@ -363,7 +430,7 @@ export class StandardLevel extends BasedLevel {
                         if (validSpot) {
                             drawCircle({
                                 c: this.gameRef.ctx,
-                                radius: 8 * this.gameRef.cameraZoom,
+                                radius: 4 * this.gameRef.cameraZoom,
                                 fillColor: 'orange',
                                 x: drawX + gridMulti / 2,
                                 y: drawY + gridMulti / 2,
@@ -374,11 +441,18 @@ export class StandardLevel extends BasedLevel {
                         if (gridKey === this.winSpot) {
                             drawCircle({
                                 c: this.gameRef.ctx,
-                                radius: 5 * this.gameRef.cameraZoom,
+                                radius: 4 * this.gameRef.cameraZoom,
                                 fillColor: 'green',
                                 x: drawX + gridMulti / 2,
                                 y: drawY + gridMulti / 2,
                             })
+                        }
+
+                        if (grid.occupants) {
+                            // Object.keys(grid.occupants).forEach(pk => {
+                            //     grid.occupants[pk].draw()
+                            // })
+                            playersOnScreen.push(...Object.keys(grid.occupants))
                         }
                     }
                 }
@@ -386,11 +460,12 @@ export class StandardLevel extends BasedLevel {
         }
 
         // draw entities
-        this.players.forEach(p => {
-            if(!p.active) { return }
-            p.draw()
+        // this.players.forEach(p => {
+        //     p.draw()
+        // })
+        playersOnScreen.forEach(pk => {
+            this.playerRef[pk].draw()
         })
-
         // draw interface
 
         this.cameraZoomButton.draw()

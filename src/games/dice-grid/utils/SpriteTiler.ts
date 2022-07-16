@@ -20,6 +20,7 @@ export class SpriteTiler extends BasedObject {
     lastSpriteMove: number = 0
     spriteMoveDelay: number = 200
     saveSpriteSheetBtn: any
+    toggleDrawModeBtn: any
 
     smallSpriteWidth: number = 16
     smallSpriteHeight: number = 16
@@ -29,6 +30,8 @@ export class SpriteTiler extends BasedObject {
 
     originalSpriteWidth: number = 1028
     originalSpriteHeight: number = 1028
+
+    drawMode: string = 'delete'
 
     bgTilemap: any;
     saveFunction: () => void = () => { }
@@ -71,6 +74,22 @@ export class SpriteTiler extends BasedObject {
         }
         this.saveSpriteSheetBtn.buttonText = 'Save'
         this.saveSpriteSheetBtn.initialize()
+
+        this.toggleDrawModeBtn = new BasedButton({ gameRef: this.gameRef, key: 'toggleDrawModeBtn' })
+        this.toggleDrawModeBtn.x = this.x + 40
+        this.toggleDrawModeBtn.y = this.y + 70 + this.smallSpriteDrawHeight + 50
+        this.toggleDrawModeBtn.width = 60
+        this.toggleDrawModeBtn.height = 40
+        this.toggleDrawModeBtn.clickFunction = () => {
+            if (this.drawMode === 'delete') {
+                this.drawMode = 'draw'
+            } else {
+                this.drawMode = 'delete'
+            }
+            this.toggleDrawModeBtn.buttonText = this.drawMode
+        }
+        this.toggleDrawModeBtn.buttonText = this.drawMode
+        this.toggleDrawModeBtn.initialize()
     }
 
     handleInput() {
@@ -113,6 +132,7 @@ export class SpriteTiler extends BasedObject {
         this.spriteXSlider.update()
         this.spriteYSlider.update()
         this.saveSpriteSheetBtn.update()
+        this.toggleDrawModeBtn.update()
     }
 
     draw() {
@@ -122,6 +142,7 @@ export class SpriteTiler extends BasedObject {
         this.spriteXSlider.draw()
         this.spriteYSlider.draw()
         this.saveSpriteSheetBtn.draw()
+        this.toggleDrawModeBtn.draw()
 
         drawImage({
             ...this.bgTilemap,

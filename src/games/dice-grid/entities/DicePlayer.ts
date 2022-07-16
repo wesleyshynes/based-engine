@@ -1,5 +1,5 @@
 import { BasedObject } from "../../../engine/BasedObject";
-import { drawCircle, drawImage, drawText } from "../../../engine/libs/drawHelpers";
+import { drawCircle, drawEllipse, drawImage, drawText, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { angleBetween, distanceBetween, pointOnCircle, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 
 export class DicePlayer extends BasedObject {
@@ -8,6 +8,8 @@ export class DicePlayer extends BasedObject {
 
     selected: boolean = false
     selectedColor: string = '#ff0000'
+
+    owner: string = 'none'
 
     active: boolean = true
     gridRef: any = {};
@@ -18,8 +20,8 @@ export class DicePlayer extends BasedObject {
     }
 
     color: string = '#fff'
-    radius: number = 10
-    speed: number = 5
+    radius: number = 4
+    speed: number = 2
 
     playerName: string;
 
@@ -27,9 +29,22 @@ export class DicePlayer extends BasedObject {
     target: XYCoordinateType = { x: 0, y: 0 }
     onTarget: boolean = false
 
-    gridSize: number = 128
+    gridSize: number = 16
 
     spriteSheet: any;
+    spriteSize: number = 32
+    spriteSheetLength: number = 10
+
+    lastDirection: number = 1
+
+    animationIndex: any = {
+        'idle': 0,
+        'dance': 1,
+        'walk': 2,
+        'attack': 3,
+        'die': 4,
+    }
+    activeAnimation: string = 'idle'
 
     async preload() { }
 
@@ -64,13 +79,91 @@ export class DicePlayer extends BasedObject {
         const moveSpeed = this.speed * this.gameRef.diffMulti
         if (distanceBetween(this, this.target) <= moveSpeed) {
             this.onTarget = true
+            this.updateSprite('idle')
             return
         }
+
         const angle = angleBetween(this, this.target)
         const newPosition = pointOnCircle(angle, moveSpeed)
         this.x += newPosition.x
         this.y += newPosition.y
+        if (newPosition.x >= 0) {
+            this.lastDirection = 1
+        } else {
+            this.lastDirection = -1
+        }
         this.setGridCoordinates()
+        this.updateSprite('walk')
+    }
+
+    updateSprite(animation: string = 'idle') {
+
+        if (this.gameRef.lastUpdate > this.spriteSheet.lastUpdate + this.spriteSheet.updateDiff) {
+            this.spriteSheet.lastUpdate = this.gameRef.lastUpdate
+            this.spriteSheet.flipX = this.lastDirection === -1
+            this.spriteSheet.flipY = false
+
+            if (!this.active) {
+                if (this.activeAnimation === 'die' && this.spriteSheet.frame < this.spriteSheetLength - 1) {
+                    this.spriteSheet.frame = this.spriteSheet.frame + 1
+                }
+                if (this.activeAnimation !== 'die') {
+                    this.spriteSheet.sy = this.animationIndex['die'] * this.spriteSheet.sHeight
+                    this.spriteSheet.frame = 0
+                    this.activeAnimation = 'die'
+                }
+                this.spriteSheet.sx = this.spriteSheet.sWidth * this.spriteSheet.frame
+                return
+            }
+
+            if (this.activeAnimation === 'attack') {
+                if (this.spriteSheet.frame < this.spriteSheetLength - 1) {
+                    this.spriteSheet.frame = this.spriteSheet.frame + 1
+                } else {
+                    this.dance()
+                }
+                this.spriteSheet.sx = this.spriteSheet.sWidth * this.spriteSheet.frame
+                return
+            }
+
+            if (this.activeAnimation === 'dance') {
+                if (this.spriteSheet.frame < this.spriteSheetLength - 1) {
+                    this.spriteSheet.frame = this.spriteSheet.frame + 1
+                } else {
+                    this.activeAnimation = 'idle'
+                    this.spriteSheet.sy = this.animationIndex['idle'] * this.spriteSheet.sHeight
+                }
+                this.spriteSheet.sx = this.spriteSheet.sWidth * this.spriteSheet.frame
+                return
+            }
+
+            if (this.activeAnimation === animation) {
+                this.spriteSheet.frame = (this.spriteSheet.frame + 1) % this.spriteSheetLength
+            }
+            if (this.activeAnimation !== animation) {
+                this.spriteSheet.sy = this.animationIndex[animation] * this.spriteSheet.sHeight
+                this.spriteSheet.frame = 0
+                this.activeAnimation = animation
+            }
+            this.spriteSheet.sx = this.spriteSheet.sWidth * this.spriteSheet.frame
+
+        }
+    }
+
+    attack() {
+        if (this.activeAnimation !== 'attack') {
+            this.activeAnimation = 'attack'
+            this.spriteSheet.frame = 0
+            this.spriteSheet.sy = this.animationIndex['attack'] * this.spriteSheet.sHeight
+        }
+    }
+
+    dance() {
+        if (this.activeAnimation !== 'dance') {
+            this.activeAnimation = 'dance'
+            this.spriteSheet.frame = 0
+            this.spriteSheet.sy = this.animationIndex['dance'] * this.spriteSheet.sHeight
+        }
     }
 
     otherOccupantsInGrid() {
@@ -84,57 +177,72 @@ export class DicePlayer extends BasedObject {
         return true
     }
 
-    draw() {
-        if(this.spriteSheet) {
-            const spriteSize = 64 * this.gameRef.cameraZoom
-            drawImage({
-                ...this.spriteSheet,
+    drawPlayerUI() {
+        if (this.playerName && this.selected) {
+            const spriteSize = this.spriteSize * this.gameRef.cameraZoom
+            drawText({
                 c: this.gameRef.ctx,
-                dx: (this.x * this.gameRef.cameraZoom) + this.gameRef.cameraPos.x - spriteSize/2,
-                dy: (this.y * this.gameRef.cameraZoom) + this.gameRef.cameraPos.y - spriteSize/2,
-                dWidth: spriteSize,
-                dHeight: spriteSize,
+                x: (this.x * this.gameRef.cameraZoom) + this.gameRef.cameraPos.x,
+                y: (this.y * this.gameRef.cameraZoom) - (this.radius * this.gameRef.cameraZoom) - 5 + this.gameRef.cameraPos.y - spriteSize,
+                align: 'center',
+                text: this.playerName,
+                fillColor: this.color,
+                fontSize: 12,
+                fontFamily: 'sans-serif'
             })
-            drawCircle({
+        }
+    }
+
+    draw() {
+
+        // if(!this.active) {
+        //     return
+        // }
+        if (this.spriteSheet) {
+
+            const spriteSize = this.spriteSize * this.gameRef.cameraZoom
+            drawEllipse({
                 c: this.gameRef.ctx,
                 x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-                y: this.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y + spriteSize/2,
-                radius: this.radius * this.gameRef.cameraZoom,
-                fillColor: this.selected ? this.otherOccupantsInGrid() ? 'green' :  this.selectedColor : this.color,
+                y: this.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+                radiusX: spriteSize / (this.active ? 5 : 3),
+                radiusY: spriteSize / 8,
+                fillColor: 'rgba(0,0,0,0.5)',
             })
-            if (this.playerName) {
-                drawText({
-                    c: this.gameRef.ctx,
-                    x: (this.x * this.gameRef.cameraZoom) + this.gameRef.cameraPos.x,
-                    y: (this.y * this.gameRef.cameraZoom) - (this.radius * this.gameRef.cameraZoom) - 5 + this.gameRef.cameraPos.y - spriteSize/2,
-                    align: 'center',
-                    text: this.playerName,
-                    fillColor: this.selected ? this.selectedColor : this.color,
-                    fontSize: 16 * this.gameRef.cameraZoom,
-                    fontFamily: 'sans-serif'
+            // drawImage({
+            //     ...this.spriteSheet,
+            //     c: this.gameRef.ctx,
+            //     dx: Math.floor((this.x * this.gameRef.cameraZoom) + this.gameRef.cameraPos.x - spriteSize / 2),
+            //     dy: Math.floor((this.y * this.gameRef.cameraZoom) + this.gameRef.cameraPos.y - spriteSize),
+            //     dWidth: Math.floor(spriteSize),
+            //     dHeight: Math.floor(spriteSize),
+            //     flipX: this.lastDirection === -1,
+            //     flipY: false
+            // })
+
+            rotateDraw({
+                c: this.gameRef.ctx,
+                x: Math.floor((this.x * this.gameRef.cameraZoom) + this.gameRef.cameraPos.x + (this.spriteSheet.flipX ? spriteSize / 2 : -spriteSize / 2)),
+                y: Math.floor((this.y * this.gameRef.cameraZoom) + this.gameRef.cameraPos.y - spriteSize),
+                a: 0
+            }, () => {
+                // this.sprite.flipX = this.velocity.x < 0
+                drawImage({
+                    ...this.spriteSheet,
+                    dWidth: Math.floor(spriteSize),
+                    dHeight: Math.floor(spriteSize),
                 })
-            }
+            })
+
+            this.drawPlayerUI()
         } else {
             drawCircle({
                 c: this.gameRef.ctx,
                 x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
                 y: this.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
                 radius: this.radius * this.gameRef.cameraZoom,
-                fillColor: this.selected ? this.otherOccupantsInGrid() ? 'green' :  this.selectedColor : this.color,
+                fillColor: this.selected ? this.otherOccupantsInGrid() ? 'green' : this.selectedColor : this.color,
             })
-    
-            if (this.playerName) {
-                drawText({
-                    c: this.gameRef.ctx,
-                    x: (this.x * this.gameRef.cameraZoom) + this.gameRef.cameraPos.x,
-                    y: (this.y * this.gameRef.cameraZoom) - (this.radius * this.gameRef.cameraZoom) - 5 + this.gameRef.cameraPos.y,
-                    align: 'center',
-                    text: this.playerName,
-                    fillColor: this.selected ? this.selectedColor : this.color,
-                    fontSize: 16 * this.gameRef.cameraZoom,
-                    fontFamily: 'sans-serif'
-                })
-            }
         }
     }
 
