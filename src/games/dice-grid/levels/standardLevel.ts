@@ -2,12 +2,20 @@ import { BasedButton } from "../../../engine/BasedButton";
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { FollowCam } from "../../../engine/cameras/FollowCam";
 import { boxCollision } from "../../../engine/libs/collisionHelpers";
-import { drawBox, drawCircle, drawText } from "../../../engine/libs/drawHelpers";
-import { getRandomInt, normalizeVector } from "../../../engine/libs/mathHelpers";
+import { createSprite, drawBox, drawCircle, drawImage, drawText } from "../../../engine/libs/drawHelpers";
+import { getRandomInt } from "../../../engine/libs/mathHelpers";
 import { DicePlayer } from "../entities/DicePlayer";
 
+// sprites
+import BgTilemap from '../../../assets/dice-grid/tilemap_big.png'
+// import BgTilemap from '../../../assets/dice-grid/tilemap.png'
+import { SliderControl } from "../../../engine/controls/SliderControl";
+import { sampleLayout } from "../layouts/sampleLayouts";
+import { SpriteTiler } from "../utils/SpriteTiler";
+
 export class StandardLevel extends BasedLevel {
-    levelWidth: number = 1400
+
+    levelWidth: number = 1000
     levelHeight: number = 1000
 
     player: any;
@@ -15,7 +23,7 @@ export class StandardLevel extends BasedLevel {
     levelGrid: { [p: string]: any } = {}
     levelGridX: number = 14
     levelGridY: number = 10
-    levelGridSize: number = 100
+    levelGridSize: number = 128
 
     selectedGrid: string = ''
 
@@ -28,18 +36,41 @@ export class StandardLevel extends BasedLevel {
     // Interface stuff
     cameraZoomButton: any
 
+    // Tools
+    spriteTiler: any
+
     // Dice stuff
     diceValue: number = 0
     rollDiceBtn: any;
 
+    // Sprites stuff
+    bgTilemap: any;
+
     async preload() {
-        this.gameRef.drawLoading('Connecting', .1)
+        this.gameRef.drawLoading('Tile map', .1)
+        this.bgTilemap = await createSprite({
+            c: this.gameRef.ctx,
+            sprite: BgTilemap,
+            sx: 0,
+            sy: 0,
+            sWidth: 128,
+            sHeight: 128,
+            dx: 0,
+            dy: 0,
+            dWidth: 1028,
+            dHeight: 1028,
+            frame: 0,
+            lastUpdate: 0,
+            updateDiff: 1000 / 60 * 10
+        })
     }
 
     initialize(): void {
 
         // reset variables
         this.gameRef.cameraZoom = 1
+        this.levelWidth = this.levelGridX * this.levelGridSize
+        this.levelHeight = this.levelGridY * this.levelGridSize
 
         this.followCam = new FollowCam({ key: 'followCam', gameRef: this.gameRef })
         this.followCam.levelWidth = this.levelWidth
@@ -52,8 +83,8 @@ export class StandardLevel extends BasedLevel {
         })
         this.player.color = '#ff0000'
         this.player.playerName = 'YOU'
-        this.player.x = this.levelGridSize/2
-        this.player.y = this.levelGridSize/2
+        this.player.x = this.levelGridSize / 2
+        this.player.y = this.levelGridSize / 2
         this.player.initialize()
 
         // create the grid
@@ -62,6 +93,9 @@ export class StandardLevel extends BasedLevel {
             for (let y = 0; y < this.levelGridY; y++) {
                 this.levelGrid[`${x}-${y}`] = {
                     color: (x + y) % 2 === 0 ? '#fff' : '#000',
+                }
+                if(sampleLayout[`${x}-${y}`]) {
+                    this.levelGrid[`${x}-${y}`].tile = sampleLayout[`${x}-${y}`]
                 }
             }
         }
@@ -87,6 +121,26 @@ export class StandardLevel extends BasedLevel {
             this.diceValue = getRandomInt(6) + 1
         }
         this.rollDiceBtn.buttonText = 'Roll'
+
+        // Sprite tool
+        this.spriteTiler = new SpriteTiler({ gameRef: this.gameRef, key: 'spriteTiler' })
+        this.spriteTiler.bgTilemap = this.bgTilemap
+        this.spriteTiler.x = 10
+        this.spriteTiler.y = 100
+        this.spriteTiler.saveFunction = () => {
+            console.log('save sprite sheet')
+            const sampleSpriter: any = {}
+            for(let x = 0; x < this.levelGridX; x++) {
+                for(let y = 0; y < this.levelGridY; y++) {
+                    const spriteEntry = this.levelGrid[`${x}-${y}`]
+                    if(spriteEntry && spriteEntry.tile) {
+                        sampleSpriter[`${x}-${y}`] = spriteEntry.tile
+                    }
+                }
+            }
+            console.log(JSON.stringify(sampleSpriter))
+        }
+        this.spriteTiler.initialize()
     }
 
     checkGameCondition() {
@@ -113,19 +167,22 @@ export class StandardLevel extends BasedLevel {
             let validTarget = false
             const playerXPos = Math.floor(this.player.x / this.levelGridSize)
             const playerYPos = Math.floor(this.player.y / this.levelGridSize)
-            if(playerYPos === yMousePos && Math.abs(playerXPos - xMousePos) <= this.diceValue) {
+            if (playerYPos === yMousePos && Math.abs(playerXPos - xMousePos) <= this.diceValue) {
                 validTarget = true
             }
-            if(playerXPos === xMousePos && Math.abs(playerYPos - yMousePos) <= this.diceValue) {
+            if (playerXPos === xMousePos && Math.abs(playerYPos - yMousePos) <= this.diceValue) {
                 validTarget = true
             }
 
-            if (this.gameRef.mouseInfo.mouseDown && validTarget) {
+            if (this.gameRef.mouseInfo.mouseDown && validTarget && this.player.onTarget) {
                 this.player.setTarget({
                     x: xMousePos * this.levelGridSize + this.levelGridSize / 2,
                     y: yMousePos * this.levelGridSize + this.levelGridSize / 2,
                 })
                 this.diceValue = 0
+            }
+            if (this.gameRef.mouseInfo.mouseDown && this.diceValue === 0) {
+                this.levelGrid[this.selectedGrid].tile = this.spriteTiler.getCurrentSprite()
             }
         }
     }
@@ -136,6 +193,8 @@ export class StandardLevel extends BasedLevel {
 
         this.cameraZoomButton.update()
         this.rollDiceBtn.update()
+
+        this.spriteTiler.update()
 
         if (!this.cameraZoomButton.hovered && !this.rollDiceBtn.hovered) {
             this.handleInput()
@@ -181,22 +240,44 @@ export class StandardLevel extends BasedLevel {
                             y: drawY,
                             width: gridMulti,
                             height: gridMulti,
-                            fillColor: grid.selected ? 'yellow' : grid.color,
+                            fillColor: grid.color,
                         })
+
+                        if (grid.tile) {
+                            drawImage({
+                                ...this.bgTilemap,
+                                sx: grid.tile.x * this.bgTilemap.sWidth,
+                                sy: grid.tile.y * this.bgTilemap.sHeight,
+                                dx: Math.floor(drawX),
+                                dy: Math.floor(drawY),
+                                dWidth: Math.ceil(gridMulti),
+                                dHeight: Math.ceil(gridMulti)
+                            })
+                        }
+                        if (grid.selected) {
+                            drawBox({
+                                c: this.gameRef.ctx,
+                                x: drawX,
+                                y: drawY,
+                                width: gridMulti,
+                                height: gridMulti,
+                                fillColor: 'rgba(255,255,0,0.5)',
+                            })
+                        }
 
                         // draw valid spot marker
                         let validSpot = false
-                        if(this.diceValue > 0) {
+                        if (this.diceValue > 0) {
                             const playerXPos = Math.floor(this.player.x / this.levelGridSize)
                             const playerYPos = Math.floor(this.player.y / this.levelGridSize)
-                            if(playerYPos === y && Math.abs(playerXPos - x) <= this.diceValue) {
+                            if (playerYPos === y && Math.abs(playerXPos - x) <= this.diceValue) {
                                 validSpot = true
                             }
-                            if(playerXPos === x && Math.abs(playerYPos - y) <= this.diceValue) {
+                            if (playerXPos === x && Math.abs(playerYPos - y) <= this.diceValue) {
                                 validSpot = true
-                            }                            
+                            }
                         }
-                        if(validSpot) {
+                        if (validSpot) {
                             drawCircle({
                                 c: this.gameRef.ctx,
                                 radius: 8 * this.gameRef.cameraZoom,
@@ -225,8 +306,35 @@ export class StandardLevel extends BasedLevel {
         this.player.draw()
 
         // draw interface
+
         this.cameraZoomButton.draw()
         this.rollDiceBtn.draw()
+
+        this.spriteTiler.draw()
+        // this.spriteXSlider.draw()
+        // this.spriteYSlider.draw()
+        // this.saveSpriteSheetBtn.draw()
+        //
+        // drawImage({
+        //     ...this.bgTilemap,
+        //     sWidth: 1028,
+        //     sHeight: 1028,
+        //     dx: 80,
+        //     dy: 180,
+        //     dWidth: 128,
+        //     dHeight: 128,
+        // })
+
+        // drawBox({
+        //     c: this.gameRef.ctx,
+        //     x: 80 + 16 * this.spriteXSlider.value,
+        //     y: 180 + 16 * Math.abs(7 - this.spriteYSlider.value),
+        //     width: 16,
+        //     height: 16,
+        //     fillColor: 'rgba(0,0,0,0.2)',
+        //     strokeWidth: 1,
+        //     strokeColor: '#000',
+        // })
 
         // text stuff
         drawText({
