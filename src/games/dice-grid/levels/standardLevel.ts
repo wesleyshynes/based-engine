@@ -13,6 +13,7 @@ import SkeletonTileSheet from '../../../assets/dice-grid/skeleton spritesheet ca
 import { sampleLayout } from "../layouts/sampleLayouts";
 import { SpriteTiler } from "../utils/SpriteTiler";
 import { SnakePlayer } from "../entities/SnakePlayer";
+import TextContainer from "../ui/TextContainer";
 
 export class StandardLevel extends BasedLevel {
 
@@ -39,6 +40,8 @@ export class StandardLevel extends BasedLevel {
     // Interface stuff
     cameraZoomButton: any
 
+    textBox: any;
+
     lastKeyPress = 0
 
     // Tools
@@ -46,7 +49,8 @@ export class StandardLevel extends BasedLevel {
 
     // Dice stuff
     diceValue: number = 0
-    rollDiceBtn: any;
+
+    // rollDiceBtn: any;
 
     // Sprites stuff
     bgTilemap: any;
@@ -150,17 +154,36 @@ export class StandardLevel extends BasedLevel {
         }
         this.cameraZoomButton.buttonText = this.miniMapActive ? 'Full' : 'Zoom'
 
-        this.rollDiceBtn = new BasedButton({ gameRef: this.gameRef, key: 'rollDiceBtn' })
-        this.rollDiceBtn.x = 10
-        this.rollDiceBtn.y = 60
-        this.rollDiceBtn.width = 60
-        this.rollDiceBtn.height = 40
-        this.rollDiceBtn.clickFunction = () => {
-            // if (this.selectedPlayer.onTarget) {
-            this.diceValue = getRandomInt(6) + 1
-            // }
+        // this.rollDiceBtn = new BasedButton({ gameRef: this.gameRef, key: 'rollDiceBtn' })
+        // this.rollDiceBtn.x = 10
+        // this.rollDiceBtn.y = 60
+        // this.rollDiceBtn.width = 60
+        // this.rollDiceBtn.height = 40
+        // this.rollDiceBtn.clickFunction = () => {
+        //     // if (this.selectedPlayer.onTarget) {
+        //     this.diceValue = getRandomInt(6) + 1
+        //     // }
+        // }
+        // this.rollDiceBtn.buttonText = 'Roll'
+
+        this.textBox = new TextContainer({ key: 'text-container', gameRef: this.gameRef })
+        this.textBox.setText('Everytime you move a dice is rolled. You have to move that many spaces. If you roll more than spaces available to move you lose.')
+        this.textBox.y = 80
+        this.textBox.x = 80
+        this.textBox.active = true
+        this.textBox.closeFunction = () => {
+            this.lastKeyPress = this.gameRef.lastUpdate
         }
-        this.rollDiceBtn.buttonText = 'Roll'
+        this.textBox.fontFillColor = 'white'
+        this.textBox.fontStrokeColor = 'black'
+        this.textBox.containerFillColor = 'rgba(0,0,0,0.7)'
+        this.textBox.containerBorderColor = 'rgba(0,0,0,0.7)'
+        this.textBox.closeButtonFillColor = 'red'
+        this.textBox.closeButtonFocusColor = '#FFA500'
+        this.textBox.closeButtonHoverColor = '#FFA500'
+        this.textBox.closeButtonWidth = 80
+        this.textBox.closeButtonHeight = 40
+        this.textBox.initialize()
 
         // Sprite tool
         this.spriteTiler = new SpriteTiler({ gameRef: this.gameRef, key: 'spriteTiler' })
@@ -251,8 +274,13 @@ export class StandardLevel extends BasedLevel {
             }
 
             if (Object.keys(this.validMoves).length === 0) {
-                alert('you lose')
-                this.gameRef.loadLevel('start-screen')
+                // alert('you lose')
+                // this.gameRef.loadLevel('start-screen')
+                this.textBox.setText('Game Over! Your score is ' + Math.ceil(this.snakePlayer.length * Math.PI))
+                this.textBox.closeFunction = () => {
+                    this.gameRef.loadLevel('start-screen')
+                  }
+                this.textBox.active = true
             }
         } else if (this.snakePlayer.onTarget && this.snakePlayer.targets.length === 0) {
             this.diceValue = getRandomInt(6) + 1
@@ -434,22 +462,27 @@ export class StandardLevel extends BasedLevel {
 
     update(): void {
         // did we win?
+        this.updateCamera()
         this.checkGameCondition()
 
+        this.textBox.update()
+        if (this.textBox.active) {
+            return
+        }
+
+        // this.rollDiceBtn.update()
         this.cameraZoomButton.update()
-        this.rollDiceBtn.update()
 
         this.spriteTiler.update()
 
         this.setValidMoves()
-        if (!this.cameraZoomButton.hovered && !this.rollDiceBtn.hovered) {
+        if (!this.cameraZoomButton.hovered) {
             this.handleInput()
         }
 
         this.snakePlayer.update()
         this.handleToasts()
 
-        this.updateCamera()
     }
 
     updateCamera() {
@@ -505,7 +538,11 @@ export class StandardLevel extends BasedLevel {
                                 dHeight: Math.ceil(gridMulti)
                             })
                         }
-                        if (grid.selected && !grid.blocked && !this.gameRef.touchMode && this.snakePlayer.onTarget) {
+
+                        // draw valid spot marker
+                        let validSpot = this.validMoves[gridKey]
+
+                        if (validSpot && grid.selected && !grid.blocked && !this.gameRef.touchMode && this.snakePlayer.onTarget) {
                             drawBox({
                                 c: this.gameRef.ctx,
                                 x: drawX,
@@ -515,9 +552,6 @@ export class StandardLevel extends BasedLevel {
                                 fillColor: 'rgba(255,255,0,0.5)',
                             })
                         }
-
-                        // draw valid spot marker
-                        let validSpot = this.validMoves[gridKey]
 
                         if (validSpot) {
                             drawCircle({
@@ -560,7 +594,7 @@ export class StandardLevel extends BasedLevel {
         this.snakePlayer.draw()
 
         this.cameraZoomButton.draw()
-        this.rollDiceBtn.draw()
+        // this.rollDiceBtn.draw()
 
         this.drawToasts()
 
@@ -601,6 +635,8 @@ export class StandardLevel extends BasedLevel {
             fontFamily: 'sans-serif',
             align: 'left'
         })
+
+        this.textBox.draw()
     }
 
     tearDown(): void { }
