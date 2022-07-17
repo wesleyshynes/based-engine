@@ -6,7 +6,7 @@ import BgMusic from '../../../assets/dice-grid/alexander-nakarada-silly-intro.mp
 
 export class StartScreen extends BasedLevel {
 
-  gameTitle: string = 'Dice Grid'
+  gameTitle: string = 'Snake Dice'
   startButton: any;
   soundButton: any;
   creditsButton: any;

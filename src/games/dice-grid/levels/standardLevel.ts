@@ -248,9 +248,9 @@ export class StandardLevel extends BasedLevel {
         // this.rollDiceBtn.buttonText = 'Roll'
 
         this.textBox = new TextContainer({ key: 'text-container', gameRef: this.gameRef })
-        this.textBox.setText('Everytime you move a dice is rolled. You have to move that many spaces. If you roll more than spaces available to move you lose.')
-        this.textBox.y = 80
+        this.textBox.setText(`Everytime you move a dice is rolled. You have to move that many spaces. Eat up and don't die!`)
         this.textBox.x = 80
+        this.textBox.y = 80
         this.textBox.active = true
         this.textBox.closeFunction = () => {
             this.lastKeyPress = this.gameRef.lastUpdate
