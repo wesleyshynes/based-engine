@@ -1,7 +1,7 @@
 import { BasedButton } from "../../../engine/BasedButton";
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { drawText } from "../../../engine/libs/drawHelpers"
-// import BgMusic from '../../../assets/pool/music/Bauchamp_-_148_jucky.mp3'
+import BgMusic from '../../../assets/dice-grid/alexander-nakarada-silly-intro.mp3'
 // import GameLogo from '../../../assets/vimjam2/monkey-meltdown-logo.png'
 
 export class StartScreen extends BasedLevel {
@@ -16,7 +16,7 @@ export class StartScreen extends BasedLevel {
     soundRef: null,
   }
 
-//   bgSong: any;
+  bgSong: any;
 
   levelWidth: number = 1000
   levelHeight: number = 1000
@@ -46,9 +46,9 @@ export class StartScreen extends BasedLevel {
     //   frame: 0,
     // })
 
-    // this.gameRef.drawLoading('Music', .5)
-    // this.bgSong = await this.gameRef.soundPlayer.loadSound(BgMusic)
-    // this.activeSound.playing = false
+    this.gameRef.drawLoading('Music', .5)
+    this.bgSong = await this.gameRef.soundPlayer.loadSound(BgMusic)
+    this.activeSound.playing = false
   }
 
   initialize() {
@@ -62,21 +62,21 @@ export class StartScreen extends BasedLevel {
       key: `start-button`,
       gameRef: this.gameRef,
     })
-    this.startButton.fillColor = 'red'
-    this.startButton.hoverColor = '#473B2D'
-    this.startButton.focusColor = '#FFA500'
+    this.startButton.fillColor = '#3E92CC'
+    this.startButton.hoverColor = '#0A2463'
+    this.startButton.focusColor = '#0A2463'
     this.startButton.textColor = 'white'
     this.startButton.enableFillColorTransition = true
     this.startButton.fillColorStart = {
-      r: 255,
-      g: 0,
-      b: 0,
+      r: 62,
+      g: 146,
+      b: 204,
       a: 1
     }
     this.startButton.fillColorEnd = {
-      r: 255,
-      g: 165,
-      b: 0,
+      r: 216,
+      g: 49,
+      b: 51,
       a: 1
     }
     this.startButton.x = 100
@@ -94,16 +94,16 @@ export class StartScreen extends BasedLevel {
       key: `credits-button`,
       gameRef: this.gameRef,
     })
-    this.creditsButton.fillColor = '#0D6F45'
-    this.creditsButton.hoverColor = '#473B2D'
-    this.creditsButton.focusColor = '#473B2D'
+    this.creditsButton.fillColor = '#3E92CC'
+    this.creditsButton.hoverColor = '#0A2463'
+    this.creditsButton.focusColor = '#0A2463'
     this.creditsButton.x = 100
     this.creditsButton.y = this.gameRef.gameHeight - 135
     this.creditsButton.buttonText = 'Credits'
     this.creditsButton.width = this.gameRef.gameWidth - 200
     this.creditsButton.height = 50
     this.creditsButton.clickFunction = () => {
-    //   this.gameRef.loadLevel('credits-screen')
+      this.gameRef.loadLevel('credits-screen')
       // alert('code in level')
     }
     this.buttonGroup.push(this.creditsButton)
@@ -113,9 +113,9 @@ export class StartScreen extends BasedLevel {
       key: `sound-button`,
       gameRef: this.gameRef,
     })
-    this.soundButton.fillColor = '#0D6F45'
-    this.soundButton.hoverColor = '#473B2D'
-    this.soundButton.focusColor = '#473B2D'
+    this.soundButton.fillColor = '#3E92CC'
+    this.soundButton.hoverColor = '#0A2463'
+    this.soundButton.focusColor = '#0A2463'
     this.soundButton.x = 100
     this.soundButton.y = this.gameRef.gameHeight - 70
     this.soundButton.buttonText = `${this.gameRef.soundPlayer.enabled ? 'Disable' : 'Enable'} Sound`
@@ -139,16 +139,16 @@ export class StartScreen extends BasedLevel {
   handleSounds() {
     if (!this.gameRef.soundPlayer.enabled) { return }
     if (this.activeSound.playing == false) {
-    //   this.activeSound.soundRef = this.gameRef.soundPlayer.playSound(this.bgSong, () => {
-    //     this.activeSound.playing = false
-    //   })
+      this.activeSound.soundRef = this.gameRef.soundPlayer.playSound(this.bgSong, () => {
+        this.activeSound.playing = false
+      })
       this.activeSound.playing = true
     }
   }
 
   update() {
     this.updateBg()
-    // this.handleSounds()
+    this.handleSounds()
     if (this.gameRef.lastUpdate > this.levelLoadedTime + this.levelLoadedDelay) {
       this.startButton.update()
       this.soundButton.update()
@@ -175,7 +175,7 @@ export class StartScreen extends BasedLevel {
   draw() {
     this.gameRef.ctx.beginPath()
     this.gameRef.ctx.rect(0, 0, this.gameRef.gameWidth, this.gameRef.gameHeight)
-    this.gameRef.ctx.fillStyle = '#0B0A09'
+    this.gameRef.ctx.fillStyle = '#1E1B18'
     this.gameRef.ctx.fill()
 
     this.drawBg()
