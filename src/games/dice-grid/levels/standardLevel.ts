@@ -323,10 +323,10 @@ export class StandardLevel extends BasedLevel {
             }
         }
 
-        if(this.gameState === 'active') {
+        if (this.gameState === 'active') {
             const deadSpot = Object.keys(availableScoreSpots)[getRandomInt(Object.keys(availableScoreSpots).length - 1)]
-            delete this.validScoreSpots[deadSpot]
-            if(this.levelGrid[deadSpot]) {
+            if (this.levelGrid[deadSpot] && !this.scoreSpots[deadSpot]) {
+                delete this.validScoreSpots[deadSpot]
                 this.levelGrid[deadSpot].blocked = true
                 this.levelGrid[deadSpot].color = '#1e1b18'
             }
@@ -714,18 +714,26 @@ export class StandardLevel extends BasedLevel {
                             fillColor: grid.color,
                         })
 
-                        if(grid.blocked) {
+                        if (grid.blocked) {
                             drawText({
                                 c: this.gameRef.ctx,
-                                text: 'X',
+                                text: 'x',
                                 x: Math.floor(drawX + gridMulti / 2),
-                                y: Math.floor(drawY + gridMulti / 2) + 6 * this.gameRef.cameraZoom,
+                                y: Math.floor(drawY + gridMulti / 2) + 4 * this.gameRef.cameraZoom,
                                 fontSize: 16 * this.gameRef.cameraZoom,
                                 fontFamily: 'sans-serif',
                                 weight: 'bold',
                                 align: 'center',
                                 fillColor: '#fff',
                             })
+                            // drawBox({
+                            //     c: this.gameRef.ctx,
+                            //     x: Math.floor(drawX) + 2 * this.gameRef.cameraZoom,
+                            //     y: Math.floor(drawY) + 2 * this.gameRef.cameraZoom,
+                            //     width: Math.ceil(gridMulti) - 4 * this.gameRef.cameraZoom,
+                            //     height: Math.ceil(gridMulti) - 4 * this.gameRef.cameraZoom,
+                            //     fillColor: '#fff',
+                            // })
                         }
 
                         // if (grid.tile) {
@@ -765,9 +773,9 @@ export class StandardLevel extends BasedLevel {
                             })
                         }
 
-                        if(this.gameState === 'lose') {
+                        if (this.gameState === 'lose') {
                             const potentialSpot = this.potentialMoves[gridKey]
-                            if(potentialSpot) {
+                            if (potentialSpot) {
                                 drawCircle({
                                     c: this.gameRef.ctx,
                                     radius: this.moveSpotRadius * this.gameRef.cameraZoom,
@@ -778,7 +786,7 @@ export class StandardLevel extends BasedLevel {
                                 })
                             }
                             const invalidSpot = this.invalidMoves[gridKey]
-                            if(invalidSpot) {
+                            if (invalidSpot) {
                                 drawCircle({
                                     c: this.gameRef.ctx,
                                     radius: this.moveSpotRadius * this.gameRef.cameraZoom,
@@ -866,38 +874,38 @@ export class StandardLevel extends BasedLevel {
         // })
 
         // if (this.diceValue > 0) {
-            const diceEntry = diceFaces[this.diceValue > 0 ? this.diceValue - 1 : this.snakePlayer.diceFrame]
-            const diceSize = 12 * this.gameRef.cameraZoom
-            const diceDistance = 3 * this.gameRef.cameraZoom
-            const diceDotSize = 1.2 * this.gameRef.cameraZoom
-            const dicePosition = {
-                // x: 0,
-                // y: 0,
-                x: this.snakePlayer.x * this.gameRef.cameraZoom * this.levelGridSize + this.gameRef.cameraPos.x,
-                y: this.snakePlayer.y * this.gameRef.cameraZoom * this.levelGridSize + this.gameRef.cameraPos.y,
-            }
-            drawBox({
+        const diceEntry = diceFaces[this.diceValue > 0 ? this.diceValue - 1 : this.snakePlayer.diceFrame]
+        const diceSize = 12 * this.gameRef.cameraZoom
+        const diceDistance = 3 * this.gameRef.cameraZoom
+        const diceDotSize = 1.2 * this.gameRef.cameraZoom
+        const dicePosition = {
+            // x: 0,
+            // y: 0,
+            x: this.snakePlayer.x * this.gameRef.cameraZoom * this.levelGridSize + this.gameRef.cameraPos.x,
+            y: this.snakePlayer.y * this.gameRef.cameraZoom * this.levelGridSize + this.gameRef.cameraPos.y,
+        }
+        drawBox({
+            c: this.gameRef.ctx,
+            x: dicePosition.x + this.levelGridSize / 2 * this.gameRef.cameraZoom - (diceSize / 2),
+            y: dicePosition.y + this.levelGridSize / 2 * this.gameRef.cameraZoom - (diceSize / 2),
+            width: diceSize,
+            height: diceSize,
+            fillColor: 'white',
+        })
+        const diceCenter = {
+            x: dicePosition.x + this.levelGridSize / 2 * this.gameRef.cameraZoom,
+            y: dicePosition.y + this.levelGridSize / 2 * this.gameRef.cameraZoom,
+        }
+        diceEntry.forEach(face => {
+            const [fx, fy] = face
+            drawCircle({
                 c: this.gameRef.ctx,
-                x: dicePosition.x + this.levelGridSize / 2 * this.gameRef.cameraZoom - (diceSize / 2),
-                y: dicePosition.y + this.levelGridSize / 2 * this.gameRef.cameraZoom - (diceSize / 2),
-                width: diceSize,
-                height: diceSize,
-                fillColor: 'white',
+                radius: diceDotSize,
+                fillColor: 'black',
+                x: diceCenter.x + fx * diceDistance,
+                y: diceCenter.y + fy * diceDistance,
             })
-            const diceCenter = {
-                x: dicePosition.x + this.levelGridSize / 2 * this.gameRef.cameraZoom,
-                y: dicePosition.y + this.levelGridSize / 2 * this.gameRef.cameraZoom,
-            }
-            diceEntry.forEach(face => {
-                const [fx, fy] = face
-                drawCircle({
-                    c: this.gameRef.ctx,
-                    radius: diceDotSize,
-                    fillColor: 'black',
-                    x: diceCenter.x + fx * diceDistance,
-                    y: diceCenter.y + fy * diceDistance,
-                })
-            })
+        })
         // }
 
         this.textBox.draw()
