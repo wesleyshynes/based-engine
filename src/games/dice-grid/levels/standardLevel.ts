@@ -18,6 +18,44 @@ import BgMusic from '../../../assets/dice-grid/FastFeelBananaPeel-320bit.mp3'
 import EpicBgMusic from '../../../assets/dice-grid/BoxCat-Games-Epic-Song.mp3'
 import LoseMusic from '../../../assets/dice-grid/03-Meydan-Tired-of-life.mp3'
 import CrunchNoise from '../../../assets/dice-grid/232955__ramstush__crunch_.mp3'
+import SwooshNoise from '../../../assets/dice-grid/371921__mrthenoronha__single-swoosh(1).mp3'
+
+const diceFaces = [
+    [
+        [0, 0],
+    ],
+    [
+        [1, 1],
+        [-1, -1],
+    ],
+    [
+        [1, 1],
+        [-1, -1],
+        [0, 0],
+    ],
+    [
+        [1, 1],
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+    ],
+    [
+        [1, 1],
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+        [0, 0],
+    ],
+    [
+        [1, 1],
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+        [1, 0],
+        [-1, 0],
+    ],
+]
+
 
 export class StandardLevel extends BasedLevel {
 
@@ -37,6 +75,9 @@ export class StandardLevel extends BasedLevel {
     validScoreSpots: { [s: string]: boolean } = {}
 
     validMoves: { [k: string]: boolean } = {}
+
+    invalidMoves: { [k: string]: boolean } = {}
+    potentialMoves: { [k: string]: boolean } = {}
 
     // Camera related stuff
     miniMapActive: boolean = true
@@ -76,6 +117,7 @@ export class StandardLevel extends BasedLevel {
 
     // SOUNDS
     crunchNoise: any
+    swooshNoise: any
 
     // MUSIC
     activeSound: any = {
@@ -109,18 +151,21 @@ export class StandardLevel extends BasedLevel {
         this.gameRef.drawLoading('Picking Apples', .4)
         this.crunchNoise = await this.gameRef.soundPlayer.loadSound(CrunchNoise)
 
+        this.gameRef.drawLoading('Mowing the Lawn', .5)
+        this.swooshNoise = await this.gameRef.soundPlayer.loadSound(SwooshNoise)
+
         this.gameRef.drawLoading('Some Tunes', .6)
         this.bgSong = await this.gameRef.soundPlayer.loadSound(BgMusic)
         this.gameRef.drawLoading('Epic Smphony', .7)
         this.epicBgSong = await this.gameRef.soundPlayer.loadSound(EpicBgMusic)
-        this.gameRef.drawLoading('The Feels', .7)
+        this.gameRef.drawLoading('The Feels', .9)
         this.loseSong = await this.gameRef.soundPlayer.loadSound(LoseMusic)
         this.activeSound.playing = false
     }
 
     initialize(): void {
 
-        this.gameState = 'active'
+        this.gameState = 'loading'
         // reset variables
         this.gameRef.cameraZoom = 1
         this.levelWidth = this.levelGridX * this.levelGridSize
@@ -162,6 +207,8 @@ export class StandardLevel extends BasedLevel {
         })
         this.snakePlayer.x = Math.floor(this.levelGridX / 2)
         this.snakePlayer.y = Math.floor(this.levelGridY / 2)
+        this.snakePlayer.swooshNoise = this.swooshNoise
+        this.snakePlayer.initialize()
 
         while (this.snakePlayer.length > this.snakePlayer.body.length) {
             const sPos = { x: this.snakePlayer.x, y: this.snakePlayer.y, }
@@ -178,10 +225,10 @@ export class StandardLevel extends BasedLevel {
 
         // setup interface
         this.cameraZoomButton = new BasedButton({ gameRef: this.gameRef, key: 'cameraZoomButton' })
-        this.cameraZoomButton.x = 10
-        this.cameraZoomButton.y = 10
         this.cameraZoomButton.width = 60
         this.cameraZoomButton.height = 40
+        this.cameraZoomButton.x = this.gameRef.gameWidth - this.cameraZoomButton.width - 10
+        this.cameraZoomButton.y = this.gameRef.gameHeight - this.cameraZoomButton.height - 10
         this.cameraZoomButton.clickFunction = () => {
             this.miniMapActive = !this.miniMapActive
             this.cameraZoomButton.buttonText = this.miniMapActive ? 'Full' : 'Zoom'
@@ -238,6 +285,8 @@ export class StandardLevel extends BasedLevel {
             console.log(JSON.stringify(sampleSpriter))
         }
         this.spriteTiler.initialize()
+        this.onResize()
+        this.gameState = 'active'
     }
 
     generateScoreSpots(count: number) {
@@ -273,6 +322,15 @@ export class StandardLevel extends BasedLevel {
                 delete availableScoreSpots[newSpot]
             }
         }
+
+        if(this.gameState === 'active') {
+            const deadSpot = Object.keys(availableScoreSpots)[getRandomInt(Object.keys(availableScoreSpots).length - 1)]
+            delete this.validScoreSpots[deadSpot]
+            if(this.levelGrid[deadSpot]) {
+                this.levelGrid[deadSpot].blocked = true
+                this.levelGrid[deadSpot].color = '#1e1b18'
+            }
+        }
     }
 
     checkGameCondition() {
@@ -306,6 +364,8 @@ export class StandardLevel extends BasedLevel {
 
     setValidMoves() {
         this.validMoves = {}
+        this.potentialMoves = {}
+        this.invalidMoves = {}
         if (this.snakePlayer.onTarget && this.snakePlayer.targets.length === 0 && this.diceValue > 0) {
             const snakePos = this.snakePlayer.gridCoordinates
             const validLeft: any = {}
@@ -316,18 +376,26 @@ export class StandardLevel extends BasedLevel {
                 const leftKey = `${snakePos.x - i}-${snakePos.y}`
                 if (!this.snakePlayer.bodyRef[leftKey] && this.levelGrid[leftKey] && !this.levelGrid[leftKey].blocked) {
                     validLeft[leftKey] = true
+                } else {
+                    this.invalidMoves[leftKey] = true
                 }
                 const rightKey = `${snakePos.x + i}-${snakePos.y}`
                 if (!this.snakePlayer.bodyRef[rightKey] && this.levelGrid[rightKey] && !this.levelGrid[rightKey].blocked) {
                     validRight[rightKey] = true
+                } else {
+                    this.invalidMoves[rightKey] = true
                 }
                 const upKey = `${snakePos.x}-${snakePos.y - i}`
                 if (!this.snakePlayer.bodyRef[upKey] && this.levelGrid[upKey] && !this.levelGrid[upKey].blocked) {
                     validUp[upKey] = true
+                } else {
+                    this.invalidMoves[upKey] = true
                 }
                 const downKey = `${snakePos.x}-${snakePos.y + i}`
                 if (!this.snakePlayer.bodyRef[downKey] && this.levelGrid[downKey] && !this.levelGrid[downKey].blocked) {
                     validDown[downKey] = true
+                } else {
+                    this.invalidMoves[downKey] = true
                 }
             }
             this.validMoves = {
@@ -336,12 +404,18 @@ export class StandardLevel extends BasedLevel {
                 ...(Object.keys(validUp).length === this.diceValue ? validUp : {}),
                 ...(Object.keys(validDown).length === this.diceValue ? validDown : {}),
             }
+            this.potentialMoves = {
+                ...validLeft,
+                ...validRight,
+                ...validUp,
+                ...validDown,
+            }
 
             if (Object.keys(this.validMoves).length === 0) {
                 // alert('you lose')
                 // this.gameRef.loadLevel('start-screen')
                 this.textBox.setText('Game Over! Your score is ' + Math.ceil(this.snakePlayer.length * Math.PI))
-                if(this.gameState !== 'lose') {
+                if (this.gameState !== 'lose') {
                     this.activeSound.soundRef.stop()
                     this.gameState = 'lose'
                 }
@@ -554,10 +628,10 @@ export class StandardLevel extends BasedLevel {
         if (!this.gameRef.soundPlayer.enabled) { return }
         if (this.activeSound.playing == false) {
             let songToPlay = this.bgSong
-            if(this.snakePlayer.body.length > 7) {
+            if (this.snakePlayer.body.length > 7) {
                 songToPlay = this.epicBgSong
             }
-            if(this.gameState === 'lose') {
+            if (this.gameState === 'lose') {
                 songToPlay = this.loseSong
             }
             this.activeSound.soundRef = this.gameRef.soundPlayer.playSound(songToPlay, () => {
@@ -603,6 +677,11 @@ export class StandardLevel extends BasedLevel {
         this.gameRef.handleCameraShake()
     }
 
+    onResize() {
+        this.cameraZoomButton.x = this.gameRef.gameWidth - this.cameraZoomButton.width - 10
+        this.cameraZoomButton.y = this.gameRef.gameHeight - this.cameraZoomButton.height - 10
+    }
+
     draw(): void {
         this.gameRef.ctx.beginPath()
         this.gameRef.ctx.rect(0, 0, this.gameRef.gameWidth, this.gameRef.gameHeight)
@@ -635,6 +714,20 @@ export class StandardLevel extends BasedLevel {
                             fillColor: grid.color,
                         })
 
+                        if(grid.blocked) {
+                            drawText({
+                                c: this.gameRef.ctx,
+                                text: 'X',
+                                x: Math.floor(drawX + gridMulti / 2),
+                                y: Math.floor(drawY + gridMulti / 2) + 6 * this.gameRef.cameraZoom,
+                                fontSize: 16 * this.gameRef.cameraZoom,
+                                fontFamily: 'sans-serif',
+                                weight: 'bold',
+                                align: 'center',
+                                fillColor: '#fff',
+                            })
+                        }
+
                         // if (grid.tile) {
                         //     drawImage({
                         //         ...this.bgTilemap,
@@ -657,7 +750,7 @@ export class StandardLevel extends BasedLevel {
                                 y: drawY,
                                 width: gridMulti,
                                 height: gridMulti,
-                                fillColor: 'rgba(255,250,255,0.5)',
+                                fillColor: 'rgba(255,250,255,0.7)',
                             })
                         }
 
@@ -670,6 +763,31 @@ export class StandardLevel extends BasedLevel {
                                 x: drawX + gridMulti / 2,
                                 y: drawY + gridMulti / 2,
                             })
+                        }
+
+                        if(this.gameState === 'lose') {
+                            const potentialSpot = this.potentialMoves[gridKey]
+                            if(potentialSpot) {
+                                drawCircle({
+                                    c: this.gameRef.ctx,
+                                    radius: this.moveSpotRadius * this.gameRef.cameraZoom,
+                                    fillColor: 'orange',
+                                    // fillColor: '#fffaff',
+                                    x: drawX + gridMulti / 2,
+                                    y: drawY + gridMulti / 2,
+                                })
+                            }
+                            const invalidSpot = this.invalidMoves[gridKey]
+                            if(invalidSpot) {
+                                drawCircle({
+                                    c: this.gameRef.ctx,
+                                    radius: this.moveSpotRadius * this.gameRef.cameraZoom,
+                                    fillColor: 'red',
+                                    // fillColor: '#fffaff',
+                                    x: drawX + gridMulti / 2,
+                                    y: drawY + gridMulti / 2,
+                                })
+                            }
                         }
 
                         // draw the win spot
@@ -736,16 +854,51 @@ export class StandardLevel extends BasedLevel {
         // })
 
         // text stuff
-        drawText({
-            c: this.gameRef.ctx,
-            text: `Dice: ${this.diceValue}`,
-            x: 10,
-            y: this.gameRef.gameHeight - 50,
-            fontSize: 20,
-            fillColor: 'green',
-            fontFamily: 'sans-serif',
-            align: 'left'
-        })
+        // drawText({
+        //     c: this.gameRef.ctx,
+        //     text: `Dice: ${this.diceValue}`,
+        //     x: 10,
+        //     y: this.gameRef.gameHeight - 50,
+        //     fontSize: 20,
+        //     fillColor: 'green',
+        //     fontFamily: 'sans-serif',
+        //     align: 'left'
+        // })
+
+        // if (this.diceValue > 0) {
+            const diceEntry = diceFaces[this.diceValue > 0 ? this.diceValue - 1 : this.snakePlayer.diceFrame]
+            const diceSize = 12 * this.gameRef.cameraZoom
+            const diceDistance = 3 * this.gameRef.cameraZoom
+            const diceDotSize = 1.2 * this.gameRef.cameraZoom
+            const dicePosition = {
+                // x: 0,
+                // y: 0,
+                x: this.snakePlayer.x * this.gameRef.cameraZoom * this.levelGridSize + this.gameRef.cameraPos.x,
+                y: this.snakePlayer.y * this.gameRef.cameraZoom * this.levelGridSize + this.gameRef.cameraPos.y,
+            }
+            drawBox({
+                c: this.gameRef.ctx,
+                x: dicePosition.x + this.levelGridSize / 2 * this.gameRef.cameraZoom - (diceSize / 2),
+                y: dicePosition.y + this.levelGridSize / 2 * this.gameRef.cameraZoom - (diceSize / 2),
+                width: diceSize,
+                height: diceSize,
+                fillColor: 'white',
+            })
+            const diceCenter = {
+                x: dicePosition.x + this.levelGridSize / 2 * this.gameRef.cameraZoom,
+                y: dicePosition.y + this.levelGridSize / 2 * this.gameRef.cameraZoom,
+            }
+            diceEntry.forEach(face => {
+                const [fx, fy] = face
+                drawCircle({
+                    c: this.gameRef.ctx,
+                    radius: diceDotSize,
+                    fillColor: 'black',
+                    x: diceCenter.x + fx * diceDistance,
+                    y: diceCenter.y + fy * diceDistance,
+                })
+            })
+        // }
 
         this.textBox.draw()
     }

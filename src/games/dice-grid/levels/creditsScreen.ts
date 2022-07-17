@@ -47,11 +47,19 @@ export default class CreditsScreen extends BasedLevel {
   initialize() {
     this.creditHeightOffset = this.gameRef.gameHeight
     this.credits = [
-      { title: 'produced by:', name: 'Shynes Gaming', },
-      { title: 'lead programmer:', name: 'Chewdawg', },
-      { title: 'lead artist:', name: 'Wesley Shynes', },
-      { title: 'sound effects:', name: 'freesound.org', },
-      { title: 'music:', name: 'chosic.com', },
+      { title: 'PRODUCED BY:', name: 'Shynes Gaming', },
+      { title: 'LEAD PROGRAMMER:', name: 'Chewdawg', },
+      { title: 'LEAD ARTIST:', name: 'Wesley Shynes', },
+      { title: '', name: '', },
+      { title: 'SOUND EFFECTS:', name: ' pulled from freesound.org', },
+      { title: 'ramstush', name: 'crunch', },
+      { title: 'Single Swoosh', name: 'Mrthenoronha', },
+      { title: '', name: '', },
+      { title: 'MUSIC:', name: 'pulled from chosic.com', },
+      { title: 'Silly Intro', name: 'Alexander Nakarada', },
+      { title: 'Fast Feel Banana', name: 'Alexander Nakarada', },
+      { title: 'Epic Song', name: 'BoxCat Games', },
+      { title: 'Tired of Life', name: 'Meydän', },
       { title: '', name: '', },
       { title: '', name: 'THANK YOU FOR PLAYING!', },
     ]

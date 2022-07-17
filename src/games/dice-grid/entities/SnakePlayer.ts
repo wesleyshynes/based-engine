@@ -1,6 +1,6 @@
 import { BasedObject } from "../../../engine/BasedObject";
 import { drawCircle, drawLine } from "../../../engine/libs/drawHelpers";
-import { angleBetween, distanceBetween, pointOnCircle, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { angleBetween, distanceBetween, getRandomInt, pointOnCircle, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 
 export class SnakePlayer extends BasedObject {
     x: number = 4
@@ -15,6 +15,8 @@ export class SnakePlayer extends BasedObject {
 
     speed: number = .2
     color: string = '#fffaff'
+
+    diceFrame: number = 0
 
     bodyRef: { [key: string]: boolean } = {}
 
@@ -32,6 +34,8 @@ export class SnakePlayer extends BasedObject {
 
     radius: number = 5
 
+    swooshNoise: any;
+
     async preload() { }
     initialize() {
         this.setGridCoordinates()
@@ -43,6 +47,10 @@ export class SnakePlayer extends BasedObject {
 
     setTarget(target: XYCoordinateType) {
         if (this.onTarget) {
+            if(this.swooshNoise){
+                this.gameRef.soundPlayer.playSound(this.swooshNoise)
+                this.diceFrame = getRandomInt(6)
+            }
             this.target = {
                 x: target.x,
                 y: target.y,
