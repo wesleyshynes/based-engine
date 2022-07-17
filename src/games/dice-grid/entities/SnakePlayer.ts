@@ -14,6 +14,9 @@ export class SnakePlayer extends BasedObject {
     }[] = []
 
     speed: number = .2
+    color: string = 'red'
+
+    bodyRef: { [key: string]: boolean } = {}
 
     gridSize: number = 16
     gridCoordinates: XYCoordinateType = {
@@ -29,7 +32,7 @@ export class SnakePlayer extends BasedObject {
 
     radius: number = 5
 
-    async preload(){}
+    async preload() { }
     initialize() {
         this.setGridCoordinates()
         this.target = {
@@ -39,21 +42,21 @@ export class SnakePlayer extends BasedObject {
     }
 
     setTarget(target: XYCoordinateType) {
-        if(this.onTarget) {            
+        if (this.onTarget) {
             this.target = {
                 x: target.x,
                 y: target.y,
             }
-            this.body.forEach((b,i) => {
-                if(i === 0) {
+            this.body.forEach((b, i) => {
+                if (i === 0) {
                     b.target = {
                         x: this.x,
                         y: this.y,
                     }
                 } else {
                     b.target = {
-                        x: this.body[i-1].position.x,
-                        y: this.body[i-1].position.y,
+                        x: this.body[i - 1].position.x,
+                        y: this.body[i - 1].position.y,
                     }
                 }
             })
@@ -65,6 +68,19 @@ export class SnakePlayer extends BasedObject {
             x: Math.floor(this.x),
             y: Math.floor(this.y),
         }
+        this.bodyRef = {}
+        this.bodyRef[this.getGridKey()] = true
+        this.body.forEach((b, i) => {
+            b.gridCoordinates = {
+                x: Math.floor(b.position.x),
+                y: Math.floor(b.position.y),
+            }
+            this.bodyRef[`${b.gridCoordinates.x}-${b.gridCoordinates.y}`] = true
+        })
+    }
+
+    getGridKey() {
+        return `${this.gridCoordinates.x}-${this.gridCoordinates.y}`
     }
 
     update() {
@@ -77,10 +93,14 @@ export class SnakePlayer extends BasedObject {
             this.body.forEach((b, i) => {
                 b.position.x = b.target.x
                 b.position.y = b.target.y
+                b.gridCoordinates.x = b.target.x
+                b.gridCoordinates.y = b.target.y
             })
-            if(this.targets.length) {
+            if (this.targets.length > 0) {
                 this.setTarget(this.targets.shift())
+                this.onTarget = false
             }
+            this.setGridCoordinates()
             return
         }
         const angle = angleBetween(this, this.target)
@@ -94,46 +114,59 @@ export class SnakePlayer extends BasedObject {
             b.position.x += newPosition.x
             b.position.y += newPosition.y
         })
+        this.setGridCoordinates()
     }
+
+    addBodyPart() {
+        this.body.push({
+            target: { x: this.body[this.body.length - 1].position.x, y: this.body[this.body.length - 1].position.y },
+            position: { x: this.body[this.body.length - 1].position.x, y: this.body[this.body.length - 1].position.y },
+            gridCoordinates: { x: this.body[this.body.length - 1].gridCoordinates.x, y: this.body[this.body.length - 1].gridCoordinates.y },
+        })
+    }
+
     draw() {
-        this.body.forEach((b,i) => {
+        this.color = this.onTarget ? 'red' : 'blue'
+        this.body.forEach((b, i) => {
             drawCircle({
                 c: this.gameRef.ctx,
-                x: (this.gridSize/2) * this.gameRef.cameraZoom + b.position.x * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-                y: (this.gridSize/2) * this.gameRef.cameraZoom + b.position.y * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+                x: (this.gridSize / 2) * this.gameRef.cameraZoom + b.position.x * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+                y: (this.gridSize / 2) * this.gameRef.cameraZoom + b.position.y * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
                 radius: this.radius * this.gameRef.cameraZoom,
-                fillColor: '#ff0000'
+                fillColor: this.color
             })
-            if(i > 0) {
+            if (i > 0) {
                 drawLine({
                     c: this.gameRef.ctx,
-                    x: (this.gridSize/2) * this.gameRef.cameraZoom + b.position.x * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-                    y: (this.gridSize/2) * this.gameRef.cameraZoom + b.position.y * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-                    toX: (this.gridSize/2) * this.gameRef.cameraZoom + this.body[i-1].position.x * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-                    toY: (this.gridSize/2) * this.gameRef.cameraZoom + this.body[i-1].position.y * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-                    strokeColor: '#ff0000',
-                    strokeWidth: this.radius * this.gameRef.cameraZoom
+                    x: (this.gridSize / 2) * this.gameRef.cameraZoom + b.position.x * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+                    y: (this.gridSize / 2) * this.gameRef.cameraZoom + b.position.y * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+                    toX: (this.gridSize / 2) * this.gameRef.cameraZoom + this.body[i - 1].position.x * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+                    toY: (this.gridSize / 2) * this.gameRef.cameraZoom + this.body[i - 1].position.y * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+                    strokeColor: this.color,
+                    strokeWidth: this.radius * 2 * this.gameRef.cameraZoom
                 })
             } else {
                 drawLine({
                     c: this.gameRef.ctx,
-                    x: (this.gridSize/2) * this.gameRef.cameraZoom + b.position.x * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-                    y: (this.gridSize/2) * this.gameRef.cameraZoom + b.position.y * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-                    toX: (this.gridSize/2) * this.gameRef.cameraZoom + this.x * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-                    toY: (this.gridSize/2) * this.gameRef.cameraZoom + this.y * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-                    strokeColor: '#ff0000',
-                    strokeWidth: this.radius * this.gameRef.cameraZoom
+                    x: (this.gridSize / 2) * this.gameRef.cameraZoom + b.position.x * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+                    y: (this.gridSize / 2) * this.gameRef.cameraZoom + b.position.y * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+                    toX: (this.gridSize / 2) * this.gameRef.cameraZoom + this.x * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+                    toY: (this.gridSize / 2) * this.gameRef.cameraZoom + this.y * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+                    strokeColor: this.color,
+                    strokeWidth: this.radius * 2 * this.gameRef.cameraZoom
                 })
             }
         })
+
+        // draw head
         drawCircle({
             c: this.gameRef.ctx,
-            x: (this.gridSize/2) * this.gameRef.cameraZoom + this.x * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: (this.gridSize/2) * this.gameRef.cameraZoom + this.y * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+            x: (this.gridSize / 2) * this.gameRef.cameraZoom + this.x * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+            y: (this.gridSize / 2) * this.gameRef.cameraZoom + this.y * this.gridSize * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
             radius: this.radius * this.gameRef.cameraZoom,
-            fillColor: '#ff0000'
+            fillColor: this.color
         })
     }
-    tearDown() {}
+    tearDown() { }
 
 }

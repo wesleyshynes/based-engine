@@ -30,12 +30,16 @@ export class StandardLevel extends BasedLevel {
 
     winSpot = `8-7`
 
+    validMoves: { [k: string]: boolean } = {}
+
     // Camera related stuff
-    miniMapActive: boolean = false
+    miniMapActive: boolean = true
     followCam: any;
 
     // Interface stuff
     cameraZoomButton: any
+
+    lastKeyPress = 0
 
     // Tools
     spriteTiler: any
@@ -47,6 +51,8 @@ export class StandardLevel extends BasedLevel {
     // Sprites stuff
     bgTilemap: any;
     skeletonTileSheet: any
+
+    toastMessages: { text: string, duration: number, yOffset: number, xOffset: number }[] = []
 
     async preload() {
         this.gameRef.drawLoading('Tile map', .1)
@@ -122,12 +128,12 @@ export class StandardLevel extends BasedLevel {
             key: 'snakePlayer',
         })
 
-        while(this.snakePlayer.length > this.snakePlayer.body.length) {
-            const sPos = {x: this.snakePlayer.x + (this.snakePlayer.body.length + 1), y: this.snakePlayer.y, }
+        while (this.snakePlayer.length > this.snakePlayer.body.length) {
+            const sPos = { x: this.snakePlayer.x + (this.snakePlayer.body.length + 1), y: this.snakePlayer.y, }
             this.snakePlayer.body.push({
-                target: {...sPos},
-                position: {...sPos},
-                gridCoordinates: {...sPos},
+                target: { ...sPos },
+                position: { ...sPos },
+                gridCoordinates: { ...sPos },
             })
         }
         this.snakePlayer.initialize()
@@ -178,6 +184,30 @@ export class StandardLevel extends BasedLevel {
     }
 
     checkGameCondition() {
+        const snakeGridPos = this.snakePlayer.getGridKey()
+        if (snakeGridPos === this.winSpot) {
+            // this.snakePlayer.color = 'green'
+            this.snakePlayer.addBodyPart()
+            this.winSpot = `used`
+            this.addToast(`Scored!`, { yOffset: -60 })
+            this.gameRef.shakeCamera()
+            while (
+                !this.levelGrid[this.winSpot] ||
+                this.levelGrid[this.winSpot].blocked ||
+                this.snakePlayer.bodyRef[this.winSpot]
+            ) {
+                this.winSpot = `${getRandomInt(this.levelGridX)}-${getRandomInt(this.levelGridY)}`
+            }
+        }
+
+        // if(!this.snakePlayer.onTarget && this.snakePlayer.targets.length > 0) {
+        //     const targetGridCoordinates = `${Math.floor(this.snakePlayer.target.x)}-${Math.floor(this.snakePlayer.y)}`
+        //     if (this.snakePlayer.bodyRef[targetGridCoordinates]) {
+        //         alert('you lose')
+        //         console.log(targetGridCoordinates, this.snakePlayer.bodyRef)
+        //         this.gameRef.loadLevel('start-screen')
+        //     }
+        // }
         // const playerGrid = this.selectedPlayer.getGridKey()
         // if (playerGrid === this.winSpot) {
         //     // this.gameRef.loadLevel('start-screen')
@@ -187,9 +217,142 @@ export class StandardLevel extends BasedLevel {
         // }
     }
 
+    setValidMoves() {
+        this.validMoves = {}
+        if (this.snakePlayer.onTarget && this.snakePlayer.targets.length === 0 && this.diceValue > 0) {
+            const snakePos = this.snakePlayer.gridCoordinates
+            const validLeft: any = {}
+            const validRight: any = {}
+            const validUp: any = {}
+            const validDown: any = {}
+            for (let i = 1; i <= this.diceValue; i++) {
+                const leftKey = `${snakePos.x - i}-${snakePos.y}`
+                if (!this.snakePlayer.bodyRef[leftKey] && this.levelGrid[leftKey] && !this.levelGrid[leftKey].blocked) {
+                    validLeft[leftKey] = true
+                }
+                const rightKey = `${snakePos.x + i}-${snakePos.y}`
+                if (!this.snakePlayer.bodyRef[rightKey] && this.levelGrid[rightKey] && !this.levelGrid[rightKey].blocked) {
+                    validRight[rightKey] = true
+                }
+                const upKey = `${snakePos.x}-${snakePos.y - i}`
+                if (!this.snakePlayer.bodyRef[upKey] && this.levelGrid[upKey] && !this.levelGrid[upKey].blocked) {
+                    validUp[upKey] = true
+                }
+                const downKey = `${snakePos.x}-${snakePos.y + i}`
+                if (!this.snakePlayer.bodyRef[downKey] && this.levelGrid[downKey] && !this.levelGrid[downKey].blocked) {
+                    validDown[downKey] = true
+                }
+            }
+            this.validMoves = {
+                ...(Object.keys(validLeft).length === this.diceValue ? validLeft : {}),
+                ...(Object.keys(validRight).length === this.diceValue ? validRight : {}),
+                ...(Object.keys(validUp).length === this.diceValue ? validUp : {}),
+                ...(Object.keys(validDown).length === this.diceValue ? validDown : {}),
+            }
+
+            if (Object.keys(this.validMoves).length === 0) {
+                alert('you lose')
+                this.gameRef.loadLevel('start-screen')
+            }
+        } else if (this.snakePlayer.onTarget && this.snakePlayer.targets.length === 0) {
+            this.diceValue = getRandomInt(6) + 1
+            this.addToast('Rolled a ' + this.diceValue)
+        }
+    }
+
+    addToast(text: string, options: any = {}) {
+        const {
+            duration,
+            yOffset,
+            xOffset,
+        } = options
+        this.toastMessages.push({
+            text: text,
+            duration: duration ? duration : 1000,
+            yOffset: yOffset ? yOffset : 0,
+            xOffset: xOffset ? xOffset : 0,
+        })
+    }
+
+    handleToasts() {
+        if (this.toastMessages.length > 0) {
+            this.toastMessages = this.toastMessages.map(x => {
+                return {
+                    ...x,
+                    duration: x.duration - this.gameRef.updateDiff
+                }
+            }).filter(x => {
+                return x.duration > 0
+            })
+        }
+    }
+
+    drawToasts() {
+        if (this.toastMessages.length) {
+            this.toastMessages.forEach((toast, idx) => {
+                const toastOpacity = toast.duration > 500 ? 1 : toast.duration / 500
+                const toastOffset = toast.duration > 500 ? 0 : ((500 - toast.duration) / 500) * 60
+                drawText({
+                    c: this.gameRef.ctx,
+                    x: this.gameRef.gameWidth / 2 + toast.xOffset + 1,
+                    y: this.gameRef.gameHeight / 2 + toast.yOffset + 1 - toastOffset,
+                    // y: this.gameRef.gameHeight/2 + (idx * 40) + 1 - toastOffset,
+                    align: 'center',
+                    fontSize: 24,
+                    fontFamily: 'sans-serif',
+                    weight: 'bold',
+                    fillColor: `rgba(0,0,0,${toastOpacity})`,
+                    text: toast.text
+                })
+                drawText({
+                    c: this.gameRef.ctx,
+                    x: this.gameRef.gameWidth / 2 + toast.xOffset,
+                    y: this.gameRef.gameHeight / 2 + toast.yOffset - toastOffset,
+                    // y: this.gameRef.gameHeight/2 + (idx * 40) - toastOffset,
+                    align: 'center',
+                    fontSize: 24,
+                    fontFamily: 'sans-serif',
+                    weight: 'bold',
+                    fillColor: `rgba(255,255,255,${toastOpacity})`,
+                    text: toast.text
+                })
+            })
+        }
+    }
+
     handleInput() {
-        const xMousePos = Math.floor(((this.gameRef.mouseInfo.x - this.gameRef.cameraPos.x) / this.gameRef.cameraZoom) / this.levelGridSize)
-        const yMousePos = Math.floor(((this.gameRef.mouseInfo.y - this.gameRef.cameraPos.y) / this.gameRef.cameraZoom) / this.levelGridSize)
+        let keyPressed = false
+        let xMousePos = this.snakePlayer.x
+        let yMousePos = this.snakePlayer.y
+        if (this.lastKeyPress + 300 < this.gameRef.lastUpdate) {
+            const pressedKeys = this.gameRef.pressedKeys
+            if (pressedKeys['KeyA'] || pressedKeys['ArrowLeft']) {
+                xMousePos--
+                keyPressed = true
+            }
+            if (pressedKeys['KeyD'] || pressedKeys['ArrowRight']) {
+                xMousePos++
+                keyPressed = true
+            }
+            if ((pressedKeys['KeyW'] || pressedKeys['ArrowUp'])) {
+                yMousePos--
+                keyPressed = true
+            }
+            if ((pressedKeys['KeyS'] || pressedKeys['ArrowDown'])) {
+                yMousePos++
+                keyPressed = true
+            }
+            if (keyPressed) {
+                this.lastKeyPress = this.gameRef.lastUpdate
+            }
+        }
+
+        if (!keyPressed) {
+            xMousePos = Math.floor(((this.gameRef.mouseInfo.x - this.gameRef.cameraPos.x) / this.gameRef.cameraZoom) / this.levelGridSize)
+            yMousePos = Math.floor(((this.gameRef.mouseInfo.y - this.gameRef.cameraPos.y) / this.gameRef.cameraZoom) / this.levelGridSize)
+        }
+
+
         if (this.levelGrid[this.selectedGrid]) {
             this.levelGrid[this.selectedGrid].selected = false
         }
@@ -205,23 +368,51 @@ export class StandardLevel extends BasedLevel {
                 return
             }
 
-            if(this.gameRef.mouseInfo.mouseDown && this.snakePlayer.onTarget && this.snakePlayer.targets.length === 0) {
+            if (
+                (keyPressed || this.gameRef.mouseInfo.mouseDown) &&
+                this.diceValue > 0 &&
+                this.snakePlayer.onTarget &&
+                this.snakePlayer.targets.length === 0 &&
+                this.validMoves[this.selectedGrid]
+            ) {
                 const currPos = {
                     x: this.snakePlayer.x,
                     y: this.snakePlayer.y,
                 }
-                while(currPos.x !== xMousePos || currPos.y !== yMousePos) {
-                    if(currPos.x !== xMousePos) {
-                        currPos.x += currPos.x > xMousePos ? -1 : 1
-                        this.snakePlayer.targets.push({...currPos})
+                let xDir = currPos.x
+                let yDir = currPos.y
+                if (Math.abs(xMousePos - currPos.x) > 0) {
+                    xDir += ((xMousePos - currPos.x) / Math.abs(xMousePos - currPos.x)) * this.diceValue
+                }
+                if (Math.abs(yMousePos - currPos.y) > 0) {
+                    yDir += ((yMousePos - currPos.y) / Math.abs(yMousePos - currPos.y)) * this.diceValue
+                }
+
+                while (currPos.x !== xDir || currPos.y !== yDir) {
+                    if (currPos.x !== xDir) {
+                        currPos.x += currPos.x > xDir ? -1 : 1
+                        this.snakePlayer.targets.push({ ...currPos })
                         continue
                     }
-                    if(currPos.y !== yMousePos) {
-                        currPos.y += currPos.y > yMousePos ? -1 : 1
-                        this.snakePlayer.targets.push({...currPos})
+                    if (currPos.y !== yDir) {
+                        currPos.y += currPos.y > yDir ? -1 : 1
+                        this.snakePlayer.targets.push({ ...currPos })
                         continue
                     }
                 }
+                // while (currPos.x !== xMousePos || currPos.y !== yMousePos) {
+                //     if (currPos.x !== xMousePos) {
+                //         currPos.x += currPos.x > xMousePos ? -1 : 1
+                //         this.snakePlayer.targets.push({ ...currPos })
+                //         continue
+                //     }
+                //     if (currPos.y !== yMousePos) {
+                //         currPos.y += currPos.y > yMousePos ? -1 : 1
+                //         this.snakePlayer.targets.push({ ...currPos })
+                //         continue
+                //     }
+                // }
+                this.diceValue = 0
                 // this.snakePlayer.setTarget({
                 //     x: xMousePos,
                 //     y: yMousePos,
@@ -250,21 +441,25 @@ export class StandardLevel extends BasedLevel {
 
         this.spriteTiler.update()
 
+        this.setValidMoves()
         if (!this.cameraZoomButton.hovered && !this.rollDiceBtn.hovered) {
             this.handleInput()
         }
 
         this.snakePlayer.update()
+        this.handleToasts()
 
         this.updateCamera()
     }
 
     updateCamera() {
-        this.followCam.setTarget(
-            { x: this.levelWidth / 2, y: this.levelHeight / 2 },
-        )
+        this.followCam.setTarget({
+            x: this.snakePlayer.x * this.levelGridSize,
+            y: this.snakePlayer.y * this.levelGridSize,
+        })
         this.followCam.setFullScreen(this.miniMapActive)
         this.followCam.update()
+        this.gameRef.handleCameraShake()
     }
 
     draw(): void {
@@ -310,7 +505,7 @@ export class StandardLevel extends BasedLevel {
                                 dHeight: Math.ceil(gridMulti)
                             })
                         }
-                        if (grid.selected) {
+                        if (grid.selected && !grid.blocked && !this.gameRef.touchMode && this.snakePlayer.onTarget) {
                             drawBox({
                                 c: this.gameRef.ctx,
                                 x: drawX,
@@ -322,10 +517,8 @@ export class StandardLevel extends BasedLevel {
                         }
 
                         // draw valid spot marker
-                        let validSpot = false
-                        if (this.diceValue > 0 && !grid.blocked) {
+                        let validSpot = this.validMoves[gridKey]
 
-                        }
                         if (validSpot) {
                             drawCircle({
                                 c: this.gameRef.ctx,
@@ -368,6 +561,8 @@ export class StandardLevel extends BasedLevel {
 
         this.cameraZoomButton.draw()
         this.rollDiceBtn.draw()
+
+        this.drawToasts()
 
         this.spriteTiler.draw()
         // this.spriteXSlider.draw()
