@@ -12,21 +12,25 @@ import BgTilemap from '../../../assets/dice-grid/tilemap_big.png'
 import SkeletonTileSheet from '../../../assets/dice-grid/skeleton spritesheet calciumtrice_big.png'
 import { sampleLayout } from "../layouts/sampleLayouts";
 import { SpriteTiler } from "../utils/SpriteTiler";
-import { SnakePlayer } from "../entities/SnakePlayer";
 
 export class StandardLevel extends BasedLevel {
 
     levelWidth: number = 1000
     levelHeight: number = 1000
 
+    activePlayer: 'main' | 'enemy' = 'main'
+    players: any[] = []
+    enemyPlayers: any[] = []
+    playerRef: { [key: string]: DicePlayer } = {}
+
+
     levelGrid: { [p: string]: any } = {}
     levelGridX: number = 20
     levelGridY: number = 20
     levelGridSize: number = 16
 
+    selectedPlayer: any;
     selectedGrid: string = ''
-
-    snakePlayer: any;
 
     winSpot = `8-7`
 
@@ -117,20 +121,52 @@ export class StandardLevel extends BasedLevel {
             }
         }
 
-        this.snakePlayer = new SnakePlayer({
-            gameRef: this.gameRef,
-            key: 'snakePlayer',
+        // create the players
+        this.players = [
+            { x: 3, y: 3 },
+            { x: 3, y: 4 },
+            { x: 3, y: 5 },
+            { x: 3, y: 6 },
+        ].map((e, i) => {
+            const p = new DicePlayer({
+                key: `player${i}`,
+                gameRef: this.gameRef,
+            })
+            p.owner = 'main'
+            p.color = 'blue'
+            p.playerName = `player-${i}`
+            p.x = (e.x * this.levelGridSize) + this.levelGridSize / 2
+            p.y = (e.y * this.levelGridSize) + this.levelGridSize / 2
+            p.gridRef = this.levelGrid
+            p.spriteSheet = { ...this.skeletonTileSheet }
+            p.initialize()
+            this.playerRef[p.objectKey] = p
+            return p
+        })
+        this.selectPlayer(this.players[0])
+
+        this.enemyPlayers = [
+            { x: 10, y: 5 },
+            { x: 10, y: 6 },
+            { x: 10, y: 7 },
+            { x: 10, y: 8 },
+        ].map((e, i) => {
+            const p = new DicePlayer({
+                key: `enemy${i}`,
+                gameRef: this.gameRef,
+            })
+            p.owner = 'enemy'
+            p.color = 'red'
+            p.playerName = `enemy-${i}`
+            p.x = (e.x * this.levelGridSize) + this.levelGridSize / 2
+            p.y = (e.y * this.levelGridSize) + this.levelGridSize / 2
+            p.gridRef = this.levelGrid
+            p.spriteSheet = { ...this.skeletonTileSheet }
+            p.initialize()
+            this.playerRef[p.objectKey] = p
+            return p
         })
 
-        while(this.snakePlayer.length > this.snakePlayer.body.length) {
-            const sPos = {x: this.snakePlayer.x + (this.snakePlayer.body.length + 1), y: this.snakePlayer.y, }
-            this.snakePlayer.body.push({
-                target: {...sPos},
-                position: {...sPos},
-                gridCoordinates: {...sPos},
-            })
-        }
-        this.snakePlayer.initialize()
 
         // setup interface
         this.cameraZoomButton = new BasedButton({ gameRef: this.gameRef, key: 'cameraZoomButton' })
@@ -150,9 +186,9 @@ export class StandardLevel extends BasedLevel {
         this.rollDiceBtn.width = 60
         this.rollDiceBtn.height = 40
         this.rollDiceBtn.clickFunction = () => {
-            // if (this.selectedPlayer.onTarget) {
-            this.diceValue = getRandomInt(6) + 1
-            // }
+            if (this.selectedPlayer.onTarget) {
+                this.diceValue = getRandomInt(6) + 1
+            }
         }
         this.rollDiceBtn.buttonText = 'Roll'
 
@@ -187,6 +223,14 @@ export class StandardLevel extends BasedLevel {
         // }
     }
 
+    selectPlayer(player: DicePlayer) {
+        if (this.selectedPlayer) {
+            this.selectedPlayer.selected = false
+        }
+        this.selectedPlayer = player
+        this.selectedPlayer.selected = true
+    }
+
     handleInput() {
         const xMousePos = Math.floor(((this.gameRef.mouseInfo.x - this.gameRef.cameraPos.x) / this.gameRef.cameraZoom) / this.levelGridSize)
         const yMousePos = Math.floor(((this.gameRef.mouseInfo.y - this.gameRef.cameraPos.y) / this.gameRef.cameraZoom) / this.levelGridSize)
@@ -199,47 +243,82 @@ export class StandardLevel extends BasedLevel {
             activeGrid.selected = true
 
             // handle sprite tiler controls
-            this.spriteTilerHandler()
+            if (this.spriteTiler.active && this.gameRef.mouseInfo.mouseDown && this.diceValue === 0) {
+                if (this.spriteTiler.drawMode === 'draw') {
+                    this.levelGrid[this.selectedGrid].tile = this.spriteTiler.getCurrentSprite()
+                }
+                if (this.spriteTiler.drawMode === 'delete') {
+                    delete this.levelGrid[this.selectedGrid].tile
+                }
+            }
 
             if (activeGrid.blocked) {
                 return
             }
 
-            if(this.gameRef.mouseInfo.mouseDown && this.snakePlayer.onTarget && this.snakePlayer.targets.length === 0) {
-                const currPos = {
-                    x: this.snakePlayer.x,
-                    y: this.snakePlayer.y,
-                }
-                while(currPos.x !== xMousePos || currPos.y !== yMousePos) {
-                    if(currPos.x !== xMousePos) {
-                        currPos.x += currPos.x > xMousePos ? -1 : 1
-                        this.snakePlayer.targets.push({...currPos})
-                        continue
-                    }
-                    if(currPos.y !== yMousePos) {
-                        currPos.y += currPos.y > yMousePos ? -1 : 1
-                        this.snakePlayer.targets.push({...currPos})
-                        continue
+            if (this.diceValue === 0 && this.selectedPlayer.onTarget) {
+                if (this.gameRef.mouseInfo.mouseDown && activeGrid.occupants && Object.keys(activeGrid.occupants).length > 0) {
+                    const liveOccupant = Object.keys(activeGrid.occupants).find(x => activeGrid.occupants[x].active)
+                    if (liveOccupant) {
+                        this.selectPlayer(activeGrid.occupants[liveOccupant])
                     }
                 }
-                // this.snakePlayer.setTarget({
-                //     x: xMousePos,
-                //     y: yMousePos,
-                // })
+            } else {
+                let validTarget = false
+                const playerPos = this.selectedPlayer.gridCoordinates
+                if (
+                    (playerPos.y === yMousePos && Math.abs(playerPos.x - xMousePos) <= this.diceValue) ||
+                    (playerPos.x === xMousePos && Math.abs(playerPos.y - yMousePos) <= this.diceValue)
+                ) {
+                    validTarget = true
+                }
+                if (this.gameRef.mouseInfo.mouseDown && validTarget && this.selectedPlayer.onTarget) {
+                    this.selectedPlayer.setTarget({
+                        x: xMousePos * this.levelGridSize + this.levelGridSize / 2,
+                        y: yMousePos * this.levelGridSize + this.levelGridSize / 2,
+                    })
+                    this.diceValue = 0
+                }
             }
         }
     }
 
-    spriteTilerHandler() {
-        if (this.spriteTiler.active && this.gameRef.mouseInfo.mouseDown && this.diceValue === 0) {
-            if (this.spriteTiler.drawMode === 'draw') {
-                this.levelGrid[this.selectedGrid].tile = this.spriteTiler.getCurrentSprite()
-            }
-            if (this.spriteTiler.drawMode === 'delete') {
-                delete this.levelGrid[this.selectedGrid].tile
-            }
+    removePlayerFromGridEntry(player: DicePlayer) {
+        const gridKey = player.getGridKey()
+        if (this.levelGrid[gridKey]) {
+            delete this.levelGrid[gridKey].occupants[player.objectKey]
         }
     }
+
+    addPlayerToGridEntry(player: DicePlayer) {
+        const gridKey = player.getGridKey()
+        if (this.levelGrid[gridKey]) {
+            this.levelGrid[gridKey].occupants[player.objectKey] = player
+        }
+    }
+
+    playerUpdater(player: DicePlayer) {
+        this.removePlayerFromGridEntry(player)
+        player.update()
+        this.addPlayerToGridEntry(player)
+        if (player.objectKey !== this.selectedPlayer.objectKey) {
+            return
+        }
+        if (player.otherOccupantsInGrid()) {
+            Object.keys(this.levelGrid[player.getGridKey()].occupants).forEach((playerKey) => {
+                if (playerKey === player.objectKey) {
+                    return
+                }
+                const otherPlayer = this.levelGrid[player.getGridKey()].occupants[playerKey]
+                // this.removePlayerFromGridEntry(otherPlayer)
+                if (otherPlayer.active) {
+                    otherPlayer.active = false
+                    player.attack()
+                }
+            })
+        }
+    }
+
 
     update(): void {
         // did we win?
@@ -254,14 +333,29 @@ export class StandardLevel extends BasedLevel {
             this.handleInput()
         }
 
-        this.snakePlayer.update()
+        // update players
+        this.players.forEach(p => {
+            if (!p.active) {
+                p.updateSprite()
+                return
+            }
+            this.playerUpdater(p)
+        })
+        this.enemyPlayers.forEach(p => {
+            if (!p.active) {
+                p.updateSprite()
+                return
+            }
+            this.playerUpdater(p)
+        })
+
 
         this.updateCamera()
     }
 
     updateCamera() {
         this.followCam.setTarget(
-            { x: this.levelWidth / 2, y: this.levelHeight / 2 },
+            { x: this.selectedPlayer.x, y: this.selectedPlayer.y },
         )
         this.followCam.setFullScreen(this.miniMapActive)
         this.followCam.update()
@@ -324,7 +418,14 @@ export class StandardLevel extends BasedLevel {
                         // draw valid spot marker
                         let validSpot = false
                         if (this.diceValue > 0 && !grid.blocked) {
-
+                            const playerXPos = Math.floor(this.selectedPlayer.x / this.levelGridSize)
+                            const playerYPos = Math.floor(this.selectedPlayer.y / this.levelGridSize)
+                            if (playerYPos === y && Math.abs(playerXPos - x) <= this.diceValue) {
+                                validSpot = true
+                            }
+                            if (playerXPos === x && Math.abs(playerYPos - y) <= this.diceValue) {
+                                validSpot = true
+                            }
                         }
                         if (validSpot) {
                             drawCircle({
@@ -359,12 +460,13 @@ export class StandardLevel extends BasedLevel {
         }
 
         // draw entities
-        // playersOnScreen.forEach(pk => {
-        //     this.playerRef[pk].draw()
+        // this.players.forEach(p => {
+        //     p.draw()
         // })
+        playersOnScreen.forEach(pk => {
+            this.playerRef[pk].draw()
+        })
         // draw interface
-
-        this.snakePlayer.draw()
 
         this.cameraZoomButton.draw()
         this.rollDiceBtn.draw()
