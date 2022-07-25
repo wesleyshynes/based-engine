@@ -18,6 +18,9 @@ export class FollowCam extends BasedObject {
     defaultBound: boolean = true
     fullScreenBound: boolean = true
 
+    cameraSpeed: number = 10
+    cameraZoomSpeed: number = .01
+
     async preload() {}
     initialize() {
         this.activeTarget = {
@@ -45,8 +48,6 @@ export class FollowCam extends BasedObject {
 
     update() {
         let targetZoom = this.zoomSetting
-        const cameraSpeed: number = 10
-        const cameraZoomSpeed: number = .01
         let currentCamZoom: number = this.gameRef.cameraZoom
         if (this.fullScreen) {
             this.activeTarget = {
@@ -70,21 +71,21 @@ export class FollowCam extends BasedObject {
             const moveCam = normalizeVector({
               x: this.activeTarget.x - this.x,
               y: this.activeTarget.y - this.y
-            }, cameraSpeed * this.gameRef.diffMulti) 
+            }, this.cameraSpeed * this.gameRef.diffMulti) 
             this.x += moveCam.x
             this.y += moveCam.y
           }
-          if(Math.abs(this.x - this.activeTarget.x) <= cameraSpeed * this.gameRef.diffMulti) {
+          if(Math.abs(this.x - this.activeTarget.x) <= this.cameraSpeed * this.gameRef.diffMulti) {
             this.x = Math.floor(this.activeTarget.x)
           }
       
-          if(Math.abs(this.y - this.activeTarget.y) <= cameraSpeed * this.gameRef.diffMulti) {
+          if(Math.abs(this.y - this.activeTarget.y) <= this.cameraSpeed * this.gameRef.diffMulti) {
             this.y = Math.floor(this.activeTarget.y)
           }
 
         if (currentCamZoom !== targetZoom) {
-            currentCamZoom += ((targetZoom - currentCamZoom >= 0 ? 1 : -1) * cameraZoomSpeed)*this.gameRef.diffMulti
-            if(Math.abs(currentCamZoom - targetZoom) <= cameraZoomSpeed) {
+            currentCamZoom += ((targetZoom - currentCamZoom >= 0 ? 1 : -1) * this.cameraZoomSpeed)*this.gameRef.diffMulti
+            if(Math.abs(currentCamZoom - targetZoom) <= this.cameraZoomSpeed) {
               currentCamZoom = targetZoom
             }
         }

@@ -1,8 +1,8 @@
 import { BasedLevel } from "../../../engine/BasedLevel";
 import Physics from 'matter-js';
 import { degToRad, normalizeVector, radToDeg } from "../../../engine/libs/mathHelpers";
-import PhysBox from "../entities/PhysBox";
-import PhysBall from "../entities/PhysBall";
+import PhysBox from "../../../engine/physicsObjects/PhysBox";
+import PhysBall from "../../../engine/physicsObjects/PhysBall";
 
 export class LevelOne extends BasedLevel {
   physics: any

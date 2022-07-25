@@ -8,7 +8,6 @@ import { getRandomInt } from "../../../engine/libs/mathHelpers";
 // sprites
 import BgTilemap from '../../../assets/dice-grid/tilemap_big.png'
 // import BgTilemap from '../../../assets/dice-grid/tilemap.png'
-import SkeletonTileSheet from '../../../assets/dice-grid/skeleton spritesheet calciumtrice_big.png'
 import { sampleLayout } from "../layouts/sampleLayouts";
 import { SpriteTiler } from "../utils/SpriteTiler";
 import { SnakePlayer } from "../entities/SnakePlayer";

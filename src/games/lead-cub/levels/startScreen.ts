@@ -103,7 +103,7 @@ export class StartScreen extends BasedLevel {
     this.creditsButton.width = this.gameRef.gameWidth - 200
     this.creditsButton.height = 50
     this.creditsButton.clickFunction = () => {
-      this.gameRef.loadLevel('credits-screen')
+      // this.gameRef.loadLevel('credits-screen')
       // alert('code in level')
     }
     this.buttonGroup.push(this.creditsButton)
