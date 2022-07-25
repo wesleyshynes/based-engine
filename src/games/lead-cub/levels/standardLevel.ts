@@ -15,9 +15,8 @@ export class StandardLevel extends BasedLevel {
     physicsRate: number = 1000 / 60
 
     player: any;
-
     floor: any;
-
+    exitDoor: any;
 
     async preload() { }
 
@@ -38,6 +37,7 @@ export class StandardLevel extends BasedLevel {
         this.player.width = 50
         this.player.height = 50
         this.player.color = 'red'
+        this.player.bodyOptions = { label: 'player' }
         this.player.initialize()
         this.addToWorld(this.player.body)
 
@@ -47,9 +47,26 @@ export class StandardLevel extends BasedLevel {
         this.floor.width = 1000
         this.floor.height = 50
         this.floor.color = 'green'
-        this.floor.bodyOptions = { label: 'wallBottom', isStatic: true }
+        this.floor.bodyOptions = { label: 'floor', isStatic: true }
         this.floor.initialize()
         this.addToWorld(this.floor.body)
+
+        this.exitDoor = new PhysBox({ key: 'exitDoor', gameRef: this.gameRef })
+        this.exitDoor.x = 500
+        this.exitDoor.y = 1100
+        this.exitDoor.width = 100
+        this.exitDoor.height = 200
+        this.exitDoor.color = 'blue'
+        this.exitDoor.bodyOptions = { label: 'exitDoor', isStatic: true, isSensor: true }
+        this.exitDoor.onCollisionStart = (otherBody: any) => {
+            console.log(otherBody)
+            const otherBodyBased = otherBody.plugin.basedRef()
+            console.log(otherBodyBased.color)            
+        }
+        this.exitDoor.initialize()
+        this.addToWorld(this.exitDoor.body)
+
+        this.initializePhysicsColliders()
 
     }
 
@@ -59,6 +76,23 @@ export class StandardLevel extends BasedLevel {
 
     removeFromWorld(bodyRef: any) {
         Physics.Composite.remove(this.physics.world, bodyRef)
+    }
+
+    initializePhysicsColliders() {
+        Physics.Events.on(this.physics, 'collisionStart', (event: any) => {
+            event.pairs.map((pair: any) => {
+                const { bodyA, bodyB } = pair
+                bodyA.plugin.collisionStart(bodyB)
+                bodyB.plugin.collisionStart(bodyA)
+            })
+        })
+        Physics.Events.on(this.physics, 'collisionEnd', (event: any) => {
+            event.pairs.map((pair: any) => {
+                const { bodyA, bodyB } = pair
+                bodyA.plugin.collisionEnd(bodyB)
+                bodyB.plugin.collisionEnd(bodyA)
+            })
+        })
     }
 
     handlePhysics() {
@@ -80,7 +114,35 @@ export class StandardLevel extends BasedLevel {
         // do something on physics tick
     }
 
+    handleKeys() {
+        const pressedKeys = this.gameRef.pressedKeys
+        const speedFactor = 10
+
+        let moveX = 0
+        // let moveY = 0
+
+        if (pressedKeys['KeyA'] || pressedKeys['ArrowLeft']) {
+            moveX -= speedFactor
+        }
+        if (pressedKeys['KeyD'] || pressedKeys['ArrowRight']) {
+            moveX += speedFactor
+        }
+        // if ((pressedKeys['KeyW'] || pressedKeys['ArrowUp'])) {
+        //   moveY -= speedFactor
+        // }
+        // if ((pressedKeys['KeyS'] || pressedKeys['ArrowDown'])) {
+        //   moveY += speedFactor
+        // }
+
+        Physics.Body.setVelocity(this.player.body, {
+            y: this.player.body.velocity.y,
+            x: moveX
+        })
+
+    }
+
     update() {
+        this.handleKeys()
         this.handlePhysics()
         this.updateCamera()
     }
@@ -108,6 +170,7 @@ export class StandardLevel extends BasedLevel {
 
     draw() {
         this.drawBg()
+        this.exitDoor.draw()
         this.player.draw()
         this.floor.draw()
     }

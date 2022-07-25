@@ -24,7 +24,8 @@ export default class PhysBall extends BasedObject {
       ...this.bodyOptions,
       plugin: {
         collisionStart: (x: any) => this.onCollisionStart(x),
-        collisionEnd: (x: any) => this.onCollisionEnd(x)
+        collisionEnd: (x: any) => this.onCollisionEnd(x),
+        basedRef: () => this,
       }
     });
     this.setCenter()
