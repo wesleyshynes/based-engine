@@ -1,6 +1,6 @@
 import { drawCircle, drawEllipse, drawText, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { radToDeg, XYCoordinateType } from "../../../engine/libs/mathHelpers";
-import PhysBall from "./PhysBall";
+import PhysBall from "../../../engine/physicsObjects/PhysBall";
 
 export default class BilliardBall extends PhysBall {
   ballNumber: string = '99';

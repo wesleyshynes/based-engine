@@ -1,7 +1,7 @@
-import { BasedObject } from "../../../engine/BasedObject";
+import { BasedObject } from "../BasedObject";
 import Physics from 'matter-js';
-import { drawCircle, drawEllipse, rotateDraw } from "../../../engine/libs/drawHelpers";
-import { radToDeg, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { drawCircle, drawEllipse, rotateDraw } from "../libs/drawHelpers";
+import { radToDeg, XYCoordinateType } from "../libs/mathHelpers";
 
 export default class PhysBall extends BasedObject {
   x: number = 0

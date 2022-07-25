@@ -1,7 +1,7 @@
-import { BasedObject } from "../../../engine/BasedObject";
+import { BasedObject } from "../BasedObject";
 import Physics from 'matter-js';
-import { drawBox, rotateDraw } from "../../../engine/libs/drawHelpers";
-import { radToDeg, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { drawBox, rotateDraw } from "../libs/drawHelpers";
+import { radToDeg, XYCoordinateType } from "../libs/mathHelpers";
 
 export default class PhysBox extends BasedObject {
   x: number = 0

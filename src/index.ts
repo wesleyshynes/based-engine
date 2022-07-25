@@ -4,7 +4,8 @@ import './assets/style.scss';
 // import { startGame } from './games/vimjam2/startGame';
 // import { startGame } from './games/physbo/startGame';
 // import { startGame } from './games/netmo/startGame';
-import { startGame } from './games/dice-grid/startGame';
+// import { startGame } from './games/dice-grid/startGame';
+import { startGame } from './games/lead-cub/startGame';
 
 const startBtn = document.getElementById('start-game')
 const gameDesc = document.getElementById('game-description')

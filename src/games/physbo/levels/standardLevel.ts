@@ -1,10 +1,7 @@
 import { BasedLevel } from "../../../engine/BasedLevel";
 import Physics from 'matter-js';
-import PhysBox from "../entities/PhysBox";
-import PhysBall from "../entities/PhysBall";
 import { angleBetween, degToRad, normalizeVector, pointOnCircle, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import { createSprite, drawBox, drawCircle, drawImage, drawLine, drawText, rotateDraw } from "../../../engine/libs/drawHelpers";
-import PhysPoly from "../entities/PhysPoly";
 import { boxCollision } from "../../../engine/libs/collisionHelpers";
 import PoolBreak from '../../../assets/pool/pool-break-1.mp3'
 import BallsHitting from '../../../assets/pool/balls-hitting-2.mp3'
@@ -24,6 +21,9 @@ import FeltSpriteUrl from '../../../assets/pool/pool-felt.jpg'
 import TableTopSpriteUrl from '../../../assets/pool/table-top.png'
 import PoolStickSpriteUrl from '../../../assets/pool/pool-stick.png'
 import { SliderControl } from "../../../engine/controls/SliderControl";
+import PhysBall from "../../../engine/physicsObjects/PhysBall";
+import PhysBox from "../../../engine/physicsObjects/PhysBox";
+import PhysPoly from "../../../engine/physicsObjects/PhysPoly";
 
 export class StandardLevel extends BasedLevel {
   physics: any
