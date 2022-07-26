@@ -5,9 +5,13 @@ export class BasedObject {
   x: number = 0
   y: number = 0
   gameRef: BasedGame
+  options: {[key: string]: any} = {}
   constructor(objectSettings: { key: string, gameRef: BasedGame, options?: { [key: string]: any } }) {
     this.objectKey = objectSettings.key
     this.gameRef = objectSettings.gameRef
+    if(objectSettings.options) {
+      this.options = objectSettings.options
+    }
     this.initialize = this.initialize.bind(this)
     this.preload = this.preload.bind(this)
     this.update = this.update.bind(this)

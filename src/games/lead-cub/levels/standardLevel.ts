@@ -29,19 +29,48 @@ export class StandardLevel extends BasedLevel {
 
 
         this.physics = Physics.Engine.create()
-        // this.physics.world.gravity.y = 0
+        this.physics.world.gravity.y = 7
 
-        this.player = new PhysBox({ key: 'player', gameRef: this.gameRef })
+        this.player = new PhysBox({
+            key: 'player', gameRef: this.gameRef, options: {
+                tags: {
+                    'player': true,
+                },
+                isGrounded: false,
+            }
+        })
         this.player.x = 300
         this.player.y = 300
         this.player.width = 50
         this.player.height = 50
         this.player.color = 'red'
-        this.player.bodyOptions = { label: 'player' }
+        this.player.bodyOptions = { label: 'player', inertia: Infinity }
+        this.player.collisionStartFn = (o: any) => {
+            const otherBody = o.plugin.basedRef()
+            if (otherBody && otherBody.options && otherBody.options.tags) {
+                if (otherBody.options.tags.ground) {
+                    this.player.isGrounded = true
+                }
+            }
+        }
+        this.player.collisionEndFn = (o: any) => {
+            const otherBody = o.plugin.basedRef()
+            if (otherBody && otherBody.options && otherBody.options.tags) {
+                if (otherBody.options.tags.ground) {
+                    this.player.isGrounded = false
+                }
+            }
+        }
         this.player.initialize()
         this.addToWorld(this.player.body)
 
-        this.floor = new PhysBox({ key: 'floor', gameRef: this.gameRef })
+        this.floor = new PhysBox({
+            key: 'floor', gameRef: this.gameRef, options: {
+                tags: {
+                    ground: true
+                }
+            }
+        })
         this.floor.x = 500
         this.floor.y = 1200
         this.floor.width = 1000
@@ -58,10 +87,10 @@ export class StandardLevel extends BasedLevel {
         this.exitDoor.height = 200
         this.exitDoor.color = 'blue'
         this.exitDoor.bodyOptions = { label: 'exitDoor', isStatic: true, isSensor: true }
-        this.exitDoor.onCollisionStart = (otherBody: any) => {
+        this.exitDoor.collisionStartFn = (otherBody: any) => {
             console.log(otherBody)
             const otherBodyBased = otherBody.plugin.basedRef()
-            console.log(otherBodyBased.color)            
+            console.log(otherBodyBased.color)
         }
         this.exitDoor.initialize()
         this.addToWorld(this.exitDoor.body)
@@ -127,9 +156,6 @@ export class StandardLevel extends BasedLevel {
         if (pressedKeys['KeyD'] || pressedKeys['ArrowRight']) {
             moveX += speedFactor
         }
-        // if ((pressedKeys['KeyW'] || pressedKeys['ArrowUp'])) {
-        //   moveY -= speedFactor
-        // }
         // if ((pressedKeys['KeyS'] || pressedKeys['ArrowDown'])) {
         //   moveY += speedFactor
         // }
@@ -138,6 +164,13 @@ export class StandardLevel extends BasedLevel {
             y: this.player.body.velocity.y,
             x: moveX
         })
+
+        if ((pressedKeys['KeyW'] || pressedKeys['ArrowUp']) && this.player.isGrounded) {
+            Physics.Body.applyForce(this.player.body, this.player.body.position, {
+                y: -.3,
+                x: 0
+            } )
+        }
 
     }
 
