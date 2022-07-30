@@ -79,6 +79,12 @@ export class Player extends PhysBox {
         // if ((pressedKeys['KeyS'] || pressedKeys['ArrowDown'])) {
         //   moveY += speedFactor
         // }
+
+        if (pressedKeys['KeyX']) {
+            moveX *= 1.5
+         }
+
+
         if (this.lastJump + this.jumpDiff < this.gameRef.lastUpdate) {
             Physics.Body.setVelocity(this.body, {
                 y: this.body.velocity.y,

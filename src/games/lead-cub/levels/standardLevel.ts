@@ -28,6 +28,7 @@ export class StandardLevel extends BasedLevel {
 
         this.followCam = new FollowCam({ key: 'followCam', gameRef: this.gameRef })
         this.followCam.cameraSpeed = 50
+        this.followCam.zoomSetting = 0.5
 
         this.gameRef.initializePhysics()
         this.gameRef.physics.world.gravity.y = 7
