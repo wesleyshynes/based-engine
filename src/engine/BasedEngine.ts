@@ -2,6 +2,7 @@ import { BasedLevel } from "./BasedLevel";
 import { BasedSounds } from "./BasedSounds";
 import { drawBox, drawText } from "./libs/drawHelpers";
 import { getClickPosition, getTouchArray, getTouchPosition, XYCoordinateType } from "./libs/mathHelpers";
+import Physics from 'matter-js';
 
 export interface gameSettings {
   width?: number
@@ -64,6 +65,10 @@ export class BasedGame implements BasedGameType {
   updateTick: number = 1000 / 60
   fps: number = 0
   diffMulti: number = this.updateDiff / this.updateTick
+
+  physics: Physics.Engine;
+  lastPhysicsUpdate: number = 0;
+  physicsRate: number = 1000 / 60
 
   keyBoardEnabled: boolean = false
   pressedKeys: { [key: string]: boolean } = {}
@@ -138,6 +143,52 @@ export class BasedGame implements BasedGameType {
 
   createContextFromElement(e: any): any {
     return e.getContext('2d')
+  }
+
+  initializePhysics() {
+    this.physics = Physics.Engine.create()
+    this.initializePhysicsColliders()
+  }
+
+  addToWorld(bodyRef: any) {
+    Physics.Composite.add(this.physics.world, bodyRef)
+  }
+
+  removeFromWorld(bodyRef: any) {
+    Physics.Composite.remove(this.physics.world, bodyRef)
+  }
+
+  initializePhysicsColliders() {
+    Physics.Events.on(this.physics, 'collisionStart', (event: any) => {
+      event.pairs.map((pair: any) => {
+        const { bodyA, bodyB } = pair
+        bodyA.plugin.collisionStart(bodyB)
+        bodyB.plugin.collisionStart(bodyA)
+      })
+    })
+    Physics.Events.on(this.physics, 'collisionEnd', (event: any) => {
+      event.pairs.map((pair: any) => {
+        const { bodyA, bodyB } = pair
+        bodyA.plugin.collisionEnd(bodyB)
+        bodyB.plugin.collisionEnd(bodyA)
+      })
+    })
+  }
+
+  updatePhysics(): boolean {
+    if (this.fps < 65) {
+      const tick = (this.physicsRate / this.updateDiff) * this.updateDiff
+      Physics.Engine.update(this.physics, tick)
+      this.lastPhysicsUpdate = this.lastUpdate
+      return true
+    } else {
+      if (this.lastUpdate - this.lastPhysicsUpdate >= this.physicsRate) {
+        Physics.Engine.update(this.physics, this.lastUpdate - this.lastPhysicsUpdate)
+        this.lastPhysicsUpdate = this.lastUpdate
+        return true
+      }
+    }
+    return false
   }
 
   enableMouse() {
@@ -218,6 +269,24 @@ export class BasedGame implements BasedGameType {
   draw() {
     // console.log('game draw')
     this.levels[this.activeLevel].draw()
+    this.debugDraw()
+  }
+
+  debugDraw() {
+    drawText({
+      c: this.ctx,
+      x: 20,
+      y: 20,
+      align: 'left',
+      fillColor: '#000',
+      strokeColor: '#fff',
+      strokeWidth: 3,
+      style: '',
+      weight: '500',
+      fontFamily: 'sans-serif',
+      fontSize: 20,
+      text: `FPS: ${this.fps.toFixed(2)}`
+    })
   }
 
   drawLoading(loadingThing?: string, percentage?: number) {
@@ -313,7 +382,7 @@ export class BasedGame implements BasedGameType {
     this.cameraPos.y = this.gameHeight / 2 - (cameraTarget.y * this.cameraZoom)
 
     if (bound) {
-      
+
       let levelWidth = this.gameWidth
       let levelHeight = this.gameHeight
       if (this.levels[this.activeLevel] &&

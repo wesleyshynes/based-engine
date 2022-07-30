@@ -10,7 +10,7 @@ export default class PhysBox extends BasedObject {
   height: number = 40;
   color: string = 'blue'
   bodyOptions: any = {
-    label: 'asdfgh',
+    label: 'physBox',
     restitution: 0.8
   }
   body: any;
@@ -21,6 +21,11 @@ export default class PhysBox extends BasedObject {
 
   async preload() { }
   initialize() {
+    this.initializeBody()
+    this.setCenter()
+  }
+
+  initializeBody() {
     this.body = Physics.Bodies.rectangle(this.x, this.y, this.width, this.height, {
       ...this.bodyOptions,
       plugin: {
@@ -29,8 +34,8 @@ export default class PhysBox extends BasedObject {
         basedRef: () => this
       }
     });
-    this.setCenter()
   }
+
   setCenter() {
     if(this.body) {
       Physics.Body.setCentre(this.body, this.bodyCenter, true)
@@ -47,6 +52,10 @@ export default class PhysBox extends BasedObject {
   update() { }
   
   draw() {
+    this.drawPhysicsBody()
+  }
+
+  drawPhysicsBody() {
     rotateDraw({
       c: this.gameRef.ctx,
       x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
@@ -64,5 +73,6 @@ export default class PhysBox extends BasedObject {
       })
     })
   }
+
   tearDown() { }
 }

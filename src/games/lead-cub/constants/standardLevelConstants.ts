@@ -13,7 +13,7 @@ export const firstLevelKillFloor = [
     },
     {
         x: 7500,
-        y: 1900,
+        y: 2300,
         width: 14600,
         height: 200,
     },
