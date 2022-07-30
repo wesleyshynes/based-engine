@@ -45,6 +45,7 @@ export default class PhysBox extends BasedObject {
   }
 
   update() { }
+  
   draw() {
     rotateDraw({
       c: this.gameRef.ctx,

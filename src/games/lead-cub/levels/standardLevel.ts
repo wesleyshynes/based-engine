@@ -2,10 +2,11 @@ import { BasedLevel } from "../../../engine/BasedLevel";
 import Physics from 'matter-js';
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
 import { FollowCam } from "../../../engine/cameras/FollowCam";
+import { firstLevelKillFloor, firstLevelLayout } from "../constants/standardLevelConstants";
 
 
 export class StandardLevel extends BasedLevel {
-    levelWidth: number = 1000
+    levelWidth: number = 15000
     levelHeight: number = 2000
 
     followCam: any;
@@ -15,7 +16,12 @@ export class StandardLevel extends BasedLevel {
     physicsRate: number = 1000 / 60
 
     player: any;
-    floor: any;
+    playerLastJump: number = 0
+    playerJumpDiff: number = 100
+
+    floors: any[] = []
+    killFloors: any[] = []
+
     exitDoor: any;
 
     async preload() { }
@@ -49,7 +55,10 @@ export class StandardLevel extends BasedLevel {
             const otherBody = o.plugin.basedRef()
             if (otherBody && otherBody.options && otherBody.options.tags) {
                 if (otherBody.options.tags.ground) {
-                    this.player.isGrounded = true
+                    this.player.options.isGrounded = true
+                }
+                if(otherBody.options.tags.death) {
+                    Physics.Body.setPosition(this.player.body, { x: 300, y: 300 })
                 }
             }
         }
@@ -57,40 +66,65 @@ export class StandardLevel extends BasedLevel {
             const otherBody = o.plugin.basedRef()
             if (otherBody && otherBody.options && otherBody.options.tags) {
                 if (otherBody.options.tags.ground) {
-                    this.player.isGrounded = false
+                    this.player.options.isGrounded = false
                 }
             }
         }
         this.player.initialize()
         this.addToWorld(this.player.body)
 
-        this.floor = new PhysBox({
-            key: 'floor', gameRef: this.gameRef, options: {
-                tags: {
-                    ground: true
+
+        this.floors = firstLevelLayout.map((obj: any, idx: number) => {
+            const tempObj = new PhysBox({
+                key: `floor-${idx}`, gameRef: this.gameRef, options: {
+                    tags: {
+                        ground: true,
+                    }
                 }
-            }
+            })
+            tempObj.x = obj.x
+            tempObj.y = obj.y
+            tempObj.width = obj.width
+            tempObj.height = obj.height
+            tempObj.color = obj.color
+            tempObj.bodyOptions = { label: `floor`, isStatic: true }
+            tempObj.initialize()
+            this.addToWorld(tempObj.body)
+            return tempObj
         })
-        this.floor.x = 500
-        this.floor.y = 1200
-        this.floor.width = 1000
-        this.floor.height = 50
-        this.floor.color = 'green'
-        this.floor.bodyOptions = { label: 'floor', isStatic: true }
-        this.floor.initialize()
-        this.addToWorld(this.floor.body)
+
+
+        this.killFloors = firstLevelKillFloor.map((obj: any, idx: number) => {
+            const tempObj = new PhysBox({
+                key: `killFloor-${idx}`, gameRef: this.gameRef, options: {
+                    tags: {
+                        death: true,
+                    }
+                }
+            })
+            tempObj.x = obj.x
+            tempObj.y = obj.y
+            tempObj.width = obj.width
+            tempObj.height = obj.height
+            tempObj.color = 'red'
+            tempObj.bodyOptions = { label: 'killFloor', isStatic: true }
+            tempObj.initialize()
+            this.addToWorld(tempObj.body)
+            return tempObj
+        })
 
         this.exitDoor = new PhysBox({ key: 'exitDoor', gameRef: this.gameRef })
-        this.exitDoor.x = 500
-        this.exitDoor.y = 1100
+        this.exitDoor.x = 3510
+        this.exitDoor.y = 820
         this.exitDoor.width = 100
         this.exitDoor.height = 200
-        this.exitDoor.color = 'blue'
+        this.exitDoor.color = 'pink'
         this.exitDoor.bodyOptions = { label: 'exitDoor', isStatic: true, isSensor: true }
-        this.exitDoor.collisionStartFn = (otherBody: any) => {
-            console.log(otherBody)
-            const otherBodyBased = otherBody.plugin.basedRef()
-            console.log(otherBodyBased.color)
+        this.exitDoor.collisionStartFn = (o: any) => {
+            const otherBody = o.plugin.basedRef()
+            if (otherBody.options && otherBody.options.tags && otherBody.options.tags.player) {
+                this.gameRef.loadLevel('start-screen')
+            }
         }
         this.exitDoor.initialize()
         this.addToWorld(this.exitDoor.body)
@@ -165,11 +199,15 @@ export class StandardLevel extends BasedLevel {
             x: moveX
         })
 
-        if ((pressedKeys['KeyW'] || pressedKeys['ArrowUp']) && this.player.isGrounded) {
-            Physics.Body.applyForce(this.player.body, this.player.body.position, {
-                y: -.3,
-                x: 0
-            } )
+        if ((pressedKeys['KeyW'] || pressedKeys['ArrowUp']) && this.player.options.isGrounded) {
+            if(this.player.body.velocity.y >= -0.0001 && 
+                this.playerLastJump + this.playerJumpDiff < this.gameRef.lastUpdate) {
+                Physics.Body.applyForce(this.player.body, this.player.body.position, {
+                    y: -.4,
+                    x: 0
+                })
+                this.playerLastJump = this.gameRef.lastUpdate
+            }
         }
 
     }
@@ -203,9 +241,15 @@ export class StandardLevel extends BasedLevel {
 
     draw() {
         this.drawBg()
+        this.killFloors.forEach(f => {
+            f.draw()
+        })
         this.exitDoor.draw()
+        this.player.color = this.player.options.isGrounded ? 'blue' : 'red'
         this.player.draw()
-        this.floor.draw()
+        this.floors.forEach(f => {
+            f.draw()
+        })
     }
 
     tearDown() { }
