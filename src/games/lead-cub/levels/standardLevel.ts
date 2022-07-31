@@ -1,8 +1,9 @@
 import { BasedLevel } from "../../../engine/BasedLevel";
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
 import { FollowCam } from "../../../engine/cameras/FollowCam";
-import { firstLevelKillFloor, firstLevelLayout } from "../constants/standardLevelConstants";
+import { firstLevelBouncePads, firstLevelKillFloor, firstLevelLayout } from "../constants/standardLevelConstants";
 import { Player } from "../entities/Player";
+import { BouncePad } from "../entities/BouncePad";
 
 
 export class StandardLevel extends BasedLevel {
@@ -16,6 +17,7 @@ export class StandardLevel extends BasedLevel {
     playerJumpDiff: number = 100
 
     floors: any[] = []
+    bouncePads: any[] = []
     killFloors: any[] = []
 
     exitDoor: any;
@@ -60,6 +62,18 @@ export class StandardLevel extends BasedLevel {
             return tempObj
         })
 
+        this.bouncePads = firstLevelBouncePads.map((obj: any, idx: number) => {
+            const tempObj = new BouncePad({ key: `bouncePad-${idx}`, gameRef: this.gameRef })
+            tempObj.x = obj.x
+            tempObj.y = obj.y
+            tempObj.width = obj.width
+            tempObj.height = obj.height
+            tempObj.color = obj.color
+            tempObj.initialize()
+            this.gameRef.addToWorld(tempObj.body)
+            return tempObj
+        })
+
 
         this.killFloors = firstLevelKillFloor.map((obj: any, idx: number) => {
             const tempObj = new PhysBox({
@@ -88,6 +102,7 @@ export class StandardLevel extends BasedLevel {
         this.exitDoor.color = 'pink'
         this.exitDoor.bodyOptions = { label: 'exitDoor', isStatic: true, isSensor: true }
         this.exitDoor.collisionStartFn = (o: any) => {
+            console.log('door collision')
             const otherBody = o.plugin.basedRef()
             if (otherBody.options && otherBody.options.tags && otherBody.options.tags.player) {
                 this.gameRef.loadLevel('start-screen')
@@ -98,8 +113,7 @@ export class StandardLevel extends BasedLevel {
     }
 
     handlePhysics() {
-        const physicsTicked = this.gameRef.updatePhysics()
-        if(physicsTicked) {
+        if (this.gameRef.updatePhysics()) {
             this.onPhysicsUpdate()
         }
     }
@@ -147,6 +161,9 @@ export class StandardLevel extends BasedLevel {
         this.exitDoor.draw()
         this.player.draw()
         this.floors.forEach(f => {
+            f.draw()
+        })
+        this.bouncePads.forEach(f => {
             f.draw()
         })
     }

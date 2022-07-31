@@ -1,7 +1,8 @@
 // https://coolors.co/palette/001219-005f73-0a9396-94d2bd-e9d8a6-ee9b00-ca6702-bb3e03-ae2012-9b2226
 
 export const SWATCH_COLORS = {
-    'ground': 'brown'
+    'ground': 'brown',
+    'bouncePad': 'green'
 }
 
 export const firstLevelKillFloor = [
@@ -23,6 +24,16 @@ export const firstLevelKillFloor = [
         width: 200,
         height: 2000,
     }
+]
+
+export const firstLevelBouncePads = [
+    {
+        x: 2090,
+        y: 1220,
+        width: 100,
+        height: 20,
+        color: SWATCH_COLORS.bouncePad
+    },
 ]
 
 export const firstLevelLayout = [

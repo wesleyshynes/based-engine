@@ -7,6 +7,8 @@ export class Player extends PhysBox {
     height: number = 50
     color: string = 'red'
 
+    speed: number = 10
+
     lastJump: number = 0
     jumpDiff: number = 100
 
@@ -57,7 +59,7 @@ export class Player extends PhysBox {
     update() { }
 
     draw() {
-        this.color = this.groundCount > 0 ? 'blue' : 'red'
+        // this.color = this.groundCount > 0 ? 'blue' : 'red'
         this.drawPhysicsBody()
     }
 
@@ -65,16 +67,14 @@ export class Player extends PhysBox {
 
     handleKeys() {
         const pressedKeys = this.gameRef.pressedKeys
-        const speedFactor = 10
-
         let moveX = 0
         // let moveY = 0
 
         if (pressedKeys['KeyA'] || pressedKeys['ArrowLeft']) {
-            moveX -= speedFactor
+            moveX -= this.speed
         }
         if (pressedKeys['KeyD'] || pressedKeys['ArrowRight']) {
-            moveX += speedFactor
+            moveX += this.speed
         }
         // if ((pressedKeys['KeyS'] || pressedKeys['ArrowDown'])) {
         //   moveY += speedFactor
@@ -94,6 +94,11 @@ export class Player extends PhysBox {
 
         if ((pressedKeys['KeyW'] || pressedKeys['ArrowUp'])) {
            this.jump()
+        } else if (this.body.velocity.y < -2) {
+            Physics.Body.setVelocity(this.body, {
+                y: this.body.velocity.y/2,
+                x: moveX
+            })
         }
 
     }
@@ -107,21 +112,21 @@ export class Player extends PhysBox {
         ) {
             // let moveX = 0
             if (this.lastGround) {
-                const lgB = this.lastGround
+                const lg = this.lastGround
                 if (
-                    this.body.position.y < lgB.y + lgB.height/2 &&
-                    this.body.position.y > lgB.y - lgB.height/2
+                    this.body.position.y < lg.y + lg.height/2 &&
+                    this.body.position.y > lg.y - lg.height/2
                 ) {
                     Physics.Body.setVelocity(this.body, {
                         y: 0,
-                        x: this.body.position.x < lgB.x ? -15 : 15
+                        x: this.body.position.x < lg.x ? -15 : 15
                     })
                 }
             }
 
-            Physics.Body.applyForce(this.body, this.body.position, {
-                y: -.4,
-                x: 0
+            Physics.Body.setVelocity(this.body, {
+                y: -40,
+                x: this.body.velocity.x
             })
             this.lastJump = this.gameRef.lastUpdate
             this.lastGround = null
