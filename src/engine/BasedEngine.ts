@@ -177,8 +177,9 @@ export class BasedGame implements BasedGameType {
 
   updatePhysics(): boolean {
     if (this.fps < 65) {
-      const tick = (this.physicsRate / this.updateDiff) * this.updateDiff
-      Physics.Engine.update(this.physics, tick)
+      // const tick = (this.physicsRate / this.updateDiff) * this.updateDiff
+      // Physics.Engine.update(this.physics, tick)
+      Physics.Engine.update(this.physics, this.physicsRate)
       this.lastPhysicsUpdate = this.lastUpdate
       return true
     } else {

@@ -48,6 +48,7 @@ export class StandardLevel extends BasedLevel {
                 key: `floor-${idx}`, gameRef: this.gameRef, options: {
                     tags: {
                         ground: true,
+                        terrain: true,
                     }
                 }
             })

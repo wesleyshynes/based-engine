@@ -13,14 +13,14 @@ export class BouncePad extends PhysBox {
     options = {
         tags: {
             bouncePad: true,
-            // ground: true
+            ground: true
         }
     }
 
-    bodyOptions = { 
-        label: 'bouncePad', 
+    bodyOptions = {
+        label: 'bouncePad',
         inertia: Infinity,
-        isStatic: true, 
+        isStatic: true,
     }
 
     collisionStartFn = (o: any) => {
@@ -29,6 +29,7 @@ export class BouncePad extends PhysBox {
             if (otherBody.options.tags.player) {
                 // launch up
                 this.launch(otherBody)
+                this.color = 'orange'
             }
         }
     }
@@ -38,6 +39,7 @@ export class BouncePad extends PhysBox {
         if (otherBody && otherBody.options && otherBody.options.tags) {
             if (otherBody.options.tags.player) {
                 // dunno
+                this.color = 'green'
             }
         }
     }
@@ -54,11 +56,13 @@ export class BouncePad extends PhysBox {
     tearDown() { }
 
     launch(otherBody: any) {
+
         const newPos = {
             x: otherBody.body.position.x,
-            y: this.body.position.y - this.height/2 - otherBody.height/2 - 3
+            y: this.body.position.y - this.height / 2 - otherBody.height / 2 - 20
         }
         Physics.Body.setPosition(otherBody.body, newPos)
+
         Physics.Body.setVelocity(otherBody.body, {
             x: otherBody.body.velocity.x,
             y: -50,

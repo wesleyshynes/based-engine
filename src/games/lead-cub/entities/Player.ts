@@ -92,9 +92,13 @@ export class Player extends PhysBox {
             })
         }
 
-        if ((pressedKeys['KeyW'] || pressedKeys['ArrowUp'])) {
-           this.jump()
-        } else if (this.body.velocity.y < -2) {
+        if ((pressedKeys['KeyW'] || pressedKeys['ArrowUp']) ) {
+           this.jump({})
+        } else if ( (this.groundCount > 0 && this.lastGround && this.lastGround.options.tags.bouncePad)) {
+            this.jump({
+                keepLastGround: true
+            })
+        } else if (this.body.velocity.y < -2 && !(this.lastGround && this.lastGround.options.tags.bouncePad)) {
             Physics.Body.setVelocity(this.body, {
                 y: this.body.velocity.y/2,
                 x: moveX
@@ -104,21 +108,21 @@ export class Player extends PhysBox {
     }
 
 
-    jump() {
+    jump(jumpOptions: any) {
         if (
             this.groundCount > 0 &&
             this.body.velocity.y >= -0.0001 &&
             this.lastJump + this.jumpDiff < this.gameRef.lastUpdate
         ) {
             // let moveX = 0
-            if (this.lastGround) {
+            if (this.lastGround && this.lastGround.options.tags.terrain) {
                 const lg = this.lastGround
                 if (
                     this.body.position.y < lg.y + lg.height/2 &&
                     this.body.position.y > lg.y - lg.height/2
                 ) {
                     Physics.Body.setVelocity(this.body, {
-                        y: 0,
+                        y: this.body.velocity.y,
                         x: this.body.position.x < lg.x ? -15 : 15
                     })
                 }
@@ -129,7 +133,9 @@ export class Player extends PhysBox {
                 x: this.body.velocity.x
             })
             this.lastJump = this.gameRef.lastUpdate
-            this.lastGround = null
+            if(!jumpOptions.keepLastGround) {
+                this.lastGround = null
+            }
         }
     }
 

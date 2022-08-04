@@ -34,6 +34,34 @@ export const firstLevelBouncePads = [
         height: 20,
         color: SWATCH_COLORS.bouncePad
     },
+    {
+        x: 2390,
+        y: 970,
+        width: 100,
+        height: 20,
+        color: SWATCH_COLORS.bouncePad
+    },
+    {
+        x: 2690,
+        y: 760,
+        width: 100,
+        height: 20,
+        color: SWATCH_COLORS.bouncePad
+    },
+    {
+        x: 2130,
+        y: 580,
+        width: 100,
+        height: 20,
+        color: SWATCH_COLORS.bouncePad
+    },
+    {
+        x: 1340,
+        y: 1110,
+        width: 100,
+        height: 20,
+        color: SWATCH_COLORS.bouncePad
+    },
 ]
 
 export const firstLevelLayout = [
