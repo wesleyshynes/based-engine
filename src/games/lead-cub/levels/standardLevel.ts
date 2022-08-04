@@ -129,6 +129,9 @@ export class StandardLevel extends BasedLevel {
 
     update() {
         this.handleKeys()
+
+        this.player.update()
+
         this.handlePhysics()
         this.updateCamera()
     }

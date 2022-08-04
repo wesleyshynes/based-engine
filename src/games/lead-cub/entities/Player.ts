@@ -56,7 +56,14 @@ export class Player extends PhysBox {
         this.setCenter()
     }
 
-    update() { }
+    update() {
+        // fixes stuck bounce pad
+        if (this.groundCount > 0 && this.lastGround && this.lastGround.options.tags.bouncePad) {
+            this.jump({
+                keepLastGround: true
+            })
+        }
+    }
 
     draw() {
         // this.color = this.groundCount > 0 ? 'blue' : 'red'
@@ -82,7 +89,7 @@ export class Player extends PhysBox {
 
         if (pressedKeys['KeyX']) {
             moveX *= 1.5
-         }
+        }
 
 
         if (this.lastJump + this.jumpDiff < this.gameRef.lastUpdate) {
@@ -92,15 +99,11 @@ export class Player extends PhysBox {
             })
         }
 
-        if ((pressedKeys['KeyW'] || pressedKeys['ArrowUp']) ) {
-           this.jump({})
-        } else if ( (this.groundCount > 0 && this.lastGround && this.lastGround.options.tags.bouncePad)) {
-            this.jump({
-                keepLastGround: true
-            })
+        if ((pressedKeys['KeyW'] || pressedKeys['ArrowUp'])) {
+            this.jump({})
         } else if (this.body.velocity.y < -2 && !(this.lastGround && this.lastGround.options.tags.bouncePad)) {
             Physics.Body.setVelocity(this.body, {
-                y: this.body.velocity.y/2,
+                y: this.body.velocity.y / 2,
                 x: moveX
             })
         }
@@ -118,8 +121,8 @@ export class Player extends PhysBox {
             if (this.lastGround && this.lastGround.options.tags.terrain) {
                 const lg = this.lastGround
                 if (
-                    this.body.position.y < lg.y + lg.height/2 &&
-                    this.body.position.y > lg.y - lg.height/2
+                    this.body.position.y < lg.y + lg.height / 2 &&
+                    this.body.position.y > lg.y - lg.height / 2
                 ) {
                     Physics.Body.setVelocity(this.body, {
                         y: this.body.velocity.y,
@@ -133,7 +136,7 @@ export class Player extends PhysBox {
                 x: this.body.velocity.x
             })
             this.lastJump = this.gameRef.lastUpdate
-            if(!jumpOptions.keepLastGround) {
+            if (!jumpOptions.keepLastGround) {
                 this.lastGround = null
             }
         }
