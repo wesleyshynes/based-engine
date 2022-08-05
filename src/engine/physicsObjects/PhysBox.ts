@@ -13,6 +13,7 @@ export default class PhysBox extends BasedObject {
     label: 'physBox',
     restitution: 0.8
   }
+  active: boolean = false
   body: any;
   bodyCenter: XYCoordinateType = {x: 0, y: 0}
 

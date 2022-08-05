@@ -9,17 +9,22 @@ export default class PhysBall extends BasedObject {
   radius: number = 15;
   color: string = 'blue'
   bodyOptions: any = {
-    label: 'ball',
+    label: 'physBall',
     restitution: 0.8,
   }
   active: boolean = false
   body: any;
-  bodyCenter: XYCoordinateType = {x: 0, y: 0}
+  bodyCenter: XYCoordinateType = { x: 0, y: 0 }
   collisionStartFn: (o: any) => void = (o: any) => null;
   collisionEndFn: (o: any) => void = (o: any) => null;
 
   async preload() { }
   initialize() {
+    this.initializeBody()
+    this.setCenter()
+  }
+
+  initializeBody() {
     this.body = Physics.Bodies.circle(this.x, this.y, this.radius, {
       ...this.bodyOptions,
       plugin: {
@@ -28,10 +33,10 @@ export default class PhysBall extends BasedObject {
         basedRef: () => this,
       }
     });
-    this.setCenter()
   }
+
   setCenter() {
-    if(this.body) {
+    if (this.body) {
       Physics.Body.setCentre(this.body, this.bodyCenter, true)
     }
   }
@@ -43,6 +48,10 @@ export default class PhysBall extends BasedObject {
   }
   update() { }
   draw() {
+    this.drawPhysicsBody()
+  }
+
+  drawPhysicsBody() {
     rotateDraw({
       c: this.gameRef.ctx,
       x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
@@ -67,7 +76,7 @@ export default class PhysBall extends BasedObject {
     rotateDraw({
       c: this.gameRef.ctx,
       x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-      y: (this.body.position.y + this.radius*.75) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+      y: (this.body.position.y + this.radius * .75) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
       a: 0
     }, () => {
 
@@ -75,8 +84,8 @@ export default class PhysBall extends BasedObject {
         c: this.gameRef.ctx,
         x: this.bodyCenter.x,
         y: this.bodyCenter.y,
-        radiusX: this.radius * this.gameRef.cameraZoom*1.1,
-        radiusY: (this.radius * this.gameRef.cameraZoom)*.75,
+        radiusX: this.radius * this.gameRef.cameraZoom * 1.1,
+        radiusY: (this.radius * this.gameRef.cameraZoom) * .75,
         fillColor: 'black'
       })
     })

@@ -19,7 +19,7 @@ export default class PhysPoly extends BasedObject {
   ]
 
   bodyOptions: any = {
-    label: 'asdfgh',
+    label: 'physPoly',
     restitution: 0.8
   }
   body: any;
@@ -30,6 +30,11 @@ export default class PhysPoly extends BasedObject {
 
   async preload() {}
   initialize() {
+    this.initializeBody()
+    this.setCenter()
+  }
+
+  initializeBody() {
     const vertString = Physics.Vertices.fromPath(this.vertices.map(p => `${p.x} ${p.y}`).join(' '), this.bodyOptions)
     this.body = Physics.Bodies.fromVertices(this.x, this.y, [vertString], {
       ...this.bodyOptions,
@@ -43,8 +48,8 @@ export default class PhysPoly extends BasedObject {
       x: (this.body.bounds.max.x - this.body.bounds.min.x)/-2,
       y: (this.body.bounds.max.y - this.body.bounds.min.y)/-2
     }
-    this.setCenter()
   }
+
   setCenter() {
     if(this.body) {
       Physics.Body.setCentre(this.body, this.bodyCenter, true)
@@ -58,6 +63,10 @@ export default class PhysPoly extends BasedObject {
   }
   update() {}
   draw() {
+    this.drawPhysicsBody()
+  }
+
+  drawPhysicsBody() {
     rotateDraw({
       c: this.gameRef.ctx,
       x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
@@ -88,6 +97,8 @@ export default class PhysPoly extends BasedObject {
 
     })
   }
+
+
   tearDown() {}
 
 }
