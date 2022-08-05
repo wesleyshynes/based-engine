@@ -1,9 +1,10 @@
 import { BasedLevel } from "../../../engine/BasedLevel";
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
 import { FollowCam } from "../../../engine/cameras/FollowCam";
-import { firstLevelBouncePads, firstLevelKillFloor, firstLevelLayout } from "../constants/standardLevelConstants";
+import { firstLevelBouncePads, firstLevelKillFloor, firstLevelLayout, firstLevelPickups } from "../constants/standardLevelConstants";
 import { Player } from "../entities/Player";
 import { BouncePad } from "../entities/BouncePad";
+import PickUp from "../entities/PickUp";
 
 
 export class StandardLevel extends BasedLevel {
@@ -19,6 +20,8 @@ export class StandardLevel extends BasedLevel {
     floors: any[] = []
     bouncePads: any[] = []
     killFloors: any[] = []
+
+    pickUps: any[] = []
 
     exitDoor: any;
 
@@ -41,6 +44,21 @@ export class StandardLevel extends BasedLevel {
         this.player.color = 'red'
         this.player.initialize()
         this.gameRef.addToWorld(this.player.body)
+
+        this.pickUps = firstLevelPickups.map((obj: any, idx: number) => {
+            const tempObj = new PickUp({
+                key: `pickup-${idx}`,
+                gameRef: this.gameRef,
+            })
+            tempObj.x = obj.x
+            tempObj.y = obj.y
+            tempObj.pickUpFn = () => {
+                this.player.speed += 10
+            }
+            tempObj.initialize()
+            this.gameRef.addToWorld(tempObj.body)
+            return tempObj
+        })
 
 
         this.floors = firstLevelLayout.map((obj: any, idx: number) => {
@@ -164,6 +182,11 @@ export class StandardLevel extends BasedLevel {
         })
         this.exitDoor.draw()
         this.player.draw()
+
+        this.pickUps.forEach(p => {
+            p.draw()
+        })
+
         this.floors.forEach(f => {
             f.draw()
         })

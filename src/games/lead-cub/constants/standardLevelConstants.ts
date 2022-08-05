@@ -5,6 +5,13 @@ export const SWATCH_COLORS = {
     'bouncePad': 'green'
 }
 
+export const firstLevelPickups = [
+    {
+        x: 1685,
+        y: 1085,
+    }
+]
+
 export const firstLevelKillFloor = [
     {
         x: 100,
