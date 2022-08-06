@@ -5,6 +5,7 @@ import { firstLevelBouncePads, firstLevelKillFloor, firstLevelLayout, firstLevel
 import { Player } from "../entities/Player";
 import { BouncePad } from "../entities/BouncePad";
 import PickUp from "../entities/PickUp";
+import { Enemy } from "../entities/Enemy";
 
 
 export class StandardLevel extends BasedLevel {
@@ -16,6 +17,8 @@ export class StandardLevel extends BasedLevel {
     player: any;
     playerLastJump: number = 0
     playerJumpDiff: number = 100
+
+    enemy: any;
 
     floors: any[] = []
     bouncePads: any[] = []
@@ -59,6 +62,15 @@ export class StandardLevel extends BasedLevel {
             this.gameRef.addToWorld(tempObj.body)
             return tempObj
         })
+
+        this.enemy = new Enemy({
+            key: 'protoEnemy',
+            gameRef: this.gameRef,
+        })
+        this.enemy.x = 700
+        this.enemy.y = 500
+        this.enemy.initialize()
+        this.gameRef.addToWorld(this.enemy.compositeRef)
 
 
         this.floors = firstLevelLayout.map((obj: any, idx: number) => {
@@ -193,6 +205,8 @@ export class StandardLevel extends BasedLevel {
         this.bouncePads.forEach(f => {
             f.draw()
         })
+
+        this.enemy.draw()
     }
 
     tearDown() { }
