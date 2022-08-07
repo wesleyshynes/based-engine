@@ -21,10 +21,10 @@ export class Enemy extends PhysBox {
 
     collisionGroup: any = Physics.Body.nextGroup(true)
 
-    bodyOptions = { 
-        label: 'enemyBody', 
+    bodyOptions = {
+        label: 'enemyBody',
         inertia: Infinity,
-        collisionFilter: {group: this.collisionGroup},
+        collisionFilter: { group: this.collisionGroup },
         // restitution: 0,
     }
 
@@ -37,11 +37,10 @@ export class Enemy extends PhysBox {
 
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
-        console.log(otherBody)
         if (otherBody && otherBody.options && otherBody.options.tags) {
             if (otherBody.options.tags.death) {
                 this.active = false
-                this.gameRef.removeFromWorld(this.body)
+                this.gameRef.removeFromWorld(this.compositeRef)
             }
         }
     }
@@ -61,26 +60,38 @@ export class Enemy extends PhysBox {
         this.sensor = Physics.Bodies.circle(this.x, this.y, this.sensorRadius, {
             label: 'enemySensor',
             isSensor: true,
-            collisionFilter: {group: this.collisionGroup},
+            collisionFilter: { group: this.collisionGroup },
             density: 0.0000000001,
             // restitution: 0,
             plugin: {
                 collisionStart: (x: any) => {
                     console.log('sensor collision start', x)
                     const otherBody = x.plugin.basedRef()
-                    if(otherBody && otherBody.options && otherBody.options.tags) {
-                        if(otherBody.options.tags.player) {
-                            // Physics.Body.setVelocity(this.sensor, {
-                            //     x: 0,
-                            //     y: -80
-                            // })
+                    if (otherBody && otherBody.options && otherBody.options.tags) {
+                        // if (otherBody.options.tags.player) {
+                        //     Physics.Body.setVelocity(this.sensor, {
+                        //         x: 0,
+                        //         y: -80
+                        //     })
+                        // }
+                        if (otherBody.options.tags.death) {
+                            Physics.Body.setVelocity(this.body, {
+                                x: 50,
+                                y: this.body.velocity.y
+                            })
                         }
                     }
                 },
                 collisionEnd: (x: any) => {
                     console.log('sensor collision end', x)
                 },
-                basedRef: () => this,
+                basedRef: () => ({
+                    options: {
+                        tags: {
+                            sensor: true,
+                        }
+                    },
+                }),
             }
         });
         this.sensor.allowGravity = false
@@ -89,7 +100,7 @@ export class Enemy extends PhysBox {
         this.body.allowGravity = false
         // this.setCenter()
 
-        
+
         // setup composite
         this.compositeRef = Physics.Composite.create({ label: 'enemyComposite' })
         Physics.Composite.add(this.compositeRef, this.body)
@@ -119,22 +130,24 @@ export class Enemy extends PhysBox {
     draw() {
         // this.color = this.groundCount > 0 ? 'blue' : 'red'
 
+        if (!this.active) return
+
         rotateDraw({
             c: this.gameRef.ctx,
             x: this.sensor.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
             y: this.sensor.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
             a: radToDeg(this.sensor.angle)
-          }, () => {
-      
+        }, () => {
+
             drawCircle({
-              c: this.gameRef.ctx,
-              x: this.bodyCenter.x,
-              y: this.bodyCenter.y,
-              radius: this.sensorRadius * this.gameRef.cameraZoom,
-              fillColor: 'rgba(100,100,100,0.5)',
-              // fillColor: 'red',
+                c: this.gameRef.ctx,
+                x: this.bodyCenter.x,
+                y: this.bodyCenter.y,
+                radius: this.sensorRadius * this.gameRef.cameraZoom,
+                fillColor: 'rgba(100,100,100,0.5)',
+                // fillColor: 'red',
             })
-          })
+        })
 
         this.drawPhysicsBody()
     }

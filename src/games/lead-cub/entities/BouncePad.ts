@@ -26,7 +26,7 @@ export class BouncePad extends PhysBox {
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
         if (otherBody && otherBody.options && otherBody.options.tags) {
-            if (otherBody.options.tags.player) {
+            if (otherBody.options.tags.player || otherBody.options.tags.enemy) {
                 // launch up
                 this.launch(otherBody)
                 this.color = 'orange'
@@ -37,7 +37,7 @@ export class BouncePad extends PhysBox {
     collisionEndFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
         if (otherBody && otherBody.options && otherBody.options.tags) {
-            if (otherBody.options.tags.player) {
+            if (otherBody.options.tags.player || otherBody.options.tags.enemy) {
                 // dunno
                 this.color = 'green'
             }
