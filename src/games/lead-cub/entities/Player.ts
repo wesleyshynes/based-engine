@@ -1,5 +1,6 @@
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
 import Physics from 'matter-js';
+import { Bullet } from "./Bullet";
 
 export class Player extends PhysBox {
 
@@ -23,6 +24,8 @@ export class Player extends PhysBox {
     }
 
     bodyOptions = { label: 'player', inertia: Infinity }
+
+    bullets: any = []
 
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
@@ -54,6 +57,15 @@ export class Player extends PhysBox {
     initialize() {
         this.initializeBody()
         this.setCenter()
+
+        this.bullets = []
+        const newBullet = new Bullet({
+            key: 'bullet1',
+            gameRef: this.gameRef,
+        }) 
+        newBullet.initialize()
+        newBullet.body.ignoreGravity = true
+        this.bullets.push(newBullet)
     }
 
     update() {
@@ -68,6 +80,11 @@ export class Player extends PhysBox {
     draw() {
         // this.color = this.groundCount > 0 ? 'blue' : 'red'
         this.drawPhysicsBody()
+        this.bullets.forEach((bullet: any) => {
+            if(bullet.active){
+                bullet.draw()
+            }
+        })
     }
 
     tearDown() { }
@@ -86,6 +103,10 @@ export class Player extends PhysBox {
         // if ((pressedKeys['KeyS'] || pressedKeys['ArrowDown'])) {
         //   moveY += speedFactor
         // }
+
+        if(pressedKeys['KeyN']) {
+            this.shootBullet()
+        }
 
         if (pressedKeys['KeyX']) {
             moveX *= 1.5
@@ -106,6 +127,26 @@ export class Player extends PhysBox {
                 y: this.body.velocity.y / 2,
                 x: moveX
             })
+        }
+
+    }
+
+    shootBullet() {
+        for (let i = 0; i < this.bullets.length; i++) {
+            const bullet = this.bullets[i]
+            if (!bullet.active) {
+                bullet.active = true
+                Physics.Body.setPosition(bullet.body, {
+                    x: this.body.position.x + (this.width/2) + 10,
+                    y: this.body.position.y - this.height/2
+                })
+                Physics.Body.setVelocity(bullet.body, {
+                    x: 60,
+                    y: 0
+                })
+                this.gameRef.addToWorld(bullet.body)
+                break
+            }
         }
 
     }
