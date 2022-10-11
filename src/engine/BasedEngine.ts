@@ -68,7 +68,8 @@ export class BasedGame implements BasedGameType {
 
   physics: Physics.Engine;
   lastPhysicsUpdate: number = 0;
-  physicsRate: number = 1000 / 60
+  physicsRate: number = 1000 / 60;
+  ignoreGravity: any = {}
 
   keyBoardEnabled: boolean = false
   pressedKeys: { [key: string]: boolean } = {}
@@ -148,6 +149,7 @@ export class BasedGame implements BasedGameType {
   initializePhysics() {
     this.physics = Physics.Engine.create()
     this.initializePhysicsColliders()
+    this.initializeIgnoreGravity()
   }
 
   addToWorld(bodyRef: any) {
@@ -158,7 +160,23 @@ export class BasedGame implements BasedGameType {
     Physics.Composite.remove(this.physics.world, bodyRef)
   }
 
+  initializeIgnoreGravity() {
+    Physics.Events.on(this.physics, 'beforeUpdate', () => {
+      const gravity = this.physics.world.gravity
+      Object.keys(this.ignoreGravity).forEach((x: any) => {
+        const body = this.ignoreGravity[x]
+        // if(body.plugin.basedRef().active) {
+          Physics.Body.applyForce(body, body.position, {
+            x: -gravity.x * gravity.scale * body.mass,
+            y: -gravity.y * gravity.scale * body.mass
+          });
+        // }
+      })
+    })
+  }
+
   initializePhysicsColliders() {
+    this.ignoreGravity = {}
     Physics.Events.on(this.physics, 'collisionStart', (event: any) => {
       event.pairs.map((pair: any) => {
         const { bodyA, bodyB } = pair

@@ -62,7 +62,7 @@ export class Player extends PhysBox {
         const newBullet = new Bullet({
             key: 'bullet1',
             gameRef: this.gameRef,
-        }) 
+        })
         newBullet.initialize()
         newBullet.body.ignoreGravity = true
         this.bullets.push(newBullet)
@@ -75,13 +75,16 @@ export class Player extends PhysBox {
                 keepLastGround: true
             })
         }
+        this.bullets.forEach((x: any) => {
+            x.update()
+        })
     }
 
     draw() {
         // this.color = this.groundCount > 0 ? 'blue' : 'red'
         this.drawPhysicsBody()
         this.bullets.forEach((bullet: any) => {
-            if(bullet.active){
+            if (bullet.active) {
                 bullet.draw()
             }
         })
@@ -104,7 +107,7 @@ export class Player extends PhysBox {
         //   moveY += speedFactor
         // }
 
-        if(pressedKeys['KeyN']) {
+        if (pressedKeys['KeyN']) {
             this.shootBullet()
         }
 
@@ -135,16 +138,16 @@ export class Player extends PhysBox {
         for (let i = 0; i < this.bullets.length; i++) {
             const bullet = this.bullets[i]
             if (!bullet.active) {
-                bullet.active = true
-                Physics.Body.setPosition(bullet.body, {
-                    x: this.body.position.x + (this.width/2) + 10,
-                    y: this.body.position.y - this.height/2
-                })
-                Physics.Body.setVelocity(bullet.body, {
-                    x: 60,
-                    y: 0
-                })
-                this.gameRef.addToWorld(bullet.body)
+                bullet.shoot(
+                    {
+                        x: this.body.position.x + (this.width / 2) + 10,
+                        y: this.body.position.y - this.height / 2
+                    },
+                    {
+                        x: 60,
+                        y: 0
+                    }
+                )
                 break
             }
         }
