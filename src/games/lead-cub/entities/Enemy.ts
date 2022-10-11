@@ -8,6 +8,8 @@ export class Enemy extends PhysBox {
     width: number = 70
     height: number = 70
     color: string = 'pink'
+    colorPool: string[] = ['red', 'green', 'blue', 'yellow', 'pink', 'purple', 'orange', 'cyan', 'magenta', 'lime', 'teal', 'indigo', 'violet', 'brown', 'olive', 'maroon', 'navy', 'turquoise', 'silver', 'gray']
+    health: number = 5
 
     speed: number = 3
 
@@ -46,6 +48,14 @@ export class Enemy extends PhysBox {
                 this.active = false
                 this.gameRef.removeFromWorld(this.compositeRef)
             }
+
+            if (otherBody.options.tags.bullet) {
+                this.health--
+                if(this.health <= 0) {
+                    this.active = false
+                    this.gameRef.removeFromWorld(this.compositeRef)
+                }
+            }
         }
     }
 
@@ -59,6 +69,8 @@ export class Enemy extends PhysBox {
     async preload() { }
 
     initialize() {
+
+        this.health = this.colorPool.length - 1
 
         // setup sensor
         this.sensor = Physics.Bodies.circle(this.x, this.y, this.sensorRadius, {
@@ -182,6 +194,10 @@ export class Enemy extends PhysBox {
 
     draw() {
         // this.color = this.groundCount > 0 ? 'blue' : 'red'
+
+        if(this.health > 0) {
+            this.color = this.colorPool[this.health]
+        }
 
         if (!this.active) return
 

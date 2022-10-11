@@ -9,13 +9,12 @@ export class Bullet extends PhysBall {
     lastShot = 0
     shotTime = 1000
 
-    radius: number = 10
+    radius: number = 15
     color: string = 'blue'
 
     bodyOptions = {
         label: 'bullet',
         inertia: Infinity,
-        ignoreGravity: true,
         density: 1,
     }
 
@@ -29,9 +28,15 @@ export class Bullet extends PhysBall {
 
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
-        if (otherBody && otherBody.options && otherBody.options.tags && !otherBody.options.tags.sensor) {
+        if (otherBody && otherBody.options && otherBody.options.tags) {
             // this.cleanup()
-            delete this.gameRef.ignoreGravity[this.objectKey]
+            if(!otherBody.options.tags.sensor) {
+                delete this.gameRef.ignoreGravity[this.objectKey]
+            }
+            if(otherBody.options.tags.enemy) {
+                Physics.Body.setVelocity(this.body, {x: 0, y: 0})
+                this.cleanup()
+            }
         }
     }
 

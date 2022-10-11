@@ -14,6 +14,7 @@ export class Player extends PhysBox {
     jumpDiff: number = 100
 
     lastGround: any;
+    facing: number = 1
 
     groundCount: number = 0
 
@@ -26,6 +27,8 @@ export class Player extends PhysBox {
     bodyOptions = { label: 'player', inertia: Infinity }
 
     bullets: any = []
+    lastShot: number = 0
+    shotDelay: number = 300
 
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
@@ -58,14 +61,15 @@ export class Player extends PhysBox {
         this.initializeBody()
         this.setCenter()
 
-        this.bullets = []
-        const newBullet = new Bullet({
-            key: 'bullet1',
-            gameRef: this.gameRef,
+        this.bullets = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'].map((x: string) => {
+            const newBullet = new Bullet({
+                key: `player-bullet-${x}`,
+                gameRef: this.gameRef,
+            })
+            newBullet.initialize()
+            // this.bullets.push(newBullet)
+            return newBullet
         })
-        newBullet.initialize()
-        newBullet.body.ignoreGravity = true
-        this.bullets.push(newBullet)
     }
 
     update() {
@@ -99,9 +103,11 @@ export class Player extends PhysBox {
 
         if (pressedKeys['KeyA'] || pressedKeys['ArrowLeft']) {
             moveX -= this.speed
+            this.facing = -1
         }
         if (pressedKeys['KeyD'] || pressedKeys['ArrowRight']) {
             moveX += this.speed
+            this.facing = 1
         }
         // if ((pressedKeys['KeyS'] || pressedKeys['ArrowDown'])) {
         //   moveY += speedFactor
@@ -135,19 +141,23 @@ export class Player extends PhysBox {
     }
 
     shootBullet() {
+        if(this.gameRef.lastUpdate < this.lastShot + this.shotDelay) {
+            return
+        }
         for (let i = 0; i < this.bullets.length; i++) {
             const bullet = this.bullets[i]
             if (!bullet.active) {
                 bullet.shoot(
                     {
-                        x: this.body.position.x + (this.width / 2) + 10,
-                        y: this.body.position.y - this.height / 2
+                        x: this.body.position.x + ((this.width / 2) + bullet.radius + 2) * this.facing,
+                        y: this.body.position.y
                     },
                     {
-                        x: 60,
+                        x: 60 * this.facing,
                         y: 0
                     }
                 )
+                this.lastShot = this.gameRef.lastUpdate
                 break
             }
         }
