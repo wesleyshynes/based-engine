@@ -18,7 +18,7 @@ export class StandardLevel extends BasedLevel {
     playerLastJump: number = 0
     playerJumpDiff: number = 100
 
-    enemy: any;
+    enemies: any[] = [];
 
     floors: any[] = []
     bouncePads: any[] = []
@@ -63,14 +63,17 @@ export class StandardLevel extends BasedLevel {
             return tempObj
         })
 
-        this.enemy = new Enemy({
-            key: 'protoEnemy',
-            gameRef: this.gameRef,
+        this.enemies = ['uno', 'dos'].map((x: string, idx: number) =>{
+            const tempEnemy = new Enemy({
+                key: `protoEnemy-${idx}`,
+                gameRef: this.gameRef,
+            })
+            tempEnemy.x = 700 + (idx * 1700)
+            tempEnemy.y = 500
+            tempEnemy.initialize()
+            this.gameRef.addToWorld(tempEnemy.compositeRef)
+            return tempEnemy
         })
-        this.enemy.x = 700
-        this.enemy.y = 500
-        this.enemy.initialize()
-        this.gameRef.addToWorld(this.enemy.compositeRef)
 
 
         this.floors = firstLevelLayout.map((obj: any, idx: number) => {
@@ -161,7 +164,9 @@ export class StandardLevel extends BasedLevel {
         this.handleKeys()
 
         this.player.update()
-        this.enemy.update()
+        this.enemies.forEach((enemy) => {
+            enemy.update()
+        })
 
         this.handlePhysics()
         this.updateCamera()
@@ -207,7 +212,9 @@ export class StandardLevel extends BasedLevel {
             f.draw()
         })
 
-        this.enemy.draw()
+        this.enemies.forEach(e => {
+            e.draw()
+        })
     }
 
     tearDown() { }

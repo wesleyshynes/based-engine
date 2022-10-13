@@ -36,6 +36,7 @@ export class Player extends PhysBox {
             if (otherBody.options.tags.ground) {
                 this.groundCount++
                 this.lastGround = otherBody
+                console.log('last ground', this.lastGround)
             }
             if (otherBody.options.tags.death) {
                 Physics.Body.setPosition(this.body, { x: 300, y: 300 })
@@ -98,7 +99,12 @@ export class Player extends PhysBox {
 
     handleKeys() {
         const pressedKeys = this.gameRef.pressedKeys
-        let moveX = 0
+        let moveX =  0
+        if(this.lastGround?.lastVelocity) {
+            if(this.lastGround.body.position.y > this.body.position.y) {
+                moveX = this.lastGround.lastVelocity.x
+            }
+        }
         // let moveY = 0
 
         if (pressedKeys['KeyA'] || pressedKeys['ArrowLeft']) {

@@ -1,7 +1,7 @@
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
 import Physics from 'matter-js';
 import { drawCircle, rotateDraw } from "../../../engine/libs/drawHelpers";
-import { radToDeg } from "../../../engine/libs/mathHelpers";
+import { radToDeg, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 
 export class Enemy extends PhysBox {
 
@@ -12,10 +12,13 @@ export class Enemy extends PhysBox {
     health: number = 5
 
     speed: number = 3
+    
+    lastVelocity: XYCoordinateType = {x: 0, y: 0}
 
     options = {
         tags: {
             enemy: true,
+            ground: true,
         }
     }
 
@@ -33,6 +36,9 @@ export class Enemy extends PhysBox {
     // sensor stuff
     sensor: any;
     sensorRadius: number = 200
+
+    leftSensor: any;
+    leftGroundCount: number = 0
 
     rightSensor: any;
     rightGroundCount: number = 0
@@ -85,10 +91,7 @@ export class Enemy extends PhysBox {
                     const otherBody = x.plugin.basedRef()
                     if (otherBody && otherBody.options && otherBody.options.tags) {
                         if (otherBody.options.tags.death) {
-                            Physics.Body.setVelocity(this.body, {
-                                x: 50,
-                                y: this.body.velocity.y
-                            })
+                            // handle imminent death
                         }
                     }
                 },
@@ -119,6 +122,9 @@ export class Enemy extends PhysBox {
                         if (otherBody.options.tags.ground) {
                             this.rightGroundCount++
                         }
+                        if(otherBody.options.tags.death){
+                            this.speed = -3
+                        }
                     }
                 },
                 collisionEnd: (x: any) => {
@@ -144,11 +150,53 @@ export class Enemy extends PhysBox {
             }
         });
 
+        this.leftSensor = Physics.Bodies.circle(this.x, this.y, this.movementSensorSize, {
+            label: 'enemyLeftSensor',
+            isSensor: true,
+            collisionFilter: { group: this.collisionGroup },
+            density: 0.0000000001,
+            // restitution: 0,
+            plugin: {
+                collisionStart: (x: any) => {
+                    console.log('left sensor collision start', x)
+                    const otherBody = x.plugin.basedRef()
+                    if (otherBody && otherBody.options && otherBody.options.tags) {
+                        if (otherBody.options.tags.ground) {
+                            this.leftGroundCount++
+                        }
+                        if(otherBody.options.tags.death){
+                            this.speed = 3
+                        }
+                    }
+                },
+                collisionEnd: (x: any) => {
+                    console.log('left sensor collision end', x)
+                    const otherBody = x.plugin.basedRef()
+                    if (otherBody && otherBody.options && otherBody.options.tags) {
+                        if (otherBody.options.tags.ground) {
+                            this.leftGroundCount--
+                            if(this.leftGroundCount <= 0) {
+                                // move left
+                                this.speed = 3
+                            }
+                        }                        
+                    }
+                },
+                basedRef: () => ({
+                    options: {
+                        tags: {
+                            sensor: true,
+                        }
+                    },
+                }),
+            }
+        });
+
+
 
 
         this.initializeBody()
 
-        this.body.allowGravity = false
         // this.setCenter()
 
 
@@ -157,6 +205,7 @@ export class Enemy extends PhysBox {
         Physics.Composite.add(this.compositeRef, this.body)
         Physics.Composite.add(this.compositeRef, this.sensor)
         Physics.Composite.add(this.compositeRef, this.rightSensor)
+        Physics.Composite.add(this.compositeRef, this.leftSensor)
 
         const sensorMount = Physics.Constraint.create({
             bodyB: this.body,
@@ -178,6 +227,15 @@ export class Enemy extends PhysBox {
         })
         Physics.Composite.add(this.compositeRef, rightSensorMount)
 
+        const leftSensorMount = Physics.Constraint.create({
+            bodyB: this.body,
+            pointB: { x: -this.width/2 - 5 , y: this.height/2 + 5 },
+            bodyA: this.leftSensor,
+            stiffness: 1,
+            length: 0
+        })
+        Physics.Composite.add(this.compositeRef, leftSensorMount)
+
         console.log(this.compositeRef)
         console.log(this.sensor)
         console.log(this.body)
@@ -190,6 +248,8 @@ export class Enemy extends PhysBox {
             x: this.speed,
             y: this.body.velocity.y
         })
+        this.lastVelocity.x = this.speed
+        this.lastVelocity.y = this.body.velocity.y
     }
 
     draw() {
@@ -222,6 +282,23 @@ export class Enemy extends PhysBox {
             c: this.gameRef.ctx,
             x: this.rightSensor.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
             y: this.rightSensor.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+            a: radToDeg(this.sensor.angle)
+        }, () => {
+
+            drawCircle({
+                c: this.gameRef.ctx,
+                x: this.bodyCenter.x,
+                y: this.bodyCenter.y,
+                radius: this.movementSensorSize * this.gameRef.cameraZoom,
+                fillColor: 'rgba(100,100,100,0.5)',
+                // fillColor: 'red',
+            })
+        })
+
+        rotateDraw({
+            c: this.gameRef.ctx,
+            x: this.leftSensor.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+            y: this.leftSensor.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
             a: radToDeg(this.sensor.angle)
         }, () => {
 
