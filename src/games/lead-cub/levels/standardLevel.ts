@@ -46,7 +46,8 @@ export class StandardLevel extends BasedLevel {
         this.player.y = 300
         this.player.color = 'red'
         this.player.initialize()
-        this.gameRef.addToWorld(this.player.body)
+        this.gameRef.addToWorld(this.player.compositeRef)
+        // this.gameRef.addToWorld(this.player.body)
 
         this.pickUps = firstLevelPickups.map((obj: any, idx: number) => {
             const tempObj = new PickUp({

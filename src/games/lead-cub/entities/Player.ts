@@ -1,6 +1,8 @@
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
 import Physics from 'matter-js';
 import { Bullet } from "./Bullet";
+import { drawBox, rotateDraw } from "../../../engine/libs/drawHelpers";
+import { radToDeg } from "../../../engine/libs/mathHelpers";
 
 export class Player extends PhysBox {
 
@@ -18,17 +20,30 @@ export class Player extends PhysBox {
 
     groundCount: number = 0
 
+    collisionGroup: any = Physics.Body.nextGroup(true)
+
     options = {
         tags: {
             player: true,
         }
     }
 
-    bodyOptions = { label: 'player', inertia: Infinity }
+    bodyOptions = {
+        label: 'player',
+        inertia: Infinity,
+        collisionFilter: { group: this.collisionGroup },
+    }
 
     bullets: any = []
     lastShot: number = 0
     shotDelay: number = 300
+
+    arm: any;
+    armLength: number = 100
+    armHeight: number = 20
+    armAngle: number = 0
+
+    compositeRef: any;
 
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
@@ -59,8 +74,6 @@ export class Player extends PhysBox {
     async preload() { }
 
     initialize() {
-        this.initializeBody()
-        this.setCenter()
 
         this.bullets = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'].map((x: string) => {
             const newBullet = new Bullet({
@@ -71,6 +84,45 @@ export class Player extends PhysBox {
             // this.bullets.push(newBullet)
             return newBullet
         })
+
+        this.arm = Physics.Bodies.rectangle(this.x + 80, this.y, this.armLength, this.armHeight, {
+            label: 'arm',
+            isSensor: false,
+            collisionFilter: { group: this.collisionGroup },
+            inertia: Infinity,
+            density: 0.001,
+            // density: 0.00000000001,
+            plugin: {
+                collisionStart: (x: any) => { },
+                collisionEnd: (x: any) => { },
+                basedRef: () => ({
+                    options: {
+                        tags: {
+                            limb: true
+                        }
+                    }
+                })
+            }
+        })
+
+        this.initializeBody()
+        this.setCenter()
+
+        this.compositeRef = Physics.Composite.create({ label: 'playerComposite' })
+        Physics.Composite.add(this.compositeRef, this.body)
+        Physics.Composite.add(this.compositeRef, this.arm)
+
+        const armMount = Physics.Constraint.create({
+            bodyA: this.body,
+            bodyB: this.arm,
+            pointA: { x: 20, y: 0 },
+            pointB: { x: -50, y: 0 },
+            length: 0,
+            stiffness: 1,
+        })
+
+        Physics.Composite.add(this.compositeRef, armMount)
+
     }
 
     update() {
@@ -83,6 +135,12 @@ export class Player extends PhysBox {
         this.bullets.forEach((x: any) => {
             x.update()
         })
+
+        Physics.Body.setAngle(this.arm, this.armAngle)
+        this.armAngle+=.01
+        if (this.armAngle > 360) {
+            this.armAngle = 0
+        }
     }
 
     draw() {
@@ -93,15 +151,32 @@ export class Player extends PhysBox {
                 bullet.draw()
             }
         })
+
+        rotateDraw({
+            c: this.gameRef.ctx,
+            x: this.arm.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+            y: this.arm.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+            a: radToDeg(this.arm.angle)
+          }, () => {
+      
+            drawBox({
+              c: this.gameRef.ctx,
+              x: (-(this.armLength/2) - this.bodyCenter.x) * this.gameRef.cameraZoom,
+              y: (-(this.armHeight/2) - this.bodyCenter.y) * this.gameRef.cameraZoom,
+              width: this.armLength * this.gameRef.cameraZoom,
+              height: this.armHeight * this.gameRef.cameraZoom,
+              fillColor: 'blue',
+            })
+          })
     }
 
     tearDown() { }
 
     handleKeys() {
         const pressedKeys = this.gameRef.pressedKeys
-        let moveX =  0
-        if(this.lastGround?.lastVelocity) {
-            if(this.lastGround.body.position.y > this.body.position.y) {
+        let moveX = 0
+        if (this.lastGround?.lastVelocity) {
+            if (this.lastGround.body.position.y > this.body.position.y) {
                 moveX = this.lastGround.lastVelocity.x
             }
         }
@@ -147,7 +222,7 @@ export class Player extends PhysBox {
     }
 
     shootBullet() {
-        if(this.gameRef.lastUpdate < this.lastShot + this.shotDelay) {
+        if (this.gameRef.lastUpdate < this.lastShot + this.shotDelay) {
             return
         }
         for (let i = 0; i < this.bullets.length; i++) {

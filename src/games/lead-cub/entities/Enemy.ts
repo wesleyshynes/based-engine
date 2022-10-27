@@ -87,7 +87,7 @@ export class Enemy extends PhysBox {
             // restitution: 0,
             plugin: {
                 collisionStart: (x: any) => {
-                    console.log('sensor collision start', x)
+                    // console.log('sensor collision start', x)
                     const otherBody = x.plugin.basedRef()
                     if (otherBody && otherBody.options && otherBody.options.tags) {
                         if (otherBody.options.tags.death) {
@@ -96,7 +96,7 @@ export class Enemy extends PhysBox {
                     }
                 },
                 collisionEnd: (x: any) => {
-                    console.log('sensor collision end', x)
+                    // console.log('sensor collision end', x)
                 },
                 basedRef: () => ({
                     options: {
@@ -116,7 +116,7 @@ export class Enemy extends PhysBox {
             // restitution: 0,
             plugin: {
                 collisionStart: (x: any) => {
-                    console.log('right sensor collision start', x)
+                    // console.log('right sensor collision start', x)
                     const otherBody = x.plugin.basedRef()
                     if (otherBody && otherBody.options && otherBody.options.tags) {
                         if (otherBody.options.tags.ground) {
@@ -128,7 +128,7 @@ export class Enemy extends PhysBox {
                     }
                 },
                 collisionEnd: (x: any) => {
-                    console.log('right sensor collision end', x)
+                    // console.log('right sensor collision end', x)
                     const otherBody = x.plugin.basedRef()
                     if (otherBody && otherBody.options && otherBody.options.tags) {
                         if (otherBody.options.tags.ground) {
@@ -158,7 +158,7 @@ export class Enemy extends PhysBox {
             // restitution: 0,
             plugin: {
                 collisionStart: (x: any) => {
-                    console.log('left sensor collision start', x)
+                    // console.log('left sensor collision start', x)
                     const otherBody = x.plugin.basedRef()
                     if (otherBody && otherBody.options && otherBody.options.tags) {
                         if (otherBody.options.tags.ground) {
@@ -170,7 +170,7 @@ export class Enemy extends PhysBox {
                     }
                 },
                 collisionEnd: (x: any) => {
-                    console.log('left sensor collision end', x)
+                    // console.log('left sensor collision end', x)
                     const otherBody = x.plugin.basedRef()
                     if (otherBody && otherBody.options && otherBody.options.tags) {
                         if (otherBody.options.tags.ground) {
