@@ -39,6 +39,7 @@ export class Player extends PhysBox {
     shotDelay: number = 300
 
     arm: any;
+    armFlip: number = 1
     armLength: number = 100
     armHeight: number = 20
     armAngle: number = 0
@@ -89,16 +90,24 @@ export class Player extends PhysBox {
             label: 'arm',
             isSensor: false,
             collisionFilter: { group: this.collisionGroup },
-            inertia: Infinity,
+            // inertia: Infinity,
             density: 0.001,
             // density: 0.00000000001,
             plugin: {
-                collisionStart: (x: any) => { },
+                collisionStart: (o: any) => {
+                    const otherBody = o.plugin.basedRef()
+                    if (otherBody && otherBody.options && otherBody.options.tags) {
+                        if (otherBody.options.tags.ground) {
+                            this.armFlip *= -1                             
+                        }
+                    }
+                },
                 collisionEnd: (x: any) => { },
                 basedRef: () => ({
                     options: {
                         tags: {
-                            limb: true
+                            limb: true,
+                            melee: true,
                         }
                     }
                 })
@@ -136,11 +145,12 @@ export class Player extends PhysBox {
             x.update()
         })
 
-        Physics.Body.setAngle(this.arm, this.armAngle)
-        this.armAngle+=.01
-        if (this.armAngle > 360) {
-            this.armAngle = 0
-        }
+        Physics.Body.setAngularVelocity(this.arm, 0.5 * this.facing * this.armFlip)
+        // Physics.Body.setAngle(this.arm, this.armAngle)
+        // this.armAngle+=.03
+        // if (this.armAngle > 360) {
+        //     this.armAngle = 0
+        // }
     }
 
     draw() {

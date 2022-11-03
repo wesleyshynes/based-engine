@@ -12,8 +12,8 @@ export class Enemy extends PhysBox {
     health: number = 5
 
     speed: number = 3
-    
-    lastVelocity: XYCoordinateType = {x: 0, y: 0}
+
+    lastVelocity: XYCoordinateType = { x: 0, y: 0 }
 
     options = {
         tags: {
@@ -32,6 +32,10 @@ export class Enemy extends PhysBox {
         collisionFilter: { group: this.collisionGroup },
         // restitution: 0,
     }
+
+    // damage stuff
+    lastDamageTime: number = 0
+    damageCooldown: number = 300
 
     // sensor stuff
     sensor: any;
@@ -56,11 +60,27 @@ export class Enemy extends PhysBox {
             }
 
             if (otherBody.options.tags.bullet) {
-                this.health--
-                if(this.health <= 0) {
-                    this.active = false
-                    this.gameRef.removeFromWorld(this.compositeRef)
-                }
+                // this.health--
+                // if (this.health <= 0) {
+                //     this.active = false
+                //     this.gameRef.removeFromWorld(this.compositeRef)
+                // }
+                this.damage(1, {
+                    x: o.position.x < this.body.position.x ? 10 : -10,
+                    y: 0
+                })
+            }
+
+            if (otherBody.options.tags.melee) {
+                // this.health--
+                // if (this.health <= 0) {
+                //     this.active = false
+                //     this.gameRef.removeFromWorld(this.compositeRef)
+                // }
+                this.damage(1, {
+                    x: o.position.x < this.body.position.x ? 30 : -30,
+                    y: 0
+                })
             }
         }
     }
@@ -122,7 +142,7 @@ export class Enemy extends PhysBox {
                         if (otherBody.options.tags.ground) {
                             this.rightGroundCount++
                         }
-                        if(otherBody.options.tags.death){
+                        if (otherBody.options.tags.death) {
                             this.speed = -3
                         }
                     }
@@ -133,11 +153,11 @@ export class Enemy extends PhysBox {
                     if (otherBody && otherBody.options && otherBody.options.tags) {
                         if (otherBody.options.tags.ground) {
                             this.rightGroundCount--
-                            if(this.rightGroundCount <= 0) {
+                            if (this.rightGroundCount <= 0) {
                                 // move left
                                 this.speed = -3
                             }
-                        }                        
+                        }
                     }
                 },
                 basedRef: () => ({
@@ -164,7 +184,7 @@ export class Enemy extends PhysBox {
                         if (otherBody.options.tags.ground) {
                             this.leftGroundCount++
                         }
-                        if(otherBody.options.tags.death){
+                        if (otherBody.options.tags.death) {
                             this.speed = 3
                         }
                     }
@@ -175,11 +195,11 @@ export class Enemy extends PhysBox {
                     if (otherBody && otherBody.options && otherBody.options.tags) {
                         if (otherBody.options.tags.ground) {
                             this.leftGroundCount--
-                            if(this.leftGroundCount <= 0) {
+                            if (this.leftGroundCount <= 0) {
                                 // move left
                                 this.speed = 3
                             }
-                        }                        
+                        }
                     }
                 },
                 basedRef: () => ({
@@ -220,7 +240,7 @@ export class Enemy extends PhysBox {
 
         const rightSensorMount = Physics.Constraint.create({
             bodyB: this.body,
-            pointB: { x:this.width/2 + 5 , y: this.height/2 + 5 },
+            pointB: { x: this.width / 2 + 5, y: this.height / 2 + 5 },
             bodyA: this.rightSensor,
             stiffness: 1,
             length: 0
@@ -229,7 +249,7 @@ export class Enemy extends PhysBox {
 
         const leftSensorMount = Physics.Constraint.create({
             bodyB: this.body,
-            pointB: { x: -this.width/2 - 5 , y: this.height/2 + 5 },
+            pointB: { x: -this.width / 2 - 5, y: this.height / 2 + 5 },
             bodyA: this.leftSensor,
             stiffness: 1,
             length: 0
@@ -243,19 +263,39 @@ export class Enemy extends PhysBox {
     }
 
     update() {
-        // fixes stuck bounce pad
-        Physics.Body.setVelocity(this.body, {
-            x: this.speed,
-            y: this.body.velocity.y
-        })
-        this.lastVelocity.x = this.speed
+        if (this.gameRef.lastUpdate > this.lastDamageTime + this.damageCooldown) {
+            // fixes stuck bounce pad
+            Physics.Body.setVelocity(this.body, {
+                x: this.speed,
+                y: this.body.velocity.y
+            })
+            this.lastVelocity.x = this.speed
+        } else {
+            this.lastVelocity.x = this.body.velocity.x
+        }
         this.lastVelocity.y = this.body.velocity.y
+    }
+
+    damage(amount: number, force: XYCoordinateType) {
+        if (this.gameRef.lastUpdate < this.lastDamageTime + this.damageCooldown ) {
+            return
+        }
+        this.health -= amount
+        if (this.health <= 0) {
+            this.active = false
+            this.gameRef.removeFromWorld(this.compositeRef)
+        }
+        Physics.Body.setVelocity(this.body, {
+            x: force.x,
+            y: this.body.velocity.y + force.y
+        })
+        this.lastDamageTime = this.gameRef.lastUpdate
     }
 
     draw() {
         // this.color = this.groundCount > 0 ? 'blue' : 'red'
 
-        if(this.health > 0) {
+        if (this.health > 0) {
             this.color = this.colorPool[this.health]
         }
 
