@@ -48,6 +48,26 @@ export class CasinoPlayer extends BasedObject {
         this.funds -= this.bet
     }
 
+    clearHand() {
+        this.cards = []
+        this.handValue = 0
+        this.nextMove = ''
+    }
+
+    winBet() {
+        this.funds += this.bet * 2
+        this.bet = 0
+    }
+
+    loseBet() {
+        this.bet = 0
+    }
+
+    returnBet() {
+        this.funds += this.bet
+        this.bet = 0
+    }
+
     makePlay() {
         if (this.handValue < 17) {
             this.nextMove = 'hit'

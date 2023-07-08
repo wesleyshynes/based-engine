@@ -1,7 +1,7 @@
 import { BasedButton } from "../../../engine/BasedButton";
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { FollowCam } from "../../../engine/cameras/FollowCam";
-import { drawBox } from "../../../engine/libs/drawHelpers";
+import { drawBox, drawText } from "../../../engine/libs/drawHelpers";
 import TextContainer from "../../../engine/ui/TextContainer";
 import Toasts from "../../../engine/ui/Toasts";
 import { CasinoPlayer } from "../entities/casinoPlayer";
@@ -24,6 +24,7 @@ export class StandardLevel extends BasedLevel {
     askPlayerButton: any
     standButton: any
     hitButton: any
+    endRoundButton: any
 
     // Game related stuff
     deck: any[] = [];
@@ -32,7 +33,7 @@ export class StandardLevel extends BasedLevel {
     suspicionMeter: number = 0
     currentPlayer: number = 0
 
-    remainingGames: number = 5
+    remainingGames: number = 3 //5
     phase: string = 'betting'
 
 
@@ -49,7 +50,9 @@ export class StandardLevel extends BasedLevel {
     initialize(): void {
 
         this.gameState = 'loading'
+        this.phase = 'betting'
         // reset variables
+        this.remainingGames = 3 //5
         this.gameRef.cameraZoom = 1
 
         this.followCam = new FollowCam({ key: 'followCam', gameRef: this.gameRef })
@@ -146,15 +149,26 @@ export class StandardLevel extends BasedLevel {
         this.hitButton.buttonText = 'Hit'
         this.hitButton.initialize()
 
+        this.endRoundButton = new BasedButton({ gameRef: this.gameRef, key: 'endRoundButton' })
+        this.endRoundButton.width = 100
+        this.endRoundButton.height = 40
+        this.endRoundButton.x = 40
+        this.endRoundButton.y = this.gameRef.gameHeight - this.endRoundButton.height - 260
+        this.endRoundButton.clickFunction = () => {
+            this.endRound()
+        }
+        this.endRoundButton.buttonText = 'End Round'
+        this.endRoundButton.initialize()
+
         // ACTUAL GAME STUFF
         this.shuffleDeck()
 
         this.players = [
             { name: 'John' },
             { name: 'Jane' },
-            { name: 'Joe' },
-            { name: 'Jill' },
-            { name: 'Jack' },
+            // { name: 'Joe' },
+            // { name: 'Jill' },
+            // { name: 'Jack' },
         ].map((p, i) => {
             const newPlayer = new CasinoPlayer({ key: `player-${i}`, gameRef: this.gameRef })
             newPlayer.name = p.name
@@ -172,6 +186,7 @@ export class StandardLevel extends BasedLevel {
         this.dealer.headColor = '#333333'
         this.dealer.color = '#000000'
         this.dealer.initialize()
+        this.dealer.funds = 0
 
         this.phase = 'betting'
 
@@ -237,16 +252,59 @@ export class StandardLevel extends BasedLevel {
         activePlayer.addCardToHand(card)
         if (activePlayer.handValue > 21) {
             this.currentPlayer++
-            if (this.currentPlayer >= this.players.length) {
-                // this.phase = 'dealer'
-            }
         }
+    }
+
+    endRound() {
+        this.shuffleDeck()
+        const dealerHandValue = this.dealer.handValue
+        const dealerBust = dealerHandValue > 21
+        this.players.forEach(p => {
+            if (p.handValue <= 21) {
+                if (dealerBust || p.handValue > dealerHandValue) {
+                    this.dealer.funds -= p.bet
+                    p.winBet()
+                } else if (p.handValue === dealerHandValue) {
+                    p.returnBet()
+                } else {
+                    this.dealer.funds += p.bet
+                    p.loseBet()
+                }
+            } else {
+                this.dealer.funds += p.bet
+                p.loseBet()
+            }
+            p.clearHand()
+        })
+        this.dealer.clearHand()
+        this.currentPlayer = 0
+        this.phase = 'betting'
+        this.remainingGames--
     }
 
     checkGameCondition() {
         // this.addToast(`Scored!`, { yOffset: -60 })
         // this.gameRef.soundPlayer.playSound(this.crunchNoise)
         // this.gameRef.shakeCamera()
+        if(this.remainingGames <= 0) {
+            this.gameState = 'over'
+            this.phase = 'over'
+        }
+
+        if(this.gameState === 'over') {
+            // this.endGame()
+            const netFunds = this.dealer.funds
+            if(netFunds > 0) {
+                this.textBox.setText(`You made the casino $${netFunds}! You did the opposite of what you were supposed to do!`)
+            } else {
+                this.textBox.setText(`You lost the casino $${netFunds}! You did a great service to the public!`)
+            }
+            this.textBox.closeFunction = () => {
+                this.gameRef.loadLevel('start-screen')
+            }
+            this.textBox.active = true
+            
+        }
     }
 
     handleInput() {
@@ -333,6 +391,14 @@ export class StandardLevel extends BasedLevel {
             this.askPlayerButton.update()
             this.standButton.update()
             this.hitButton.update()
+
+            if (this.dealer.activePlayer && (this.dealer.nextMove === 'stand' || this.dealer.handValue > 21)) {
+                this.phase = 'endRound'
+            }
+        }
+
+        if (this.phase === 'endRound') {
+            this.endRoundButton.update()
         }
 
 
@@ -378,6 +444,34 @@ export class StandardLevel extends BasedLevel {
             fillColor: '#0c6640' // '#777'
         })
 
+        // remaining rounds text
+        drawText({
+            c: this.gameRef.ctx,
+            x: 40,
+            y: 60,
+            text: `Rounds remaining: ${this.remainingGames}`,
+            fontSize: 20,
+            fontFamily: 'sans-serif',
+            fillColor: '#fff',
+            align: 'left',
+            strokeColor: '#000',
+            strokeWidth: 2,
+        })
+
+        // suspicion value
+        drawText({
+            c: this.gameRef.ctx,
+            x: 40,
+            y: 100,
+            text: `Suspicion: ${this.suspicionMeter}`,
+            fontSize: 20,
+            fontFamily: 'sans-serif',
+            fillColor: '#fff',
+            align: 'left',
+            strokeColor: '#000',
+            strokeWidth: 2,
+        })
+
         this.players.forEach((player) => {
             player.draw()
         })
@@ -407,6 +501,10 @@ export class StandardLevel extends BasedLevel {
             if (activePlayer.nextMove === 'stand') {
                 this.standButton.draw()
             }
+        }
+
+        if (this.phase === 'endRound') {
+            this.endRoundButton.draw()
         }
 
 
