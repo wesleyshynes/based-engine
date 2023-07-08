@@ -20,13 +20,20 @@ export class StandardLevel extends BasedLevel {
     cameraZoomButton: any
 
     dealButton: any
+    takeBetButton: any
+    askPlayerButton: any
+    standButton: any
+    hitButton: any
 
     // Game related stuff
     deck: any[] = [];
     players: any[] = []
+    dealer: any
     suspicionMeter: number = 0
-
     currentPlayer: number = 0
+
+    remainingGames: number = 5
+    phase: string = 'betting'
 
 
     textBox: any;
@@ -85,7 +92,7 @@ export class StandardLevel extends BasedLevel {
         this.textBox.initialize()
 
         this.dealButton = new BasedButton({ gameRef: this.gameRef, key: 'dealButton' })
-        this.dealButton.width = 60
+        this.dealButton.width = 100
         this.dealButton.height = 40
         this.dealButton.x = 40
         this.dealButton.y = this.gameRef.gameHeight - this.dealButton.height - 10
@@ -93,9 +100,51 @@ export class StandardLevel extends BasedLevel {
             this.dealCard()
         }
         this.dealButton.buttonText = 'Deal'
+        this.dealButton.initialize()
 
-        this.onResize()
-        this.gameState = 'active'
+        this.takeBetButton = new BasedButton({ gameRef: this.gameRef, key: 'takeBetButton' })
+        this.takeBetButton.width = 100
+        this.takeBetButton.height = 40
+        this.takeBetButton.x = 40
+        this.takeBetButton.y = this.gameRef.gameHeight - this.takeBetButton.height - 60
+        this.takeBetButton.clickFunction = () => {
+            this.takeBet()
+        }
+        this.takeBetButton.buttonText = 'Take Bets'
+        this.takeBetButton.initialize()
+
+        this.askPlayerButton = new BasedButton({ gameRef: this.gameRef, key: 'askPlayerButton' })
+        this.askPlayerButton.width = 100
+        this.askPlayerButton.height = 40
+        this.askPlayerButton.x = 40
+        this.askPlayerButton.y = this.gameRef.gameHeight - this.askPlayerButton.height - 110
+        this.askPlayerButton.clickFunction = () => {
+            this.askPlayer()
+        }
+        this.askPlayerButton.buttonText = 'Ask Player'
+        this.askPlayerButton.initialize()
+
+        this.standButton = new BasedButton({ gameRef: this.gameRef, key: 'standButton' })
+        this.standButton.width = 100
+        this.standButton.height = 40
+        this.standButton.x = 40
+        this.standButton.y = this.gameRef.gameHeight - this.standButton.height - 160
+        this.standButton.clickFunction = () => {
+            this.stand()
+        }
+        this.standButton.buttonText = 'Stand'
+        this.standButton.initialize()
+
+        this.hitButton = new BasedButton({ gameRef: this.gameRef, key: 'hitButton' })
+        this.hitButton.width = 100
+        this.hitButton.height = 40
+        this.hitButton.x = 40
+        this.hitButton.y = this.gameRef.gameHeight - this.hitButton.height - 210
+        this.hitButton.clickFunction = () => {
+            this.hit()
+        }
+        this.hitButton.buttonText = 'Hit'
+        this.hitButton.initialize()
 
         // ACTUAL GAME STUFF
         this.shuffleDeck()
@@ -115,23 +164,84 @@ export class StandardLevel extends BasedLevel {
             return newPlayer
         })
         this.currentPlayer = 0
+
+        this.dealer = new CasinoPlayer({ key: `dealer`, gameRef: this.gameRef })
+        this.dealer.name = 'Dealer'
+        this.dealer.x = 100 + 5 * 120
+        this.dealer.y = 190
+        this.dealer.headColor = '#333333'
+        this.dealer.color = '#000000'
+        this.dealer.initialize()
+
+        this.phase = 'betting'
+
+        // BEGIN
+        this.onResize()
+        this.gameState = 'active'
     }
 
     shuffleDeck() {
         this.deck = createDeck()
     }
 
+    getActivePlayer() {
+        return this.players[this.currentPlayer] ? this.players[this.currentPlayer] : this.dealer
+    }
+
     dealCard() {
-        if (this.currentPlayer < this.players.length) {
-            const card = this.deck.pop()
-            this.players[this.currentPlayer].addCardToHand(card)
-            this.currentPlayer++
-        }
-        if (this.currentPlayer >= this.players.length) {
-            this.currentPlayer = 0
+        if (this.phase === 'dealing') {
+            if (this.currentPlayer < this.players.length) {
+                const card = this.deck.pop()
+                this.players[this.currentPlayer].addCardToHand(card)
+                this.currentPlayer++
+                return
+            }
+            if (this.currentPlayer >= this.players.length) {
+                const card = this.deck.pop()
+                this.dealer.addCardToHand(card)
+                this.currentPlayer = 0
+            }
+            if (this.dealer.cards.length >= 2) {
+                this.phase = 'playing'
+            }
+            return
         }
     }
 
+    takeBet() {
+        this.players.forEach(p => {
+            p.placeBet()
+        })
+        this.phase = 'dealing'
+    }
+
+    askPlayer() {
+        const activePlayer = this.getActivePlayer()
+        activePlayer.makePlay()
+    }
+
+    stand() {
+        const activePlayer = this.getActivePlayer()
+        if (activePlayer.nextMove !== 'stand') {
+            return
+        }
+        this.currentPlayer++
+    }
+
+    hit() {
+        const activePlayer = this.getActivePlayer()
+        if (activePlayer.nextMove !== 'hit') {
+            return
+        }
+        const card = this.deck.pop()
+        activePlayer.addCardToHand(card)
+        if (activePlayer.handValue > 21) {
+            this.currentPlayer++
+            if (this.currentPlayer >= this.players.length) {
+                // this.phase = 'dealer'
+            }
+        }
+    }
 
     checkGameCondition() {
         // this.addToast(`Scored!`, { yOffset: -60 })
@@ -196,10 +306,35 @@ export class StandardLevel extends BasedLevel {
             return
         }
 
+        this.players.forEach((p, i: number) => {
+            if (i === this.currentPlayer && this.phase !== 'betting') {
+                p.activePlayer = true
+            } else {
+                p.activePlayer = false
+            }
+            p.update()
+        })
+
+        this.dealer.update()
+        this.dealer.activePlayer = this.currentPlayer >= this.players.length
+
         // this.rollDiceBtn.update()
         this.cameraZoomButton.update()
 
-        this.dealButton.update()
+        if (this.phase === 'betting') {
+            this.takeBetButton.update()
+        }
+
+        if (this.phase === 'dealing') {
+            this.dealButton.update()
+        }
+
+        if (this.phase === 'playing') {
+            this.askPlayerButton.update()
+            this.standButton.update()
+            this.hitButton.update()
+        }
+
 
         if (!this.cameraZoomButton.hovered) {
             this.handleInput()
@@ -223,6 +358,7 @@ export class StandardLevel extends BasedLevel {
         this.cameraZoomButton.y = this.gameRef.gameHeight - this.cameraZoomButton.height - 10
 
         this.dealButton.y = this.gameRef.gameHeight - this.dealButton.height - 10
+        this.takeBetButton.y = this.gameRef.gameHeight - this.takeBetButton.height - 60
     }
 
     draw(): void {
@@ -242,39 +378,36 @@ export class StandardLevel extends BasedLevel {
             fillColor: '#0c6640' // '#777'
         })
 
-        // random box
-        // drawBox({
-        //     c: this.gameRef.ctx,
-        //     x: (this.levelWidth - 80) * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-        //     y: 100 * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-        //     width: 20 * this.gameRef.cameraZoom,
-        //     height: 20 * this.gameRef.cameraZoom,
-        //     fillColor: '#ce192b' // '#777'
-        // })
-
-        // draw entities
-        // this.deck.forEach((card, idx: number) => {
-        //     drawText({
-        //         c: this.gameRef.ctx,
-        //         x: (idx < 26 ? 40 : 300) * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-        //         y: ((idx % 26 * 20) + 40) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-        //         align: 'left',
-        //         fontSize: 12 * this.gameRef.cameraZoom,
-        //         fontFamily: 'sans-serif',
-        //         fillColor: '#fff',
-        //         text: card.name
-        //     })
-        // })
-
         this.players.forEach((player) => {
             player.draw()
         })
 
-        // draw interface
+        this.dealer.draw()
 
+        // draw interface
         this.cameraZoomButton.draw()
 
-        this.dealButton.draw()
+
+        if (this.phase === 'betting') {
+            this.takeBetButton.draw()
+        }
+
+        if (this.phase === 'dealing') {
+            this.dealButton.draw()
+        }
+
+        if (this.phase === 'playing') {
+            const activePlayer = this.getActivePlayer()
+            if (activePlayer.nextMove === '') {
+                this.askPlayerButton.draw()
+            }
+            if (activePlayer.nextMove === 'hit') {
+                this.hitButton.draw()
+            }
+            if (activePlayer.nextMove === 'stand') {
+                this.standButton.draw()
+            }
+        }
 
 
         this.toastMessages.draw()
