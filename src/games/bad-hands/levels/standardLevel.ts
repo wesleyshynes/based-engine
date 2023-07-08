@@ -5,6 +5,7 @@ import { drawBox } from "../../../engine/libs/drawHelpers";
 import TextContainer from "../../../engine/ui/TextContainer";
 import Toasts from "../../../engine/ui/Toasts";
 import { CasinoPlayer } from "../entities/casinoPlayer";
+import { createDeck } from "../helpers/cardHelpers";
 
 export class StandardLevel extends BasedLevel {
 
@@ -117,65 +118,7 @@ export class StandardLevel extends BasedLevel {
     }
 
     shuffleDeck() {
-        this.deck = []
-        // const suits = ['hearts', 'diamonds', 'clubs', 'spades']
-        const suits = [
-            {
-                name: 'hearts',
-                symbol: '♥',
-                color: 'red',
-            },
-            {
-                name: 'diamonds',
-                symbol: '♦',
-                color: 'red',
-            },
-            {
-                name: 'clubs',
-                symbol: '♣',
-                color: 'black',
-            },
-            {
-                name: 'spades',
-                symbol: '♠',
-                color: 'black',
-            },
-        ]
-        const values = [
-            { name: 'ace', value: 11, altValue: 1, letter: 'A' },
-            { name: 'two', value: 2, letter: '2' },
-            { name: 'three', value: 3, letter: '3' },
-            { name: 'four', value: 4, letter: '4' },
-            { name: 'five', value: 5, letter: '5' },
-            { name: 'six', value: 6, letter: '6' },
-            { name: 'seven', value: 7, letter: '7' },
-            { name: 'eight', value: 8, letter: '8' },
-            { name: 'nine', value: 9, letter: '9' },
-            { name: 'ten', value: 10, letter: '10' },
-            { name: 'jack', value: 10, letter: 'J' },
-            { name: 'queen', value: 10, letter: 'Q' },
-            { name: 'king', value: 10, letter: 'K' },
-        ]
-        for (let i = 0; i < suits.length; i++) {
-            for (let j = 0; j < values.length; j++) {
-                this.deck.push({
-                    suit: suits[i].name,
-                    symbol: suits[i].symbol,
-                    value: values[j].value,
-                    altValue: values[j].altValue ? values[j].altValue : 0,
-                    name: values[j].name,
-                    letter: values[j].letter,
-                    color: suits[i].color,
-                })
-            }
-        }
-
-        for (let i = 0; i < this.deck.length; i++) {
-            const randomIndex = Math.floor(Math.random() * this.deck.length)
-            const temp = this.deck[i]
-            this.deck[i] = this.deck[randomIndex]
-            this.deck[randomIndex] = temp
-        }
+        this.deck = createDeck()
     }
 
     dealCard() {

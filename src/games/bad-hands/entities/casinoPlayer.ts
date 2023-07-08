@@ -1,10 +1,11 @@
 import { BasedObject } from "../../../engine/BasedObject";
 import { drawBox, drawCircle, drawText } from "../../../engine/libs/drawHelpers";
+import { calculateHandValue } from "../helpers/cardHelpers";
 
 export class CasinoPlayer extends BasedObject {
     x: number = 0
     y: number = 0
-    name: string = 'Casino  Player'
+    name: string = 'Casino Player'
     color: string = 'white'
 
     headSize: number = 40
@@ -29,24 +30,7 @@ export class CasinoPlayer extends BasedObject {
 
     addCardToHand(card: any) {
         this.cards.push(card)
-        this.handValue = 0
-        const altValues: any[] = []
-        this.cards.forEach((card: any, idx: number) => {
-            this.handValue += card.value
-            if(card.altValue > 0) {
-                altValues.push(card)
-            }
-            if(this.handValue > 21 && card.altValue > 0) {
-                this.handValue -= card.value
-                this.handValue += card.altValue
-                altValues.pop()
-            }
-        })
-        while(this.handValue > 21 && altValues.length > 0) {
-            const card = altValues.pop()
-            this.handValue -= card.value
-            this.handValue += card.altValue
-        }
+        this.handValue = calculateHandValue(this.cards)
     }
 
     update() {}
