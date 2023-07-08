@@ -164,7 +164,8 @@ export function drawEllipse(settings: {
 
 
 export function drawBox(settings: {
-  c: CanvasRenderingContext2D,
+  c: any,
+  // c: CanvasRenderingContext2D,
   x: number,
   y: number,
   width: number,
