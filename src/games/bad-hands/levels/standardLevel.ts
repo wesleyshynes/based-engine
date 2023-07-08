@@ -1,8 +1,9 @@
 import { BasedButton } from "../../../engine/BasedButton";
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { FollowCam } from "../../../engine/cameras/FollowCam";
-import { drawBox, drawText } from "../../../engine/libs/drawHelpers";
+import { drawBox } from "../../../engine/libs/drawHelpers";
 import TextContainer from "../../../engine/ui/TextContainer";
+import Toasts from "../../../engine/ui/Toasts";
 import { CasinoPlayer } from "../entities/casinoPlayer";
 
 export class StandardLevel extends BasedLevel {
@@ -17,17 +18,19 @@ export class StandardLevel extends BasedLevel {
     // Interface stuff
     cameraZoomButton: any
 
+    dealButton: any
+
+    // Game related stuff
     deck: any[] = [];
-
     players: any[] = []
-
     suspicionMeter: number = 0
 
+    currentPlayer: number = 0
+
+
     textBox: any;
-
     lastKeyPress = 0
-
-    toastMessages: { text: string, duration: number, yOffset: number, xOffset: number }[] = []
+    toastMessages: any;
 
     gameState: string = 'active'
 
@@ -47,7 +50,7 @@ export class StandardLevel extends BasedLevel {
         this.followCam.zoomSetting = 1
         this.followCam.initialize()
 
-        this.toastMessages = []
+        this.toastMessages = new Toasts({ gameRef: this.gameRef, key: 'toastsMessages' })
 
         // setup interface
         this.cameraZoomButton = new BasedButton({ gameRef: this.gameRef, key: 'cameraZoomButton' })
@@ -80,6 +83,16 @@ export class StandardLevel extends BasedLevel {
         this.textBox.closeButtonHeight = 40
         this.textBox.initialize()
 
+        this.dealButton = new BasedButton({ gameRef: this.gameRef, key: 'dealButton' })
+        this.dealButton.width = 60
+        this.dealButton.height = 40
+        this.dealButton.x = 40
+        this.dealButton.y = this.gameRef.gameHeight - this.dealButton.height - 10
+        this.dealButton.clickFunction = () => {
+            this.dealCard()
+        }
+        this.dealButton.buttonText = 'Deal'
+
         this.onResize()
         this.gameState = 'active'
 
@@ -100,32 +113,59 @@ export class StandardLevel extends BasedLevel {
             newPlayer.initialize()
             return newPlayer
         })
+        this.currentPlayer = 0
     }
 
     shuffleDeck() {
         this.deck = []
-        const suits = ['hearts', 'diamonds', 'clubs', 'spades']
+        // const suits = ['hearts', 'diamonds', 'clubs', 'spades']
+        const suits = [
+            {
+                name: 'hearts',
+                symbol: '♥',
+                color: 'red',
+            },
+            {
+                name: 'diamonds',
+                symbol: '♦',
+                color: 'red',
+            },
+            {
+                name: 'clubs',
+                symbol: '♣',
+                color: 'black',
+            },
+            {
+                name: 'spades',
+                symbol: '♠',
+                color: 'black',
+            },
+        ]
         const values = [
-            { name: 'ace', value: 1 },
-            { name: 'two', value: 2 },
-            { name: 'three', value: 3 },
-            { name: 'four', value: 4 },
-            { name: 'five', value: 5 },
-            { name: 'six', value: 6 },
-            { name: 'seven', value: 7 },
-            { name: 'eight', value: 8 },
-            { name: 'nine', value: 9 },
-            { name: 'ten', value: 10 },
-            { name: 'jack', value: 10 },
-            { name: 'queen', value: 10 },
-            { name: 'king', value: 10 },
+            { name: 'ace', value: 11, altValue: 1, letter: 'A' },
+            { name: 'two', value: 2, letter: '2' },
+            { name: 'three', value: 3, letter: '3' },
+            { name: 'four', value: 4, letter: '4' },
+            { name: 'five', value: 5, letter: '5' },
+            { name: 'six', value: 6, letter: '6' },
+            { name: 'seven', value: 7, letter: '7' },
+            { name: 'eight', value: 8, letter: '8' },
+            { name: 'nine', value: 9, letter: '9' },
+            { name: 'ten', value: 10, letter: '10' },
+            { name: 'jack', value: 10, letter: 'J' },
+            { name: 'queen', value: 10, letter: 'Q' },
+            { name: 'king', value: 10, letter: 'K' },
         ]
         for (let i = 0; i < suits.length; i++) {
             for (let j = 0; j < values.length; j++) {
                 this.deck.push({
-                    suit: suits[i],
+                    suit: suits[i].name,
+                    symbol: suits[i].symbol,
                     value: values[j].value,
-                    name: `${values[j].name} of ${suits[i]}`,
+                    altValue: values[j].altValue ? values[j].altValue : 0,
+                    name: values[j].name,
+                    letter: values[j].letter,
+                    color: suits[i].color,
                 })
             }
         }
@@ -138,71 +178,22 @@ export class StandardLevel extends BasedLevel {
         }
     }
 
+    dealCard() {
+        if (this.currentPlayer < this.players.length) {
+            const card = this.deck.pop()
+            this.players[this.currentPlayer].addCardToHand(card)
+            this.currentPlayer++
+        }
+        if (this.currentPlayer >= this.players.length) {
+            this.currentPlayer = 0
+        }
+    }
+
 
     checkGameCondition() {
         // this.addToast(`Scored!`, { yOffset: -60 })
         // this.gameRef.soundPlayer.playSound(this.crunchNoise)
         // this.gameRef.shakeCamera()
-    }
-
-    addToast(text: string, options: any = {}) {
-        const {
-            duration,
-            yOffset,
-            xOffset,
-        } = options
-        this.toastMessages.push({
-            text: text,
-            duration: duration ? duration : 1000,
-            yOffset: yOffset ? yOffset : 0,
-            xOffset: xOffset ? xOffset : 0,
-        })
-    }
-
-    handleToasts() {
-        if (this.toastMessages.length > 0) {
-            this.toastMessages = this.toastMessages.map(x => {
-                return {
-                    ...x,
-                    duration: x.duration - this.gameRef.updateDiff
-                }
-            }).filter(x => {
-                return x.duration > 0
-            })
-        }
-    }
-
-    drawToasts() {
-        if (this.toastMessages.length) {
-            this.toastMessages.forEach((toast, idx) => {
-                const toastOpacity = toast.duration > 500 ? 1 : toast.duration / 500
-                const toastOffset = toast.duration > 500 ? 0 : ((500 - toast.duration) / 500) * 60
-                drawText({
-                    c: this.gameRef.ctx,
-                    x: this.gameRef.gameWidth / 2 + toast.xOffset + 2,
-                    y: this.gameRef.gameHeight / 2 + toast.yOffset + 2 - toastOffset,
-                    // y: this.gameRef.gameHeight/2 + (idx * 40) + 1 - toastOffset,
-                    align: 'center',
-                    fontSize: 28,
-                    fontFamily: 'sans-serif',
-                    weight: 'bold',
-                    fillColor: `rgba(0,0,0,${toastOpacity})`,
-                    text: toast.text
-                })
-                drawText({
-                    c: this.gameRef.ctx,
-                    x: this.gameRef.gameWidth / 2 + toast.xOffset,
-                    y: this.gameRef.gameHeight / 2 + toast.yOffset - toastOffset,
-                    // y: this.gameRef.gameHeight/2 + (idx * 40) - toastOffset,
-                    align: 'center',
-                    fontSize: 28,
-                    fontFamily: 'sans-serif',
-                    weight: 'bold',
-                    fillColor: `rgba(255,255,255,${toastOpacity})`,
-                    text: toast.text
-                })
-            })
-        }
     }
 
     handleInput() {
@@ -265,11 +256,13 @@ export class StandardLevel extends BasedLevel {
         // this.rollDiceBtn.update()
         this.cameraZoomButton.update()
 
+        this.dealButton.update()
+
         if (!this.cameraZoomButton.hovered) {
             this.handleInput()
         }
 
-        this.handleToasts()
+        this.toastMessages.update()
     }
 
     updateCamera() {
@@ -285,6 +278,8 @@ export class StandardLevel extends BasedLevel {
     onResize() {
         this.cameraZoomButton.x = this.gameRef.gameWidth - this.cameraZoomButton.width - 10
         this.cameraZoomButton.y = this.gameRef.gameHeight - this.cameraZoomButton.height - 10
+
+        this.dealButton.y = this.gameRef.gameHeight - this.dealButton.height - 10
     }
 
     draw(): void {
@@ -336,7 +331,10 @@ export class StandardLevel extends BasedLevel {
 
         this.cameraZoomButton.draw()
 
-        this.drawToasts()
+        this.dealButton.draw()
+
+
+        this.toastMessages.draw()
 
         this.textBox.draw()
     }
