@@ -1,6 +1,6 @@
-import { BasedButton } from "../../../engine/BasedButton";
-import { BasedObject } from "../../../engine/BasedObject";
-import { drawBox, drawText } from "../../../engine/libs/drawHelpers";
+import { BasedButton } from "../BasedButton";
+import { BasedObject } from "../BasedObject";
+import { drawBox, drawText } from "../libs/drawHelpers";
 
 export default class TextContainer extends BasedObject {
 

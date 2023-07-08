@@ -2,7 +2,7 @@ import { BasedButton } from "../../../engine/BasedButton";
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { FollowCam } from "../../../engine/cameras/FollowCam";
 import { boxCollision } from "../../../engine/libs/collisionHelpers";
-import { createSprite, drawBox, drawCircle, drawImage, drawText } from "../../../engine/libs/drawHelpers";
+import { createSprite, drawBox, drawCircle, drawText } from "../../../engine/libs/drawHelpers";
 import { getRandomInt } from "../../../engine/libs/mathHelpers";
 
 // sprites
@@ -11,7 +11,7 @@ import BgTilemap from '../../../assets/dice-grid/tilemap_big.png'
 import { sampleLayout } from "../layouts/sampleLayouts";
 import { SpriteTiler } from "../utils/SpriteTiler";
 import { SnakePlayer } from "../entities/SnakePlayer";
-import TextContainer from "../ui/TextContainer";
+import TextContainer from "../../../engine/ui/TextContainer";
 
 import BgMusic from '../../../assets/dice-grid/FastFeelBananaPeel-320bit.mp3'
 import EpicBgMusic from '../../../assets/dice-grid/BoxCat-Games-Epic-Song.mp3'

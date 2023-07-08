@@ -8,23 +8,23 @@ export function rotateDraw(settings: {
   a: number,
 }, drawFn: () => void) {
   const {
-    c,x,y,a
+    c, x, y, a
   } = settings
 
-    c.save();
+  c.save();
 
-    // move to the center of the canvas
-    c.translate(x,y);
+  // move to the center of the canvas
+  c.translate(x, y);
 
-    // rotate the canvas to the specified degrees
-    c.rotate(a*Math.PI/180);
+  // rotate the canvas to the specified degrees
+  c.rotate(a * Math.PI / 180);
 
-    // draw the image
-    // since the context is rotated, the image will be rotated also
-    drawFn()
+  // draw the image
+  // since the context is rotated, the image will be rotated also
+  drawFn()
 
-    // we’re done with the rotating so restore the unrotated context
-    c.restore();
+  // we’re done with the rotating so restore the unrotated context
+  c.restore();
 }
 
 export function drawImage(settings: {
@@ -39,46 +39,46 @@ export function drawImage(settings: {
   dWidth: number,
   dHeight: number,
   sprite: string,
-  flipX?:boolean,
-  flipY?:boolean
+  flipX?: boolean,
+  flipY?: boolean
 }) {
-    const {
-        c,
-        sprite,
-        sx,
-        sy,
-        sWidth,
-        sHeight,
-        dx,
-        dy,
-        dWidth,
-        dHeight,
-        img,
-        flipX,
-        flipY
-    } = settings
-    c.scale(flipX ? -1: 1, flipY ? -1 : 1)
-    c.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
-    c.scale(1,1)
+  const {
+    c,
+    sprite,
+    sx,
+    sy,
+    sWidth,
+    sHeight,
+    dx,
+    dy,
+    dWidth,
+    dHeight,
+    img,
+    flipX,
+    flipY
+  } = settings
+  c.scale(flipX ? -1 : 1, flipY ? -1 : 1)
+  c.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+  c.scale(1, 1)
 }
 
 const spriteCache: any = {}
 
 export async function createSprite(spriteOptions: any) {
-    const spriteKey = 'cache-' + spriteOptions.sprite
-    if(spriteCache[spriteKey]) {
-      spriteOptions.img = spriteCache[spriteKey]
-    } else {
-      const spriteImg = await new Promise((resolve, reject) => {
-        let img = new Image();
-        img.onload = () => {resolve(img)}
-        img.onerror = (err) => {reject(err)}
-        img.src = spriteOptions.sprite
-      })
-      spriteOptions.img = spriteImg
-      spriteCache[spriteKey] = spriteImg
-    }
-    return spriteOptions
+  const spriteKey = 'cache-' + spriteOptions.sprite
+  if (spriteCache[spriteKey]) {
+    spriteOptions.img = spriteCache[spriteKey]
+  } else {
+    const spriteImg = await new Promise((resolve, reject) => {
+      let img = new Image();
+      img.onload = () => { resolve(img) }
+      img.onerror = (err) => { reject(err) }
+      img.src = spriteOptions.sprite
+    })
+    spriteOptions.img = spriteImg
+    spriteCache[spriteKey] = spriteImg
+  }
+  return spriteOptions
 }
 
 export function drawLine(settings: {
@@ -171,13 +171,18 @@ export function drawBox(settings: {
   height: number,
   fillColor?: string,
   strokeWidth?: number,
-  strokeColor?: string
+  strokeColor?: string,
+  borderRadius?: number | number[]
 }) {
   const {
-    c, x, y, width, height, fillColor, strokeWidth, strokeColor
+    c, x, y, width, height, fillColor, strokeWidth, strokeColor, borderRadius
   } = settings
   c.beginPath()
-  c.rect(x, y, width, height)
+  if(borderRadius) {
+    c.roundRect(x, y, width, height, borderRadius)
+  } else {
+    c.rect(x, y, width, height)
+  }
   if (fillColor) {
     c.fillStyle = fillColor
     c.fill()
@@ -195,7 +200,7 @@ export function drawText(settings: {
   x: number,
   y: number,
   fillColor: string,
-  align: 'center' |  'left' | 'right',
+  align: 'center' | 'left' | 'right',
   text: string,
   strokeWidth?: number,
   strokeColor?: string,
@@ -205,31 +210,31 @@ export function drawText(settings: {
   weight?: string | number
 }) {
   const {
-       c,
-       x,
-       y,
-       fillColor,
-       strokeWidth,
-       strokeColor,
-       text,
-       fontFamily,
-       fontSize,
-       align,
-       style,
-       weight
-   } = settings
-   c.textAlign = align ? align : 'center'
-   c.font = `${style ? style + ' ' : ''}${weight ? weight + ' ' : ''}${fontSize}px ${fontFamily}`
+    c,
+    x,
+    y,
+    fillColor,
+    strokeWidth,
+    strokeColor,
+    text,
+    fontFamily,
+    fontSize,
+    align,
+    style,
+    weight
+  } = settings
+  c.textAlign = align ? align : 'center'
+  c.font = `${style ? style + ' ' : ''}${weight ? weight + ' ' : ''}${fontSize}px ${fontFamily}`
 
-   if(strokeWidth && strokeColor) {
-       c.strokeStyle = strokeColor
-       c.lineWidth = strokeWidth
-       c.strokeText(text, x, y)
-   }
+  if (strokeWidth && strokeColor) {
+    c.strokeStyle = strokeColor
+    c.lineWidth = strokeWidth
+    c.strokeText(text, x, y)
+  }
 
-   if(fillColor) {
-       c.fillStyle = fillColor
-       c.fillText(text, x, y)
-   }
+  if (fillColor) {
+    c.fillStyle = fillColor
+    c.fillText(text, x, y)
+  }
 
 }
