@@ -8,6 +8,26 @@ import Toasts from "../../../engine/ui/Toasts";
 import { CasinoPlayer } from "../entities/casinoPlayer";
 import { createDeck } from "../helpers/cardHelpers";
 
+import ShuffleNoise from '../../../assets/black-jack/445031__ailett__riffle-shuffle.mp3'
+import BetNoise from '../../../assets/black-jack/75235__creek23__cha-ching.mp3'
+
+import DealNoise from '../../../assets/black-jack/571576__el_boss__playing-card-deal-variation-2.mp3'
+import SneakDealNoise from '../../../assets/black-jack/536784__egomassive__deal.mp3'
+
+import HitNoise from '../../../assets/black-jack/240777__f4ngy__dealing-card.mp3'
+import SneakHitNoise from '../../../assets/black-jack/240776__f4ngy__card-flip.mp3'
+
+import StandNoise from '../../../assets/black-jack/585256__lesaucisson__swoosh-2.mp3'
+import BustNoise from '../../../assets/black-jack/344268__inspectorj__glass-smash-bottle-a.mp3'
+
+import DingNoise from '../../../assets/black-jack/679016__leonelale71__typerwriter_ding.mp3'
+
+import BeatNoise from '../../../assets/black-jack/85558__maj061785__punching-metal-door.mp3'
+import LoseNoise from '../../../assets/black-jack/270334__littlerobotsoundfactory__jingle_lose_01.mp3'
+import WinNoise from '../../../assets/black-jack/165492__chripei__victory-cry-reverb-1.mp3'
+
+import BgMusic from '../../../assets/black-jack/AcidJazz.mp3'
+
 export class StandardLevel extends BasedLevel {
 
     levelWidth: number = 800
@@ -52,8 +72,51 @@ export class StandardLevel extends BasedLevel {
 
     gameState: string = 'active'
 
+    // SOUNDS
+    shuffleNoise: any
+    betNoise: any
+    dealNoise: any
+    sneakDealNoise: any
+    hitNoise: any
+    sneakHitNoise: any
+    standNoise: any
+    bustNoise: any
+    dingNoise: any
+    beatNoise: any
+    loseNoise: any
+    winNoise: any
+
+    // MUSIC
+    activeSound: any = {
+        playing: false,
+        soundRef: null,
+      }
+    
+      bgSong: any;
+
     async preload() {
         this.gameRef.drawLoading('All the things', .1)
+        this.bgSong = await this.gameRef.soundPlayer.loadSound(BgMusic)
+
+        this.gameRef.drawLoading('Gathering Cards', .4)
+        this.shuffleNoise = await this.gameRef.soundPlayer.loadSound(ShuffleNoise)
+        this.standNoise = await this.gameRef.soundPlayer.loadSound(StandNoise)
+        this.beatNoise = await this.gameRef.soundPlayer.loadSound(BeatNoise)
+        this.loseNoise = await this.gameRef.soundPlayer.loadSound(LoseNoise)
+        this.winNoise = await this.gameRef.soundPlayer.loadSound(WinNoise)
+
+        this.gameRef.drawLoading('Getting Chips', .6)
+        this.betNoise = await this.gameRef.soundPlayer.loadSound(BetNoise)
+        this.bustNoise = await this.gameRef.soundPlayer.loadSound(BustNoise)
+        this.dingNoise = await this.gameRef.soundPlayer.loadSound(DingNoise)
+
+        this.gameRef.drawLoading('Dealing Cards', .8)
+        this.dealNoise = await this.gameRef.soundPlayer.loadSound(DealNoise)
+        this.hitNoise = await this.gameRef.soundPlayer.loadSound(HitNoise)        
+
+        this.gameRef.drawLoading('Sneaking Cards', .9)
+        this.sneakDealNoise = await this.gameRef.soundPlayer.loadSound(SneakDealNoise)
+        this.sneakHitNoise = await this.gameRef.soundPlayer.loadSound(SneakHitNoise)
     }
 
     initialize(): void {
@@ -253,6 +316,8 @@ export class StandardLevel extends BasedLevel {
 
     shuffleDeck() {
         this.deck = createDeck()
+        this.gameRef.soundPlayer.playSound(this.shuffleNoise)
+
     }
 
     getActivePlayer() {
@@ -265,9 +330,18 @@ export class StandardLevel extends BasedLevel {
             const card = sneak ? this.deck.shift() : this.deck.pop()
             if (sneak) {
                 this.increaseSuspicions()
+                this.gameRef.soundPlayer.playSound(this.sneakDealNoise)
+            } else {
+                this.gameRef.soundPlayer.playSound(this.dealNoise)
             }
+
+            const activePlayer = this.getActivePlayer()
+
             if (this.currentPlayer < this.players.length) {
                 this.players[this.currentPlayer].addCardToHand(card)
+                if(activePlayer.handValue === 21) {
+                    this.gameRef.soundPlayer.playSound(this.dingNoise)
+                }
                 this.currentPlayer++
                 return
             }
@@ -287,6 +361,7 @@ export class StandardLevel extends BasedLevel {
             p.placeBet()
         })
         this.phase = 'dealing'
+        this.gameRef.soundPlayer.playSound(this.betNoise)
     }
 
     // dead code
@@ -301,6 +376,7 @@ export class StandardLevel extends BasedLevel {
             return
         }
         this.currentPlayer++
+        this.gameRef.soundPlayer.playSound(this.standNoise)
     }
 
     hit(sneak = false) {
@@ -312,11 +388,20 @@ export class StandardLevel extends BasedLevel {
         const card = sneak ? this.deck.shift() : this.deck.pop()
         if (sneak) {
             this.increaseSuspicions()
+            this.gameRef.soundPlayer.playSound(this.sneakHitNoise)
+        } else {
+            this.gameRef.soundPlayer.playSound(this.hitNoise)
         }
         activePlayer.addCardToHand(card)
         if (activePlayer.handValue > 21) {
             this.currentPlayer++
+            this.gameRef.soundPlayer.playSound(this.bustNoise)
         }
+        if(activePlayer.handValue === 21) {
+            this.currentPlayer++
+            this.gameRef.soundPlayer.playSound(this.dingNoise)
+        }
+
     }
 
     increaseSuspicions() {
@@ -361,6 +446,8 @@ export class StandardLevel extends BasedLevel {
         // this.addToast(`Scored!`, { yOffset: -60 })
         // this.gameRef.soundPlayer.playSound(this.crunchNoise)
         // this.gameRef.shakeCamera()
+
+        const lastGameState = this.gameState
         if (this.remainingGames <= 0 || this.caught) {
             this.gameState = 'over'
             this.phase = 'over'
@@ -369,18 +456,21 @@ export class StandardLevel extends BasedLevel {
         if (this.gameState === 'over') {
             // this.endGame()
             const netFunds = this.dealer.funds
+            const playNoise = lastGameState !== this.gameState
             if (this.caught) {
                 this.textBox.setText(`GAME OVER! You got caught! Security took you out back to beat you!`)
+                playNoise && this.gameRef.soundPlayer.playSound(this.beatNoise)
             } else if (netFunds > 0) {
                 this.textBox.setText(`You made the casino $${netFunds}! You did the opposite of what you were supposed to do!`)
+                playNoise && this.gameRef.soundPlayer.playSound(this.loseNoise)
             } else {
                 this.textBox.setText(`You lost the casino $${netFunds}! You did a great service to the public!`)
+                playNoise && this.gameRef.soundPlayer.playSound(this.winNoise)
             }
             this.textBox.closeFunction = () => {
                 this.gameRef.loadLevel('start-screen')
             }
             this.textBox.active = true
-
         }
     }
 
@@ -415,19 +505,19 @@ export class StandardLevel extends BasedLevel {
 
     handleSounds() {
         if (!this.gameRef.soundPlayer.enabled) { return }
-        // if (this.activeSound.playing == false) {
-        //     let songToPlay = this.bgSong
-        //     if (this.snakePlayer.body.length > 7) {
-        //         songToPlay = this.epicBgSong
-        //     }
-        //     if (this.gameState === 'lose') {
-        //         songToPlay = this.loseSong
-        //     }
-        //     this.activeSound.soundRef = this.gameRef.soundPlayer.playSound(songToPlay, () => {
-        //         this.activeSound.playing = false
-        //     })
-        //     this.activeSound.playing = true
-        // }
+        if (this.activeSound.playing == false) {
+            let songToPlay = this.bgSong
+            // if (this.snakePlayer.body.length > 7) {
+            //     songToPlay = this.epicBgSong
+            // }
+            // if (this.gameState === 'lose') {
+            //     songToPlay = this.loseSong
+            // }
+            this.activeSound.soundRef = this.gameRef.soundPlayer.playSound(songToPlay, () => {
+                this.activeSound.playing = false
+            })
+            this.activeSound.playing = true
+        }
     }
 
     update(): void {
@@ -468,6 +558,9 @@ export class StandardLevel extends BasedLevel {
         if (this.phase === 'dealing') {
             this.dealButton.update()
             this.sneakDealButton.update()
+        } else {
+            this.dealButton.hovered = false
+            this.sneakDealButton.hovered = false
         }
 
         if (this.phase === 'playing') {
@@ -476,6 +569,9 @@ export class StandardLevel extends BasedLevel {
             if (currentPlayer.nextMove === 'hit') {
                 this.hitButton.update()
                 this.sneakHitButton.update()
+            } else {
+                this.hitButton.hovered = false
+                this.sneakHitButton.hovered = false
             }
             if (currentPlayer.nextMove === 'stand') {
                 this.standButton.update()
@@ -602,19 +698,20 @@ export class StandardLevel extends BasedLevel {
             //     strokeColor: '#000',
             //     strokeWidth: 2,
             // })
-            drawText({
-                c: this.gameRef.ctx,
-                x: this.gameRef.gameWidth / 2,
-                y: this.gameRef.gameHeight - 50,
-                align: 'center',
-                fontSize: 30,
-                fontFamily: 'Arial',
-                fillColor: lastCard.color,
-                // fillColor: '#fff',
-                text: `${lastCard.letter} ${lastCard.symbol}`,
-                strokeWidth: 2 * this.gameRef.cameraZoom,
-                strokeColor: '#fff'
-            })
+            // drawText({
+            //     c: this.gameRef.ctx,
+            //     x: this.gameRef.gameWidth / 2,
+            //     y: this.gameRef.gameHeight - 50,
+            //     align: 'center',
+            //     fontSize: 30,
+            //     fontFamily: 'Arial',
+            //     fillColor: lastCard.color,
+            //     // fillColor: '#fff',
+            //     text: `${lastCard.letter} ${lastCard.symbol}`,
+            //     strokeWidth: 2 * this.gameRef.cameraZoom,
+            //     strokeColor: '#fff'
+            // })
+            this.drawSneakCard(lastCard)
 
             // suspicion value
             this.drawSuspicionMeter()
@@ -673,6 +770,70 @@ export class StandardLevel extends BasedLevel {
         this.textBox.draw()
     }
 
+    drawSneakCard(card: any) {
+
+        const cardX = this.gameRef.gameWidth / 2 + 100
+        const cardY = this.gameRef.gameHeight - 220
+
+        // BACK OF CARDS
+        drawBox({
+            c: this.gameRef.ctx,
+            x: this.gameRef.gameWidth / 2 - 175,
+            y: cardY ,
+            width: 75,
+            height: 100,
+            fillColor: 'blue',
+            borderRadius: 5,
+            strokeColor: this.dealButton.hovered || this.hitButton.hovered ? 'orange' : '#fff',
+            strokeWidth: 5,
+        })
+
+        drawText({
+            c: this.gameRef.ctx,
+            x: cardX + 37,
+            y: cardY + 120,
+            align: 'center',
+            fontSize: 16,
+            fontFamily: 'Arial',
+            fillColor: '#fff',
+            text: `SNEAK`,
+        })
+        
+        drawBox({
+            c: this.gameRef.ctx,
+            x: cardX,
+            y: cardY,
+            width: 75,
+            height: 100,
+            fillColor: '#fff',
+            borderRadius: 5,
+            strokeColor: this.sneakHitButton.hovered || this.sneakDealButton.hovered ? 'orange' : '#fff',
+            strokeWidth: 5,
+        })
+
+        drawText({
+            c: this.gameRef.ctx,
+            x: cardX + 10,
+            y: cardY + 35,
+            align: 'left',
+            fontSize: 36,
+            fontFamily: 'Arial',
+            fillColor: card.color,
+            text: `${card.letter}`,
+        })
+
+        drawText({
+            c: this.gameRef.ctx,
+            x: cardX + 65,
+            y: cardY + 85,
+            align: 'right',
+            fontSize: 45,
+            fontFamily: 'Arial',
+            fillColor: card.color,
+            text: `${card.symbol}`,
+        })
+    }
+
     drawSuspicionMeter() {
         drawText({
             c: this.gameRef.ctx,
@@ -703,8 +864,8 @@ export class StandardLevel extends BasedLevel {
     }
 
     tearDown(): void {
-        // if (this.activeSound.playing && this.activeSound.soundRef) {
-        //     this.activeSound.soundRef.stop()
-        // }
+        if (this.activeSound.playing && this.activeSound.soundRef) {
+            this.activeSound.soundRef.stop()
+        }
     }
 } 

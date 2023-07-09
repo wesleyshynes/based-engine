@@ -14,7 +14,7 @@ export class CasinoPlayer extends BasedObject {
 
     headSize: number = 40
     width: number = 100
-    height: number = 175
+    height: number = 170
 
     cards: any[] = []
     handValue: number = 0
@@ -30,7 +30,13 @@ export class CasinoPlayer extends BasedObject {
 
     activePlayer: boolean = false
 
-    async preload() {}
+
+    headRadius: number = 3
+    headMaxRadius: number = 6
+    headMinRadius: number = 1
+    headRadiusGrow: number = .2
+
+    async preload() { }
 
     initialize() {
         this.cards = []
@@ -48,7 +54,23 @@ export class CasinoPlayer extends BasedObject {
         this.hitTolerance = getRandomInt(10)
     }
 
-    update() {}
+    handlePulses() {
+        this.headRadius += this.headRadiusGrow * this.gameRef.diffMulti
+        if (this.headRadius > this.headMaxRadius) {
+            this.headRadius = this.headMaxRadius
+            this.headRadiusGrow = -1 * this.headRadiusGrow
+        }
+        if (this.headRadius < this.headMinRadius) {
+            this.headRadius = this.headMinRadius
+            this.headRadiusGrow = -1 * this.headRadiusGrow
+        }
+    }
+
+    update() {
+        if (this.activePlayer) {
+            this.handlePulses()
+        }
+    }
 
     placeBet() {
         // this.bet = this.funds > 100 ? 100 : this.funds
@@ -68,12 +90,12 @@ export class CasinoPlayer extends BasedObject {
     winBet() {
         this.funds += this.bet * 2
         this.bet = 0
-        this.betMultiplier = 1 + getRandomInt(10)/10
+        this.betMultiplier = 1 + getRandomInt(10) / 10
     }
 
     loseBet() {
         this.bet = 0
-        this.betMultiplier = getRandomInt(10)/10
+        this.betMultiplier = getRandomInt(10) / 10
     }
 
     returnBet() {
@@ -82,7 +104,7 @@ export class CasinoPlayer extends BasedObject {
     }
 
     makePlay() {
-        if(this.dealer) {
+        if (this.dealer) {
             if (this.handValue < 17) {
                 this.nextMove = 'hit'
             } else {
@@ -91,7 +113,7 @@ export class CasinoPlayer extends BasedObject {
             return
         }
 
-        if (this.handValue  < this.hitTolerance + 11) {
+        if (this.handValue < this.hitTolerance + 11) {
             this.nextMove = 'hit'
         } else {
             this.nextMove = 'stand'
@@ -103,29 +125,32 @@ export class CasinoPlayer extends BasedObject {
         // draw body
         drawBox({
             c: this.gameRef.ctx,
-            x: (this.x - this.width/2) * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: (this.y - this.height/2) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+            x: (this.x - this.width / 2) * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+            y: (this.y - this.height / 2) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
             width: this.width * this.gameRef.cameraZoom,
             height: this.height * this.gameRef.cameraZoom,
             fillColor: this.color,
             borderRadius: [30 * this.gameRef.cameraZoom, 30 * this.gameRef.cameraZoom, 0, 0]
-        }) 
-
+        })
+        
+        const headCenter = this.y - this.height / 2 - this.headSize / 2 - 10
         // draw head
         drawCircle({
             c: this.gameRef.ctx,
             x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: (this.y - this.height/2 - this.headSize/2) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+            y: (headCenter) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
             radius: this.headSize * this.gameRef.cameraZoom,
-            fillColor: this.activePlayer ? '#D18539'  : this.headColor
+            fillColor: this.activePlayer ? '#D18539' : this.headColor,
+            strokeColor: this.activePlayer ? '#D18539' : this.headColor,
+            strokeWidth: (this.activePlayer ? this.headRadius : 0) * this.gameRef.cameraZoom
         })
 
         // draw hand value
-        if(this.handValue > 0 ) {
+        if (this.handValue > 0) {
             drawText({
                 c: this.gameRef.ctx,
                 x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-                y: (this.y - this.height/2 - this.headSize/2 + 8) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+                y: (headCenter+ 8 ) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
                 align: 'center',
                 fontSize: 24 * this.gameRef.cameraZoom,
                 fontFamily: 'Arial',
@@ -151,28 +176,29 @@ export class CasinoPlayer extends BasedObject {
 
 
         // draw cards 
-         this.cards.forEach((card, idx: number) => {
-            drawText({
-                c: this.gameRef.ctx,
-                x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-                y: (this.y - this.height/4 + idx * 24 - 4) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-                // y: (this.y + this.height/2 + idx * 20 + 40) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-                align: 'center',
-                fontSize: 16 * this.gameRef.cameraZoom,
-                fontFamily: 'Arial',
-                fillColor: card.color,
-                // fillColor: '#fff',
-                text: `${card.letter} ${card.symbol}`,
-                strokeWidth: 3 * this.gameRef.cameraZoom,
-                strokeColor: '#fff'
-            })
-        })
+        this.drawCards()
+        // this.cards.forEach((card, idx: number) => {
+        //     drawText({
+        //         c: this.gameRef.ctx,
+        //         x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+        //         y: (this.y - this.height / 4 + idx * 24 - 4) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+        //         // y: (this.y + this.height/2 + idx * 20 + 40) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+        //         align: 'center',
+        //         fontSize: 16 * this.gameRef.cameraZoom,
+        //         fontFamily: 'Arial',
+        //         fillColor: card.color,
+        //         // fillColor: '#fff',
+        //         text: `${card.letter} ${card.symbol}`,
+        //         strokeWidth: 3 * this.gameRef.cameraZoom,
+        //         strokeColor: '#fff'
+        //     })
+        // })
 
         // draw name
         drawText({
             c: this.gameRef.ctx,
             x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: (this.y + this.height/2 + 20) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+            y: (this.y + this.height / 2 + 20) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
             text: this.name,
             fontSize: 16 * this.gameRef.cameraZoom,
             fillColor: 'white',
@@ -185,11 +211,11 @@ export class CasinoPlayer extends BasedObject {
             drawText({
                 c: this.gameRef.ctx,
                 x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-                y: (this.y + this.height/2 + 50) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+                y: (this.y + this.height / 2 - 10) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
                 align: 'center',
                 fontSize: 24 * this.gameRef.cameraZoom,
                 fontFamily: 'Arial',
-                fillColor: '#fff',
+                fillColor: '#000',
                 text: `$${this.bet}`
             })
         }
@@ -208,5 +234,39 @@ export class CasinoPlayer extends BasedObject {
 
     }
 
-    tearDown() {}
+    drawCards() {
+        const cardWidth = 40
+        const cardHeight = 35
+        const cardTop = this.y - this.height / 4 - 3
+        this.cards.forEach((card, idx: number) => {
+
+            drawBox({
+                c: this.gameRef.ctx,
+                x: (this.x - cardWidth / 2) * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+                y: (cardTop + idx * 24 - 5 - cardHeight / 2) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+                width: cardWidth * this.gameRef.cameraZoom,
+                height: cardHeight * this.gameRef.cameraZoom,
+                fillColor: '#fff',
+                strokeColor: '#ccc',
+                strokeWidth: 1 * this.gameRef.cameraZoom,
+                borderRadius: 5 * this.gameRef.cameraZoom
+            })
+
+            drawText({
+                c: this.gameRef.ctx,
+                x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+                y: (cardTop + idx * 24 - 4) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+                align: 'center',
+                fontSize: 20 * this.gameRef.cameraZoom,
+                fontFamily: 'Arial',
+                fillColor: card.color,
+                // fillColor: '#fff',
+                text: `${card.letter} ${card.symbol}`,
+                strokeWidth: 3 * this.gameRef.cameraZoom,
+                strokeColor: '#fff'
+            })
+        })
+    }
+
+    tearDown() { }
 }

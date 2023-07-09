@@ -1,7 +1,7 @@
 import { BasedButton } from "../../../engine/BasedButton";
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { drawText } from "../../../engine/libs/drawHelpers"
-import BgMusic from '../../../assets/dice-grid/alexander-nakarada-silly-intro.mp3'
+import BgMusic from '../../../assets/black-jack/Frederic_Lardon_feat_Laura_Palme_-_04_-_Dans_le_casino.mp3'
 // import GameLogo from '../../../assets/vimjam2/monkey-meltdown-logo.png'
 
 export class StartScreen extends BasedLevel {
@@ -148,7 +148,7 @@ export class StartScreen extends BasedLevel {
 
   update() {
     this.updateBg()
-    // this.handleSounds()
+    this.handleSounds()
     if (this.gameRef.lastUpdate > this.levelLoadedTime + this.levelLoadedDelay) {
       this.startButton.update()
       this.soundButton.update()
