@@ -4,6 +4,12 @@ import { drawText } from "../../../engine/libs/drawHelpers"
 import BgMusic from '../../../assets/black-jack/Frederic_Lardon_feat_Laura_Palme_-_04_-_Dans_le_casino.mp3'
 // import GameLogo from '../../../assets/vimjam2/monkey-meltdown-logo.png'
 
+const FILL_COLOR = '#81B622'
+const HOVER_COLOR = '#ECF87F'
+const ALT_FILL_COLOR = '#59981A'
+const TEXT_COLOR = '#FFFFFF'
+const TEXT_HOVER_COLOR = '#000000'
+const BG_COLOR = '#3D550C'
 export class StartScreen extends BasedLevel {
 
   gameTitle: string = 'The House Always Loses'
@@ -62,21 +68,22 @@ export class StartScreen extends BasedLevel {
       key: `start-button`,
       gameRef: this.gameRef,
     })
-    this.startButton.fillColor = '#3E92CC'
-    this.startButton.hoverColor = '#0A2463'
-    this.startButton.focusColor = '#0A2463'
-    this.startButton.textColor = 'white'
+    this.startButton.fillColor =  FILL_COLOR
+    this.startButton.hoverColor = HOVER_COLOR
+    this.startButton.focusColor = HOVER_COLOR
+    this.startButton.textColor = TEXT_COLOR
+    this.startButton.textHoverColor = TEXT_HOVER_COLOR
     this.startButton.enableFillColorTransition = true
     this.startButton.fillColorStart = {
-      r: 62,
-      g: 146,
-      b: 204,
+      r: 129,
+      g: 182,
+      b: 34,
       a: 1
     }
     this.startButton.fillColorEnd = {
-      r: 216,
-      g: 49,
-      b: 51,
+      r: 89,
+      g: 152,
+      b: 26,
       a: 1
     }
     this.startButton.x = 100
@@ -94,9 +101,11 @@ export class StartScreen extends BasedLevel {
       key: `credits-button`,
       gameRef: this.gameRef,
     })
-    this.creditsButton.fillColor = '#3E92CC'
-    this.creditsButton.hoverColor = '#0A2463'
-    this.creditsButton.focusColor = '#0A2463'
+    this.creditsButton.fillColor = FILL_COLOR
+    this.creditsButton.hoverColor = HOVER_COLOR
+    this.creditsButton.focusColor = HOVER_COLOR
+    this.creditsButton.textColor = TEXT_COLOR
+    this.creditsButton.textHoverColor = TEXT_HOVER_COLOR
     this.creditsButton.x = 100
     this.creditsButton.y = this.gameRef.gameHeight - 135
     this.creditsButton.buttonText = 'Credits'
@@ -113,9 +122,11 @@ export class StartScreen extends BasedLevel {
       key: `sound-button`,
       gameRef: this.gameRef,
     })
-    this.soundButton.fillColor = '#3E92CC'
-    this.soundButton.hoverColor = '#0A2463'
-    this.soundButton.focusColor = '#0A2463'
+    this.soundButton.fillColor = FILL_COLOR
+    this.soundButton.hoverColor = HOVER_COLOR
+    this.soundButton.focusColor = HOVER_COLOR
+    this.soundButton.textColor = TEXT_COLOR
+    this.soundButton.textHoverColor = TEXT_HOVER_COLOR
     this.soundButton.x = 100
     this.soundButton.y = this.gameRef.gameHeight - 70
     this.soundButton.buttonText = `${this.gameRef.soundPlayer.enabled ? 'Disable' : 'Enable'} Sound`
@@ -175,7 +186,7 @@ export class StartScreen extends BasedLevel {
   draw() {
     this.gameRef.ctx.beginPath()
     this.gameRef.ctx.rect(0, 0, this.gameRef.gameWidth, this.gameRef.gameHeight)
-    this.gameRef.ctx.fillStyle = '#1E1B18'
+    this.gameRef.ctx.fillStyle = BG_COLOR
     this.gameRef.ctx.fill()
 
     this.drawBg()

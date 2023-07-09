@@ -3,6 +3,13 @@ import { BasedLevel } from "../../../engine/BasedLevel";
 import { drawText } from "../../../engine/libs/drawHelpers";
 import CreditsMusic from '../../../assets/pool/music/keys-of-moon-the-success.mp3'
 
+const FILL_COLOR = '#81B622'
+const HOVER_COLOR = '#ECF87F'
+const ALT_FILL_COLOR = '#59981A'
+const TEXT_COLOR = '#FFFFFF'
+const TEXT_HOVER_COLOR = '#000000'
+const BG_COLOR = '#3D550C'
+
 export default class CreditsScreen extends BasedLevel {
   backButton: any;
 
@@ -28,10 +35,11 @@ export default class CreditsScreen extends BasedLevel {
       key: `back-button`,
       gameRef: this.gameRef,
     })
-    this.backButton.fillColor = '#D8315B'
-    this.backButton.hoverColor = '#3E92CC'
-    this.backButton.focusColor = '#3E92CC'
-    this.backButton.textColor = 'white'
+    this.backButton.fillColor = FILL_COLOR
+    this.backButton.hoverColor = HOVER_COLOR
+    this.backButton.focusColor = HOVER_COLOR
+    this.backButton.textColor = TEXT_COLOR
+    this.backButton.textHoverColor = TEXT_HOVER_COLOR
     this.backButton.x = 10
     this.backButton.y = 10
     this.backButton.buttonText = '< Go Back'
@@ -69,8 +77,8 @@ export default class CreditsScreen extends BasedLevel {
     this.handleSounds()
     this.backButton.update()
     this.creditHeightOffset -= this.creditsSpeed * this.gameRef.diffMulti
-    if ( this.creditHeightOffset < -( this.creditEntryHeight * (this.credits.length + 2) )) {
-      this.creditHeightOffset =  this.gameRef.gameHeight
+    if (this.creditHeightOffset < -(this.creditEntryHeight * (this.credits.length + 2))) {
+      this.creditHeightOffset = this.gameRef.gameHeight
     }
   }
 

@@ -28,6 +28,13 @@ import WinNoise from '../../../assets/black-jack/165492__chripei__victory-cry-re
 
 import BgMusic from '../../../assets/black-jack/AcidJazz.mp3'
 
+const FILL_COLOR = '#81B622'
+const HOVER_COLOR = '#ECF87F'
+const ALT_FILL_COLOR = '#59981A'
+const TEXT_COLOR = '#FFFFFF'
+const TEXT_HOVER_COLOR = '#000000'
+const BG_COLOR = '#3D550C'
+
 export class StandardLevel extends BasedLevel {
 
     levelWidth: number = 800
@@ -90,9 +97,9 @@ export class StandardLevel extends BasedLevel {
     activeSound: any = {
         playing: false,
         soundRef: null,
-      }
-    
-      bgSong: any;
+    }
+
+    bgSong: any;
 
     async preload() {
         this.gameRef.drawLoading('All the things', .1)
@@ -112,7 +119,7 @@ export class StandardLevel extends BasedLevel {
 
         this.gameRef.drawLoading('Dealing Cards', .8)
         this.dealNoise = await this.gameRef.soundPlayer.loadSound(DealNoise)
-        this.hitNoise = await this.gameRef.soundPlayer.loadSound(HitNoise)        
+        this.hitNoise = await this.gameRef.soundPlayer.loadSound(HitNoise)
 
         this.gameRef.drawLoading('Sneaking Cards', .9)
         this.sneakDealNoise = await this.gameRef.soundPlayer.loadSound(SneakDealNoise)
@@ -162,14 +169,21 @@ export class StandardLevel extends BasedLevel {
         this.textBox.fontStrokeColor = 'black'
         this.textBox.containerFillColor = 'rgba(0,0,0,0.7)'
         this.textBox.containerBorderColor = 'rgba(0,0,0,0.7)'
-        this.textBox.closeButtonFillColor = '#D8315B'
-        this.textBox.closeButtonFocusColor = '#3E92CC'
-        this.textBox.closeButtonHoverColor = '#3E92CC'
+        this.textBox.closeButtonFillColor = FILL_COLOR
+        this.textBox.closeButtonFocusColor = HOVER_COLOR
+        this.textBox.closeButtonHoverColor = HOVER_COLOR
+        this.textBox.closeButtonTextColor = 'white'
+        this.textBox.closeButtonTextHoverColor = 'black'
         this.textBox.closeButtonWidth = 80
         this.textBox.closeButtonHeight = 40
         this.textBox.initialize()
 
         this.dealButton = new BasedButton({ gameRef: this.gameRef, key: 'dealButton' })
+        this.dealButton.fillColor = FILL_COLOR
+        this.dealButton.hoverColor = HOVER_COLOR
+        this.dealButton.focusColor = HOVER_COLOR
+        this.dealButton.textColor = TEXT_COLOR
+        this.dealButton.textHoverColor = TEXT_HOVER_COLOR
         this.dealButton.width = this.buttonWidth
         this.dealButton.height = this.buttonHeight
         this.dealButton.fontSize = this.buttonFontSize
@@ -184,6 +198,11 @@ export class StandardLevel extends BasedLevel {
         this.dealButton.initialize()
 
         this.sneakDealButton = new BasedButton({ gameRef: this.gameRef, key: 'sneakDealButton' })
+        this.sneakDealButton.fillColor = FILL_COLOR
+        this.sneakDealButton.hoverColor = HOVER_COLOR
+        this.sneakDealButton.focusColor = HOVER_COLOR
+        this.sneakDealButton.textColor = TEXT_COLOR
+        this.sneakDealButton.textHoverColor = TEXT_HOVER_COLOR
         this.sneakDealButton.width = this.buttonWidth
         this.sneakDealButton.height = this.buttonHeight
         this.sneakDealButton.fontSize = this.buttonFontSize
@@ -198,6 +217,11 @@ export class StandardLevel extends BasedLevel {
         this.sneakDealButton.initialize()
 
         this.takeBetButton = new BasedButton({ gameRef: this.gameRef, key: 'takeBetButton' })
+        this.takeBetButton.fillColor = FILL_COLOR
+        this.takeBetButton.hoverColor = HOVER_COLOR
+        this.takeBetButton.focusColor = HOVER_COLOR
+        this.takeBetButton.textColor = TEXT_COLOR
+        this.takeBetButton.textHoverColor = TEXT_HOVER_COLOR
         this.takeBetButton.width = this.buttonWidth
         this.takeBetButton.height = this.buttonHeight
         this.takeBetButton.fontSize = this.buttonFontSize
@@ -211,18 +235,12 @@ export class StandardLevel extends BasedLevel {
         this.takeBetButton.buttonText = 'TAKE BETS'
         this.takeBetButton.initialize()
 
-        // this.askPlayerButton = new BasedButton({ gameRef: this.gameRef, key: 'askPlayerButton' })
-        // this.askPlayerButton.width = 100
-        // this.askPlayerButton.height = 40
-        // this.askPlayerButton.x = 40
-        // this.askPlayerButton.y = this.gameRef.gameHeight - this.askPlayerButton.height - 110
-        // this.askPlayerButton.clickFunction = () => {
-        //     this.askPlayer()
-        // }
-        // this.askPlayerButton.buttonText = 'Ask Player'
-        // this.askPlayerButton.initialize()
-
         this.standButton = new BasedButton({ gameRef: this.gameRef, key: 'standButton' })
+        this.standButton.fillColor = FILL_COLOR
+        this.standButton.hoverColor = HOVER_COLOR
+        this.standButton.focusColor = HOVER_COLOR
+        this.standButton.textColor = TEXT_COLOR
+        this.standButton.textHoverColor = TEXT_HOVER_COLOR
         this.standButton.width = this.buttonWidth
         this.standButton.height = this.buttonHeight
         this.standButton.fontSize = this.buttonFontSize
@@ -237,6 +255,11 @@ export class StandardLevel extends BasedLevel {
         this.standButton.initialize()
 
         this.hitButton = new BasedButton({ gameRef: this.gameRef, key: 'hitButton' })
+        this.hitButton.fillColor = FILL_COLOR
+        this.hitButton.hoverColor = HOVER_COLOR
+        this.hitButton.focusColor = HOVER_COLOR
+        this.hitButton.textColor = TEXT_COLOR
+        this.hitButton.textHoverColor = TEXT_HOVER_COLOR
         this.hitButton.width = this.buttonWidth
         this.hitButton.height = this.buttonHeight
         this.hitButton.fontSize = this.buttonFontSize
@@ -251,6 +274,11 @@ export class StandardLevel extends BasedLevel {
         this.hitButton.initialize()
 
         this.sneakHitButton = new BasedButton({ gameRef: this.gameRef, key: 'sneakHitButton' })
+        this.sneakHitButton.fillColor = FILL_COLOR
+        this.sneakHitButton.hoverColor = HOVER_COLOR
+        this.sneakHitButton.focusColor = HOVER_COLOR
+        this.sneakHitButton.textColor = TEXT_COLOR
+        this.sneakHitButton.textHoverColor = TEXT_HOVER_COLOR
         this.sneakHitButton.width = this.buttonWidth
         this.sneakHitButton.height = this.buttonHeight
         this.sneakHitButton.fontSize = this.buttonFontSize
@@ -265,6 +293,11 @@ export class StandardLevel extends BasedLevel {
         this.sneakHitButton.initialize()
 
         this.endRoundButton = new BasedButton({ gameRef: this.gameRef, key: 'endRoundButton' })
+        this.endRoundButton.fillColor = FILL_COLOR
+        this.endRoundButton.hoverColor = HOVER_COLOR
+        this.endRoundButton.focusColor = HOVER_COLOR
+        this.endRoundButton.textColor = TEXT_COLOR
+        this.endRoundButton.textHoverColor = TEXT_HOVER_COLOR
         this.endRoundButton.width = this.buttonWidth
         this.endRoundButton.height = this.buttonHeight
         this.endRoundButton.fontSize = this.buttonFontSize
@@ -339,7 +372,7 @@ export class StandardLevel extends BasedLevel {
 
             if (this.currentPlayer < this.players.length) {
                 this.players[this.currentPlayer].addCardToHand(card)
-                if(activePlayer.handValue === 21) {
+                if (activePlayer.handValue === 21) {
                     this.gameRef.soundPlayer.playSound(this.dingNoise)
                 }
                 this.currentPlayer++
@@ -397,7 +430,7 @@ export class StandardLevel extends BasedLevel {
             this.currentPlayer++
             this.gameRef.soundPlayer.playSound(this.bustNoise)
         }
-        if(activePlayer.handValue === 21) {
+        if (activePlayer.handValue === 21) {
             this.currentPlayer++
             this.gameRef.soundPlayer.playSound(this.dingNoise)
         }
@@ -641,7 +674,7 @@ export class StandardLevel extends BasedLevel {
 
         this.gameRef.ctx.beginPath()
         this.gameRef.ctx.rect(0, 0, this.gameRef.gameWidth, this.gameRef.gameHeight)
-        this.gameRef.ctx.fillStyle = '#0c6640' // '#222'
+        this.gameRef.ctx.fillStyle = BG_COLOR
         this.gameRef.ctx.fill()
 
         // draw the level
@@ -717,16 +750,16 @@ export class StandardLevel extends BasedLevel {
             this.drawSuspicionMeter()
         } else {
             // remaining rounds text
-         drawText({
-            c: this.gameRef.ctx,
-            x: 10,
-            y: this.gameRef.gameHeight - 40,
-            fontSize: 20,
-            fontFamily: 'Arial',
-            fillColor: '#fff',
-            align: 'left',
-            text: `ROUNDS: ${this.remainingGames}`,
-        })
+            drawText({
+                c: this.gameRef.ctx,
+                x: 10,
+                y: this.gameRef.gameHeight - 40,
+                fontSize: 20,
+                fontFamily: 'Arial',
+                fillColor: '#fff',
+                align: 'left',
+                text: `ROUNDS: ${this.remainingGames}`,
+            })
         }
 
         this.players.forEach((player) => {
@@ -779,7 +812,7 @@ export class StandardLevel extends BasedLevel {
         drawBox({
             c: this.gameRef.ctx,
             x: this.gameRef.gameWidth / 2 - 175,
-            y: cardY ,
+            y: cardY,
             width: 75,
             height: 100,
             fillColor: 'blue',
@@ -798,7 +831,7 @@ export class StandardLevel extends BasedLevel {
             fillColor: '#fff',
             text: `SNEAK`,
         })
-        
+
         drawBox({
             c: this.gameRef.ctx,
             x: cardX,

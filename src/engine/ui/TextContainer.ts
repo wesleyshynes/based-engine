@@ -39,6 +39,7 @@ export default class TextContainer extends BasedObject {
   closeButtonHoverColor: string = '#000'
   closeButtonFocusColor: string = '#000'
   closeButtonTextColor: string = '#fff'
+  closeButtonTextHoverColor: string = ''
 
   async preload() { }
   initialize() {
@@ -47,6 +48,7 @@ export default class TextContainer extends BasedObject {
     this.closeButton.height = this.closeButtonHeight
     this.closeButton.fillColor = this.closeButtonFillColor
     this.closeButton.textColor = this.closeButtonTextColor
+    this.closeButton.textHoverColor = this.closeButtonTextHoverColor
     this.closeButton.hoverColor = this.closeButtonHoverColor
     this.closeButton.focusColor = this.closeButtonFocusColor
     this.closeButton.buttonText = 'Close'

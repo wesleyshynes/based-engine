@@ -52,7 +52,7 @@
 
     #start-game {
       padding: 10px 20px;
-      background: #3E92CC;
+      background: #59981A;
       border: 1px solid #333;
       font-size: 1em;
       color: white;
@@ -61,7 +61,8 @@
       -moz-user-select: none;
       cursor: pointer;
       &:hover {
-        background: #D8315B;
+        background: #ECF87F;
+        color: #333;
       }
     }
 
@@ -79,7 +80,7 @@
 
 body {
   overflow-y: hidden;
-  background: #1E1B18;
+  background: #3D550C;
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;

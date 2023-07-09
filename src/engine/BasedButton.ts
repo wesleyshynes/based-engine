@@ -17,6 +17,7 @@ export class BasedButton extends BasedObject {
   focused: boolean = false
 
   textColor: string = '#fff'
+  textHoverColor: string = ''
   buttonText: string = 'Click Me'
   style: string = ''
   weight: string = 'bold'
@@ -155,7 +156,7 @@ export class BasedButton extends BasedObject {
       x: (this.x + this.x + this.width)/2,
       y: (this.y + this.y + this.height)/2 + this.fontSize/3,
       align:'center',
-      fillColor: this.textColor,
+      fillColor: this.hovered && this.textHoverColor ? this.textHoverColor : this.textColor,
       style: this.style,
       weight: this.weight,
       fontFamily: this.fontFamily,

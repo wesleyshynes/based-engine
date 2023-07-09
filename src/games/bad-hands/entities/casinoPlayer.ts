@@ -8,7 +8,7 @@ export class CasinoPlayer extends BasedObject {
     y: number = 0
     name: string = 'Casino Player'
     color: string = 'white'
-    headColor = '#ce192b'
+    headColor = '#59981A' // '#ce192b'
 
     dealer: boolean = false
 
@@ -132,6 +132,17 @@ export class CasinoPlayer extends BasedObject {
             fillColor: this.color,
             borderRadius: [30 * this.gameRef.cameraZoom, 30 * this.gameRef.cameraZoom, 0, 0]
         })
+        if(this.cards.length > 1) {
+            drawBox({
+                c: this.gameRef.ctx,
+                x: (this.x - this.width / 2) * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+                y: (this.y - this.height / 2) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+                width: this.width * this.gameRef.cameraZoom,
+                height: this.height * this.gameRef.cameraZoom,
+                fillColor: this.dealer ? this.color : `rgba(236, 248, 127, ${this.hitTolerance / 10 > 0 ? this.hitTolerance / 10 : 0.1})`,
+                borderRadius: [30 * this.gameRef.cameraZoom, 30 * this.gameRef.cameraZoom, 0, 0]
+            })
+        }
         
         const headCenter = this.y - this.height / 2 - this.headSize / 2 - 10
         // draw head
