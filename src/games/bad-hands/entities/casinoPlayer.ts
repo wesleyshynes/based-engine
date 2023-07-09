@@ -9,9 +9,11 @@ export class CasinoPlayer extends BasedObject {
     color: string = 'white'
     headColor = '#ce192b'
 
+    dealer: boolean = false
+
     headSize: number = 40
     width: number = 100
-    height: number = 150
+    height: number = 175
 
     cards: any[] = []
     handValue: number = 0
@@ -98,42 +100,46 @@ export class CasinoPlayer extends BasedObject {
             fillColor: this.activePlayer ? 'blue'  : this.headColor
         })
 
-        // draw next move
-        if(this.nextMove !== '') {
+        // draw hand value
+        if(this.handValue > 0 ) {
             drawText({
                 c: this.gameRef.ctx,
                 x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-                y: (this.y - this.height/2 - this.headSize/2) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+                y: (this.y - this.height/2 - this.headSize/2 + 8) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
                 align: 'center',
-                fontSize: 20 * this.gameRef.cameraZoom,
-                fontFamily: 'sans-serif',
+                fontSize: 24 * this.gameRef.cameraZoom,
+                fontFamily: 'Arial',
                 fillColor: '#fff',
-                text: this.nextMove
+                text: `${this.handValue > 21 ? 'BUST' : this.handValue}`
             })
         }
 
-        // draw name
-        drawText({
-            c: this.gameRef.ctx,
-            x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: (this.y + this.height/2 + 20) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-            text: this.name,
-            fontSize: 20 * this.gameRef.cameraZoom,
-            fillColor: 'white',
-            align: 'center',
-            fontFamily: 'sans-serif'
-        })
+
+        // draw next move
+        // if(this.nextMove !== '') {
+        //     drawText({
+        //         c: this.gameRef.ctx,
+        //         x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+        //         y: (this.y - this.height/2 - this.headSize/2) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+        //         align: 'center',
+        //         fontSize: 20 * this.gameRef.cameraZoom,
+        //         fontFamily: 'Arial',
+        //         fillColor: '#fff',
+        //         text: this.nextMove
+        //     })
+        // }
+
 
         // draw cards 
          this.cards.forEach((card, idx: number) => {
             drawText({
                 c: this.gameRef.ctx,
                 x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-                y: (this.y - this.height/4 + idx * 20) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+                y: (this.y - this.height/4 + idx * 24 - 4) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
                 // y: (this.y + this.height/2 + idx * 20 + 40) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
                 align: 'center',
-                fontSize: 12 * this.gameRef.cameraZoom,
-                fontFamily: 'sans-serif',
+                fontSize: 16 * this.gameRef.cameraZoom,
+                fontFamily: 'Arial',
                 fillColor: card.color,
                 // fillColor: '#fff',
                 text: `${card.letter} ${card.symbol}`,
@@ -142,41 +148,43 @@ export class CasinoPlayer extends BasedObject {
             })
         })
 
-        // draw hand value
+        // draw name
         drawText({
             c: this.gameRef.ctx,
             x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: (this.y + this.height/2 + 40) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+            y: (this.y + this.height/2 + 20) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+            text: this.name,
+            fontSize: 16 * this.gameRef.cameraZoom,
+            fillColor: 'white',
             align: 'center',
-            fontSize: 12 * this.gameRef.cameraZoom,
-            fontFamily: 'sans-serif',
-            fillColor: '#fff',
-            text: `Val: ${this.handValue > 21 ? 'BUST' : this.handValue}`
+            fontFamily: 'Arial'
         })
 
         // draw bet
-        drawText({
-            c: this.gameRef.ctx,
-            x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: (this.y + this.height/2 + 60) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-            align: 'center',
-            fontSize: 12 * this.gameRef.cameraZoom,
-            fontFamily: 'sans-serif',
-            fillColor: '#fff',
-            text: `Bet: $${this.bet}`
-        })
+        if (!this.dealer && this.bet > 0) {
+            drawText({
+                c: this.gameRef.ctx,
+                x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+                y: (this.y + this.height/2 + 50) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+                align: 'center',
+                fontSize: 24 * this.gameRef.cameraZoom,
+                fontFamily: 'Arial',
+                fillColor: '#fff',
+                text: `$${this.bet}`
+            })
+        }
 
         // draw funds
-        drawText({
-            c: this.gameRef.ctx,
-            x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: (this.y + this.height/2 + 80) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-            align: 'center',
-            fontSize: 12 * this.gameRef.cameraZoom,
-            fontFamily: 'sans-serif',
-            fillColor: '#fff',
-            text: `Funds: $${this.funds}`
-        })
+        // drawText({
+        //     c: this.gameRef.ctx,
+        //     x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+        //     y: (this.y + this.height/2 + 80) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+        //     align: 'center',
+        //     fontSize: 12 * this.gameRef.cameraZoom,
+        //     fontFamily: 'Arial',
+        //     fillColor: '#fff',
+        //     text: `Funds: $${this.funds}`
+        // })
 
     }
 

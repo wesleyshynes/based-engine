@@ -1,7 +1,7 @@
 import { BasedButton } from "../../../engine/BasedButton";
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { FollowCam } from "../../../engine/cameras/FollowCam";
-import { drawBox, drawText } from "../../../engine/libs/drawHelpers";
+import { drawText } from "../../../engine/libs/drawHelpers";
 import { getRandomInt } from "../../../engine/libs/mathHelpers";
 import TextContainer from "../../../engine/ui/TextContainer";
 import Toasts from "../../../engine/ui/Toasts";
@@ -12,6 +12,10 @@ export class StandardLevel extends BasedLevel {
 
     levelWidth: number = 800
     levelHeight: number = 600
+
+    buttonWidth: number = 160
+    buttonHeight: number = 50
+    buttonFontSize: number = 22
 
     // Camera related stuff
     miniMapActive: boolean = true
@@ -61,6 +65,7 @@ export class StandardLevel extends BasedLevel {
         this.suspicionMeter = 0
         this.caught = false
         this.gameRef.cameraZoom = 1
+        this.lastKeyPress = 0
 
         this.followCam = new FollowCam({ key: 'followCam', gameRef: this.gameRef })
         this.followCam.levelWidth = this.levelWidth
@@ -102,36 +107,45 @@ export class StandardLevel extends BasedLevel {
         this.textBox.initialize()
 
         this.dealButton = new BasedButton({ gameRef: this.gameRef, key: 'dealButton' })
-        this.dealButton.width = 100
-        this.dealButton.height = 40
-        this.dealButton.x = 40
-        this.dealButton.y = this.gameRef.gameHeight - this.dealButton.height - 10
+        this.dealButton.width = this.buttonWidth
+        this.dealButton.height = this.buttonHeight
+        this.dealButton.fontSize = this.buttonFontSize
+        this.dealButton.x = this.gameRef.gameWidth / 2 - this.buttonWidth / 2
+        this.dealButton.y = this.gameRef.gameHeight - 120 - this.buttonHeight * 2
         this.dealButton.clickFunction = () => {
+            if (this.gameRef.lastUpdate - this.lastKeyPress < 300) { return }
             this.dealCard()
+            this.lastKeyPress = this.gameRef.lastUpdate
         }
-        this.dealButton.buttonText = 'Deal'
+        this.dealButton.buttonText = 'DEAL'
         this.dealButton.initialize()
 
         this.sneakDealButton = new BasedButton({ gameRef: this.gameRef, key: 'sneakDealButton' })
-        this.sneakDealButton.width = 100
-        this.sneakDealButton.height = 40
-        this.sneakDealButton.x = 40
-        this.sneakDealButton.y = this.gameRef.gameHeight - this.sneakDealButton.height - 60
+        this.sneakDealButton.width = this.buttonWidth
+        this.sneakDealButton.height = this.buttonHeight
+        this.sneakDealButton.fontSize = this.buttonFontSize
+        this.sneakDealButton.x = this.gameRef.gameWidth / 2 - this.sneakDealButton.width / 2
+        this.sneakDealButton.y = this.gameRef.gameHeight - 120 - this.buttonHeight / 2
         this.sneakDealButton.clickFunction = () => {
+            if (this.gameRef.lastUpdate - this.lastKeyPress < 300) { return }
             this.dealCard(true)
+            this.lastKeyPress = this.gameRef.lastUpdate
         }
-        this.sneakDealButton.buttonText = 'Sneak Deal'
+        this.sneakDealButton.buttonText = 'SNEAK DEAL'
         this.sneakDealButton.initialize()
 
         this.takeBetButton = new BasedButton({ gameRef: this.gameRef, key: 'takeBetButton' })
-        this.takeBetButton.width = 100
-        this.takeBetButton.height = 40
-        this.takeBetButton.x = 40
-        this.takeBetButton.y = this.gameRef.gameHeight - this.takeBetButton.height - 60
+        this.takeBetButton.width = this.buttonWidth
+        this.takeBetButton.height = this.buttonHeight
+        this.takeBetButton.fontSize = this.buttonFontSize
+        this.takeBetButton.x = this.gameRef.gameWidth / 2 - this.buttonWidth / 2
+        this.takeBetButton.y = this.gameRef.gameHeight - 120 - this.buttonHeight / 2
         this.takeBetButton.clickFunction = () => {
+            if (this.gameRef.lastUpdate - this.lastKeyPress < 300) { return }
             this.takeBet()
+            this.lastKeyPress = this.gameRef.lastUpdate
         }
-        this.takeBetButton.buttonText = 'Take Bets'
+        this.takeBetButton.buttonText = 'TAKE BETS'
         this.takeBetButton.initialize()
 
         // this.askPlayerButton = new BasedButton({ gameRef: this.gameRef, key: 'askPlayerButton' })
@@ -146,47 +160,59 @@ export class StandardLevel extends BasedLevel {
         // this.askPlayerButton.initialize()
 
         this.standButton = new BasedButton({ gameRef: this.gameRef, key: 'standButton' })
-        this.standButton.width = 100
-        this.standButton.height = 40
-        this.standButton.x = 40
-        this.standButton.y = this.gameRef.gameHeight - this.standButton.height - 160
+        this.standButton.width = this.buttonWidth
+        this.standButton.height = this.buttonHeight
+        this.standButton.fontSize = this.buttonFontSize
+        this.standButton.x = this.gameRef.gameWidth / 2 - this.buttonWidth / 2
+        this.standButton.y = this.gameRef.gameHeight - 120 - this.buttonHeight / 2
         this.standButton.clickFunction = () => {
+            if (this.gameRef.lastUpdate - this.lastKeyPress < 300) { return }
             this.stand()
+            this.lastKeyPress = this.gameRef.lastUpdate
         }
-        this.standButton.buttonText = 'Stand'
+        this.standButton.buttonText = 'STAND'
         this.standButton.initialize()
 
         this.hitButton = new BasedButton({ gameRef: this.gameRef, key: 'hitButton' })
-        this.hitButton.width = 100
-        this.hitButton.height = 40
-        this.hitButton.x = 40
-        this.hitButton.y = this.gameRef.gameHeight - this.hitButton.height - 210
+        this.hitButton.width = this.buttonWidth
+        this.hitButton.height = this.buttonHeight
+        this.hitButton.fontSize = this.buttonFontSize
+        this.hitButton.x = this.gameRef.gameWidth / 2 - this.buttonWidth / 2
+        this.hitButton.y = this.gameRef.gameHeight - 120 - this.buttonHeight * 2
         this.hitButton.clickFunction = () => {
+            if (this.gameRef.lastUpdate - this.lastKeyPress < 300) { return }
             this.hit()
+            this.lastKeyPress = this.gameRef.lastUpdate
         }
-        this.hitButton.buttonText = 'Hit'
+        this.hitButton.buttonText = 'HIT'
         this.hitButton.initialize()
 
         this.sneakHitButton = new BasedButton({ gameRef: this.gameRef, key: 'sneakHitButton' })
-        this.sneakHitButton.width = 100
-        this.sneakHitButton.height = 40
-        this.sneakHitButton.x = 40
-        this.sneakHitButton.y = this.gameRef.gameHeight - this.sneakHitButton.height - 260
+        this.sneakHitButton.width = this.buttonWidth
+        this.sneakHitButton.height = this.buttonHeight
+        this.sneakHitButton.fontSize = this.buttonFontSize
+        this.sneakHitButton.x = this.gameRef.gameWidth / 2 - this.sneakHitButton.width / 2
+        this.sneakHitButton.y = this.gameRef.gameHeight - 120 - this.buttonHeight / 2
         this.sneakHitButton.clickFunction = () => {
+            if (this.gameRef.lastUpdate - this.lastKeyPress < 300) { return }
             this.hit(true)
+            this.lastKeyPress = this.gameRef.lastUpdate
         }
-        this.sneakHitButton.buttonText = 'Sneak Hit'
+        this.sneakHitButton.buttonText = 'SNEAK HIT'
         this.sneakHitButton.initialize()
 
         this.endRoundButton = new BasedButton({ gameRef: this.gameRef, key: 'endRoundButton' })
-        this.endRoundButton.width = 100
-        this.endRoundButton.height = 40
-        this.endRoundButton.x = 40
-        this.endRoundButton.y = this.gameRef.gameHeight - this.endRoundButton.height - 260
+        this.endRoundButton.width = this.buttonWidth
+        this.endRoundButton.height = this.buttonHeight
+        this.endRoundButton.fontSize = this.buttonFontSize
+        this.endRoundButton.x = this.gameRef.gameWidth / 2 - this.endRoundButton.width / 2
+        this.endRoundButton.y = this.gameRef.gameHeight - 120 - this.buttonHeight / 2
         this.endRoundButton.clickFunction = () => {
+            if (this.gameRef.lastUpdate - this.lastKeyPress < 300) { return }
             this.endRound()
+            this.lastKeyPress = this.gameRef.lastUpdate
         }
-        this.endRoundButton.buttonText = 'End Round'
+        this.endRoundButton.buttonText = 'END ROUND'
         this.endRoundButton.initialize()
 
         // ACTUAL GAME STUFF
@@ -202,7 +228,7 @@ export class StandardLevel extends BasedLevel {
             const newPlayer = new CasinoPlayer({ key: `player-${i}`, gameRef: this.gameRef })
             newPlayer.name = p.name
             newPlayer.x = 100 + (i * 120)
-            newPlayer.y = 190
+            newPlayer.y = 250
             newPlayer.initialize()
             return newPlayer
         })
@@ -211,9 +237,10 @@ export class StandardLevel extends BasedLevel {
         this.dealer = new CasinoPlayer({ key: `dealer`, gameRef: this.gameRef })
         this.dealer.name = 'Dealer'
         this.dealer.x = 100 + 5 * 120
-        this.dealer.y = 190
+        this.dealer.y = 250
         this.dealer.headColor = '#333333'
         this.dealer.color = '#000000'
+        this.dealer.dealer = true
         this.dealer.initialize()
         this.dealer.funds = 0
 
@@ -490,26 +517,45 @@ export class StandardLevel extends BasedLevel {
         this.cameraZoomButton.x = this.gameRef.gameWidth - this.cameraZoomButton.width - 10
         this.cameraZoomButton.y = this.gameRef.gameHeight - this.cameraZoomButton.height - 10
 
-        this.dealButton.y = this.gameRef.gameHeight - this.dealButton.height - 10
-        this.takeBetButton.y = this.gameRef.gameHeight - this.takeBetButton.height - 60
+        this.dealButton.x = this.gameRef.gameWidth / 2 - this.buttonWidth / 2
+        this.dealButton.y = this.gameRef.gameHeight - 120 - this.buttonHeight * 2
+
+        this.sneakDealButton.x = this.gameRef.gameWidth / 2 - this.sneakDealButton.width / 2
+        this.sneakDealButton.y = this.gameRef.gameHeight - 120 - this.buttonHeight / 2
+
+        this.takeBetButton.x = this.gameRef.gameWidth / 2 - this.buttonWidth / 2
+        this.takeBetButton.y = this.gameRef.gameHeight - 120 - this.buttonHeight / 2
+
+        this.standButton.x = this.gameRef.gameWidth / 2 - this.buttonWidth / 2
+        this.standButton.y = this.gameRef.gameHeight - 120 - this.buttonHeight / 2
+
+        this.hitButton.x = this.gameRef.gameWidth / 2 - this.buttonWidth / 2
+        this.hitButton.y = this.gameRef.gameHeight - 120 - this.buttonHeight * 2
+
+        this.sneakHitButton.x = this.gameRef.gameWidth / 2 - this.sneakHitButton.width / 2
+        this.sneakHitButton.y = this.gameRef.gameHeight - 120 - this.buttonHeight / 2
+
+        this.endRoundButton.x = this.gameRef.gameWidth / 2 - this.endRoundButton.width / 2
+        this.endRoundButton.y = this.gameRef.gameHeight - 120 - this.buttonHeight / 2
+
     }
 
     draw(): void {
         this.gameRef.ctx.beginPath()
         this.gameRef.ctx.rect(0, 0, this.gameRef.gameWidth, this.gameRef.gameHeight)
-        this.gameRef.ctx.fillStyle = '#222'
+        this.gameRef.ctx.fillStyle = '#0c6640' // '#222'
         this.gameRef.ctx.fill()
 
         // draw the level
         // level bg
-        drawBox({
-            c: this.gameRef.ctx,
-            x: 0 + this.gameRef.cameraPos.x,
-            y: 0 + this.gameRef.cameraPos.y,
-            width: this.levelWidth * this.gameRef.cameraZoom,
-            height: this.levelHeight * this.gameRef.cameraZoom,
-            fillColor: '#0c6640' // '#777'
-        })
+        // drawBox({
+        //     c: this.gameRef.ctx,
+        //     x: 0 + this.gameRef.cameraPos.x,
+        //     y: 0 + this.gameRef.cameraPos.y,
+        //     width: this.levelWidth * this.gameRef.cameraZoom,
+        //     height: this.levelHeight * this.gameRef.cameraZoom,
+        //     fillColor: '#0c6640' // '#777'
+        // })
 
         // remaining rounds text
         drawText({
@@ -518,21 +564,47 @@ export class StandardLevel extends BasedLevel {
             y: 60,
             text: `Rounds remaining: ${this.remainingGames}`,
             fontSize: 20,
-            fontFamily: 'sans-serif',
+            fontFamily: 'Arial',
             fillColor: '#fff',
             align: 'left',
             strokeColor: '#000',
             strokeWidth: 2,
         })
 
+        // HOUSE FUNDS
+        drawText({
+            c: this.gameRef.ctx,
+            x: this.gameRef.gameWidth/2,
+            y: 40,
+            text: `House Funds:`,
+            fontSize: 20,
+            fontFamily: 'Arial',
+            fillColor: '#fff',
+            align: 'center',
+            // strokeColor: '#000',
+            // strokeWidth: 2,
+        })
+        drawText({
+            c: this.gameRef.ctx,
+            x: this.gameRef.gameWidth/2,
+            y: 80,
+            text: `${this.dealer.funds < 0 ? '-' : ''}$${Math.abs(this.dealer.funds)}`,
+            fontSize: 32,
+            fontFamily: 'Arial',
+            fillColor: '#fff',
+            align: 'center',
+            // strokeColor: '#000',
+            // strokeWidth: 2,
+        })
+
         // suspicion value
         drawText({
             c: this.gameRef.ctx,
             x: 40,
-            y: 85,
+            y: this.gameRef.gameHeight - 40,
             text: `Suspicion: ${this.suspicionMeter}`,
             fontSize: 20,
-            fontFamily: 'sans-serif',
+            fontFamily: 'Arial',
             fillColor: '#fff',
             align: 'left',
             strokeColor: '#000',
@@ -541,26 +613,26 @@ export class StandardLevel extends BasedLevel {
 
         // sneak card
         const lastCard = this.deck[0]
-        if (lastCard) {
+        if (lastCard && this.phase !== 'betting') {
+            // drawText({
+            //     c: this.gameRef.ctx,
+            //     x: 40,
+            //     y: 120,
+            //     text: `Sneak Card: `,
+            //     fontSize: 20,
+            //     fontFamily: 'Arial',
+            //     fillColor: '#fff',
+            //     align: 'left',
+            //     strokeColor: '#000',
+            //     strokeWidth: 2,
+            // })
             drawText({
                 c: this.gameRef.ctx,
-                x: 40,
-                y: 120,
-                text: `Sneak Card: `,
-                fontSize: 20,
-                fontFamily: 'sans-serif',
-                fillColor: '#fff',
-                align: 'left',
-                strokeColor: '#000',
-                strokeWidth: 2,
-            })
-            drawText({
-                c: this.gameRef.ctx,
-                x: 160,
-                y: 120,
-                align: 'left',
-                fontSize: 20,
-                fontFamily: 'sans-serif',
+                x: this.gameRef.gameWidth / 2,
+                y: this.gameRef.gameHeight - 50,
+                align: 'center',
+                fontSize: 30,
+                fontFamily: 'Arial',
                 fillColor: lastCard.color,
                 // fillColor: '#fff',
                 text: `${lastCard.letter} ${lastCard.symbol}`,
