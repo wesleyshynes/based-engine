@@ -20,10 +20,12 @@ export class StandardLevel extends BasedLevel {
     cameraZoomButton: any
 
     dealButton: any
+    sneakDealButton: any
     takeBetButton: any
-    askPlayerButton: any
+    // askPlayerButton: any
     standButton: any
     hitButton: any
+    sneakHitButton: any
     endRoundButton: any
 
     // Game related stuff
@@ -33,7 +35,7 @@ export class StandardLevel extends BasedLevel {
     suspicionMeter: number = 0
     currentPlayer: number = 0
 
-    remainingGames: number = 3 //5
+    remainingGames: number = 5
     phase: string = 'betting'
 
 
@@ -52,7 +54,8 @@ export class StandardLevel extends BasedLevel {
         this.gameState = 'loading'
         this.phase = 'betting'
         // reset variables
-        this.remainingGames = 3 //5
+        this.remainingGames = 5
+        this.suspicionMeter = 0
         this.gameRef.cameraZoom = 1
 
         this.followCam = new FollowCam({ key: 'followCam', gameRef: this.gameRef })
@@ -105,6 +108,17 @@ export class StandardLevel extends BasedLevel {
         this.dealButton.buttonText = 'Deal'
         this.dealButton.initialize()
 
+        this.sneakDealButton = new BasedButton({ gameRef: this.gameRef, key: 'sneakDealButton' })
+        this.sneakDealButton.width = 100
+        this.sneakDealButton.height = 40
+        this.sneakDealButton.x = 40
+        this.sneakDealButton.y = this.gameRef.gameHeight - this.sneakDealButton.height - 60
+        this.sneakDealButton.clickFunction = () => {
+            this.dealCard(true)
+        }
+        this.sneakDealButton.buttonText = 'Sneak Deal'
+        this.sneakDealButton.initialize()
+
         this.takeBetButton = new BasedButton({ gameRef: this.gameRef, key: 'takeBetButton' })
         this.takeBetButton.width = 100
         this.takeBetButton.height = 40
@@ -116,16 +130,16 @@ export class StandardLevel extends BasedLevel {
         this.takeBetButton.buttonText = 'Take Bets'
         this.takeBetButton.initialize()
 
-        this.askPlayerButton = new BasedButton({ gameRef: this.gameRef, key: 'askPlayerButton' })
-        this.askPlayerButton.width = 100
-        this.askPlayerButton.height = 40
-        this.askPlayerButton.x = 40
-        this.askPlayerButton.y = this.gameRef.gameHeight - this.askPlayerButton.height - 110
-        this.askPlayerButton.clickFunction = () => {
-            this.askPlayer()
-        }
-        this.askPlayerButton.buttonText = 'Ask Player'
-        this.askPlayerButton.initialize()
+        // this.askPlayerButton = new BasedButton({ gameRef: this.gameRef, key: 'askPlayerButton' })
+        // this.askPlayerButton.width = 100
+        // this.askPlayerButton.height = 40
+        // this.askPlayerButton.x = 40
+        // this.askPlayerButton.y = this.gameRef.gameHeight - this.askPlayerButton.height - 110
+        // this.askPlayerButton.clickFunction = () => {
+        //     this.askPlayer()
+        // }
+        // this.askPlayerButton.buttonText = 'Ask Player'
+        // this.askPlayerButton.initialize()
 
         this.standButton = new BasedButton({ gameRef: this.gameRef, key: 'standButton' })
         this.standButton.width = 100
@@ -149,6 +163,17 @@ export class StandardLevel extends BasedLevel {
         this.hitButton.buttonText = 'Hit'
         this.hitButton.initialize()
 
+        this.sneakHitButton = new BasedButton({ gameRef: this.gameRef, key: 'sneakHitButton' })
+        this.sneakHitButton.width = 100
+        this.sneakHitButton.height = 40
+        this.sneakHitButton.x = 40
+        this.sneakHitButton.y = this.gameRef.gameHeight - this.sneakHitButton.height - 260
+        this.sneakHitButton.clickFunction = () => {
+            this.hit(true)
+        }
+        this.sneakHitButton.buttonText = 'Sneak Hit'
+        this.sneakHitButton.initialize()
+
         this.endRoundButton = new BasedButton({ gameRef: this.gameRef, key: 'endRoundButton' })
         this.endRoundButton.width = 100
         this.endRoundButton.height = 40
@@ -166,9 +191,9 @@ export class StandardLevel extends BasedLevel {
         this.players = [
             { name: 'John' },
             { name: 'Jane' },
-            // { name: 'Joe' },
-            // { name: 'Jill' },
-            // { name: 'Jack' },
+            { name: 'Joe' },
+            { name: 'Jill' },
+            { name: 'Jack' },
         ].map((p, i) => {
             const newPlayer = new CasinoPlayer({ key: `player-${i}`, gameRef: this.gameRef })
             newPlayer.name = p.name
@@ -203,16 +228,19 @@ export class StandardLevel extends BasedLevel {
         return this.players[this.currentPlayer] ? this.players[this.currentPlayer] : this.dealer
     }
 
-    dealCard() {
-        if (this.phase === 'dealing') {
+    dealCard(sneak = false) {
+        if (this.phase === 'dealing' && this.deck.length > 0) {
+            this.gameRef.shakeCamera()
+            const card = sneak ? this.deck.shift() : this.deck.pop()
+            if (sneak) {
+                this.suspicionMeter += 1
+            }
             if (this.currentPlayer < this.players.length) {
-                const card = this.deck.pop()
                 this.players[this.currentPlayer].addCardToHand(card)
                 this.currentPlayer++
                 return
             }
             if (this.currentPlayer >= this.players.length) {
-                const card = this.deck.pop()
                 this.dealer.addCardToHand(card)
                 this.currentPlayer = 0
             }
@@ -230,6 +258,7 @@ export class StandardLevel extends BasedLevel {
         this.phase = 'dealing'
     }
 
+    // dead code
     askPlayer() {
         const activePlayer = this.getActivePlayer()
         activePlayer.makePlay()
@@ -243,12 +272,16 @@ export class StandardLevel extends BasedLevel {
         this.currentPlayer++
     }
 
-    hit() {
+    hit(sneak = false) {
+        this.gameRef.shakeCamera()
         const activePlayer = this.getActivePlayer()
         if (activePlayer.nextMove !== 'hit') {
             return
         }
-        const card = this.deck.pop()
+        const card = sneak ? this.deck.shift() : this.deck.pop()
+        if (sneak) {
+            this.suspicionMeter += 1
+        }
         activePlayer.addCardToHand(card)
         if (activePlayer.handValue > 21) {
             this.currentPlayer++
@@ -286,15 +319,18 @@ export class StandardLevel extends BasedLevel {
         // this.addToast(`Scored!`, { yOffset: -60 })
         // this.gameRef.soundPlayer.playSound(this.crunchNoise)
         // this.gameRef.shakeCamera()
-        if(this.remainingGames <= 0) {
+        if (this.remainingGames <= 0 || this.suspicionMeter >= 10) {
             this.gameState = 'over'
             this.phase = 'over'
         }
 
-        if(this.gameState === 'over') {
+        if (this.gameState === 'over') {
             // this.endGame()
             const netFunds = this.dealer.funds
-            if(netFunds > 0) {
+            if(this.suspicionMeter >= 10) {
+                this.textBox.setText(`GAME OVER! You got caught! Security took you out back to beat you!`)
+            }
+            if (netFunds > 0) {
                 this.textBox.setText(`You made the casino $${netFunds}! You did the opposite of what you were supposed to do!`)
             } else {
                 this.textBox.setText(`You lost the casino $${netFunds}! You did a great service to the public!`)
@@ -303,7 +339,7 @@ export class StandardLevel extends BasedLevel {
                 this.gameRef.loadLevel('start-screen')
             }
             this.textBox.active = true
-            
+
         }
     }
 
@@ -367,6 +403,9 @@ export class StandardLevel extends BasedLevel {
         this.players.forEach((p, i: number) => {
             if (i === this.currentPlayer && this.phase !== 'betting') {
                 p.activePlayer = true
+                if (this.phase === 'playing') {
+                    p.makePlay()
+                }
             } else {
                 p.activePlayer = false
             }
@@ -375,8 +414,10 @@ export class StandardLevel extends BasedLevel {
 
         this.dealer.update()
         this.dealer.activePlayer = this.currentPlayer >= this.players.length
+        if (this.dealer.activePlayer && this.phase === 'playing') {
+            this.dealer.makePlay()
+        }
 
-        // this.rollDiceBtn.update()
         this.cameraZoomButton.update()
 
         if (this.phase === 'betting') {
@@ -385,13 +426,19 @@ export class StandardLevel extends BasedLevel {
 
         if (this.phase === 'dealing') {
             this.dealButton.update()
+            this.sneakDealButton.update()
         }
 
         if (this.phase === 'playing') {
-            this.askPlayerButton.update()
-            this.standButton.update()
-            this.hitButton.update()
-
+            // this.askPlayerButton.update()
+            const currentPlayer = this.getActivePlayer()
+            if (currentPlayer.nextMove === 'hit') {
+                this.hitButton.update()
+                this.sneakHitButton.update()
+            }
+            if (currentPlayer.nextMove === 'stand') {
+                this.standButton.update()
+            }
             if (this.dealer.activePlayer && (this.dealer.nextMove === 'stand' || this.dealer.handValue > 21)) {
                 this.phase = 'endRound'
             }
@@ -414,6 +461,12 @@ export class StandardLevel extends BasedLevel {
             x: this.levelWidth / 2,
             y: this.levelHeight / 2,
         })
+
+        const activePlayer = this.getActivePlayer()
+        if (activePlayer) {
+            this.followCam.setTarget(activePlayer)
+        }
+
         this.followCam.setFullScreen(this.miniMapActive)
         this.followCam.update()
         this.gameRef.handleCameraShake()
@@ -462,7 +515,7 @@ export class StandardLevel extends BasedLevel {
         drawText({
             c: this.gameRef.ctx,
             x: 40,
-            y: 100,
+            y: 85,
             text: `Suspicion: ${this.suspicionMeter}`,
             fontSize: 20,
             fontFamily: 'sans-serif',
@@ -471,6 +524,36 @@ export class StandardLevel extends BasedLevel {
             strokeColor: '#000',
             strokeWidth: 2,
         })
+
+        // sneak card
+        const lastCard = this.deck[0]
+        if (lastCard) {
+            drawText({
+                c: this.gameRef.ctx,
+                x: 40,
+                y: 120,
+                text: `Sneak Card: `,
+                fontSize: 20,
+                fontFamily: 'sans-serif',
+                fillColor: '#fff',
+                align: 'left',
+                strokeColor: '#000',
+                strokeWidth: 2,
+            })
+            drawText({
+                c: this.gameRef.ctx,
+                x: 160,
+                y: 120,
+                align: 'left',
+                fontSize: 20,
+                fontFamily: 'sans-serif',
+                fillColor: lastCard.color,
+                // fillColor: '#fff',
+                text: `${lastCard.letter} ${lastCard.symbol}`,
+                strokeWidth: 2 * this.gameRef.cameraZoom,
+                strokeColor: '#fff'
+            })
+        }
 
         this.players.forEach((player) => {
             player.draw()
@@ -488,15 +571,17 @@ export class StandardLevel extends BasedLevel {
 
         if (this.phase === 'dealing') {
             this.dealButton.draw()
+            this.sneakDealButton.draw()
         }
 
         if (this.phase === 'playing') {
             const activePlayer = this.getActivePlayer()
-            if (activePlayer.nextMove === '') {
-                this.askPlayerButton.draw()
-            }
+            // if (activePlayer.nextMove === '') {
+            // this.askPlayerButton.draw()
+            // }
             if (activePlayer.nextMove === 'hit') {
                 this.hitButton.draw()
+                this.sneakHitButton.draw()
             }
             if (activePlayer.nextMove === 'stand') {
                 this.standButton.draw()
