@@ -2,6 +2,7 @@ import { BasedButton } from "../../../engine/BasedButton";
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { FollowCam } from "../../../engine/cameras/FollowCam";
 import { drawBox, drawText } from "../../../engine/libs/drawHelpers";
+import { getRandomInt } from "../../../engine/libs/mathHelpers";
 import TextContainer from "../../../engine/ui/TextContainer";
 import Toasts from "../../../engine/ui/Toasts";
 import { CasinoPlayer } from "../entities/casinoPlayer";
@@ -33,6 +34,8 @@ export class StandardLevel extends BasedLevel {
     players: any[] = []
     dealer: any
     suspicionMeter: number = 0
+    maxSuspicion: number = 10
+    caught: boolean = false
     currentPlayer: number = 0
 
     remainingGames: number = 5
@@ -56,6 +59,7 @@ export class StandardLevel extends BasedLevel {
         // reset variables
         this.remainingGames = 5
         this.suspicionMeter = 0
+        this.caught = false
         this.gameRef.cameraZoom = 1
 
         this.followCam = new FollowCam({ key: 'followCam', gameRef: this.gameRef })
@@ -233,7 +237,7 @@ export class StandardLevel extends BasedLevel {
             this.gameRef.shakeCamera()
             const card = sneak ? this.deck.shift() : this.deck.pop()
             if (sneak) {
-                this.suspicionMeter += 1
+                this.increaseSuspicions()
             }
             if (this.currentPlayer < this.players.length) {
                 this.players[this.currentPlayer].addCardToHand(card)
@@ -280,11 +284,22 @@ export class StandardLevel extends BasedLevel {
         }
         const card = sneak ? this.deck.shift() : this.deck.pop()
         if (sneak) {
-            this.suspicionMeter += 1
+            this.increaseSuspicions()
         }
         activePlayer.addCardToHand(card)
         if (activePlayer.handValue > 21) {
             this.currentPlayer++
+        }
+    }
+
+    increaseSuspicions() {
+        this.suspicionMeter += 1
+        if (this.suspicionMeter >= 3) {
+            const saveSus = getRandomInt(this.maxSuspicion) + 3
+            const susRoll = getRandomInt(this.suspicionMeter)
+            if (susRoll > saveSus) {
+                this.caught = true
+            }
         }
     }
 
@@ -319,7 +334,7 @@ export class StandardLevel extends BasedLevel {
         // this.addToast(`Scored!`, { yOffset: -60 })
         // this.gameRef.soundPlayer.playSound(this.crunchNoise)
         // this.gameRef.shakeCamera()
-        if (this.remainingGames <= 0 || this.suspicionMeter >= 10) {
+        if (this.remainingGames <= 0 || this.caught) {
             this.gameState = 'over'
             this.phase = 'over'
         }
@@ -327,10 +342,9 @@ export class StandardLevel extends BasedLevel {
         if (this.gameState === 'over') {
             // this.endGame()
             const netFunds = this.dealer.funds
-            if(this.suspicionMeter >= 10) {
+            if (this.caught) {
                 this.textBox.setText(`GAME OVER! You got caught! Security took you out back to beat you!`)
-            }
-            if (netFunds > 0) {
+            } else if (netFunds > 0) {
                 this.textBox.setText(`You made the casino $${netFunds}! You did the opposite of what you were supposed to do!`)
             } else {
                 this.textBox.setText(`You lost the casino $${netFunds}! You did a great service to the public!`)
