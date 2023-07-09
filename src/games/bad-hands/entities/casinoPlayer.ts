@@ -1,5 +1,6 @@
 import { BasedObject } from "../../../engine/BasedObject";
 import { drawBox, drawCircle, drawText } from "../../../engine/libs/drawHelpers";
+import { getRandomInt } from "../../../engine/libs/mathHelpers";
 import { calculateHandValue } from "../helpers/cardHelpers";
 
 export class CasinoPlayer extends BasedObject {
@@ -21,6 +22,9 @@ export class CasinoPlayer extends BasedObject {
 
     funds: number = 1000
     bet: number = 0
+    betMultiplier: number = 1
+
+    hitTolerance: number = 0
 
     nextMove: string = ''
 
@@ -41,12 +45,17 @@ export class CasinoPlayer extends BasedObject {
         this.cards.push(card)
         this.handValue = calculateHandValue(this.cards)
         this.nextMove = ''
+        this.hitTolerance = getRandomInt(10)
     }
 
     update() {}
 
     placeBet() {
-        this.bet = this.funds > 100 ? 100 : this.funds
+        // this.bet = this.funds > 100 ? 100 : this.funds
+        this.bet = Math.ceil((getRandomInt(100) + 5) * this.betMultiplier)
+        if (this.bet <= 5) {
+            this.bet = 5
+        }
         this.funds -= this.bet
     }
 
@@ -59,10 +68,12 @@ export class CasinoPlayer extends BasedObject {
     winBet() {
         this.funds += this.bet * 2
         this.bet = 0
+        this.betMultiplier = 1 + getRandomInt(10)/10
     }
 
     loseBet() {
         this.bet = 0
+        this.betMultiplier = getRandomInt(10)/10
     }
 
     returnBet() {
@@ -71,7 +82,16 @@ export class CasinoPlayer extends BasedObject {
     }
 
     makePlay() {
-        if (this.handValue < 17) {
+        if(this.dealer) {
+            if (this.handValue < 17) {
+                this.nextMove = 'hit'
+            } else {
+                this.nextMove = 'stand'
+            }
+            return
+        }
+
+        if (this.handValue  < this.hitTolerance + 11) {
             this.nextMove = 'hit'
         } else {
             this.nextMove = 'stand'
@@ -97,7 +117,7 @@ export class CasinoPlayer extends BasedObject {
             x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
             y: (this.y - this.height/2 - this.headSize/2) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
             radius: this.headSize * this.gameRef.cameraZoom,
-            fillColor: this.activePlayer ? 'blue'  : this.headColor
+            fillColor: this.activePlayer ? '#D18539'  : this.headColor
         })
 
         // draw hand value
@@ -174,7 +194,7 @@ export class CasinoPlayer extends BasedObject {
             })
         }
 
-        // draw funds
+        // draw info
         // drawText({
         //     c: this.gameRef.ctx,
         //     x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
@@ -183,7 +203,7 @@ export class CasinoPlayer extends BasedObject {
         //     fontSize: 12 * this.gameRef.cameraZoom,
         //     fontFamily: 'Arial',
         //     fillColor: '#fff',
-        //     text: `Funds: $${this.funds}`
+        //     text: `T: $${this.hitTolerance}`
         // })
 
     }

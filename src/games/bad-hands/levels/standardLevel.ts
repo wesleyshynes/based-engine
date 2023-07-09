@@ -1,7 +1,7 @@
 import { BasedButton } from "../../../engine/BasedButton";
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { FollowCam } from "../../../engine/cameras/FollowCam";
-import { drawText } from "../../../engine/libs/drawHelpers";
+import { drawBox, drawText } from "../../../engine/libs/drawHelpers";
 import { getRandomInt } from "../../../engine/libs/mathHelpers";
 import TextContainer from "../../../engine/ui/TextContainer";
 import Toasts from "../../../engine/ui/Toasts";
@@ -88,7 +88,7 @@ export class StandardLevel extends BasedLevel {
         this.cameraZoomButton.buttonText = this.miniMapActive ? 'Full' : 'Zoom'
 
         this.textBox = new TextContainer({ key: 'text-container', gameRef: this.gameRef })
-        this.textBox.setText(`You hate the casino, make them lose!`)
+        this.textBox.setText(`You are a BlackJack dealer and you hate the house. Use your sneak hits and deals to make sure the house loses. Make sure the other players win and the house loses. Don't get caught or you'll be fired and beated.`)
         this.textBox.x = 80
         this.textBox.y = 80
         this.textBox.active = true
@@ -541,6 +541,8 @@ export class StandardLevel extends BasedLevel {
     }
 
     draw(): void {
+        const activePlayer = this.getActivePlayer()
+
         this.gameRef.ctx.beginPath()
         this.gameRef.ctx.rect(0, 0, this.gameRef.gameWidth, this.gameRef.gameHeight)
         this.gameRef.ctx.fillStyle = '#0c6640' // '#222'
@@ -557,63 +559,37 @@ export class StandardLevel extends BasedLevel {
         //     fillColor: '#0c6640' // '#777'
         // })
 
-        // remaining rounds text
-        drawText({
-            c: this.gameRef.ctx,
-            x: 40,
-            y: 60,
-            text: `Rounds remaining: ${this.remainingGames}`,
-            fontSize: 20,
-            fontFamily: 'Arial',
-            fillColor: '#fff',
-            align: 'left',
-            strokeColor: '#000',
-            strokeWidth: 2,
-        })
-
-        // HOUSE FUNDS
-        drawText({
-            c: this.gameRef.ctx,
-            x: this.gameRef.gameWidth/2,
-            y: 40,
-            text: `House Funds:`,
-            fontSize: 20,
-            fontFamily: 'Arial',
-            fillColor: '#fff',
-            align: 'center',
-            // strokeColor: '#000',
-            // strokeWidth: 2,
-        })
-        drawText({
-            c: this.gameRef.ctx,
-            x: this.gameRef.gameWidth/2,
-            y: 80,
-            text: `${this.dealer.funds < 0 ? '-' : ''}$${Math.abs(this.dealer.funds)}`,
-            fontSize: 32,
-            fontFamily: 'Arial',
-            fillColor: '#fff',
-            align: 'center',
-            // strokeColor: '#000',
-            // strokeWidth: 2,
-        })
-
-        // suspicion value
-        drawText({
-            c: this.gameRef.ctx,
-            x: 40,
-            y: this.gameRef.gameHeight - 40,
-            text: `Suspicion: ${this.suspicionMeter}`,
-            fontSize: 20,
-            fontFamily: 'Arial',
-            fillColor: '#fff',
-            align: 'left',
-            strokeColor: '#000',
-            strokeWidth: 2,
-        })
+        if (!this.textBox.active) {
+            // HOUSE FUNDS
+            drawText({
+                c: this.gameRef.ctx,
+                x: this.gameRef.gameWidth / 2,
+                y: 40,
+                text: `House Funds:`,
+                fontSize: 20,
+                fontFamily: 'Arial',
+                fillColor: '#fff',
+                align: 'center',
+                // strokeColor: '#000',
+                // strokeWidth: 2,
+            })
+            drawText({
+                c: this.gameRef.ctx,
+                x: this.gameRef.gameWidth / 2,
+                y: 80,
+                text: `${this.dealer.funds < 0 ? '-' : ''}$${Math.abs(this.dealer.funds)}`,
+                fontSize: 32,
+                fontFamily: 'Arial',
+                fillColor: '#fff',
+                align: 'center',
+                // strokeColor: '#000',
+                // strokeWidth: 2,
+            })
+        }
 
         // sneak card
         const lastCard = this.deck[0]
-        if (lastCard && this.phase !== 'betting') {
+        if (lastCard && this.phase !== 'betting' && activePlayer?.nextMove !== 'stand') {
             // drawText({
             //     c: this.gameRef.ctx,
             //     x: 40,
@@ -639,6 +615,21 @@ export class StandardLevel extends BasedLevel {
                 strokeWidth: 2 * this.gameRef.cameraZoom,
                 strokeColor: '#fff'
             })
+
+            // suspicion value
+            this.drawSuspicionMeter()
+        } else {
+            // remaining rounds text
+         drawText({
+            c: this.gameRef.ctx,
+            x: 10,
+            y: this.gameRef.gameHeight - 40,
+            fontSize: 20,
+            fontFamily: 'Arial',
+            fillColor: '#fff',
+            align: 'left',
+            text: `ROUNDS: ${this.remainingGames}`,
+        })
         }
 
         this.players.forEach((player) => {
@@ -661,7 +652,6 @@ export class StandardLevel extends BasedLevel {
         }
 
         if (this.phase === 'playing') {
-            const activePlayer = this.getActivePlayer()
             // if (activePlayer.nextMove === '') {
             // this.askPlayerButton.draw()
             // }
@@ -678,10 +668,38 @@ export class StandardLevel extends BasedLevel {
             this.endRoundButton.draw()
         }
 
-
         this.toastMessages.draw()
 
         this.textBox.draw()
+    }
+
+    drawSuspicionMeter() {
+        drawText({
+            c: this.gameRef.ctx,
+            x: 10,
+            y: this.gameRef.gameHeight - 40,
+            text: `SNEAK RISK:`,
+            fontSize: 20,
+            fontFamily: 'Arial',
+            fillColor: '#fff',
+            align: 'left',
+        })
+        drawBox({
+            c: this.gameRef.ctx,
+            x: 10,
+            y: this.gameRef.gameHeight - 30,
+            width: 150,
+            height: 20,
+            fillColor: '#000'
+        })
+        drawBox({
+            c: this.gameRef.ctx,
+            x: 10,
+            y: this.gameRef.gameHeight - 30,
+            width: 150 * (this.suspicionMeter <= this.maxSuspicion ? this.suspicionMeter / this.maxSuspicion : 1),
+            height: 20,
+            fillColor: '#f00'
+        })
     }
 
     tearDown(): void {

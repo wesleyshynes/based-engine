@@ -288,7 +288,7 @@ export class BasedGame implements BasedGameType {
   draw() {
     // console.log('game draw')
     this.levels[this.activeLevel].draw()
-    this.debugDraw()
+    // this.debugDraw()
   }
 
   debugDraw() {

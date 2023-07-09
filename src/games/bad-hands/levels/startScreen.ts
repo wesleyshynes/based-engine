@@ -160,17 +160,17 @@ export class StartScreen extends BasedLevel {
 
   onResize() {
     const heightOffset = (this.gameRef.gameHeight >= 400 ? 20 : 10)
-    this.buttonGroup.forEach((x,i) => {
+    this.buttonGroup.forEach((x, i) => {
       x.width = this.gameRef.gameWidth - 200
       x.height = this.gameRef.gameHeight >= 400 ? 50 : 30
       x.y = this.gameRef.gameHeight - (this.buttonGroup.length - i) * (x.height + heightOffset)
     })
 
-    this.startButton.y = this.buttonGroup[0].y - this.startButton.height - heightOffset*2
+    this.startButton.y = this.buttonGroup[0].y - this.startButton.height - heightOffset * 2
     this.startButton.width = this.gameRef.gameWidth - 200
   }
 
-  drawBg() {}
+  drawBg() { }
 
   draw() {
     this.gameRef.ctx.beginPath()
@@ -193,6 +193,8 @@ export class StartScreen extends BasedLevel {
     //     drawImage(this.logoSprite)
     // })
 
+
+    // SHADOWS
     drawText({
       c: this.gameRef.ctx,
       x: (this.gameRef.gameWidth) / 2 + 1,
@@ -205,10 +207,27 @@ export class StartScreen extends BasedLevel {
       style: '',
       weight: '700',
       fontFamily: 'sans-serif',
-      fontSize: 40,
-      text: this.gameTitle
+      fontSize: 32,
+      text: 'THE HOUSE'
     })
 
+    drawText({
+      c: this.gameRef.ctx,
+      x: (this.gameRef.gameWidth) / 2 + 1,
+      y: this.gameRef.gameHeight / 4 + 40 + 1,
+      // y: 150,
+      align: 'center',
+      fillColor: '#000',
+      // strokeColor: '#fff',
+      // strokeWidth: 3,
+      style: '',
+      weight: '700',
+      fontFamily: 'sans-serif',
+      fontSize: 32,
+      text: 'ALWAYS LOSES'
+    })
+
+    // LIGHT
     drawText({
       c: this.gameRef.ctx,
       x: (this.gameRef.gameWidth) / 2,
@@ -221,9 +240,26 @@ export class StartScreen extends BasedLevel {
       style: '',
       weight: '700',
       fontFamily: 'sans-serif',
-      fontSize: 40,
-      text: this.gameTitle
+      fontSize: 32,
+      text: 'THE HOUSE'
     })
+
+    drawText({
+      c: this.gameRef.ctx,
+      x: (this.gameRef.gameWidth) / 2,
+      y: this.gameRef.gameHeight / 4 + 40,
+      // y: 150,
+      align: 'center',
+      fillColor: '#FFF',
+      // strokeColor: '#fff',
+      // strokeWidth: 3,
+      style: '',
+      weight: '700',
+      fontFamily: 'sans-serif',
+      fontSize: 32,
+      text: 'ALWAYS LOSES'
+    })
+
   }
   tearDown() {
     this.startButton.tearDown()
