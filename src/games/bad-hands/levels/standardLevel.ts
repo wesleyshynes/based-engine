@@ -8,7 +8,7 @@ import Toasts from "../../../engine/ui/Toasts";
 import { CasinoPlayer } from "../entities/casinoPlayer";
 import { createDeck } from "../helpers/cardHelpers";
 
-import ShuffleNoise from '../../../assets/black-jack/445031__ailett__riffle-shuffle.mp3'
+import ShuffleNoise from '../../../assets/black-jack/445031__ailett__riffle-shuffle__.mp3'
 import BetNoise from '../../../assets/black-jack/75235__creek23__cha-ching.mp3'
 
 import DealNoise from '../../../assets/black-jack/571576__el_boss__playing-card-deal-variation-2.mp3'
