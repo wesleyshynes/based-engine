@@ -7,7 +7,8 @@
     "watch": "webpack --watch",
     "startwin": "set NODE_OPTIONS=--openssl-legacy-provider && webpack serve --open",
     "start": "webpack serve --open",
-    "build": "webpack"
+    "build": "webpack",
+    "buildwin": "set NODE_OPTIONS=--openssl-legacy-provider && webpack"
   },
   "author": "",
   "license": "ISC",
