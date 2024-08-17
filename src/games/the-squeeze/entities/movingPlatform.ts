@@ -64,10 +64,12 @@ export class MovingPlatform extends PhysBox {
     update() {
         this.movePlatform()
         this.otherBodies.forEach((b: any) => {
-            Physics.Body.setPosition(b.body, {
-                x: b.body.position.x + this.xDirection * this.gameRef.diffMulti,
-                y: b.body.position.y + this.yDirection * this.gameRef.diffMulti
-            })
+            if(!b.options.tags.static) {
+                Physics.Body.setPosition(b.body, {
+                    x: b.body.position.x + this.xDirection * this.gameRef.diffMulti,
+                    y: b.body.position.y + this.yDirection * this.gameRef.diffMulti
+                })
+            }
         })
     }
 

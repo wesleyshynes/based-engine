@@ -18,8 +18,12 @@ export class PushableBox extends PhysBox {
             static: false,
         }
     }
-    
+
     body: any;
+
+    sizeToMove: number = 50
+
+    movingBody: any = false
 
     bodyOptions = {
         label: `pushBox`,
@@ -31,16 +35,22 @@ export class PushableBox extends PhysBox {
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
         if (otherBody && otherBody.options && otherBody.options.tags) {
-            if (otherBody.options.tags.player) {
+            if (!this.movingBody && otherBody.options.tags.player) {
                 // console.log('pushing box')
-                if (otherBody.radius < 40) {
-                    Physics.Body.setStatic(this.body, true)
-                    this.options.tags.static = true
-                } else if (this.options.tags.static) {
-                    Physics.Body.setMass(this.body, 50)
-                    Physics.Body.setStatic(this.body, false)
-                    this.options.tags.static = false
+                if (otherBody.radius < this.sizeToMove) {
+                    this.enableStatic()
+                } else {
+                    this.disableStatic()
+                    Physics.Body.setVelocity(this.body, {
+                        x: 0,
+                        y: 0
+                    })
                 }
+            }
+
+            if (otherBody.options.tags.movingPlatform) {
+                this.disableStatic()
+                this.movingBody = true
             }
         }
     }
@@ -49,16 +59,28 @@ export class PushableBox extends PhysBox {
         const otherBody = o.plugin.basedRef()
         if (otherBody && otherBody.options && otherBody.options.tags) {
             if (otherBody.options.tags.player) {
-                // console.log('pushing box')
-                if (otherBody.radius < 40) {
-                    Physics.Body.setStatic(this.body, true)
-                    this.options.tags.static = true
-                } else if (this.options.tags.static) {
-                    Physics.Body.setMass(this.body, 50)
-                    Physics.Body.setStatic(this.body, false)
-                    this.options.tags.static = false
-                }
+                this.disableStatic()
+                Physics.Body.setVelocity(this.body, {
+                    x: 0,
+                    y: 0
+                })
             }
+            if(otherBody.options.tags.movingPlatform) {
+                this.movingBody = false
+            }
+        }
+    }
+
+    enableStatic() {
+        Physics.Body.setStatic(this.body, true)
+        this.options.tags.static = true
+    }
+
+    disableStatic() {
+        if (this.options.tags.static) {
+            Physics.Body.setStatic(this.body, false)
+            Physics.Body.setMass(this.body, 50)
+            this.options.tags.static = false
         }
     }
 
@@ -67,7 +89,9 @@ export class PushableBox extends PhysBox {
         this.initializeBody()
         this.setCenter()
     }
-    update() { }
+    update() {
+        this.validatePosition()
+    }
     draw() {
         this.drawPhysicsBody()
     }

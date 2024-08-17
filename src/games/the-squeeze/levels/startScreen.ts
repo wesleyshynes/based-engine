@@ -91,7 +91,8 @@ export class StartScreen extends BasedLevel {
     this.startButton.buttonText = 'Play'
     this.startButton.width = this.gameRef.gameWidth - 200
     this.startButton.clickFunction = () => {
-      this.gameRef.loadLevel('standard-level')
+      this.gameRef.loadLevel('level-01')
+      // this.gameRef.loadLevel('standard-level')
     }
 
     this.buttonGroup = []

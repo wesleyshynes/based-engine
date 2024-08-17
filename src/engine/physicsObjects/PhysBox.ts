@@ -6,6 +6,10 @@ import { radToDeg, XYCoordinateType } from "../libs/mathHelpers";
 export default class PhysBox extends BasedObject {
   x: number = 0
   y: number = 0
+
+  lastX: number = 0
+  lastY: number  = 0
+
   width: number = 40;
   height: number = 40;
   color: string = 'blue'
@@ -15,7 +19,7 @@ export default class PhysBox extends BasedObject {
   }
   active: boolean = false
   body: any;
-  bodyCenter: XYCoordinateType = {x: 0, y: 0}
+  bodyCenter: XYCoordinateType = { x: 0, y: 0 }
 
   collisionStartFn: (o: any) => void = (o: any) => null;
   collisionEndFn: (o: any) => void = (o: any) => null;
@@ -38,7 +42,7 @@ export default class PhysBox extends BasedObject {
   }
 
   setCenter() {
-    if(this.body) {
+    if (this.body) {
       Physics.Body.setCentre(this.body, this.bodyCenter, true)
     }
   }
@@ -50,8 +54,21 @@ export default class PhysBox extends BasedObject {
     this.collisionEndFn(otherBody)
   }
 
-  update() { }
-  
+  validatePosition() {
+    if (!Number.isNaN(this.body.position.x)) {
+      this.lastX = this.body.position.x
+      this.lastY = this.body.position.y
+    } else {
+      this.gameRef.removeFromWorld(this.body)
+      this.x = this.lastX
+      this.y = this.lastY
+      this.initializeBody()
+      this.gameRef.addToWorld(this.body)
+    }
+  }
+
+  update() {}
+
   draw() {
     this.drawPhysicsBody()
   }
@@ -66,8 +83,8 @@ export default class PhysBox extends BasedObject {
 
       drawBox({
         c: this.gameRef.ctx,
-        x: (-(this.width/2) - this.bodyCenter.x) * this.gameRef.cameraZoom,
-        y: (-(this.height/2) - this.bodyCenter.y) * this.gameRef.cameraZoom,
+        x: (-(this.width / 2) - this.bodyCenter.x) * this.gameRef.cameraZoom,
+        y: (-(this.height / 2) - this.bodyCenter.y) * this.gameRef.cameraZoom,
         width: this.width * this.gameRef.cameraZoom,
         height: this.height * this.gameRef.cameraZoom,
         fillColor: this.color,

@@ -73,6 +73,7 @@ export class MainPlayer extends PhysBall {
 
     update() {
         this.handleKeys()
+        // this.validatePosition()
     }
 
     handleKeys() {

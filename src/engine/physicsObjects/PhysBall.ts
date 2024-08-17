@@ -6,6 +6,10 @@ import { radToDeg, XYCoordinateType } from "../libs/mathHelpers";
 export default class PhysBall extends BasedObject {
   x: number = 0
   y: number = 0
+
+  lastX: number = 0
+  lastY: number = 0
+
   radius: number = 15;
   color: string = 'blue'
   bodyOptions: any = {
@@ -46,6 +50,20 @@ export default class PhysBall extends BasedObject {
   onCollisionEnd(otherBody: any) {
     this.collisionEndFn(otherBody)
   }
+
+  validatePosition() {
+    if (!Number.isNaN(this.body.position.x)) {
+      this.lastX = this.body.position.x
+      this.lastY = this.body.position
+    } else {
+      this.gameRef.removeFromWorld(this.body)
+      this.x = this.lastX
+      this.y = this.lastY
+      this.initializeBody()
+      this.gameRef.addToWorld(this.body)
+    }
+  }
+
   update() { }
   draw() {
     this.drawPhysicsBody()

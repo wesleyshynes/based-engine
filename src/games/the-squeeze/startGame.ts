@@ -1,6 +1,6 @@
 import { BasedGame } from "../../engine/BasedEngine"
 import CreditsScreen from "./levels/creditsScreen"
-// import { LevelOne } from "./levels/levelOne"
+import { Level01 } from "./levels/level-01"
 import { StandardLevel } from "./levels/standardLevel"
 import { StartScreen } from "./levels/startScreen"
 
@@ -13,7 +13,7 @@ export function startGame() {
       { key: 'start-screen', level: StartScreen },
       { key: 'credits-screen', level: CreditsScreen },
       { key: 'standard-level', level: StandardLevel },
-    //   { key: 'level-1', level: LevelOne },
+      { key: 'level-01', level: Level01 },
     ]
   })
   newGame.enableMouse()

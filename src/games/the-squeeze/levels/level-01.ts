@@ -4,9 +4,9 @@ import { FollowCam } from "../../../engine/cameras/FollowCam";
 import { drawBox } from "../../../engine/libs/drawHelpers";
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
 import { MainPlayer } from "../entities/mainPlayer";
+import { LEVEL_01_BOUNDARIES, LEVEL_01_PUSH_BOXES, LEVEL_01_WALLS } from "../constants/level01Constants";
 import { PushableBox } from "../entities/pushableBox";
-import { LEVEL_WALLS_STANDARD, PUSHABLE_BOXES_STANDARD } from "../constants/standardLevelConstants";
-import { MovingPlatform } from "../entities/movingPlatform";
+import { ExitDoor } from "../entities/exitDoor";
 
 // const FILL_COLOR = '#81B622'
 // const HOVER_COLOR = '#ECF87F'
@@ -15,12 +15,12 @@ import { MovingPlatform } from "../entities/movingPlatform";
 // const TEXT_HOVER_COLOR = '#000000'
 const BG_COLOR = 'black'
 
-export class StandardLevel extends BasedLevel {
+export class Level01 extends BasedLevel {
 
     physics: any
 
-    levelWidth: number = 3000
-    levelHeight: number = 2000
+    levelWidth: number = 800
+    levelHeight: number = 600
 
     buttonWidth: number = 160
     buttonHeight: number = 50
@@ -39,10 +39,8 @@ export class StandardLevel extends BasedLevel {
     mainPlayer: any
 
     levelWalls: any[] = []
-
     pushBoxes: any[] = []
-
-    movingPlatform: any
+    exitDoors: any[] = []
 
     // SOUNDS
 
@@ -91,15 +89,24 @@ export class StandardLevel extends BasedLevel {
 
         this.setupWalls()
         this.setupPushBoxes()
-        this.setupMovingPlatforms()
-
+        this.setupExitDoors()
 
         // BEGIN
         this.onResize()
         this.gameState = 'active'
     }
 
-    handleInput() { }
+    handleInput() {
+        const pressedKeys = this.gameRef.pressedKeys
+        if (pressedKeys['KeyP']) {
+            this.pushBoxes.forEach((box: any) => {
+                console.log(box)
+            })
+        }
+        if (pressedKeys['KeyO']) {
+            this.gameRef.loadLevel('level-01')
+        }
+    }
 
     checkGameCondition() { }
 
@@ -127,9 +134,8 @@ export class StandardLevel extends BasedLevel {
         this.checkGameCondition()
         this.handleInput()
 
-        this.mainPlayer.validatePosition()
         this.pushBoxes.forEach((box: any) => {
-            box.validatePosition()
+            box.update()
         })
 
         this.cameraZoomButton.update()
@@ -144,7 +150,6 @@ export class StandardLevel extends BasedLevel {
     onPhysicsUpdate() {
         // do something on physics tick
         this.updateCamera()
-        this.movingPlatform.update()
         this.mainPlayer.update()
     }
 
@@ -187,32 +192,25 @@ export class StandardLevel extends BasedLevel {
             fillColor: '#777' // '#777'
         })
 
-        drawBox({
-            c: this.gameRef.ctx,
-            x: 200 * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: 400 * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-            width: 800 * this.gameRef.cameraZoom,
-            height: 800 * this.gameRef.cameraZoom,
-            fillColor: 'orange' // '#777'
-        })
-
-        // draw the main player
-        this.mainPlayer.draw()
-
+        
         // draw level walls
         this.levelWalls.forEach((wall: any) => {
             wall.draw()
         })
-
+        
         // draw push boxes
         this.pushBoxes.forEach((box: any) => {
             box.draw()
         })
 
-        // draw moving platform
-        this.movingPlatform.draw()
+        // draw exit doors
+        this.exitDoors.forEach((door: any) => {
+            door.draw()
+        })
 
-
+        // draw the main player
+        this.mainPlayer.draw()
+        
         // draw interface
         this.cameraZoomButton.draw()
 
@@ -220,7 +218,10 @@ export class StandardLevel extends BasedLevel {
 
     // SETUP FUNCTIONS
     setupWalls() {
-        this.levelWalls = LEVEL_WALLS_STANDARD.map((obj: any, idx: number) => {
+        this.levelWalls = [
+            ...LEVEL_01_BOUNDARIES,
+            ...LEVEL_01_WALLS,
+        ].map((obj: any, idx: number) => {
             const tempObj = new PhysBox({
                 key: `wall-${idx}`, gameRef: this.gameRef, options: {
                     tags: {
@@ -242,7 +243,9 @@ export class StandardLevel extends BasedLevel {
     }
 
     setupPushBoxes() {
-        this.pushBoxes = PUSHABLE_BOXES_STANDARD.map((obj: any, idx: number) => {
+        this.pushBoxes = [
+            ...LEVEL_01_PUSH_BOXES,
+        ].map((obj: any, idx: number) => {
             const tempObj = new PushableBox({
                 key: `pushBox-${idx}`,
                 gameRef: this.gameRef
@@ -251,26 +254,42 @@ export class StandardLevel extends BasedLevel {
             tempObj.y = obj.y
             tempObj.width = obj.width
             tempObj.height = obj.height
+            tempObj.sizeToMove = obj.sizeToMove
             tempObj.initialize()
             this.gameRef.addToWorld(tempObj.body)
             return tempObj
         })
     }
 
-    setupMovingPlatforms() {
-        this.movingPlatform = new MovingPlatform({
-            key: `movingPlatform-main`,
-            gameRef: this.gameRef
+    setupExitDoors() {
+        this.exitDoors = [
+            // ...LEVEL_01_EXIT_DOORS,
+            {
+                x: 730,
+                y: 530,
+                width: 100,
+                height: 100,
+                color: 'yellow',
+                doorPath: 'standard-level'
+            }
+        ].map((obj: any, idx: number) => {
+            const tempObj = new ExitDoor({
+                key: `exitDoor-${idx}`, gameRef: this.gameRef, options: {
+                    tags: {
+                        exitDoor: true,
+                    }
+                }
+            })
+            tempObj.x = obj.x
+            tempObj.y = obj.y
+            tempObj.width = obj.width
+            tempObj.height = obj.height
+            tempObj.color = obj.color
+            tempObj.doorPath = obj.doorPath
+            tempObj.initialize()
+            this.gameRef.addToWorld(tempObj.body)
+            return tempObj
         })
-        this.movingPlatform.x = 1000
-        this.movingPlatform.y = 1900
-        this.movingPlatform.minX = 1000
-        this.movingPlatform.maxX = 2000
-        this.movingPlatform.width = 500
-        this.movingPlatform.height = 50
-        this.movingPlatform.color = 'purple'
-        this.movingPlatform.initialize()
-        this.gameRef.addToWorld(this.movingPlatform.body)
     }
 
     tearDown(): void {
