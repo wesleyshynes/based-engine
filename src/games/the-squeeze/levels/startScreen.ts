@@ -6,7 +6,7 @@ import BgMusic from '../../../assets/black-jack/Frederic_Lardon_feat_Laura_Palme
 
 const FILL_COLOR = '#81B622'
 const HOVER_COLOR = '#ECF87F'
-const ALT_FILL_COLOR = '#59981A'
+// const ALT_FILL_COLOR = '#59981A'
 const TEXT_COLOR = '#FFFFFF'
 const TEXT_HOVER_COLOR = '#000000'
 const BG_COLOR = '#3D550C'
@@ -54,7 +54,7 @@ export class StartScreen extends BasedLevel {
 
     this.gameRef.drawLoading('Music', .5)
     this.bgSong = await this.gameRef.soundPlayer.loadSound(BgMusic)
-    this.activeSound.playing = false
+    this.activeSound.playing = true // false
   }
 
   initialize() {
