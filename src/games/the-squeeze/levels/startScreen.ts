@@ -13,6 +13,7 @@ const BG_COLOR = '#333333'
 export class StartScreen extends BasedLevel {
 
   gameTitle: string = 'The Squeeze'
+
   startButton: any;
   soundButton: any;
   creditsButton: any;
@@ -220,24 +221,24 @@ export class StartScreen extends BasedLevel {
       weight: '700',
       fontFamily: 'sans-serif',
       fontSize: 32,
-      text: 'THE HOUSE'
+      text: 'THE SQUEEZE'
     })
 
-    drawText({
-      c: this.gameRef.ctx,
-      x: (this.gameRef.gameWidth) / 2 + 1,
-      y: this.gameRef.gameHeight / 4 + 40 + 1,
-      // y: 150,
-      align: 'center',
-      fillColor: '#000',
-      // strokeColor: '#fff',
-      // strokeWidth: 3,
-      style: '',
-      weight: '700',
-      fontFamily: 'sans-serif',
-      fontSize: 32,
-      text: 'ALWAYS LOSES'
-    })
+    // drawText({
+    //   c: this.gameRef.ctx,
+    //   x: (this.gameRef.gameWidth) / 2 + 1,
+    //   y: this.gameRef.gameHeight / 4 + 40 + 1,
+    //   // y: 150,
+    //   align: 'center',
+    //   fillColor: '#000',
+    //   // strokeColor: '#fff',
+    //   // strokeWidth: 3,
+    //   style: '',
+    //   weight: '700',
+    //   fontFamily: 'sans-serif',
+    //   fontSize: 32,
+    //   text: 'ALWAYS LOSES'
+    // })
 
     // LIGHT
     drawText({
@@ -253,24 +254,24 @@ export class StartScreen extends BasedLevel {
       weight: '700',
       fontFamily: 'sans-serif',
       fontSize: 32,
-      text: 'THE HOUSE'
+      text: 'THE SQUEEZE'
     })
 
-    drawText({
-      c: this.gameRef.ctx,
-      x: (this.gameRef.gameWidth) / 2,
-      y: this.gameRef.gameHeight / 4 + 40,
-      // y: 150,
-      align: 'center',
-      fillColor: '#FFF',
-      // strokeColor: '#fff',
-      // strokeWidth: 3,
-      style: '',
-      weight: '700',
-      fontFamily: 'sans-serif',
-      fontSize: 32,
-      text: 'ALWAYS LOSES'
-    })
+    // drawText({
+    //   c: this.gameRef.ctx,
+    //   x: (this.gameRef.gameWidth) / 2,
+    //   y: this.gameRef.gameHeight / 4 + 40,
+    //   // y: 150,
+    //   align: 'center',
+    //   fillColor: '#FFF',
+    //   // strokeColor: '#fff',
+    //   // strokeWidth: 3,
+    //   style: '',
+    //   weight: '700',
+    //   fontFamily: 'sans-serif',
+    //   fontSize: 32,
+    //   text: 'ALWAYS LOSES'
+    // })
 
   }
   tearDown() {
