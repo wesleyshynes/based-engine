@@ -4,7 +4,6 @@ import { FollowCam } from "../../../engine/cameras/FollowCam";
 import { drawBox } from "../../../engine/libs/drawHelpers";
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
 import { MainPlayer } from "../entities/mainPlayer";
-import Physics from 'matter-js'
 import { PushableBox } from "../entities/pushableBox";
 import { LEVEL_WALLS_STANDARD, PUSHABLE_BOXES_STANDARD } from "../constants/standardLevelConstants";
 import { MovingPlatform } from "../entities/movingPlatform";
@@ -36,7 +35,6 @@ export class StandardLevel extends BasedLevel {
 
     // Game related stuff
     gameState: string = 'active'
-    lastKeyPress: number = 0
 
     mainPlayer: any
 
@@ -69,6 +67,7 @@ export class StandardLevel extends BasedLevel {
         this.followCam.levelHeight = this.levelHeight
         this.followCam.zoomSetting = 1
         this.followCam.cameraZoomSpeed = .03
+        this.followCam.cameraSpeed = 50
         this.followCam.initialize()
 
         // setup interface
@@ -124,13 +123,9 @@ export class StandardLevel extends BasedLevel {
     update(): void {
         // did we win?
         this.handlePhysics()
-        this.updateCamera()
         this.handleSounds()
         this.checkGameCondition()
         this.handleInput()
-        this.movingPlatform.update()
-
-        this.mainPlayer.update()
 
         this.cameraZoomButton.update()
     }
@@ -143,6 +138,9 @@ export class StandardLevel extends BasedLevel {
 
     onPhysicsUpdate() {
         // do something on physics tick
+        this.updateCamera()
+        this.movingPlatform.update()
+        this.mainPlayer.update()
     }
 
     updateCamera() {

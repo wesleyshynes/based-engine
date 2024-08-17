@@ -7,13 +7,15 @@ export class MainPlayer extends PhysBall {
     y: number = 100
 
     color: string = 'white'
+
     originalRadius: number = 50
     activeMaxRadius: number = 100
     maxRadius: number = 100
     radius: number = 50
     minRadius: number = 25
+    sizeSpeed: number = .05
 
-    speed: number = 10
+    baseSpeed: number = 12
 
     wallCount: number = 0
 
@@ -29,6 +31,7 @@ export class MainPlayer extends PhysBall {
         label: 'player',
         inertia: Infinity,
         collisionFilter: { group: this.collisionGroup },
+        // friction: 0,
     }
 
     collisionStartFn = (o: any) => {
@@ -79,35 +82,37 @@ export class MainPlayer extends PhysBall {
 
         let scale = 1
 
+        const activeSpeed = this.baseSpeed
+
         if (pressedKeys['KeyA'] || pressedKeys['ArrowLeft']) {
-            moveX -= this.speed
+            moveX -= activeSpeed
         }
         if (pressedKeys['KeyD'] || pressedKeys['ArrowRight']) {
-            moveX += this.speed
+            moveX += activeSpeed
         }
         if (pressedKeys['KeyW'] || pressedKeys['ArrowUp']) {
-            moveY -= this.speed
+            moveY -= activeSpeed
         }
         if (pressedKeys['KeyS'] || pressedKeys['ArrowDown']) {
-            moveY += this.speed
+            moveY += activeSpeed
         }
 
         if (pressedKeys['KeyX'] && this.wallCount < 2) {
-            scale = 1.01
+            scale += this.sizeSpeed
         }
 
         if (pressedKeys['KeyZ']) {
-            scale = 0.99
+            scale -= this.sizeSpeed
         }
 
         if (moveX !== 0 || moveY !== 0) {
             Physics.Body.setVelocity(this.body, normalizeVector({
                 y: moveY,
                 x: moveX
-            }, this.speed))
+            }, activeSpeed))
         } else {
-            Physics.Body.setVelocity(this.body, { 
-                x: 0, 
+            Physics.Body.setVelocity(this.body, {
+                x: 0,
                 y: 0
             })
         }
@@ -117,7 +122,7 @@ export class MainPlayer extends PhysBall {
                 if (this.radius * scale < this.maxRadius) {
                     Physics.Body.scale(this.body, scale, scale)
                     this.radius *= scale
-                } else {
+                } else if (this.radius != this.maxRadius) {
                     Physics.Body.scale(this.body, this.maxRadius / this.radius, this.maxRadius / this.radius)
                     this.radius = this.maxRadius
                 }
@@ -126,13 +131,15 @@ export class MainPlayer extends PhysBall {
             if (this.radius * scale > this.minRadius) {
                 Physics.Body.scale(this.body, scale, scale)
                 this.radius *= scale
-            } else {
+            } else if (this.radius != this.minRadius) {
                 Physics.Body.scale(this.body, this.minRadius / this.radius, this.minRadius / this.radius)
                 this.radius = this.minRadius
             }
-        } else {
-            scale = this.radius > this.originalRadius ? 0.99 : this.wallCount < 2 ? 1.01 : 1
-            if (this.radius * scale != this.originalRadius) {
+        } else if (this.radius != this.originalRadius) {
+            scale = this.radius > this.originalRadius ? 1 - this.sizeSpeed : this.wallCount < 2 ? 1 + this.sizeSpeed : 1
+            const radiusScale = Math.abs((this.radius - this.originalRadius) / this.originalRadius)
+            if (radiusScale > this.sizeSpeed * 1.2) {
+                // if (this.radius != this.originalRadius) {
                 Physics.Body.scale(this.body, scale, scale)
                 this.radius *= scale
             } else {
