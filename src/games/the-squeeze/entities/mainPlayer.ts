@@ -23,21 +23,18 @@ export class MainPlayer extends PhysBall {
         }
     }
 
-    otherBodies: any[] = []
-
     collisionGroup: any = Physics.Body.nextGroup(true)
 
     bodyOptions = {
         label: 'player',
         inertia: Infinity,
         collisionFilter: { group: this.collisionGroup },
-        // density: 9,
     }
 
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
         if (otherBody && otherBody.options && otherBody.options.tags) {
-            console.log('collision start', otherBody)
+            // console.log('collision start', otherBody)
             if (otherBody.options.tags.wall) {
                 this.wallCount++
                 if (this.wallCount > 1) {
@@ -46,27 +43,12 @@ export class MainPlayer extends PhysBall {
                     this.maxRadius = this.activeMaxRadius
                 }
             }
-            if (otherBody.options.tags.pushBox) {
-                // console.log('pushing box')
-                if (this.radius < 40) {
-                    Physics.Body.setStatic(otherBody.body, true)
-                    otherBody.options.tags.static = true
-                } else if (otherBody.options.tags.static) {
-                    Physics.Body.setMass(otherBody.body, 50)
-                    Physics.Body.setStatic(otherBody.body, false)
-                    otherBody.options.tags.static = false
-                }
-            }
-            if(otherBody.options.tags.movingPlatform) {
-                this.otherBodies.push(otherBody)
-            }
         }
     }
 
     collisionEndFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
         if (otherBody && otherBody.options && otherBody.options.tags) {
-            console.log('collision end', otherBody)
             if (otherBody.options.tags.wall) {
                 this.wallCount--
                 if (this.wallCount < 0) {
@@ -75,9 +57,6 @@ export class MainPlayer extends PhysBall {
                 if (this.wallCount === 0) {
                     this.maxRadius = this.activeMaxRadius
                 }
-            }
-            if(otherBody.options.tags.movingPlatform) {
-                this.otherBodies = this.otherBodies.filter(b => b.objectKey !== otherBody.objectKey)
             }
         }
     }
@@ -99,16 +78,6 @@ export class MainPlayer extends PhysBall {
         let moveY = 0
 
         let scale = 1
-
-        this.otherBodies.forEach(b => {
-            if(b.options.tags.xDirection) {
-                // moveX += b.options.tags.xDirection
-                Physics.Body.setPosition(this.body, {
-                    x: this.body.position.x + b.options.tags.xDirection,
-                    y: this.body.position.y
-                })
-            }
-        })
 
         if (pressedKeys['KeyA'] || pressedKeys['ArrowLeft']) {
             moveX -= this.speed

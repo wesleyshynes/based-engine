@@ -9,7 +9,7 @@ const HOVER_COLOR = '#ECF87F'
 // const ALT_FILL_COLOR = '#59981A'
 const TEXT_COLOR = '#FFFFFF'
 const TEXT_HOVER_COLOR = '#000000'
-const BG_COLOR = '#3D550C'
+const BG_COLOR = '#333333'
 export class StartScreen extends BasedLevel {
 
   gameTitle: string = 'The Squeeze'

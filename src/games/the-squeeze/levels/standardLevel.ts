@@ -5,6 +5,9 @@ import { drawBox } from "../../../engine/libs/drawHelpers";
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
 import { MainPlayer } from "../entities/mainPlayer";
 import Physics from 'matter-js'
+import { PushableBox } from "../entities/pushableBox";
+import { LEVEL_WALLS_STANDARD, PUSHABLE_BOXES_STANDARD } from "../constants/standardLevelConstants";
+import { MovingPlatform } from "../entities/movingPlatform";
 
 // const FILL_COLOR = '#81B622'
 // const HOVER_COLOR = '#ECF87F'
@@ -42,7 +45,6 @@ export class StandardLevel extends BasedLevel {
     pushBoxes: any[] = []
 
     movingPlatform: any
-    movingPlatformDirection: number = 1
 
     // SOUNDS
 
@@ -84,127 +86,13 @@ export class StandardLevel extends BasedLevel {
         this.mainPlayer = new MainPlayer({
             key: 'mainPlayer',
             gameRef: this.gameRef,
-            // x: this.levelWidth / 2,
-            // y: this.levelHeight / 2,
-            // width: 50,
-            // height: 50,
-            // color: 'white',
         })
         this.mainPlayer.initialize()
         this.gameRef.addToWorld(this.mainPlayer.body)
 
-        this.levelWalls = [
-            {
-                x: 300,
-                y: 500,
-                width: 500,
-                height: 100,
-                color: 'blue'
-            },
-            {
-                x: 900,
-                y: 500,
-                width: 500,
-                height: 100,
-                color: 'blue'
-            },
-            {
-                x: 300,
-                y: 1200,
-                width: 500,
-                height: 100,
-                color: 'blue'
-            },
-            {
-                x: 850,
-                y: 1200,
-                width: 500,
-                height: 100,
-                color: 'blue'
-            }
-        ].map((obj: any, idx: number) => {
-            const tempObj = new PhysBox({
-                key: `wall-${idx}`, gameRef: this.gameRef, options: {
-                    tags: {
-                        wall: true,
-                        terrain: true,
-                    }
-                }
-            })
-            tempObj.x = obj.x
-            tempObj.y = obj.y
-            tempObj.width = obj.width
-            tempObj.height = obj.height
-            tempObj.color = obj.color
-            tempObj.bodyOptions = { label: `wall`, isStatic: true }
-            tempObj.initialize()
-            this.gameRef.addToWorld(tempObj.body)
-            return tempObj
-        })
-
-        this.pushBoxes = [
-            {
-                x: 1500,
-                y: 200,
-                width: 90,
-                height: 90,
-                color: 'red'
-            },
-            {
-                x: 1200,
-                y: 1200,
-                width: 90,
-                height: 90,
-                color: 'red'
-            },
-        ].map((obj: any, idx: number) => {
-            const tempObj = new PhysBox({
-                key: `pushBox-${idx}`, gameRef: this.gameRef, options: {
-                    tags: {
-                        pushBox: true,
-                        wall: true,
-                        terrain: true,
-                    }
-                }
-            })
-            tempObj.x = obj.x
-            tempObj.y = obj.y
-            tempObj.width = obj.width
-            tempObj.height = obj.height
-            tempObj.color = 'red'
-            tempObj.bodyOptions = {
-                label: `pushBox`,
-                inertia: Infinity,
-                density: 5,
-                friction: 0.9
-            }
-            tempObj.initialize()
-            this.gameRef.addToWorld(tempObj.body)
-            return tempObj
-        })
-
-        this.movingPlatform = new PhysBox({
-            key: `movingPlatform`, gameRef: this.gameRef, options: {
-                tags: {
-                    wall: true,
-                    terrain: true,
-                    movingPlatform: true,
-                    xDirection: 1,
-                }
-            }
-        })
-        this.movingPlatform.x = 1000
-        this.movingPlatform.y = 1900
-        this.movingPlatform.width = 500
-        this.movingPlatform.height = 50
-        this.movingPlatform.color = 'purple'
-        this.movingPlatform.bodyOptions = {
-            label: `movingPlatform`,
-            isStatic: true,
-            inertia: Infinity,
-        }
-        this.movingPlatform.initialize()
-        this.gameRef.addToWorld(this.movingPlatform.body)
+        this.setupWalls()
+        this.setupPushBoxes()
+        this.setupMovingPlatforms()
 
 
         // BEGIN
@@ -240,27 +128,11 @@ export class StandardLevel extends BasedLevel {
         this.handleSounds()
         this.checkGameCondition()
         this.handleInput()
-        this.movePlatform()
+        this.movingPlatform.update()
 
         this.mainPlayer.update()
 
         this.cameraZoomButton.update()
-    }
-
-    movePlatform() {
-        let minX = 150
-        let maxX = 1850
-        if (this.movingPlatform.body.position.x < minX) {
-            this.movingPlatformDirection = 1
-        }
-        if (this.movingPlatform.body.position.x > maxX) {
-            this.movingPlatformDirection = -1
-        }
-        Physics.Body.setPosition(this.movingPlatform.body, {
-            x: this.movingPlatform.body.position.x + this.movingPlatformDirection,
-            y: this.movingPlatform.body.position.y
-        })
-        this.movingPlatform.options.tags.xDirection = this.movingPlatformDirection
     }
 
     handlePhysics() {
@@ -341,6 +213,61 @@ export class StandardLevel extends BasedLevel {
         // draw interface
         this.cameraZoomButton.draw()
 
+    }
+
+    // SETUP FUNCTIONS
+    setupWalls() {
+        this.levelWalls = LEVEL_WALLS_STANDARD.map((obj: any, idx: number) => {
+            const tempObj = new PhysBox({
+                key: `wall-${idx}`, gameRef: this.gameRef, options: {
+                    tags: {
+                        wall: true,
+                        terrain: true,
+                    }
+                }
+            })
+            tempObj.x = obj.x
+            tempObj.y = obj.y
+            tempObj.width = obj.width
+            tempObj.height = obj.height
+            tempObj.color = obj.color
+            tempObj.bodyOptions = { label: `wall`, isStatic: true }
+            tempObj.initialize()
+            this.gameRef.addToWorld(tempObj.body)
+            return tempObj
+        })
+    }
+
+    setupPushBoxes() {
+        this.pushBoxes = PUSHABLE_BOXES_STANDARD.map((obj: any, idx: number) => {
+            const tempObj = new PushableBox({
+                key: `pushBox-${idx}`,
+                gameRef: this.gameRef
+            })
+            tempObj.x = obj.x
+            tempObj.y = obj.y
+            tempObj.width = obj.width
+            tempObj.height = obj.height
+            tempObj.initialize()
+            this.gameRef.addToWorld(tempObj.body)
+            return tempObj
+        })
+    }
+
+    setupMovingPlatforms() {
+        this.movingPlatform = new MovingPlatform({
+            key: `movingPlatform-main`,
+            gameRef: this.gameRef
+        })
+        this.movingPlatform.x = 1000
+        this.movingPlatform.y = 1900
+        this.movingPlatform.minX = 1000
+        this.movingPlatform.maxX = 2000
+        this.movingPlatform.width = 500
+        this.movingPlatform.height = 50
+        this.movingPlatform.color = 'purple'
+        this.movingPlatform.initialize()
+        this.gameRef.addToWorld(this.movingPlatform.body)
     }
 
     tearDown(): void {
