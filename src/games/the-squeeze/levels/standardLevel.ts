@@ -99,7 +99,12 @@ export class StandardLevel extends BasedLevel {
         this.gameState = 'active'
     }
 
-    handleInput() { }
+    handleInput() {
+        const pressedKeys = this.gameRef.pressedKeys
+        if (pressedKeys['KeyO']) {
+            this.resetLevel()
+        }
+    }
 
     checkGameCondition() { }
 

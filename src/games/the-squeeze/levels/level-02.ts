@@ -4,9 +4,9 @@ import { FollowCam } from "../../../engine/cameras/FollowCam";
 import { drawBox } from "../../../engine/libs/drawHelpers";
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
 import { MainPlayer } from "../entities/mainPlayer";
-import { LEVEL_01_BOUNDARIES, LEVEL_01_PUSH_BOXES, LEVEL_01_WALLS } from "../constants/level01Constants";
 import { PushableBox } from "../entities/pushableBox";
 import { ExitDoor } from "../entities/exitDoor";
+import { LEVEL_02_BOUNDARIES, LEVEL_02_PUSH_BOXES, LEVEL_02_WALLS } from "../constants/level02Constants";
 
 // const FILL_COLOR = '#81B622'
 // const HOVER_COLOR = '#ECF87F'
@@ -15,7 +15,7 @@ import { ExitDoor } from "../entities/exitDoor";
 // const TEXT_HOVER_COLOR = '#000000'
 const BG_COLOR = 'black'
 
-export class Level01 extends BasedLevel {
+export class Level02 extends BasedLevel {
 
     physics: any
 
@@ -84,6 +84,8 @@ export class Level01 extends BasedLevel {
             key: 'mainPlayer',
             gameRef: this.gameRef,
         })
+        this.mainPlayer.x = 64
+        this.mainPlayer.y = 535
         this.mainPlayer.initialize()
         this.gameRef.addToWorld(this.mainPlayer.body)
 
@@ -187,12 +189,12 @@ export class Level01 extends BasedLevel {
             fillColor: '#777' // '#777'
         })
 
-        
+
         // draw level walls
         this.levelWalls.forEach((wall: any) => {
             wall.draw()
         })
-        
+
         // draw push boxes
         this.pushBoxes.forEach((box: any) => {
             box.draw()
@@ -205,7 +207,7 @@ export class Level01 extends BasedLevel {
 
         // draw the main player
         this.mainPlayer.draw()
-        
+
         // draw interface
         this.cameraZoomButton.draw()
 
@@ -214,8 +216,8 @@ export class Level01 extends BasedLevel {
     // SETUP FUNCTIONS
     setupWalls() {
         this.levelWalls = [
-            ...LEVEL_01_BOUNDARIES,
-            ...LEVEL_01_WALLS,
+            ...LEVEL_02_BOUNDARIES,
+            ...LEVEL_02_WALLS,
         ].map((obj: any, idx: number) => {
             const tempObj = new PhysBox({
                 key: `wall-${idx}`, gameRef: this.gameRef, options: {
@@ -239,7 +241,7 @@ export class Level01 extends BasedLevel {
 
     setupPushBoxes() {
         this.pushBoxes = [
-            ...LEVEL_01_PUSH_BOXES,
+            ...LEVEL_02_PUSH_BOXES,
         ].map((obj: any, idx: number) => {
             const tempObj = new PushableBox({
                 key: `pushBox-${idx}`,
@@ -261,11 +263,11 @@ export class Level01 extends BasedLevel {
             // ...LEVEL_01_EXIT_DOORS,
             {
                 x: 730,
-                y: 530,
+                y: 315,
                 width: 100,
                 height: 100,
                 color: 'yellow',
-                doorPath: 'level-02'
+                doorPath: 'standard-level'
             }
         ].map((obj: any, idx: number) => {
             const tempObj = new ExitDoor({

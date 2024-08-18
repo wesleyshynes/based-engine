@@ -31,6 +31,9 @@ export class BasedLevel {
   initialize() { }
   update() { }
   draw() { }
+  resetLevel() {
+    this.gameRef.loadLevel(this.levelKey)
+  }
   onResize() { }
   tearDown() { }
 }
