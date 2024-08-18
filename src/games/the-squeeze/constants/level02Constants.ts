@@ -46,15 +46,15 @@ export const LEVEL_02_PUSH_BOXES: {
     sizeToMove: number,
 }[] = [
     // push box
-    '555 315 90 220 red',
+    '463 315 262 220 red 60',
 ].map(w => {
-    const [x, y, width, height, color] = w.split(' ')
+    const [x, y, width, height, color, sizeToMove] = w.split(' ')
     return {
         x: parseInt(x),
         y: parseInt(y),
         width: parseInt(width),
         height: parseInt(height),
         color,
-        sizeToMove: (+width + +height)/4,
+        sizeToMove: sizeToMove ? +sizeToMove : (+width + +height)/4,
     }
 })

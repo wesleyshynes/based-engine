@@ -16,7 +16,11 @@ export class MovingPlatform extends PhysBox {
 
     color: string = 'red'
 
-    xSpeed: number = 3
+    xSpeed: number = 10
+    ySpeed: number = 10
+
+    // set this value for 1 to make the box actually sticky
+    pushMultiplier: number = .95
 
     xDirection: number = 0
     yDirection: number = 0
@@ -88,27 +92,26 @@ export class MovingPlatform extends PhysBox {
 
         if (Math.abs(this.yDirection) > 0) {
             if (this.body.position.y <= this.minY) {
-                this.yDirection = 1 * this.xSpeed
+                this.yDirection = 1 * this.ySpeed
                 currentY = this.minY
                 mYTriggered = true
             }
             if (this.body.position.y >= this.maxY) {
-                this.yDirection = -1 * this.xSpeed
+                this.yDirection = -1 * this.ySpeed
                 currentY = this.maxY
                 mYTriggered = true
             }
         }
 
-        // if(mXTriggered || mYTriggered) {
+
         this.otherBodies.forEach((b: any) => {
             if (!b.options.tags.static) {
                 Physics.Body.setPosition(b.body, {
-                    x: b.body.position.x + this.xDirection * this.gameRef.diffMulti * (mXTriggered ? -1 : 1),
-                    y: b.body.position.y + this.yDirection * this.gameRef.diffMulti * (mYTriggered ? -1 : 1)
+                    x: b.body.position.x + this.xDirection * this.gameRef.diffMulti * (mXTriggered ? -1 : this.pushMultiplier),
+                    y: b.body.position.y + this.yDirection * this.gameRef.diffMulti * (mYTriggered ? -1 : this.pushMultiplier)
                 })
             }
         })
-        // }
 
         Physics.Body.setPosition(this.body, {
             x: currentX + this.xDirection * this.gameRef.diffMulti,

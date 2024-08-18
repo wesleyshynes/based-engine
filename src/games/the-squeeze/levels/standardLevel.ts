@@ -102,7 +102,10 @@ export class StandardLevel extends BasedLevel {
     handleInput() {
         const pressedKeys = this.gameRef.pressedKeys
         if (pressedKeys['KeyP']) {
+            console.log('-- DEBUG --')
             console.log(this.movingPlatform)
+            console.log(this.mainPlayer)
+            console.log(this.pushBoxes)
         }
         if (pressedKeys['KeyO']) {
             this.resetLevel()

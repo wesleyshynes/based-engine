@@ -1,8 +1,8 @@
 import { generateLevelBoundaries } from "../helpers"
 
-export const LEVEL_01_BOUNDARIES = generateLevelBoundaries({
-    width: 800,
-    height: 600,
+export const LEVEL_04_BOUNDARIES = generateLevelBoundaries({
+    width: 1200,
+    height: 900,
     offset: 200,
 }).map(x => {
     return {
@@ -11,24 +11,23 @@ export const LEVEL_01_BOUNDARIES = generateLevelBoundaries({
     }
 })
 
-export const LEVEL_01_WALLS: {
+export const LEVEL_04_WALLS: {
     x: number,
     y: number,
     width: number,
     height: number,
     color: string,
 }[] = [
-    // jail cell
-    '200 375 400 50 #000',
-    // jail bars
-    '375 25 50 50 #000',
-    '375 125 50 50 #000',
-    '375 225 50 50 #000',
-    '375 325 50 50 #000',
-
-    // escape covering
-    '700 430 200 50 #000',
-    '625 555 50 90 #000',
+    // top blocks
+    '272 67 544 134 #000',
+    '928 67 544 134 #000',
+    '285 174 570 50 #000',
+    '915 174 570 50 #000',
+    // bottom blocks
+    '272 450 544 300 #000',
+    '928 450 544 300 #000',
+    // bottom right block
+    '1046 755 310 290 #000',
 
 ].map(w => {
     const [x, y, width, height, color] = w.split(' ')
@@ -41,7 +40,7 @@ export const LEVEL_01_WALLS: {
     }
 })
 
-export const LEVEL_01_PUSH_BOXES: {
+export const LEVEL_04_PUSH_BOXES: {
     x: number,
     y: number,
     width: number,
@@ -50,15 +49,18 @@ export const LEVEL_01_PUSH_BOXES: {
     sizeToMove: number,
 }[] = [
     // push box
-    '545 450 90 90 red',
+    '600 252 90 90 red 40',
+    '600 350 90 90 red 40',
+    '600 450 90 90 red 40',
+    '600 750 280 280 red 70',
 ].map(w => {
-    const [x, y, width, height, color] = w.split(' ')
+    const [x, y, width, height, color, sizeToMove] = w.split(' ')
     return {
         x: parseInt(x),
         y: parseInt(y),
         width: parseInt(width),
         height: parseInt(height),
         color,
-        sizeToMove: (+width + +height)/4,
+        sizeToMove: sizeToMove ? +sizeToMove : (+width + +height)/4,
     }
 })

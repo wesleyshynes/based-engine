@@ -6,7 +6,8 @@ import PhysBox from "../../../engine/physicsObjects/PhysBox";
 import { MainPlayer } from "../entities/mainPlayer";
 import { PushableBox } from "../entities/pushableBox";
 import { ExitDoor } from "../entities/exitDoor";
-import { LEVEL_03_BOUNDARIES, LEVEL_03_PUSH_BOXES, LEVEL_03_WALLS } from "../constants/level03Constants";
+import { MovingPlatform } from "../entities/movingPlatform";
+import { LEVEL_04_BOUNDARIES, LEVEL_04_PUSH_BOXES, LEVEL_04_WALLS } from "../constants/level04Constants";
 
 // const FILL_COLOR = '#81B622'
 // const HOVER_COLOR = '#ECF87F'
@@ -15,12 +16,12 @@ import { LEVEL_03_BOUNDARIES, LEVEL_03_PUSH_BOXES, LEVEL_03_WALLS } from "../con
 // const TEXT_HOVER_COLOR = '#000000'
 const BG_COLOR = 'black'
 
-export class Level03 extends BasedLevel {
+export class Level04 extends BasedLevel {
 
     physics: any
 
-    levelWidth: number = 800
-    levelHeight: number = 600
+    levelWidth: number = 1200
+    levelHeight: number = 900
 
     buttonWidth: number = 160
     buttonHeight: number = 50
@@ -41,6 +42,7 @@ export class Level03 extends BasedLevel {
     levelWalls: any[] = []
     pushBoxes: any[] = []
     exitDoors: any[] = []
+    movingPlatforms: any[] = []
 
     // SOUNDS
 
@@ -84,14 +86,15 @@ export class Level03 extends BasedLevel {
             key: 'mainPlayer',
             gameRef: this.gameRef,
         })
-        this.mainPlayer.x = 70
-        this.mainPlayer.y = 520
+        this.mainPlayer.x = 100
+        this.mainPlayer.y = 740
         this.mainPlayer.initialize()
         this.gameRef.addToWorld(this.mainPlayer.body)
 
         this.setupWalls()
         this.setupPushBoxes()
         this.setupExitDoors()
+        this.setupMovingPlatforms()
 
         // BEGIN
         this.onResize()
@@ -147,6 +150,9 @@ export class Level03 extends BasedLevel {
     onPhysicsUpdate() {
         // do something on physics tick
         this.updateCamera()
+        this.movingPlatforms.forEach((plat: any) => {
+            plat.update()
+        })
         this.mainPlayer.update()
     }
 
@@ -205,6 +211,11 @@ export class Level03 extends BasedLevel {
             door.draw()
         })
 
+        // draw moving platforms
+        this.movingPlatforms.forEach((plat: any) => {
+            plat.draw()
+        })
+
         // draw the main player
         this.mainPlayer.draw()
 
@@ -216,8 +227,8 @@ export class Level03 extends BasedLevel {
     // SETUP FUNCTIONS
     setupWalls() {
         this.levelWalls = [
-            ...LEVEL_03_BOUNDARIES,
-            ...LEVEL_03_WALLS,
+            ...LEVEL_04_BOUNDARIES,
+            ...LEVEL_04_WALLS,
         ].map((obj: any, idx: number) => {
             const tempObj = new PhysBox({
                 key: `wall-${idx}`, gameRef: this.gameRef, options: {
@@ -241,7 +252,7 @@ export class Level03 extends BasedLevel {
 
     setupPushBoxes() {
         this.pushBoxes = [
-            ...LEVEL_03_PUSH_BOXES,
+            ...LEVEL_04_PUSH_BOXES,
         ].map((obj: any, idx: number) => {
             const tempObj = new PushableBox({
                 key: `pushBox-${idx}`,
@@ -259,16 +270,64 @@ export class Level03 extends BasedLevel {
         })
     }
 
+    setupMovingPlatforms() {
+
+        this.movingPlatforms = [
+            {
+                x: 831,
+                y: 249,
+
+                width: 350,
+                height: 64,
+
+                xDirection: 1,
+                yDirection: 0,
+
+                xSpeed: 3,
+                ySpeed: 0,
+
+                minX: 475,
+                maxX: 860,
+
+                minY: 249,
+                maxY: 249,
+
+                color: 'purple'
+            }
+        ].map((obj: any, idx: number) => {
+            const tempObj = new MovingPlatform({
+                key: `movingPlatform-${idx}`,
+                gameRef: this.gameRef
+            })
+            tempObj.x = obj.x
+            tempObj.xDirection = obj.xDirection
+            tempObj.minX = obj.minX
+            tempObj.maxX = obj.maxX
+
+            tempObj.yDirection = obj.yDirection
+            tempObj.y = obj.y
+            tempObj.minY = obj.minY
+            tempObj.maxY = obj.maxY
+
+            tempObj.width = obj.width
+            tempObj.height = obj.height
+            tempObj.color = obj.color
+            tempObj.initialize()
+            this.gameRef.addToWorld(tempObj.body)
+            return tempObj
+        })
+    }
+
     setupExitDoors() {
         this.exitDoors = [
             // ...LEVEL_01_EXIT_DOORS,
             {
-                x: 722,
-                y: 82,
+                x: 600,
+                y: 67,
                 width: 100,
                 height: 100,
                 color: 'yellow',
-                doorPath: 'level-04'
+                doorPath: 'standard-level'
             }
         ].map((obj: any, idx: number) => {
             const tempObj = new ExitDoor({
