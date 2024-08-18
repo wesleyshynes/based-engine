@@ -6,7 +6,7 @@ import PhysBox from "../../../engine/physicsObjects/PhysBox";
 import { MainPlayer } from "../entities/mainPlayer";
 import { PushableBox } from "../entities/pushableBox";
 import { ExitDoor } from "../entities/exitDoor";
-import { LEVEL_02_BOUNDARIES, LEVEL_02_PUSH_BOXES, LEVEL_02_WALLS } from "../constants/level02Constants";
+import { LEVEL_03_BOUNDARIES, LEVEL_03_PUSH_BOXES, LEVEL_03_WALLS } from "../constants/level03Constants";
 
 // const FILL_COLOR = '#81B622'
 // const HOVER_COLOR = '#ECF87F'
@@ -15,7 +15,7 @@ import { LEVEL_02_BOUNDARIES, LEVEL_02_PUSH_BOXES, LEVEL_02_WALLS } from "../con
 // const TEXT_HOVER_COLOR = '#000000'
 const BG_COLOR = 'black'
 
-export class Level02 extends BasedLevel {
+export class Level03 extends BasedLevel {
 
     physics: any
 
@@ -84,8 +84,8 @@ export class Level02 extends BasedLevel {
             key: 'mainPlayer',
             gameRef: this.gameRef,
         })
-        this.mainPlayer.x = 64
-        this.mainPlayer.y = 535
+        this.mainPlayer.x = 40
+        this.mainPlayer.y = 340
         this.mainPlayer.initialize()
         this.gameRef.addToWorld(this.mainPlayer.body)
 
@@ -216,8 +216,8 @@ export class Level02 extends BasedLevel {
     // SETUP FUNCTIONS
     setupWalls() {
         this.levelWalls = [
-            ...LEVEL_02_BOUNDARIES,
-            ...LEVEL_02_WALLS,
+            ...LEVEL_03_BOUNDARIES,
+            ...LEVEL_03_WALLS,
         ].map((obj: any, idx: number) => {
             const tempObj = new PhysBox({
                 key: `wall-${idx}`, gameRef: this.gameRef, options: {
@@ -241,7 +241,7 @@ export class Level02 extends BasedLevel {
 
     setupPushBoxes() {
         this.pushBoxes = [
-            ...LEVEL_02_PUSH_BOXES,
+            ...LEVEL_03_PUSH_BOXES,
         ].map((obj: any, idx: number) => {
             const tempObj = new PushableBox({
                 key: `pushBox-${idx}`,
@@ -262,12 +262,12 @@ export class Level02 extends BasedLevel {
         this.exitDoors = [
             // ...LEVEL_01_EXIT_DOORS,
             {
-                x: 730,
-                y: 315,
+                x: 722,
+                y: 82,
                 width: 100,
                 height: 100,
                 color: 'yellow',
-                doorPath: 'level-03'
+                doorPath: 'standard-level'
             }
         ].map((obj: any, idx: number) => {
             const tempObj = new ExitDoor({
