@@ -54,7 +54,7 @@ export const LEVEL_03_PUSH_BOXES: {
     // push box
     '381 345 66 174 red 25',
     // red herring push box
-    '379 199 90 90'
+    '379 199 90 90 red',
 ].map(w => {
     const [x, y, width, height, color, sizeToMove] = w.split(' ')
     return {

@@ -101,6 +101,9 @@ export class StandardLevel extends BasedLevel {
 
     handleInput() {
         const pressedKeys = this.gameRef.pressedKeys
+        if (pressedKeys['KeyP']) {
+            console.log(this.movingPlatform)
+        }
         if (pressedKeys['KeyO']) {
             this.resetLevel()
         }
@@ -267,10 +270,17 @@ export class StandardLevel extends BasedLevel {
             key: `movingPlatform-main`,
             gameRef: this.gameRef
         })
-        this.movingPlatform.x = 1000
-        this.movingPlatform.y = 1900
+        this.movingPlatform.x = 1500
+        this.movingPlatform.xDirection = 1
         this.movingPlatform.minX = 1000
-        this.movingPlatform.maxX = 2000
+        this.movingPlatform.maxX = 2000        
+        
+        this.movingPlatform.yDirection = 0
+        this.movingPlatform.y = 1200
+        this.movingPlatform.minY = 1200
+        this.movingPlatform.maxY = 1200
+
+        // this.movingPlatform.y = 1900
         this.movingPlatform.width = 500
         this.movingPlatform.height = 50
         this.movingPlatform.color = 'purple'

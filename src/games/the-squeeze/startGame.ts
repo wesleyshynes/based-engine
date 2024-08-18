@@ -6,6 +6,9 @@ import { Level03 } from "./levels/level-03"
 import { StandardLevel } from "./levels/standardLevel"
 import { StartScreen } from "./levels/startScreen"
 
+export const START_LEVEL = 'level-01' 
+// export const START_LEVEL = 'standard-level' 
+// 
 export function startGame() {
   const newGame = new BasedGame({
     canvasElementId: 'game-container',

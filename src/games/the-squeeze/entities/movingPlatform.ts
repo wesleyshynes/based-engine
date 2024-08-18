@@ -8,6 +8,9 @@ export class MovingPlatform extends PhysBox {
     minX: number = 0
     maxX: number = 300
 
+    minY: number = 0
+    maxY: number = 300
+
     width: number = 100
     height: number = 100
 
@@ -15,7 +18,7 @@ export class MovingPlatform extends PhysBox {
 
     xSpeed: number = 3
 
-    xDirection: number = 1
+    xDirection: number = 0
     yDirection: number = 0
 
     otherBodies: any[] = []
@@ -63,26 +66,53 @@ export class MovingPlatform extends PhysBox {
     }
     update() {
         this.movePlatform()
-        this.otherBodies.forEach((b: any) => {
-            if(!b.options.tags.static) {
-                Physics.Body.setPosition(b.body, {
-                    x: b.body.position.x + this.xDirection * this.gameRef.diffMulti,
-                    y: b.body.position.y + this.yDirection * this.gameRef.diffMulti
-                })
-            }
-        })
     }
 
     movePlatform() {
-        if (this.body.position.x < this.minX) {
-            this.xDirection = 1 * this.xSpeed
+        let currentX = this.body.position.x
+        let mXTriggered = false
+        let currentY = this.body.position.y
+        let mYTriggered = false
+        if (Math.abs(this.xDirection) > 0) {
+            if (this.body.position.x <= this.minX) {
+                this.xDirection = 1 * this.xSpeed
+                currentX = this.minX
+                mXTriggered = true
+            }
+            if (this.body.position.x >= this.maxX) {
+                this.xDirection = -1 * this.xSpeed
+                currentX = this.maxX
+                mXTriggered = true
+            }
         }
-        if (this.body.position.x > this.maxX) {
-            this.xDirection = -1 * this.xSpeed
+
+        if (Math.abs(this.yDirection) > 0) {
+            if (this.body.position.y <= this.minY) {
+                this.yDirection = 1 * this.xSpeed
+                currentY = this.minY
+                mYTriggered = true
+            }
+            if (this.body.position.y >= this.maxY) {
+                this.yDirection = -1 * this.xSpeed
+                currentY = this.maxY
+                mYTriggered = true
+            }
         }
+
+        // if(mXTriggered || mYTriggered) {
+        this.otherBodies.forEach((b: any) => {
+            if (!b.options.tags.static) {
+                Physics.Body.setPosition(b.body, {
+                    x: b.body.position.x + this.xDirection * this.gameRef.diffMulti * (mXTriggered ? -1 : 1),
+                    y: b.body.position.y + this.yDirection * this.gameRef.diffMulti * (mYTriggered ? -1 : 1)
+                })
+            }
+        })
+        // }
+
         Physics.Body.setPosition(this.body, {
-            x: this.body.position.x + this.xDirection * this.gameRef.diffMulti,
-            y: this.body.position.y
+            x: currentX + this.xDirection * this.gameRef.diffMulti,
+            y: currentY + this.yDirection * this.gameRef.diffMulti
         })
     }
 

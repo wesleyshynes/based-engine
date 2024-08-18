@@ -252,6 +252,7 @@ export class Level03 extends BasedLevel {
             tempObj.width = obj.width
             tempObj.height = obj.height
             tempObj.sizeToMove = obj.sizeToMove
+            tempObj.color = obj.color
             tempObj.initialize()
             this.gameRef.addToWorld(tempObj.body)
             return tempObj
