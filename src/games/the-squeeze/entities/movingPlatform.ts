@@ -1,3 +1,5 @@
+import { drawBox, rotateDraw } from "../../../engine/libs/drawHelpers";
+import { radToDeg } from "../../../engine/libs/mathHelpers";
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
 import Physics from 'matter-js';
 
@@ -15,9 +17,11 @@ export class MovingPlatform extends PhysBox {
     height: number = 100
 
     color: string = 'red'
+    strokeColor: string = 'darkred'
+    innerGlowColor: string = 'rgba(171,195,47, 1)'
 
-    xSpeed: number = 5
-    ySpeed: number = 5
+    xSpeed: number = 3
+    ySpeed: number = 3
 
     // set this value for 1 to make the box actually sticky
     pushMultiplier: number = .95
@@ -65,6 +69,10 @@ export class MovingPlatform extends PhysBox {
     initialize() {
         this.xDirection *= this.xSpeed
         this.yDirection *= this.xSpeed
+
+        this.color = '#222222'
+        this.strokeColor = '#141414'
+
         this.initializeBody()
         this.setCenter()
     }
@@ -121,7 +129,108 @@ export class MovingPlatform extends PhysBox {
 
 
     draw() {
-        this.drawPhysicsBody()
+        // this.drawPhysicsBody()
+        rotateDraw({
+            c: this.gameRef.ctx,
+            x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+            y: this.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+            a: radToDeg(this.body.angle)
+        }, () => {
+
+            drawBox({
+                c: this.gameRef.ctx,
+                x: (-(this.width / 2)) * this.gameRef.cameraZoom,
+                y: (-(this.height / 2)) * this.gameRef.cameraZoom,
+                width: this.width * this.gameRef.cameraZoom,
+                height: this.height * this.gameRef.cameraZoom,
+                fillColor: this.color,
+                strokeColor: this.strokeColor,
+                strokeWidth: 2 * this.gameRef.cameraZoom,
+            })
+
+            drawBox({
+                c: this.gameRef.ctx,
+                x: (-(this.width / 2) + 10) * this.gameRef.cameraZoom,
+                y: (-(this.height / 2) + 10) * this.gameRef.cameraZoom,
+                width: (this.width - 20) * this.gameRef.cameraZoom,
+                height: (this.height - 20) * this.gameRef.cameraZoom,
+                fillColor: this.innerGlowColor,
+                strokeColor: '#3b3b3b',
+                strokeWidth: 2 * this.gameRef.cameraZoom,
+                borderRadius: 10 * this.gameRef.cameraZoom
+            })
+
+            // const squareDim = 4
+            // let squareCount = 0
+
+            // while (squareCount * squareDim + squareCount < this.width / 2 - squareDim - 15) {
+            //     drawBox({
+            //         c: this.gameRef.ctx,
+            //         x: ((squareCount * squareDim + squareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
+            //         y: (-squareDim / 2) * this.gameRef.cameraZoom,
+            //         width: (squareDim) * this.gameRef.cameraZoom,
+            //         height: (squareDim) * this.gameRef.cameraZoom,
+            //         fillColor: '#3b3b3b',
+            //     })
+
+            //     if(squareCount > 0) {
+            //         drawBox({
+            //             c: this.gameRef.ctx,
+            //             x: (-(squareCount * squareDim + squareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
+            //             y: (-squareDim / 2) * this.gameRef.cameraZoom,
+            //             width: (squareDim) * this.gameRef.cameraZoom,
+            //             height: (squareDim) * this.gameRef.cameraZoom,
+            //             fillColor: '#3b3b3b',
+            //         })
+            //     }
+
+
+            //     let vSquareCount = 1
+            //     while (vSquareCount * squareDim + vSquareCount < this.height / 2 - squareDim - 15) {
+            //         drawBox({
+            //             c: this.gameRef.ctx,
+            //             x: ((squareCount * squareDim + squareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
+            //             y: ((vSquareCount * squareDim + vSquareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
+            //             width: (squareDim) * this.gameRef.cameraZoom,
+            //             height: (squareDim) * this.gameRef.cameraZoom,
+            //             fillColor: '#3b3b3b',
+            //         })
+            //         drawBox({
+            //             c: this.gameRef.ctx,
+            //             x: (-(squareCount * squareDim + squareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
+            //             y: (-(vSquareCount * squareDim + vSquareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
+            //             width: (squareDim) * this.gameRef.cameraZoom,
+            //             height: (squareDim) * this.gameRef.cameraZoom,
+            //             fillColor: '#3b3b3b',
+            //         })
+
+            //         if(vSquareCount > 0 && squareCount > 0) {
+            //             drawBox({
+            //                 c: this.gameRef.ctx,
+            //                 x: (-(squareCount * squareDim + squareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
+            //                 y: ((vSquareCount * squareDim + vSquareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
+            //                 width: (squareDim) * this.gameRef.cameraZoom,
+            //                 height: (squareDim) * this.gameRef.cameraZoom,
+            //                 fillColor: '#3b3b3b',
+            //             })
+            //             drawBox({
+            //                 c: this.gameRef.ctx,
+            //                 x: ((squareCount * squareDim + squareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
+            //                 y: (-(vSquareCount * squareDim + vSquareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
+            //                 width: (squareDim) * this.gameRef.cameraZoom,
+            //                 height: (squareDim) * this.gameRef.cameraZoom,
+            //                 fillColor: '#3b3b3b',
+            //             })
+            //         }                 
+            //         vSquareCount++
+            //     }
+
+            //     squareCount++
+            // }
+
+
+
+        })
     }
     tearDown() { }
 

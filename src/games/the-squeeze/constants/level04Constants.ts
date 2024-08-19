@@ -49,7 +49,7 @@ export const LEVEL_04_PUSH_BOXES: {
     sizeToMove: number,
 }[] = [
     // push box
-    '600 252 95 95 red 40',
+    '600 250 95 95 red 40',
     '600 350 95 95 red 40',
     '600 450 95 95 red 40',
     '600 750 280 280 red 70',
