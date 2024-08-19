@@ -64,3 +64,38 @@ export const LEVEL_04_PUSH_BOXES: {
         sizeToMove: sizeToMove ? +sizeToMove : (+width + +height)/4,
     }
 })
+
+export const LEVEL_04_MOVING_PLATFORMS = [
+    {
+        x: 831,
+        y: 249,
+
+        width: 350,
+        height: 64,
+
+        xDirection: 1,
+        yDirection: 0,
+
+        xSpeed: 3,
+        ySpeed: 0,
+
+        minX: 475,
+        maxX: 900,
+
+        minY: 249,
+        maxY: 249,
+
+        color: 'purple'
+    }
+]
+
+export const LEVEL_04_EXIT_DOORS = [
+    {
+        x: 600,
+        y: 67,
+        width: 100,
+        height: 100,
+        color: 'yellow',
+        doorPath: 'standard-level'
+    }
+]

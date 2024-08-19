@@ -66,3 +66,13 @@ export const LEVEL_03_PUSH_BOXES: {
         sizeToMove: sizeToMove ? +sizeToMove : (+width + +height)/4,
     }
 })
+
+export const LEVEL_03_EXIT_DOORS = [{
+    x: 722,
+    y: 82,
+    width: 100,
+    height: 100,
+    color: 'yellow',
+    doorPath: 'level-04'
+}]
+

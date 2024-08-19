@@ -45,3 +45,14 @@ export const PUSHABLE_BOXES_STANDARD = [
         color: 'red'
     },
 ]
+
+export const EXIT_DOORS_STANDARD = [
+    {
+        x: 2000,
+        y: 1500,
+        width: 100,
+        height: 100,
+        color: 'green',
+        doorPath: 'start-screen'
+    }
+]

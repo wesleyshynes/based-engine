@@ -27,6 +27,10 @@ export class MainPlayer extends PhysBall {
         b: 0,
     }
 
+    moveKnob: any
+    shrinkButton: any
+    growButton: any
+
     originalRadius: number = 50
     activeMaxRadius: number = 100
     maxRadius: number = 100
@@ -93,6 +97,16 @@ export class MainPlayer extends PhysBall {
         this.setCenter()
     }
 
+    setMoveKnob(knob: any) {
+        this.moveKnob = knob
+    }
+    setShrinkButton(button: any) {
+        this.shrinkButton = button
+    }
+    setGrowButton(button: any) {
+        this.growButton = button
+    }
+
     update() {
         this.handleKeys()
         // this.validatePosition()
@@ -120,13 +134,33 @@ export class MainPlayer extends PhysBall {
             moveY += activeSpeed
         }
 
-        if (pressedKeys['KeyX'] && this.wallCount < 2) {
+        if (this.wallCount < 2 && pressedKeys['KeyX']) {
             scale += this.sizeSpeed
         }
 
-        if (pressedKeys['KeyZ']) {
+        if (pressedKeys['KeyZ'] || (this.shrinkButton && this.shrinkButton.focused)) {
             scale -= this.sizeSpeed
         }
+
+        if(this.gameRef.touchMode) {
+            if(this.shrinkButton && this.shrinkButton.hovered) {
+                scale -= this.sizeSpeed
+            }
+            if(this.growButton && this.growButton.hovered) {
+                scale += this.sizeSpeed
+            }
+        }
+
+
+
+        // touch stuff
+        if (this.moveKnob && this.moveKnob.knobActive) {
+            const speedFactor = activeSpeed * this.gameRef.diffMulti
+            moveX += (this.moveKnob.knobCoord.x / this.moveKnob.maxOffset) * speedFactor
+            moveY += (this.moveKnob.knobCoord.y / this.moveKnob.maxOffset) * speedFactor
+        }
+
+
 
         if (moveX !== 0 || moveY !== 0) {
             Physics.Body.setVelocity(this.body, normalizeVector({

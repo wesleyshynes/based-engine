@@ -7,7 +7,7 @@ import { Level04 } from "./levels/level-04"
 import { StandardLevel } from "./levels/standardLevel"
 import { StartScreen } from "./levels/startScreen"
 
-export const START_LEVEL = 'level-04' 
+export const START_LEVEL = 'level-01' 
 // export const START_LEVEL = 'standard-level' 
 // 
 export function startGame() {

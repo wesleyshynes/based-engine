@@ -1,5 +1,5 @@
 import { BasedObject } from "./BasedObject"
-import { drawBox, drawText } from "./libs/drawHelpers"
+import { drawBox, drawEllipse, drawText } from "./libs/drawHelpers"
 
 export class BasedButton extends BasedObject {
 
@@ -15,6 +15,8 @@ export class BasedButton extends BasedObject {
 
   hovered: boolean = false
   focused: boolean = false
+
+  roundButton: boolean = false
 
   textColor: string = '#fff'
   textHoverColor: string = ''
@@ -142,14 +144,26 @@ export class BasedButton extends BasedObject {
 
   draw() {
     this.handleColorTransition()
-    drawBox({
-      c: this.gameRef.ctx,
-      x: this.x,
-      y: this.y,
-      width: this.width,
-      height: this.height,
-      fillColor: this.hovered && this.focused ? this.focusColor : this.hovered ? this.hoverColor : this.fillColor
-    })
+
+    if(this.roundButton) {
+      drawEllipse({
+        c: this.gameRef.ctx,
+        x: this.x + this.width/2,
+        y: this.y + this.height/2,
+        radiusX: this.width/2,
+        radiusY: this.height/2,
+        fillColor: this.hovered && this.focused ? this.focusColor : this.hovered ? this.hoverColor : this.fillColor
+      })
+    } else {
+      drawBox({
+        c: this.gameRef.ctx,
+        x: this.x,
+        y: this.y,
+        width: this.width,
+        height: this.height,
+        fillColor: this.hovered && this.focused ? this.focusColor : this.hovered ? this.hoverColor : this.fillColor
+      })
+    }
 
     drawText({
       c: this.gameRef.ctx,
