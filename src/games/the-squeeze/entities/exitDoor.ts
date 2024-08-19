@@ -56,7 +56,7 @@ export class ExitDoor extends PhysBox {
             drawEllipse({
                 c: this.gameRef.ctx,
                 x: 0,
-                y: - this.height / 2 + this.height / 3 * this.gameRef.cameraZoom,
+                y: (- this.height / 2 + this.height / 3) * this.gameRef.cameraZoom,
                 radiusX: this.width / 2 * this.gameRef.cameraZoom,
                 radiusY: this.height / 3 * this.gameRef.cameraZoom,
                 fillColor: this.color,
@@ -67,7 +67,7 @@ export class ExitDoor extends PhysBox {
             drawBox({
                 c: this.gameRef.ctx,
                 x: -this.width / 2 * this.gameRef.cameraZoom,
-                y: -this.height / 2 + this.height/3 * this.gameRef.cameraZoom,
+                y: (-this.height / 2 + this.height/3) * this.gameRef.cameraZoom,
                 width: this.width * this.gameRef.cameraZoom,
                 height: this.height * 2/3 * this.gameRef.cameraZoom,
                 fillColor: this.color,
@@ -78,7 +78,7 @@ export class ExitDoor extends PhysBox {
             drawEllipse({
                 c: this.gameRef.ctx,
                 x: 0,
-                y: - this.height / 2 + this.height / 3 * this.gameRef.cameraZoom,
+                y: (- this.height / 2 + this.height / 3) * this.gameRef.cameraZoom,
                 radiusX: this.width / 2 * this.gameRef.cameraZoom,
                 radiusY: this.height / 3 * this.gameRef.cameraZoom,
                 fillColor: this.color,
@@ -87,7 +87,7 @@ export class ExitDoor extends PhysBox {
             drawBox({
                 c: this.gameRef.ctx,
                 x: -this.width / 2 * this.gameRef.cameraZoom,
-                y: -this.height / 2 + this.height/3 * this.gameRef.cameraZoom,
+                y: (-this.height / 2 + this.height/3) * this.gameRef.cameraZoom,
                 width: this.width * this.gameRef.cameraZoom,
                 height: this.height * 2/3 * this.gameRef.cameraZoom,
                 fillColor: this.color,
