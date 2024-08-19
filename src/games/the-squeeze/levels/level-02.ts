@@ -189,6 +189,8 @@ export class Level02 extends BasedLevel {
             fillColor: '#777' // '#777'
         })
 
+        this.mainPlayer.drawShadows()
+
 
         // draw level walls
         this.levelWalls.forEach((wall: any) => {

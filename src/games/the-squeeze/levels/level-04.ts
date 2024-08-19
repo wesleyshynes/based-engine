@@ -195,6 +195,8 @@ export class Level04 extends BasedLevel {
             fillColor: '#777' // '#777'
         })
 
+        this.mainPlayer.drawShadows()
+
 
         // draw level walls
         this.levelWalls.forEach((wall: any) => {
@@ -287,7 +289,7 @@ export class Level04 extends BasedLevel {
                 ySpeed: 0,
 
                 minX: 475,
-                maxX: 860,
+                maxX: 900,
 
                 minY: 249,
                 maxY: 249,

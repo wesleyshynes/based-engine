@@ -19,7 +19,7 @@ export const LEVEL_01_WALLS: {
     color: string,
 }[] = [
     // jail cell
-    '200 375 400 50 #000',
+    '200 425 400 50 #000',
     // jail bars
     '375 25 50 50 #000',
     '375 125 50 50 #000',
