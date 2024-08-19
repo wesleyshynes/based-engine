@@ -16,8 +16,8 @@ export class MovingPlatform extends PhysBox {
 
     color: string = 'red'
 
-    xSpeed: number = 10
-    ySpeed: number = 10
+    xSpeed: number = 5
+    ySpeed: number = 5
 
     // set this value for 1 to make the box actually sticky
     pushMultiplier: number = .95

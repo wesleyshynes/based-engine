@@ -1,5 +1,12 @@
+import { drawBox, drawLine, rotateDraw } from "../../../engine/libs/drawHelpers";
+import { radToDeg } from "../../../engine/libs/mathHelpers";
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
 import Physics from 'matter-js';
+
+const LIGHT_BROWN = '#d4c9b2'
+const MID_BROWN = '#d4bc89'
+const HEAVY_BROWN = '#c3aa83'
+const BROWN_BORDER = '#a08f73'
 
 export class PushableBox extends PhysBox {
     x: number = 0
@@ -65,7 +72,7 @@ export class PushableBox extends PhysBox {
                     y: 0
                 })
             }
-            if(otherBody.options.tags.movingPlatform) {
+            if (otherBody.options.tags.movingPlatform) {
                 this.movingBody = false
             }
         }
@@ -86,6 +93,7 @@ export class PushableBox extends PhysBox {
 
     async preload() { }
     initialize() {
+        this.color = this.sizeToMove < 41 ? LIGHT_BROWN : this.sizeToMove < 61 ? MID_BROWN : HEAVY_BROWN
         this.initializeBody()
         this.setCenter()
     }
@@ -94,7 +102,104 @@ export class PushableBox extends PhysBox {
     }
     draw() {
         this.drawPhysicsBody()
+
+        rotateDraw({
+            c: this.gameRef.ctx,
+            x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+            y: this.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+            a: radToDeg(this.body.angle)
+        }, () => {
+
+            const plankWidth = 20
+
+            // base box
+            drawBox({
+                c: this.gameRef.ctx,
+                x: (-(this.width / 2)) * this.gameRef.cameraZoom,
+                y: (-(this.height / 2)) * this.gameRef.cameraZoom,
+                width: this.width * this.gameRef.cameraZoom,
+                height: this.height * this.gameRef.cameraZoom,
+                fillColor: this.color,
+                strokeColor: BROWN_BORDER,
+                strokeWidth: 2 * this.gameRef.cameraZoom
+            })
+
+            // diagonal planks
+
+            let plankCount = 0
+            const maxPlankDimension = Math.min(this.width, this.height)
+            while (plankWidth * plankCount < maxPlankDimension) {
+                drawLine({
+                    c: this.gameRef.ctx,
+                    x: (-(this.width / 2) + plankWidth * plankCount) * this.gameRef.cameraZoom,
+                    y: (-(this.height / 2)) * this.gameRef.cameraZoom,
+                    toX: (this.width / 2) * this.gameRef.cameraZoom,
+                    toY: ((this.height / 2) - plankWidth * plankCount) * this.gameRef.cameraZoom,
+                    strokeColor: BROWN_BORDER,
+                    strokeWidth: 2 * this.gameRef.cameraZoom
+                })
+
+                drawLine({
+                    c: this.gameRef.ctx,
+                    x: (-(this.width / 2)) * this.gameRef.cameraZoom,
+                    y: (-(this.height / 2) + plankWidth * plankCount) * this.gameRef.cameraZoom,
+                    toX: ((this.width / 2) - plankWidth * plankCount) * this.gameRef.cameraZoom,
+                    toY: ((this.height / 2)) * this.gameRef.cameraZoom,
+                    strokeColor: BROWN_BORDER,
+                    strokeWidth: 2 * this.gameRef.cameraZoom
+                })
+
+                plankCount++
+
+            }            
+
+            // border planks
+            drawBox({
+                c: this.gameRef.ctx,
+                x: (-(this.width / 2)) * this.gameRef.cameraZoom,
+                y: (-(this.height / 2)) * this.gameRef.cameraZoom,
+                width: this.width * this.gameRef.cameraZoom,
+                height: plankWidth * this.gameRef.cameraZoom,
+                fillColor: this.color,
+                strokeColor: BROWN_BORDER,
+                strokeWidth: 2 * this.gameRef.cameraZoom
+            })
+
+            drawBox({
+                c: this.gameRef.ctx,
+                x: (-(this.width / 2)) * this.gameRef.cameraZoom,
+                y: (-(this.height / 2) + this.height - plankWidth) * this.gameRef.cameraZoom,
+                width: this.width * this.gameRef.cameraZoom,
+                height: plankWidth * this.gameRef.cameraZoom,
+                fillColor: this.color,
+                strokeColor: BROWN_BORDER,
+                strokeWidth: 2 * this.gameRef.cameraZoom
+            })
+
+            drawBox({
+                c: this.gameRef.ctx,
+                x: (-(this.width / 2)) * this.gameRef.cameraZoom,
+                y: (-(this.height / 2)) * this.gameRef.cameraZoom,
+                width: plankWidth * this.gameRef.cameraZoom,
+                height: this.height * this.gameRef.cameraZoom,
+                fillColor: this.color,
+                strokeColor: BROWN_BORDER,
+                strokeWidth: 2 * this.gameRef.cameraZoom
+            })
+
+            drawBox({
+                c: this.gameRef.ctx,
+                x: (-(this.width / 2) + this.width - plankWidth) * this.gameRef.cameraZoom,
+                y: (-(this.height / 2)) * this.gameRef.cameraZoom,
+                width: plankWidth * this.gameRef.cameraZoom,
+                height: this.height * this.gameRef.cameraZoom,
+                fillColor: this.color,
+                strokeColor: BROWN_BORDER,
+                strokeWidth: 2 * this.gameRef.cameraZoom
+            })
+        })
     }
+
     tearDown() { }
 
     launch(otherBody: any) {

@@ -2,11 +2,11 @@ import { BasedButton } from "../../../engine/BasedButton";
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { FollowCam } from "../../../engine/cameras/FollowCam";
 import { drawBox } from "../../../engine/libs/drawHelpers";
-import PhysBox from "../../../engine/physicsObjects/PhysBox";
 import { MainPlayer } from "../entities/mainPlayer";
 import { PushableBox } from "../entities/pushableBox";
 import { LEVEL_WALLS_STANDARD, PUSHABLE_BOXES_STANDARD } from "../constants/standardLevelConstants";
 import { MovingPlatform } from "../entities/movingPlatform";
+import { LevelWall } from "../entities/levelWall";
 
 // const FILL_COLOR = '#81B622'
 // const HOVER_COLOR = '#ECF87F'
@@ -27,7 +27,7 @@ export class StandardLevel extends BasedLevel {
     buttonFontSize: number = 22
 
     // Camera related stuff
-    miniMapActive: boolean = true
+    miniMapActive: boolean = false
     followCam: any;
 
     // Interface stuff
@@ -232,7 +232,7 @@ export class StandardLevel extends BasedLevel {
     // SETUP FUNCTIONS
     setupWalls() {
         this.levelWalls = LEVEL_WALLS_STANDARD.map((obj: any, idx: number) => {
-            const tempObj = new PhysBox({
+            const tempObj = new LevelWall({
                 key: `wall-${idx}`, gameRef: this.gameRef, options: {
                     tags: {
                         wall: true,
