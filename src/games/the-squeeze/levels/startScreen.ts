@@ -7,6 +7,8 @@ import { START_LEVEL } from "../startGame";
 
 const FILL_COLOR = '#81B622'
 const HOVER_COLOR = '#ECF87F'
+
+
 // const ALT_FILL_COLOR = '#59981A'
 const TEXT_COLOR = '#FFFFFF'
 const TEXT_HOVER_COLOR = '#000000'
@@ -18,6 +20,7 @@ export class StartScreen extends BasedLevel {
   startButton: any;
   soundButton: any;
   creditsButton: any;
+  resetScoreButton: any;
 
   activeSound: any = {
     playing: false,
@@ -36,6 +39,9 @@ export class StartScreen extends BasedLevel {
 
   levelLoadedTime: number = 0
   levelLoadedDelay: number = 1000
+
+  currentScoreText: string = 'No current score'
+  highScoreText: string = 'No high score'
 
   async preload() {
 
@@ -60,6 +66,16 @@ export class StartScreen extends BasedLevel {
   }
 
   initialize() {
+
+    this.handleScores()
+
+    if(this.gameRef.basedObjectRefs.scores.currentScore > 0) {
+      this.currentScoreText = `Current Score: ${(this.gameRef.basedObjectRefs.scores.currentScore/1000).toFixed(2)} seconds`
+      if(this.gameRef.basedObjectRefs.scores.currentScore < this.gameRef.basedObjectRefs.scores.highScore || this.gameRef.basedObjectRefs.scores.highScore === 0) {
+        this.highScoreText = `New High: ${(this.gameRef.basedObjectRefs.scores.currentScore/1000).toFixed(2)} seconds`
+        localStorage.setItem('the-squeeze-high-score', this.gameRef.basedObjectRefs.scores.currentScore)
+      }
+    }
 
     this.gameRef.basedObjectRefs.gameOptions = {
       mode: 'standard'
@@ -93,6 +109,7 @@ export class StartScreen extends BasedLevel {
     this.startButton.buttonText = 'Play'
     this.startButton.width = this.gameRef.gameWidth - 200
     this.startButton.clickFunction = () => {
+      this.gameRef.basedObjectRefs.scores.currentScore = 0
       this.gameRef.loadLevel(START_LEVEL)
     }
 
@@ -103,7 +120,7 @@ export class StartScreen extends BasedLevel {
       key: `credits-button`,
       gameRef: this.gameRef,
     })
-    this.creditsButton.fillColor = FILL_COLOR
+    this.creditsButton.fillColor = 'black'
     this.creditsButton.hoverColor = HOVER_COLOR
     this.creditsButton.focusColor = HOVER_COLOR
     this.creditsButton.textColor = TEXT_COLOR
@@ -124,7 +141,7 @@ export class StartScreen extends BasedLevel {
       key: `sound-button`,
       gameRef: this.gameRef,
     })
-    this.soundButton.fillColor = FILL_COLOR
+    this.soundButton.fillColor = 'black'
     this.soundButton.hoverColor = HOVER_COLOR
     this.soundButton.focusColor = HOVER_COLOR
     this.soundButton.textColor = TEXT_COLOR
@@ -144,9 +161,54 @@ export class StartScreen extends BasedLevel {
     }
     this.buttonGroup.push(this.soundButton)
 
+    this.resetScoreButton = new BasedButton({
+      key: `reset-score-button`,
+      gameRef: this.gameRef,
+    })
+    this.resetScoreButton.fillColor = '#111'
+    this.resetScoreButton.hoverColor = HOVER_COLOR
+    this.resetScoreButton.focusColor = HOVER_COLOR
+    this.resetScoreButton.textColor = TEXT_COLOR
+    this.resetScoreButton.textHoverColor = TEXT_HOVER_COLOR
+    this.resetScoreButton.x = 100
+    this.resetScoreButton.y = this.gameRef.gameHeight - 200
+    this.resetScoreButton.buttonText = 'Reset Score'
+    this.resetScoreButton.width = this.gameRef.gameWidth - 200
+    this.resetScoreButton.height = 50
+    this.resetScoreButton.clickFunction = () => {
+      this.resetScores()
+    }
+    this.buttonGroup.push(this.resetScoreButton)
+
     this.onResize()
 
     this.levelLoadedTime = this.gameRef.lastUpdate
+  }
+
+  handleScores() {
+    this.currentScoreText = 'No current score'
+    this.highScoreText = 'No high score'
+    if(!this.gameRef.basedObjectRefs.scores) {
+      this.gameRef.basedObjectRefs.scores = {
+        highScore: 0,
+        currentScore: 0
+      }
+    }
+    // check local storage for the-squeeze-high-score
+    const highScore = localStorage.getItem('the-squeeze-high-score')
+    if (highScore) {
+      this.gameRef.basedObjectRefs.scores.highScore = parseInt(highScore)
+      // convert highscore from milliseconds to seconds with 2 decimal places
+      this.highScoreText = `High Score: ${(this.gameRef.basedObjectRefs.scores.highScore/1000).toFixed(2)} seconds`
+    }
+  }
+
+  resetScores() {
+    localStorage.removeItem('the-squeeze-high-score')
+    this.gameRef.basedObjectRefs.scores.highScore = 0
+    this.highScoreText = 'No high score'
+    this.gameRef.basedObjectRefs.scores.currentScore = 0
+    this.handleScores()
   }
 
   handleSounds() {
@@ -166,6 +228,7 @@ export class StartScreen extends BasedLevel {
       this.startButton.update()
       this.soundButton.update()
       this.creditsButton.update()
+      this.resetScoreButton.update()
     }
   }
 
@@ -196,6 +259,7 @@ export class StartScreen extends BasedLevel {
     this.startButton.draw()
     this.soundButton.draw()
     this.creditsButton.draw()
+    this.resetScoreButton.draw()
 
     // rotateDraw({
     //   c: this.gameRef.ctx,
@@ -239,6 +303,49 @@ export class StartScreen extends BasedLevel {
     //   fontSize: 32,
     //   text: 'ALWAYS LOSES'
     // })
+
+    // draw current score
+    if(this.currentScoreText) {
+      drawText({
+        c: this.gameRef.ctx,
+        x: (this.gameRef.gameWidth) / 2,
+        y: this.gameRef.gameHeight / 4 + 40,
+        // y: 150,
+        align: 'center',
+        fillColor: 'orange',
+        // strokeColor: '#fff',
+        // strokeWidth: 3,
+        style: '',
+        weight: '700',
+        fontFamily: 'sans-serif',
+        fontSize: 16,
+        // text: `Dicks out for Harambe`
+        text: this.currentScoreText
+      })
+    }
+
+    // draw high score
+    if(this.highScoreText) {
+      drawText({
+        c: this.gameRef.ctx,
+        x: (this.gameRef.gameWidth) / 2,
+        y: this.gameRef.gameHeight / 4 + 70,
+        // y: 150,
+        align: 'center',
+        fillColor: 'red',
+        // strokeColor: '#fff',
+        // strokeWidth: 3,
+        style: '',
+        weight: '700',
+        fontFamily: 'sans-serif',
+        fontSize: 16,
+        // text: `Dicks out for Harambe score`
+        text: this.highScoreText
+      })
+    }
+
+
+
 
     // LIGHT
     drawText({

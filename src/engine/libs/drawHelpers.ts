@@ -117,9 +117,10 @@ export function drawCircle(settings: {
   fillColor?: string,
   strokeWidth?: number,
   strokeColor?: string
+  strokeDashPattern?: number[]
 }) {
   const {
-    c, x, y, radius, startAngle, endAngle, fillColor, strokeWidth, strokeColor
+    c, x, y, radius, startAngle, endAngle, fillColor, strokeWidth, strokeColor, strokeDashPattern
   } = settings
   c.beginPath()
   c.arc(x, y, radius, startAngle ? degToRad(startAngle) : 0, endAngle ? degToRad(endAngle) : 2 * Math.PI)
@@ -130,7 +131,11 @@ export function drawCircle(settings: {
   if (strokeWidth && strokeColor) {
     c.strokeStyle = strokeColor
     c.lineWidth = strokeWidth
+    if(settings.strokeDashPattern) {
+      c.setLineDash(strokeDashPattern)
+    }
     c.stroke()
+    c.setLineDash([])
   }
 }
 

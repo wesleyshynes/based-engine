@@ -28,11 +28,16 @@ export class ExitDoor extends PhysBox {
 
     stairsNoise: any
 
+    onExit: () => void;
+
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
         if (otherBody && otherBody.options && otherBody.options.tags.player) {
             if(this.stairsNoise) {
                 this.gameRef.soundPlayer.playSound(this.stairsNoise)
+            }
+            if(this.onExit) {
+                this.onExit()
             }
             this.gameRef.loadLevel(this.doorPath)
         }

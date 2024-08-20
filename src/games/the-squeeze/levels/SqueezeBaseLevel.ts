@@ -1,7 +1,7 @@
 import { BasedButton } from "../../../engine/BasedButton";
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { FollowCam } from "../../../engine/cameras/FollowCam";
-import { drawBox } from "../../../engine/libs/drawHelpers";
+import { drawBox, drawCircle, drawLine, drawText } from "../../../engine/libs/drawHelpers";
 import { MainPlayer } from "../entities/mainPlayer";
 import { PushableBox } from "../entities/pushableBox";
 import { ExitDoor } from "../entities/exitDoor";
@@ -105,6 +105,15 @@ export class SqueezeBaseLevel extends BasedLevel {
     }
     bgSong: any;
     bgMusicTrack: any = BGMusic
+
+    levelStartTime: number = 0
+
+    textLines: string[] = [
+        'Move: ←↑↓→ or W A S D',
+        'Shrink: Z',
+        'Grow: X',
+        'Reset: R',
+    ]
 
     async preload() {
         this.gameRef.drawLoading('Wall Thudding', .1)
@@ -254,6 +263,8 @@ export class SqueezeBaseLevel extends BasedLevel {
         // BEGIN
         this.onResize()
         this.gameState = 'active'
+
+        this.levelStartTime = this.gameRef.lastUpdate
     }
 
     handleInput() {
@@ -372,6 +383,31 @@ export class SqueezeBaseLevel extends BasedLevel {
         // draw shadows
         this.mainPlayer.drawShadows()
 
+        // draw circle where the player starts
+        drawCircle({
+            c: this.gameRef.ctx,
+            x: this.playerStartPosition.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+            y: this.playerStartPosition.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+            radius: 40 * this.gameRef.cameraZoom,
+            fillColor: '#777',
+            strokeColor: 'rgba(255,255,0,0.4)',
+            strokeWidth: 6 * this.gameRef.cameraZoom,
+            strokeDashPattern: [20 * this.gameRef.cameraZoom, 11 * this.gameRef.cameraZoom]
+        })
+        // draw X where the player starts
+        drawText({
+            c: this.gameRef.ctx,
+            x: this.playerStartPosition.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
+            y: (this.playerStartPosition.y + 18) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+            align: 'center',
+            fillColor: 'rgba(255,255,0,0.4)',
+            style: '',
+            weight: '700',
+            fontFamily: 'sans-serif',
+            fontSize: 50 * this.gameRef.cameraZoom,
+            text: 'X'
+        })
+
 
         // draw level walls
         this.levelWalls.forEach((wall: any) => {
@@ -404,6 +440,21 @@ export class SqueezeBaseLevel extends BasedLevel {
             this.moveKnob.draw()
             this.shrinkButton.draw()
             this.growButton.draw()
+        } else {
+            this.textLines.forEach((line: string, idx: number) => {
+                drawText({
+                    c: this.gameRef.ctx,
+                    x: 10,
+                    y: 20 + (idx * 20),
+                    align: 'left',
+                    fillColor: 'white',
+                    style: '',
+                    weight: '700',
+                    fontFamily: 'sans-serif',
+                    fontSize: 14,
+                    text: line
+                  })
+            })
         }
 
     }
@@ -498,6 +549,9 @@ export class SqueezeBaseLevel extends BasedLevel {
             tempObj.height = obj.height
             tempObj.color = obj.color
             tempObj.doorPath = obj.doorPath
+            tempObj.onExit = () => {
+                this.gameRef.basedObjectRefs.scores.currentScore += this.gameRef.lastUpdate - this.levelStartTime
+            }
             tempObj.initialize()
             tempObj.setupStairsNoise(this.runningStairs)
             this.gameRef.addToWorld(tempObj.body)
