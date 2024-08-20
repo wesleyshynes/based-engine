@@ -68,7 +68,7 @@ export class MovingPlatform extends PhysBox {
     async preload() { }
     initialize() {
         this.xDirection *= this.xSpeed
-        this.yDirection *= this.xSpeed
+        this.yDirection *= this.ySpeed
 
         this.color = '#222222'
         this.strokeColor = '#141414'

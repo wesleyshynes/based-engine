@@ -4,6 +4,7 @@ import { Level01 } from "./levels/level-01"
 import { Level02 } from "./levels/level-02"
 import { Level03 } from "./levels/level-03"
 import { Level04 } from "./levels/level-04"
+import { Level05 } from "./levels/level-05"
 import { StartScreen } from "./levels/startScreen"
 
 export const START_LEVEL = 'level-01' 
@@ -21,6 +22,7 @@ export function startGame() {
       { key: 'level-02', level: Level02 },
       { key: 'level-03', level: Level03 },
       { key: 'level-04', level: Level04 },
+      { key: 'level-05', level: Level05 },
     ]
   })
   newGame.enableMouse()

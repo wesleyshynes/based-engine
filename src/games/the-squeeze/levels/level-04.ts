@@ -7,7 +7,7 @@ export class Level04 extends SqueezeBaseLevel {
     levelWidth: number = 1200
     levelHeight: number = 900
 
-    nextLevel: string = 'credits-screen'
+    nextLevel: string = 'level-05'
     
     playerStartPosition: any = { x: 100, y: 740 }
     levelWalls: any[] = []

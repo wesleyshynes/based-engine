@@ -96,6 +96,6 @@ export const LEVEL_04_EXIT_DOORS = [
         width: 100,
         height: 100,
         color: 'yellow',
-        doorPath: 'credits-screen'
+        doorPath: 'level-05'
     }
 ]

@@ -515,11 +515,13 @@ export class SqueezeBaseLevel extends BasedLevel {
             })
             tempObj.x = obj.x
             tempObj.xDirection = obj.xDirection
+            tempObj.xSpeed = obj.xSpeed
             tempObj.minX = obj.minX
             tempObj.maxX = obj.maxX
 
-            tempObj.yDirection = obj.yDirection
             tempObj.y = obj.y
+            tempObj.yDirection = obj.yDirection
+            tempObj.ySpeed = obj.ySpeed
             tempObj.minY = obj.minY
             tempObj.maxY = obj.maxY
 
