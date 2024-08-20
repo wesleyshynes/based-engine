@@ -26,9 +26,14 @@ export class ExitDoor extends PhysBox {
         isSensor: true
     }
 
+    stairsNoise: any
+
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
-        if (otherBody && otherBody.options && otherBody.options.tags) {
+        if (otherBody && otherBody.options && otherBody.options.tags.player) {
+            if(this.stairsNoise) {
+                this.gameRef.soundPlayer.playSound(this.stairsNoise)
+            }
             this.gameRef.loadLevel(this.doorPath)
         }
     }
@@ -36,6 +41,11 @@ export class ExitDoor extends PhysBox {
     collisionEndFn = (o: any) => { }
 
     async preload() { }
+
+    setupStairsNoise(noise: any) {
+        this.stairsNoise = noise
+    }
+
     initialize() {
         this.color = '#000'
         this.strokeColor = '#3c3c3c'

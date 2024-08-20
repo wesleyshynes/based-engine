@@ -1,7 +1,7 @@
 import { BasedButton } from "../../../engine/BasedButton";
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { drawText } from "../../../engine/libs/drawHelpers"
-import BgMusic from '../../../assets/black-jack/Frederic_Lardon_feat_Laura_Palme_-_04_-_Dans_le_casino.mp3'
+import BgMusic from '../../../assets/the-squeeze//tunetank.com_6683_the-odds_by_boy_.mp3'
 import { START_LEVEL } from "../startGame";
 // import GameLogo from '../../../assets/vimjam2/monkey-meltdown-logo.png'
 
@@ -56,7 +56,7 @@ export class StartScreen extends BasedLevel {
 
     this.gameRef.drawLoading('Music', .5)
     this.bgSong = await this.gameRef.soundPlayer.loadSound(BgMusic)
-    this.activeSound.playing = true // false
+    this.activeSound.playing = false
   }
 
   initialize() {
@@ -94,8 +94,6 @@ export class StartScreen extends BasedLevel {
     this.startButton.width = this.gameRef.gameWidth - 200
     this.startButton.clickFunction = () => {
       this.gameRef.loadLevel(START_LEVEL)
-      // this.gameRef.loadLevel('level-01')
-      // this.gameRef.loadLevel('standard-level')
     }
 
     this.buttonGroup = []

@@ -8,7 +8,27 @@ import { ExitDoor } from "../entities/exitDoor";
 import { LevelWall } from "../entities/levelWall";
 import { TouchKnob } from "../../../engine/controls/TouchKnob";
 import { MovingPlatform } from "../entities/movingPlatform";
-import _ from "lodash";
+
+import WallThud1 from '../../../assets/the-squeeze/387478__cosmicembers__dart-thud-1.mp3'
+import WallThud2 from '../../../assets/the-squeeze/387480__cosmicembers__dart-thud-2.mp3'
+import WallThud3 from '../../../assets/the-squeeze/387479__cosmicembers__dart-thud-3.mp3'
+
+import Walking1 from '../../../assets/the-squeeze/walking_1.mp3'
+import Walking2 from '../../../assets/the-squeeze/walking_2.mp3'
+import Walking3 from '../../../assets/the-squeeze/walking_3.mp3'
+import Walking4 from '../../../assets/the-squeeze/walking_4.mp3'
+import Walking5 from '../../../assets/the-squeeze/walking_5.mp3'
+import Walking6 from '../../../assets/the-squeeze/walking_6.mp3'
+import Walking7 from '../../../assets/the-squeeze/walking_7.mp3'
+import Walking8 from '../../../assets/the-squeeze/walking_8.mp3'
+
+import BoxThud1 from '../../../assets/the-squeeze/box_thud1.mp3'
+import BoxThud2 from '../../../assets/the-squeeze/box_thud2.mp3'
+import BoxThud3 from '../../../assets/the-squeeze/box_thud3.mp3'
+
+import RunningStairs from '../../../assets/the-squeeze/running_stairs.mp3'
+
+import BGMusic from '../../../assets/the-squeeze/tunetank.com_5630_ready-to-play_by_alexey-anisimov__1.mp3'
 
 // const FILL_COLOR = '#81B622'
 // const HOVER_COLOR = '#ECF87F'
@@ -59,6 +79,24 @@ export class SqueezeBaseLevel extends BasedLevel {
     _exitDoors: any[] = []
 
     // SOUNDS
+    wallThud1: any;
+    wallThud2: any;
+    wallThud3: any;
+
+    walking1: any;
+    walking2: any;
+    walking3: any;
+    walking4: any;
+    walking5: any;
+    walking6: any;
+    walking7: any;
+    walking8: any;
+
+    boxThud1: any;
+    boxThud2: any;
+    boxThud3: any;
+
+    runningStairs: any;
 
     // MUSIC
     activeSound: any = {
@@ -66,8 +104,37 @@ export class SqueezeBaseLevel extends BasedLevel {
         soundRef: null,
     }
     bgSong: any;
+    bgMusicTrack: any = BGMusic
 
-    async preload() { }
+    async preload() {
+        this.gameRef.drawLoading('Wall Thudding', .1)
+        this.wallThud1 = await this.gameRef.soundPlayer.loadSound(WallThud1)
+        this.wallThud2 = await this.gameRef.soundPlayer.loadSound(WallThud2)
+        this.wallThud3 = await this.gameRef.soundPlayer.loadSound(WallThud3)
+
+        this.gameRef.drawLoading('Walking Sounds', .2)
+        this.walking1 = await this.gameRef.soundPlayer.loadSound(Walking1)
+        this.walking2 = await this.gameRef.soundPlayer.loadSound(Walking2)
+        this.walking3 = await this.gameRef.soundPlayer.loadSound(Walking3)
+        this.walking4 = await this.gameRef.soundPlayer.loadSound(Walking4)
+        this.gameRef.drawLoading('More Walking Sounds', .3)
+        this.walking5 = await this.gameRef.soundPlayer.loadSound(Walking5)
+        this.walking6 = await this.gameRef.soundPlayer.loadSound(Walking6)
+        this.walking7 = await this.gameRef.soundPlayer.loadSound(Walking7)
+        this.walking8 = await this.gameRef.soundPlayer.loadSound(Walking8)
+
+        this.gameRef.drawLoading('Box Thudding', .4)
+        this.boxThud1 = await this.gameRef.soundPlayer.loadSound(BoxThud1)
+        this.boxThud2 = await this.gameRef.soundPlayer.loadSound(BoxThud2)
+        this.boxThud3 = await this.gameRef.soundPlayer.loadSound(BoxThud3)
+
+        this.gameRef.drawLoading('Music', .5)
+        this.bgSong = await this.gameRef.soundPlayer.loadSound(this.bgMusicTrack)
+
+        this.gameRef.drawLoading('Running Stairs', .6)
+        this.runningStairs = await this.gameRef.soundPlayer.loadSound(RunningStairs)
+
+    }
 
     initialize(): void {
 
@@ -79,7 +146,7 @@ export class SqueezeBaseLevel extends BasedLevel {
         this.followCam = new FollowCam({ key: 'followCam', gameRef: this.gameRef })
         this.followCam.levelWidth = this.levelWidth
         this.followCam.levelHeight = this.levelHeight
-        this.followCam.zoomSetting = 1
+        this.followCam.zoomSetting = this.gameRef.touchMode ? 0.7 : 1.0
         this.followCam.cameraZoomSpeed = .03
         this.followCam.cameraSpeed = 50
         this.followCam.initialize()
@@ -158,6 +225,26 @@ export class SqueezeBaseLevel extends BasedLevel {
         this.mainPlayer.setMoveKnob(this.moveKnob)
         this.mainPlayer.setShrinkButton(this.shrinkButton)
         this.mainPlayer.setGrowButton(this.growButton)
+        this.mainPlayer.setWallThuds([
+            this.wallThud1,
+            this.wallThud2,
+            this.wallThud3,
+        ])
+        this.mainPlayer.setWalkingSounds([
+            this.walking1,
+            this.walking2,
+            this.walking3,
+            this.walking4,
+            this.walking5,
+            this.walking6,
+            this.walking7,
+            this.walking8,
+        ])
+        this.mainPlayer.setBoxThuds([
+            this.boxThud1,
+            this.boxThud2,
+            this.boxThud3,
+        ])
 
         this.setupWalls()
         this.setupPushBoxes()
@@ -182,12 +269,6 @@ export class SqueezeBaseLevel extends BasedLevel {
         if (!this.gameRef.soundPlayer.enabled) { return }
         if (this.activeSound.playing == false) {
             let songToPlay = this.bgSong
-            // if (this.snakePlayer.body.length > 7) {
-            //     songToPlay = this.epicBgSong
-            // }
-            // if (this.gameState === 'lose') {
-            //     songToPlay = this.loseSong
-            // }
             this.activeSound.soundRef = this.gameRef.soundPlayer.playSound(songToPlay, () => {
                 this.activeSound.playing = false
             })
@@ -418,6 +499,7 @@ export class SqueezeBaseLevel extends BasedLevel {
             tempObj.color = obj.color
             tempObj.doorPath = obj.doorPath
             tempObj.initialize()
+            tempObj.setupStairsNoise(this.runningStairs)
             this.gameRef.addToWorld(tempObj.body)
             return tempObj
         })

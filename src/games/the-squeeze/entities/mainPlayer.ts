@@ -38,9 +38,20 @@ export class MainPlayer extends PhysBall {
     minRadius: number = 25
     sizeSpeed: number = .05
 
-    baseSpeed: number = 12
+    baseSpeed: number = 8
 
     wallCount: number = 0
+
+    // sound fx
+    lastThud: number = 0
+    wallThuds: any[] = []
+
+    lastStep: number = 0
+    walkingSounds: any[] = []
+
+    lastBoxThud: number = 0
+    boxThuds: any[] = []
+    
 
     options = {
         tags: {
@@ -68,6 +79,20 @@ export class MainPlayer extends PhysBall {
                 } else {
                     this.maxRadius = this.activeMaxRadius
                 }
+                if(otherBody.options.tags.pushBox) {
+                    if(this.boxThuds.length > 0 && this.gameRef.lastUpdate - this.lastBoxThud > 300) {
+                        const randomThud = this.boxThuds[Math.floor(Math.random() * this.boxThuds.length)]
+                        this.gameRef.soundPlayer.playSound(randomThud)
+                        this.lastBoxThud = this.gameRef.lastUpdate
+                    }
+                } else {
+                    if(this.wallThuds.length > 0 && this.gameRef.lastUpdate - this.lastThud > 600) {
+                        // this.gameRef.soundPlayer.playSound(this.wallThud)
+                        const randomThud = this.wallThuds[Math.floor(Math.random() * this.wallThuds.length)]
+                        this.gameRef.soundPlayer.playSound(randomThud)
+                        this.lastThud = this.gameRef.lastUpdate
+                    }
+                }
             }
 
             this.gameRef.shakeCamera(5 * (this.radius / this.originalRadius))
@@ -90,7 +115,7 @@ export class MainPlayer extends PhysBall {
         }
     }
 
-    async preload() { }
+    async preload() {}
 
     initialize() {
         this.initializeBody()
@@ -105,6 +130,16 @@ export class MainPlayer extends PhysBall {
     }
     setGrowButton(button: any) {
         this.growButton = button
+    }
+
+    setWallThuds(thuds: any[]) {
+        this.wallThuds = thuds
+    }
+    setWalkingSounds(sounds: any[]) {
+        this.walkingSounds = sounds
+    }
+    setBoxThuds(thuds: any[]) {
+        this.boxThuds = thuds
     }
 
     update() {
@@ -167,6 +202,11 @@ export class MainPlayer extends PhysBall {
                 y: moveY,
                 x: moveX
             }, activeSpeed))
+            if(this.gameRef.lastUpdate - this.lastStep > 100) {
+                const randomStep = this.walkingSounds[Math.floor(Math.random() * this.walkingSounds.length)]
+                this.gameRef.soundPlayer.playSound(randomStep)
+                this.lastStep = this.gameRef.lastUpdate
+            }
         } else {
             Physics.Body.setVelocity(this.body, {
                 x: 0,
@@ -242,10 +282,10 @@ export class MainPlayer extends PhysBall {
             y: (this.body.velocity.y / this.baseSpeed) * this.radius / 8,
         }
 
-        const yOffset = ((this.gameRef.lastUpdate % 300) / 300) * nV.y
-        const xOffset = ((this.gameRef.lastUpdate % 300) / 300) * nV.x
+        const yOffset = ((this.gameRef.lastUpdate % 200) / 200) * nV.y
+        const xOffset = ((this.gameRef.lastUpdate % 200) / 200) * nV.x
 
-        const offSetMultiplier = this.gameRef.lastUpdate % 600 > 300 ? 1 : -1
+        const offSetMultiplier = this.gameRef.lastUpdate % 400 > 200 ? 1 : -1
 
         const maxOffset = Math.max(Math.abs(yOffset), Math.abs(xOffset)) + offSetMultiplier
 

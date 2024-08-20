@@ -1,5 +1,6 @@
 import { LEVEL_02_BOUNDARIES, LEVEL_02_EXIT_DOORS, LEVEL_02_PUSH_BOXES, LEVEL_02_WALLS } from "../constants/level02Constants";
 import { SqueezeBaseLevel } from "./SqueezeBaseLevel";
+import BGMusic from '../../../assets/the-squeeze/tunetank.com_5230_day-party_by_cloudsystem__2.mp3'
 
 export class Level02 extends SqueezeBaseLevel {
 
@@ -17,5 +18,7 @@ export class Level02 extends SqueezeBaseLevel {
     _pushBoxes: any[] = LEVEL_02_PUSH_BOXES
     exitDoors: any[] = []
     _exitDoors: any[] = LEVEL_02_EXIT_DOORS
+
+    bgMusicTrack: any = BGMusic
   
 } 

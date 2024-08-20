@@ -166,10 +166,10 @@ export class BasedGame implements BasedGameType {
       Object.keys(this.ignoreGravity).forEach((x: any) => {
         const body = this.ignoreGravity[x]
         // if(body.plugin.basedRef().active) {
-          Physics.Body.applyForce(body, body.position, {
-            x: -gravity.x * gravity.scale * body.mass,
-            y: -gravity.y * gravity.scale * body.mass
-          });
+        Physics.Body.applyForce(body, body.position, {
+          x: -gravity.x * gravity.scale * body.mass,
+          y: -gravity.y * gravity.scale * body.mass
+        });
         // }
       })
     })
@@ -223,7 +223,15 @@ export class BasedGame implements BasedGameType {
       this.mouseInfo.mouseDown = false;
     });
 
-    this.canvasElement.addEventListener('touchstart', e => {
+    document.addEventListener(
+      "dblclick",
+      function (event) {
+        event.preventDefault();
+      },
+      { passive: false }
+    );
+
+    this.canvasElement.addEventListener('touchstart', (e: any) => {
       // [this.mouseInfo.x,this.mouseInfo.y] = getClickPosition(e)
       // e.preventDefault()
       [this.mouseInfo.x, this.mouseInfo.y] = getTouchPosition(e)
