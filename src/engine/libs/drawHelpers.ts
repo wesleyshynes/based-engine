@@ -6,15 +6,20 @@ export function rotateDraw(settings: {
   x: number,
   y: number,
   a: number,
+  cameraPos?: any,
+  zoom?: number
 }, drawFn: () => void) {
   const {
-    c, x, y, a
+    c, x, y, a, cameraPos, zoom = 1
   } = settings
 
   c.save();
 
   // move to the center of the canvas
-  c.translate(x, y);
+  c.translate(
+    x * zoom + (cameraPos ? cameraPos.x : 0),
+    y * zoom + (cameraPos ? cameraPos.y : 0)
+  );
 
   // rotate the canvas to the specified degrees
   c.rotate(a * Math.PI / 180);
@@ -25,6 +30,54 @@ export function rotateDraw(settings: {
 
   // we’re done with the rotating so restore the unrotated context
   c.restore();
+}
+
+export function drawSVG(settings: {
+  c: CanvasRenderingContext2D,
+  img: CanvasImageSource,
+  sx: number,
+  sy: number,
+  sWidth: number,
+  sHeight: number,
+  dx: number,
+  dy: number,
+  dWidth: number,
+  dHeight: number,
+  sprite: string,
+  flipX?: boolean,
+  flipY?: boolean,
+}, camera?: {
+  cameraPos?: any,
+  zoom?: number
+}) {
+  const {
+    c,
+    sprite,
+    sx,
+    sy,
+    sWidth,
+    sHeight,
+    dx,
+    dy,
+    dWidth,
+    dHeight,
+    img,
+    flipX,
+    flipY,
+  } = settings
+  const {
+    cameraPos,
+    zoom = 1
+  } = camera || {}
+  c.scale(flipX ? -1 : 1, flipY ? -1 : 1)
+  c.drawImage(
+    img,
+    sx * (zoom ? zoom : 1) + (cameraPos ? cameraPos.x : 0),
+    sy * (zoom ? zoom : 1) + (cameraPos ? cameraPos.y : 0),
+    sWidth * (zoom ? zoom : 1),
+    sHeight * (zoom ? zoom : 1),
+  )
+  c.scale(1, 1)
 }
 
 export function drawImage(settings: {
@@ -40,8 +93,15 @@ export function drawImage(settings: {
   dHeight: number,
   sprite: string,
   flipX?: boolean,
-  flipY?: boolean
-}) {
+  flipY?: boolean,
+  cameraPos?: any,
+  zoom?: number
+},
+camera?: {
+  cameraPos?: any,
+  zoom?: number
+}
+) {
   const {
     c,
     sprite,
@@ -55,10 +115,24 @@ export function drawImage(settings: {
     dHeight,
     img,
     flipX,
-    flipY
+    flipY,
   } = settings
+  const {
+    cameraPos,
+    zoom = 1
+  } = camera || {}
   c.scale(flipX ? -1 : 1, flipY ? -1 : 1)
-  c.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+  c.drawImage(
+    img,
+    sx * (zoom ? zoom : 1) + (cameraPos ? cameraPos.x : 0),
+    sy * (zoom ? zoom : 1) + (cameraPos ? cameraPos.y : 0),
+    sWidth * (zoom ? zoom : 1),
+    sHeight * (zoom ? zoom : 1),
+    dx * zoom,
+    dy * zoom,
+    dWidth * zoom,
+    dHeight * zoom,
+  )
   c.scale(1, 1)
 }
 
@@ -117,21 +191,26 @@ export function drawCircle(settings: {
   fillColor?: string,
   strokeWidth?: number,
   strokeColor?: string
-  strokeDashPattern?: number[]
+  strokeDashPattern?: number[],
+  cameraPos?: any,
+  zoom?: number
 }) {
   const {
-    c, x, y, radius, startAngle, endAngle, fillColor, strokeWidth, strokeColor, strokeDashPattern
+    c, x, y, radius, startAngle, endAngle, fillColor, strokeWidth, strokeColor, strokeDashPattern, cameraPos, zoom = 1
   } = settings
   c.beginPath()
-  c.arc(x, y, radius, startAngle ? degToRad(startAngle) : 0, endAngle ? degToRad(endAngle) : 2 * Math.PI)
+  c.arc(
+    x * zoom + (cameraPos ? cameraPos.x : 0),
+    y * zoom + (cameraPos ? cameraPos.y : 0),
+    radius * zoom, startAngle ? degToRad(startAngle) : 0, endAngle ? degToRad(endAngle) : 2 * Math.PI)
   if (fillColor) {
     c.fillStyle = fillColor
     c.fill()
   }
   if (strokeWidth && strokeColor) {
     c.strokeStyle = strokeColor
-    c.lineWidth = strokeWidth
-    if(settings.strokeDashPattern) {
+    c.lineWidth = strokeWidth * zoom
+    if (settings.strokeDashPattern) {
       c.setLineDash(strokeDashPattern)
     }
     c.stroke()
@@ -149,20 +228,27 @@ export function drawEllipse(settings: {
   endAngle?: number,
   fillColor?: string,
   strokeWidth?: number,
-  strokeColor?: string
+  strokeColor?: string,
+  cameraPos?: any,
+  zoom?: number
 }) {
   const {
-    c, x, y, radiusX, radiusY, startAngle, endAngle, fillColor, strokeWidth, strokeColor
+    c, x, y, radiusX, radiusY, startAngle, endAngle, fillColor, strokeWidth, strokeColor, cameraPos, zoom = 1
   } = settings
   c.beginPath()
-  c.ellipse(x, y, radiusX, radiusY, 0, startAngle ? degToRad(startAngle) : 0, endAngle ? degToRad(endAngle) : 2 * Math.PI)
+  c.ellipse(
+    x * zoom + (cameraPos ? cameraPos.x : 0),
+    y * zoom + (cameraPos ? cameraPos.y : 0),
+    radiusX * zoom,
+    radiusY * zoom,
+    0, startAngle ? degToRad(startAngle) : 0, endAngle ? degToRad(endAngle) : 2 * Math.PI)
   if (fillColor) {
     c.fillStyle = fillColor
     c.fill()
   }
   if (strokeWidth && strokeColor) {
     c.strokeStyle = strokeColor
-    c.lineWidth = strokeWidth
+    c.lineWidth = strokeWidth * zoom
     c.stroke()
   }
 }
@@ -178,16 +264,29 @@ export function drawBox(settings: {
   fillColor?: string,
   strokeWidth?: number,
   strokeColor?: string,
-  borderRadius?: number | number[]
+  borderRadius?: number | number[],
+  cameraPos?: any,
+  zoom?: number
 }) {
   const {
-    c, x, y, width, height, fillColor, strokeWidth, strokeColor, borderRadius
+    c, x, y, width, height, fillColor, strokeWidth, strokeColor, borderRadius, cameraPos, zoom = 1
   } = settings
   c.beginPath()
-  if(borderRadius) {
-    c.roundRect(x, y, width, height, borderRadius)
+  if (borderRadius) {
+    c.roundRect(
+      x * zoom + (cameraPos ? cameraPos.x : 0),
+      y * zoom + (cameraPos ? cameraPos.y : 0),
+      width * zoom,
+      height * zoom,
+      typeof borderRadius === 'number' ? borderRadius * zoom : borderRadius.map((r: number) => r * zoom)
+    )
   } else {
-    c.rect(x, y, width, height)
+    c.rect(
+      x * zoom + (cameraPos ? cameraPos.x : 0),
+      y * zoom + (cameraPos ? cameraPos.y : 0),
+      width * zoom,
+      height * zoom
+    )
   }
   if (fillColor) {
     c.fillStyle = fillColor
@@ -196,7 +295,7 @@ export function drawBox(settings: {
 
   if (strokeWidth && strokeColor) {
     c.strokeStyle = strokeColor
-    c.lineWidth = strokeWidth
+    c.lineWidth = strokeWidth * zoom
     c.stroke()
   }
 }
@@ -213,7 +312,9 @@ export function drawText(settings: {
   fontFamily: string,
   fontSize: number,
   style?: string,
-  weight?: string | number
+  weight?: string | number,
+  cameraPos?: any,
+  zoom?: number
 }) {
   const {
     c,
@@ -227,20 +328,30 @@ export function drawText(settings: {
     fontSize,
     align,
     style,
-    weight
+    weight,
+    cameraPos,
+    zoom = 1
   } = settings
   c.textAlign = align ? align : 'center'
-  c.font = `${style ? style + ' ' : ''}${weight ? weight + ' ' : ''}${fontSize}px ${fontFamily}`
+  c.font = `${style ? style + ' ' : ''}${weight ? weight + ' ' : ''}${fontSize * zoom}px ${fontFamily}`
 
   if (strokeWidth && strokeColor) {
     c.strokeStyle = strokeColor
     c.lineWidth = strokeWidth
-    c.strokeText(text, x, y)
+    c.strokeText(
+      text,
+      x * zoom + (cameraPos ? cameraPos.x : 0),
+      y * zoom + (cameraPos ? cameraPos.y : 0)
+    )
   }
 
   if (fillColor) {
     c.fillStyle = fillColor
-    c.fillText(text, x, y)
+    c.fillText(
+      text,
+      x * zoom + (cameraPos ? cameraPos.x : 0),
+      y * zoom + (cameraPos ? cameraPos.y : 0)
+    )
   }
 
 }

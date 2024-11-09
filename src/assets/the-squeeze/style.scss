@@ -1,10 +1,5 @@
 @import 'reset.scss';
 
-$dark-color: #252525;
-$light-color: #e0e9c4;
-$primary-color: #9aa57c;
-$secondary-color: #4b564d;
-
 body {
   user-select: none;
   -webkit-user-select: none;
@@ -45,7 +40,7 @@ body {
     text-align: center;
     margin-bottom: 20px;
     max-width: 300px;
-    color: #e0e9c4;
+    color: white;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -74,24 +69,24 @@ body {
 
   #start-game {
     padding: 10px 20px;
-    background: $primary-color;
-    border: 1px solid $dark-color;
+    background: #59981A;
+    border: 1px solid #333;
     font-size: 1em;
-    color: $dark-color;
+    color: white;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     cursor: pointer;
 
     &:hover {
-      background: $secondary-color;
-      color: $light-color;
+      background: #ECF87F;
+      color: #333;
     }
   }
 
   canvas {
     // border: 1px solid;
-    -webkit-tap-highlight-color: $dark-color;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     user-select: none;
     touch-action: none;
     -webkit-user-select: none;
@@ -103,7 +98,7 @@ body {
 
 body {
   overflow-y: hidden;
-  background: $dark-color;
+  background: #333333;
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
