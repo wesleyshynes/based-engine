@@ -1,6 +1,6 @@
 import { BasedObject } from "../BasedObject";
 import Physics from 'matter-js';
-import { rotateDraw } from "../libs/drawHelpers";
+import { drawPolygon, rotateDraw } from "../libs/drawHelpers";
 import { radToDeg, XYCoordinateType } from "../libs/mathHelpers";
 
 export default class PhysPoly extends BasedObject {
@@ -69,31 +69,36 @@ export default class PhysPoly extends BasedObject {
   drawPhysicsBody() {
     rotateDraw({
       c: this.gameRef.ctx,
-      x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-      y: this.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-      // x: this.body.position.x + this.gameRef.cameraPos.x,
-      // y: this.body.position.y + this.gameRef.cameraPos.y,
-      // x: this.x + this.gameRef.cameraPos.x,
-      // y: this.y + this.gameRef.cameraPos.y,
-      a: radToDeg(this.body.angle)
-      // a: 0//radToDeg(this.body.angle)
+      x: this.body.position.x,
+      y: this.body.position.y,
+      a: radToDeg(this.body.angle),
+      cameraPos: this.gameRef.cameraPos,
+      zoom: this.gameRef.cameraZoom
     }, () => {
 
-      const {ctx} = this.gameRef
-      ctx.fillStyle = this.color;
-      ctx.beginPath();
-      // start line
-      ctx.moveTo(this.vertices[0].x * this.gameRef.cameraZoom, this.vertices[0].y * this.gameRef.cameraZoom);
+      // const {ctx} = this.gameRef
+      // ctx.fillStyle = this.color;
+      // ctx.beginPath();
+      // // start line
+      // ctx.moveTo(this.vertices[0].x * this.gameRef.cameraZoom, this.vertices[0].y * this.gameRef.cameraZoom);
 
-      for (let i = 1; i < this.vertices.length; i++) {
-        ctx.lineTo(this.vertices[i].x * this.gameRef.cameraZoom, this.vertices[i].y * this.gameRef.cameraZoom);
-      }
+      // for (let i = 1; i < this.vertices.length; i++) {
+      //   ctx.lineTo(this.vertices[i].x * this.gameRef.cameraZoom, this.vertices[i].y * this.gameRef.cameraZoom);
+      // }
 
-      // go to start
-      ctx.lineTo(this.vertices[0].x * this.gameRef.cameraZoom, this.vertices[0].y * this.gameRef.cameraZoom);
+      // // go to start
+      // ctx.lineTo(this.vertices[0].x * this.gameRef.cameraZoom, this.vertices[0].y * this.gameRef.cameraZoom);
 
-      ctx.closePath();
-      ctx.fill();
+      // ctx.closePath();
+      // ctx.fill();
+
+      drawPolygon({
+        c: this.gameRef.ctx,
+        vertices: this.vertices,
+        fillColor: this.color,
+        strokeColor: 'black',
+        strokeWidth: 4,
+      })
 
     })
   }

@@ -1,4 +1,5 @@
-import { degToRad } from "./mathHelpers"
+import { BasedGame } from "../BasedEngine";
+import { degToRad, XYCoordinateType } from "./mathHelpers"
 
 
 export function rotateDraw(settings: {
@@ -97,10 +98,10 @@ export function drawImage(settings: {
   cameraPos?: any,
   zoom?: number
 },
-camera?: {
-  cameraPos?: any,
-  zoom?: number
-}
+  camera?: {
+    cameraPos?: any,
+    zoom?: number
+  }
 ) {
   const {
     c,
@@ -353,5 +354,84 @@ export function drawText(settings: {
       y * zoom + (cameraPos ? cameraPos.y : 0)
     )
   }
+}
 
+export function drawPolygon(settings: {
+  c: CanvasRenderingContext2D,
+  vertices: XYCoordinateType[],
+  fillColor: string,
+  strokeWidth?: number,
+  strokeColor?: string,
+  cameraPos?: any,
+  zoom?: number
+}
+) {
+
+  const {
+    c,
+    vertices,
+    fillColor,
+    strokeWidth,
+    strokeColor,
+    cameraPos = { x: 0, y: 0 },
+    zoom = 1
+  } = settings
+
+  c.fillStyle = fillColor;
+  c.beginPath();
+  // start line
+  c.moveTo(
+    vertices[0].x * zoom + cameraPos.x,
+    vertices[0].y * zoom + cameraPos.y
+  );
+
+  for (let i = 1; i < vertices.length; i++) {
+    c.lineTo(
+      vertices[i].x * zoom + cameraPos.x,
+      vertices[i].y * zoom + cameraPos.y
+    );
+  }
+
+  // go to start
+  c.lineTo(
+    vertices[0].x * zoom + cameraPos.x, 
+    vertices[0].y * zoom + cameraPos.y
+  );
+
+  c.closePath();
+  c.fill();
+
+  if (strokeWidth && strokeColor) {
+    c.strokeStyle = strokeColor
+    c.lineWidth = strokeWidth * zoom
+    c.stroke()
+  }
+}
+
+export function drawCameraFrame(gameRef: BasedGame, drawFn: () => void) {
+  const rcX = gameRef.gameWidth / 2
+  const rcY = gameRef.gameHeight / 2
+  rotateDraw({
+    c: gameRef.ctx,
+    x: rcX,
+    y: rcY,
+    a: 0,
+  }, () => {
+    rotateDraw({
+      c: gameRef.ctx,
+      x: 0,
+      y: 0,
+      // a: 0,
+      a: gameRef.cameraRotation,
+    }, () => {
+      rotateDraw({
+        c: gameRef.ctx,
+        x: -rcX,
+        y: -rcY,
+        a: 0,
+      }, () => {
+        drawFn()
+      })
+    })
+  })
 }

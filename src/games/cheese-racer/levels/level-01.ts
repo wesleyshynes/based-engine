@@ -1,27 +1,31 @@
 import BGMusic from '../../../assets/the-squeeze/tunetank.com_5630_ready-to-play_by_alexey-anisimov__1.mp3'
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { FollowCam } from '../../../engine/cameras/FollowCam';
-import { createSprite, drawBox, drawImage, drawSVG, rotateDraw } from '../../../engine/libs/drawHelpers';
+import { createSprite, drawBox, drawCameraFrame, drawCircle, drawSVG, rotateDraw } from '../../../engine/libs/drawHelpers';
 import PhysBox from '../../../engine/physicsObjects/PhysBox';
 import { DARK_COLOR, LIGHT_COLOR, PRIMARY_COLOR, SECONDARY_COLOR } from '../constants/gameColors';
 import { MainPlayer } from '../entities/mainPlayer';
 import CheesePiece from '../../../assets/cheese-racer/cheese-piece.svg'
+import PhysPoly from '../../../engine/physicsObjects/PhysPoly';
 
 export class Level01 extends BasedLevel {
 
     physics: any
 
-    levelWidth: number = 800
-    levelHeight: number = 600
+    levelWidth: number = 1800
+    levelHeight: number = 1600
 
     nextLevel: string = 'credits-screen'
 
-    playerStartPosition: any = { x: 100, y: 100 }
+    playerStartPosition: any = { 
+        x: this.levelWidth / 2,
+        y: this.levelHeight / 2
+    }
 
     bgMusicTrack: any = BGMusic
 
     // Camera related stuff
-    miniMapActive: boolean = true
+    miniMapActive: boolean = false
     followCam: any;
 
     mainPlayer: any
@@ -31,6 +35,9 @@ export class Level01 extends BasedLevel {
     cheeseY: number = 400
 
     cheesePiece: any
+
+    randomPoly: any
+
 
     async preload() {
         this.cheesePiece = await createSprite({
@@ -49,10 +56,9 @@ export class Level01 extends BasedLevel {
             lastUpdate: 0,
             updateDiff: 1000 / 60 * 10
         })
-
-        console.log('cheesePiece', this.cheesePiece)
-
     }
+
+
     initialize() {
         this.gameRef.initializePhysics()
         this.gameRef.physics.world.gravity.y = 0
@@ -63,6 +69,12 @@ export class Level01 extends BasedLevel {
         this.followCam.zoomSetting = this.gameRef.touchMode ? 0.7 : 1.0
         this.followCam.cameraZoomSpeed = .03
         this.followCam.cameraSpeed = 50
+
+        this.followCam.defaultBound = false
+        this.followCam.fullScreenBound = false
+
+        this.followCam.cameraRotationTarget = 45
+
         this.followCam.initialize()
 
 
@@ -97,6 +109,22 @@ export class Level01 extends BasedLevel {
         this.littleBox.initialize()
         this.gameRef.addToWorld(this.littleBox.body)
 
+        this.randomPoly = new PhysPoly({
+            key: 'randomPoly',
+            gameRef: this.gameRef,
+        })
+        this.randomPoly.bodyOptions = {
+            label: `randomPoly`,
+            inertia: Infinity,
+            density: 5,
+            friction: 0.9
+        }
+        this.randomPoly.x = 600
+        this.randomPoly.y = 400
+        this.randomPoly.initialize()
+        this.gameRef.addToWorld(this.randomPoly.body)
+
+
     }
     update() {
         this.handlePhysics()
@@ -115,6 +143,8 @@ export class Level01 extends BasedLevel {
         // })
         this.mainPlayer.update()
         this.littleBox.update()
+        this.randomPoly.update()
+        // console.log(this.followCam.activeTarget)
     }
 
 
@@ -142,38 +172,52 @@ export class Level01 extends BasedLevel {
         this.gameRef.ctx.fill();
 
 
-        // draw the level
-        // level bg
-        drawBox({
-            c: this.gameRef.ctx,
-            x: 0,
-            y: 0 ,
-            width: this.levelWidth,
-            height: this.levelHeight,
-            fillColor: LIGHT_COLOR,
-            cameraPos: this.gameRef.cameraPos,
-            zoom: this.gameRef.cameraZoom
+        drawCameraFrame(this.gameRef, () => {
+
+            // draw the level
+            // level bg
+            drawBox({
+                c: this.gameRef.ctx,
+                x: 0,
+                y: 0,
+                width: this.levelWidth,
+                height: this.levelHeight,
+                fillColor: LIGHT_COLOR,
+                cameraPos: this.gameRef.cameraPos,
+                zoom: this.gameRef.cameraZoom
+            })
+
+            // draw the player
+            this.mainPlayer.draw()
+
+            // draw the little box
+            this.littleBox.draw()
+
+
+            rotateDraw({
+                c: this.gameRef.ctx,
+                x: (this.cheeseX - this.cheesePiece.sWidth / 2),
+                y: (this.cheeseY - this.cheesePiece.sHeight / 2),
+                a: 0,
+                cameraPos: this.gameRef.cameraPos,
+                zoom: this.gameRef.cameraZoom
+            }, () => {
+                // this.sprite.flipX = this.velocity.x < 0
+                drawSVG(this.cheesePiece, { zoom: this.gameRef.cameraZoom })
+            })
+
+            drawCircle({
+                c: this.gameRef.ctx,
+                x: this.gameRef.cameraMouseInfo.x,
+                y: this.gameRef.cameraMouseInfo.y,
+                radius: 10,
+                fillColor: 'red',
+                cameraPos: this.gameRef.cameraPos,
+                zoom: this.gameRef.cameraZoom,
+            })
+
+            this.randomPoly.draw()
         })
-
-        // draw the player
-        this.mainPlayer.draw()
-
-        // draw the little box
-        this.littleBox.draw()
-
-
-        rotateDraw({
-            c: this.gameRef.ctx,
-            x: (this.cheeseX - this.cheesePiece.sWidth / 2),
-            y: (this.cheeseY - this.cheesePiece.sHeight / 2),
-            a: 0,
-            cameraPos: this.gameRef.cameraPos,
-            zoom: this.gameRef.cameraZoom
-        }, () => {
-            // this.sprite.flipX = this.velocity.x < 0
-            drawSVG(this.cheesePiece, { zoom: this.gameRef.cameraZoom })
-        })
-
 
 
 

@@ -1,7 +1,7 @@
 import { BasedLevel } from "./BasedLevel";
 import { BasedSounds } from "./BasedSounds";
 import { drawBox, drawText } from "./libs/drawHelpers";
-import { getClickPosition, getTouchArray, getTouchPosition, XYCoordinateType } from "./libs/mathHelpers";
+import { angleBetween, degToRad, distanceBetween, getClickPosition, getTouchArray, getTouchPosition, pointOnCircle, XYCoordinateType } from "./libs/mathHelpers";
 import Physics from 'matter-js';
 
 export interface gameSettings {
@@ -54,6 +54,7 @@ export class BasedGame implements BasedGameType {
 
   cameraPos: XYCoordinateType = { x: 0, y: 0 }
   cameraZoom: number = 1
+  cameraRotation: number = 0
   cameraShake: XYCoordinateType = {
     x: 0,
     y: 0
@@ -79,9 +80,15 @@ export class BasedGame implements BasedGameType {
     x: number, y: number,
     mouseDown: boolean
   } = { x: -100, y: -100, mouseDown: false }
+  cameraMouseInfo: {
+    x: number, y: number,
+    mouseDown: boolean
+  } = { x: -100, y: -100, mouseDown: false }
+
 
   touchInfo: { x: number, y: number, id: string }[] = []
   touchMode: boolean = false
+  cameraTouchInfo: { x: number, y: number, id: string }[] = []
 
   levels: { [key: string]: BasedLevel } = {}
   activeLevel: string = '';
@@ -403,15 +410,24 @@ export class BasedGame implements BasedGameType {
 
   // Other stuff
 
-  updateCamera(cameraTarget: XYCoordinateType, bound: boolean = true) {
+  updateCamera(cameraTarget: {
+    x: number,
+    y: number,
+    cameraRotation?: number
+  },
+    bound: boolean = true
+  ) {
 
     this.cameraPos.x = this.gameWidth / 2 - (cameraTarget.x * this.cameraZoom)
     this.cameraPos.y = this.gameHeight / 2 - (cameraTarget.y * this.cameraZoom)
+    this.cameraRotation = cameraTarget.cameraRotation ? cameraTarget.cameraRotation : 0
 
     if (bound) {
 
+      
       let levelWidth = this.gameWidth
       let levelHeight = this.gameHeight
+
       if (this.levels[this.activeLevel] &&
         this.levels[this.activeLevel].levelWidth &&
         this.levels[this.activeLevel].levelHeight) {
@@ -444,6 +460,22 @@ export class BasedGame implements BasedGameType {
 
     this.cameraPos.x += this.cameraShake.x
     this.cameraPos.y += this.cameraShake.y
+
+    const camMouse = this.convertPointToCameraSpace({ x: this.mouseInfo.x, y: this.mouseInfo.y })
+    this.cameraMouseInfo.x = camMouse.x
+    this.cameraMouseInfo.y = camMouse.y
+    this.cameraMouseInfo.mouseDown = this.mouseInfo.mouseDown
+
+    this.cameraTouchInfo = this.touchInfo.map((touch) => {
+      const camTouch = this.convertPointToCameraSpace({ x: touch.x, y: touch.y })
+      return {
+        x: camTouch.x,
+        y: camTouch.y,
+        id: touch.id
+      }
+    })
+
+
   }
 
   shakeCamera(amount: number = 50) {
@@ -459,6 +491,24 @@ export class BasedGame implements BasedGameType {
       this.cameraShake.x = this.cameraShake.x ? -this.cameraShake.x : 2
       this.cameraShake.y = this.cameraShake.y ? -this.cameraShake.y : 2
       this.shakeCamera(this.shakeCount - this.updateDiff)
+    }
+  }
+
+  convertPointToCameraSpace(pointCoord: XYCoordinateType) {
+    // update mouse info
+    const rcX = this.gameWidth / 2
+    const rcY = this.gameHeight / 2
+
+    const angleBetweenCenterOfScreenAndMouse = angleBetween({ x: rcX, y: rcY }, pointCoord, true)
+    const newMouseAngle = angleBetweenCenterOfScreenAndMouse - this.cameraRotation
+    const newMouseAngleRads = degToRad(newMouseAngle)
+    const distanceBetweenCenterOfScreenAndMouse = distanceBetween(pointCoord, { x: rcX, y: rcY })
+
+    const mouseOnCircle = pointOnCircle(newMouseAngleRads, distanceBetweenCenterOfScreenAndMouse)
+
+    return {
+      x: ((mouseOnCircle.x + rcX) - this.cameraPos.x) / this.cameraZoom,
+      y: ((mouseOnCircle.y + rcY) - this.cameraPos.y) / this.cameraZoom
     }
   }
 

@@ -65,8 +65,6 @@ export class MainPlayer extends PhysBall {
         let moveX = 0
         let moveY = 0
 
-        let scale = 1
-
         const activeSpeed = this.baseSpeed
 
         if (pressedKeys['KeyA'] || pressedKeys['ArrowLeft']) {
@@ -97,6 +95,7 @@ export class MainPlayer extends PhysBall {
     }
 
     draw() {
+        // this.drawShadows()
         this.drawPhysicsBody()
     }
 }

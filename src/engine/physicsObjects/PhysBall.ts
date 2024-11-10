@@ -16,6 +16,8 @@ export default class PhysBall extends BasedObject {
     label: 'physBall',
     restitution: 0.8,
   }
+
+  shadowColor: string = 'black'
   active: boolean = false
   body: any;
   bodyCenter: XYCoordinateType = { x: 0, y: 0 }
@@ -72,16 +74,18 @@ export default class PhysBall extends BasedObject {
   drawPhysicsBody() {
     rotateDraw({
       c: this.gameRef.ctx,
-      x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-      y: this.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-      a: radToDeg(this.body.angle)
+      x: this.body.position.x,
+      y: this.body.position.y,
+      a: radToDeg(this.body.angle),
+      cameraPos: this.gameRef.cameraPos,
+      zoom: this.gameRef.cameraZoom
     }, () => {
 
       drawCircle({
         c: this.gameRef.ctx,
         x: this.bodyCenter.x,
         y: this.bodyCenter.y,
-        radius: this.radius * this.gameRef.cameraZoom,
+        radius: this.radius,
         fillColor: this.color,
         // fillColor: 'red',
       })
@@ -93,18 +97,20 @@ export default class PhysBall extends BasedObject {
 
     rotateDraw({
       c: this.gameRef.ctx,
-      x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-      y: (this.body.position.y + this.radius * .75) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-      a: 0
+      x: this.body.position.x,
+      y: (this.body.position.y + this.radius * .75),
+      a: 0,
+      cameraPos: this.gameRef.cameraPos,
+      zoom: this.gameRef.cameraZoom
     }, () => {
 
       drawEllipse({
         c: this.gameRef.ctx,
         x: this.bodyCenter.x,
         y: this.bodyCenter.y,
-        radiusX: this.radius * this.gameRef.cameraZoom * 1.1,
-        radiusY: (this.radius * this.gameRef.cameraZoom) * .75,
-        fillColor: 'black'
+        radiusX: this.radius * 1.1,
+        radiusY: this.radius * .75,
+        fillColor: this.shadowColor,
       })
     })
 
