@@ -1,4 +1,4 @@
-import { normalizeVector } from "../../../engine/libs/mathHelpers";
+import { distanceBetween, normalizeVector, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import PhysBall from "../../../engine/physicsObjects/PhysBall";
 import Physics from 'matter-js'
 
@@ -26,6 +26,12 @@ export class MainPlayer extends PhysBall {
         collisionFilter: { group: this.collisionGroup },
         // friction: 0,
     }
+
+    targetPosition: XYCoordinateType = {
+        x: 0,
+        y: 0
+    }
+    targetThreshold: number = 5
 
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
@@ -56,8 +62,39 @@ export class MainPlayer extends PhysBall {
     }
 
     update() {
-        this.handleKeys()
+        // this.handleKeys()
         // this.validatePosition()
+        this.moveTowardsTarget()
+    }
+
+    setTargetPosition(target: XYCoordinateType) {
+        this.targetPosition = target
+    }
+
+    moveTowardsTarget() {
+        const distanceToTarget = distanceBetween(this.body.position, this.targetPosition)
+        if (distanceToTarget < this.targetThreshold) {
+            Physics.Body.setVelocity(this.body, {
+                x: 0,
+                y: 0
+            })
+            return
+        }
+        const moveX = this.targetPosition.x - this.body.position.x
+        const moveY = this.targetPosition.y - this.body.position.y
+        const activeSpeed = this.baseSpeed
+
+        if (moveX !== 0 || moveY !== 0) {
+            Physics.Body.setVelocity(this.body, normalizeVector({
+                y: moveY,
+                x: moveX
+            }, activeSpeed))
+        } else {
+            Physics.Body.setVelocity(this.body, {
+                x: 0,
+                y: 0
+            })
+        }
     }
 
     handleKeys() {

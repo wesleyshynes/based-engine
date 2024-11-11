@@ -13,6 +13,8 @@ export default class PhysBox extends BasedObject {
   width: number = 40;
   height: number = 40;
   color: string = 'blue'
+  strokeColor: string = 'black'
+  strokeWidth: number = 4
   bodyOptions: any = {
     label: 'physBox',
     restitution: 0.8
@@ -90,6 +92,8 @@ export default class PhysBox extends BasedObject {
         width: this.width,
         height: this.height,
         fillColor: this.color,
+        strokeColor: this.strokeColor,
+        strokeWidth: this.strokeWidth,
       })
     })
   }

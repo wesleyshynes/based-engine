@@ -12,6 +12,8 @@ export default class PhysBall extends BasedObject {
 
   radius: number = 15;
   color: string = 'blue'
+  strokeColor: string = 'black'
+  strokeWidth: number = 4
   bodyOptions: any = {
     label: 'physBall',
     restitution: 0.8,
@@ -87,6 +89,8 @@ export default class PhysBall extends BasedObject {
         y: this.bodyCenter.y,
         radius: this.radius,
         fillColor: this.color,
+        strokeColor: this.strokeColor,
+        strokeWidth: this.strokeWidth,
         // fillColor: 'red',
       })
     })

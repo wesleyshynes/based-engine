@@ -7,6 +7,8 @@ export default class PhysPoly extends BasedObject {
   x: number = 0
   y: number = 0
   color: string = 'orange'
+  strokeColor: string = 'black'
+  strokeWidth: number = 4
   angle: number = 0
 
   vertices: XYCoordinateType[] = [
@@ -96,8 +98,8 @@ export default class PhysPoly extends BasedObject {
         c: this.gameRef.ctx,
         vertices: this.vertices,
         fillColor: this.color,
-        strokeColor: 'black',
-        strokeWidth: 4,
+        strokeColor: this.strokeColor,
+        strokeWidth: this.strokeWidth
       })
 
     })

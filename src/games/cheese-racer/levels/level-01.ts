@@ -86,6 +86,7 @@ export class Level01 extends BasedLevel {
         this.mainPlayer.x = this.playerStartPosition.x
         this.mainPlayer.y = this.playerStartPosition.y
         this.mainPlayer.color = PRIMARY_COLOR
+        this.mainPlayer.strokeColor = SECONDARY_COLOR
         this.mainPlayer.radius = 25
         this.mainPlayer.initialize()
         this.gameRef.addToWorld(this.mainPlayer.body)
@@ -100,6 +101,7 @@ export class Level01 extends BasedLevel {
         this.littleBox.width = 50
         this.littleBox.height = 50
         this.littleBox.color = SECONDARY_COLOR
+        this.littleBox.strokeColor = PRIMARY_COLOR
         this.littleBox.bodyOptions = {
             label: `pushBox`,
             inertia: Infinity,
@@ -121,6 +123,8 @@ export class Level01 extends BasedLevel {
         }
         this.randomPoly.x = 600
         this.randomPoly.y = 400
+        this.randomPoly.color = SECONDARY_COLOR
+        this.randomPoly.strokeColor = PRIMARY_COLOR
         this.randomPoly.initialize()
         this.gameRef.addToWorld(this.randomPoly.body)
 
@@ -145,6 +149,13 @@ export class Level01 extends BasedLevel {
         this.littleBox.update()
         this.randomPoly.update()
         // console.log(this.followCam.activeTarget)
+
+        if(this.gameRef.mouseInfo.mouseDown) {
+            this.mainPlayer.setTargetPosition({
+                x: this.gameRef.cameraMouseInfo.x,
+                y: this.gameRef.cameraMouseInfo.y
+            })
+        }
     }
 
 
@@ -186,6 +197,84 @@ export class Level01 extends BasedLevel {
                 cameraPos: this.gameRef.cameraPos,
                 zoom: this.gameRef.cameraZoom
             })
+
+            const tileSize = 100
+            const tileColor = DARK_COLOR
+            const tileColor2 = LIGHT_COLOR
+            const tileColorHighlight = PRIMARY_COLOR
+            const tileColorHovered = SECONDARY_COLOR
+            const tileStroke = 2
+            const tileColorStroke2 = SECONDARY_COLOR
+            const tileColorStroke = PRIMARY_COLOR
+
+            const highlightedTile = {
+                x: Math.floor(this.mainPlayer.body.position.x / tileSize),
+                y: Math.floor(this.mainPlayer.body.position.y / tileSize)
+            }
+            const hoveredTile = {
+                x: Math.floor(this.gameRef.cameraMouseInfo.x / tileSize),
+                y: Math.floor(this.gameRef.cameraMouseInfo.y / tileSize)
+            }
+            const targetTile = {
+                x: Math.floor(this.mainPlayer.targetPosition.x / tileSize),
+                y: Math.floor(this.mainPlayer.targetPosition.y / tileSize)
+            }
+            for (let i = 0; i < this.levelWidth / tileSize; i++) {
+                for (let j = 0; j < this.levelHeight / tileSize; j++) {
+                    drawBox({
+                        c: this.gameRef.ctx,
+                        x: i * tileSize,
+                        y: j * tileSize,
+                        width: tileSize,
+                        height: tileSize,
+                        fillColor: (i + j) % 2 === 0 ? tileColor : tileColor2,
+                        strokeColor: (i + j) % 2 === 0 ? tileColorStroke : tileColorStroke2,
+                        strokeWidth: tileStroke,
+                        cameraPos: this.gameRef.cameraPos,
+                        zoom: this.gameRef.cameraZoom
+                    })
+                }
+            }
+
+            drawBox({
+                c: this.gameRef.ctx,
+                x: highlightedTile.x * tileSize,
+                y: highlightedTile.y * tileSize,
+                width: tileSize,
+                height: tileSize,
+                fillColor: tileColorHighlight,
+                strokeColor: tileColorStroke,
+                strokeWidth: tileStroke,
+                cameraPos: this.gameRef.cameraPos,
+                zoom: this.gameRef.cameraZoom
+            })
+
+            drawBox({
+                c: this.gameRef.ctx,
+                x: hoveredTile.x * tileSize,
+                y: hoveredTile.y * tileSize,
+                width: tileSize,
+                height: tileSize,
+                fillColor: tileColorHovered,
+                strokeColor: tileColorStroke,
+                strokeWidth: tileStroke,
+                cameraPos: this.gameRef.cameraPos,
+                zoom: this.gameRef.cameraZoom
+            })
+
+            drawBox({
+                c: this.gameRef.ctx,
+                x: targetTile.x * tileSize + 5,
+                y: targetTile.y * tileSize + 5,
+                width: tileSize - 10,
+                height: tileSize - 10,
+                fillColor: SECONDARY_COLOR,
+                strokeColor: PRIMARY_COLOR,
+                strokeWidth: 5,
+                cameraPos: this.gameRef.cameraPos,
+                zoom: this.gameRef.cameraZoom
+            })
+
 
             // draw the player
             this.mainPlayer.draw()
