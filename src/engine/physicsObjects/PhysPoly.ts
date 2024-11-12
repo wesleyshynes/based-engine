@@ -99,7 +99,8 @@ export default class PhysPoly extends BasedObject {
         vertices: this.vertices,
         fillColor: this.color,
         strokeColor: this.strokeColor,
-        strokeWidth: this.strokeWidth
+        strokeWidth: this.strokeWidth,
+        zoom: this.gameRef.cameraZoom,
       })
 
     })

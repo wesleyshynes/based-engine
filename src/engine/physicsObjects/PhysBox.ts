@@ -94,6 +94,7 @@ export default class PhysBox extends BasedObject {
         fillColor: this.color,
         strokeColor: this.strokeColor,
         strokeWidth: this.strokeWidth,
+        zoom: this.gameRef.cameraZoom
       })
     })
   }

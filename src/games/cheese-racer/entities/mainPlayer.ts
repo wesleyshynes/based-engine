@@ -1,6 +1,9 @@
-import { distanceBetween, normalizeVector, XYCoordinateType } from "../../../engine/libs/mathHelpers";
+import { distanceBetween, normalizeVector, radToDeg, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import PhysBall from "../../../engine/physicsObjects/PhysBall";
 import Physics from 'matter-js'
+import MouseBody from '../../../assets/cheese-racer/mouse-body-full.svg'
+import { createSprite, drawSVG, rotateDraw } from "../../../engine/libs/drawHelpers";
+
 
 export class MainPlayer extends PhysBall {
     x: number = 100
@@ -33,6 +36,8 @@ export class MainPlayer extends PhysBall {
     }
     targetThreshold: number = 5
 
+    mouseSprite: any
+
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
         if (otherBody && otherBody.options && otherBody.options.tags) {
@@ -54,7 +59,23 @@ export class MainPlayer extends PhysBall {
         }
     }
 
-    async preload() {}
+    async preload() {
+        this.mouseSprite = await createSprite({
+            c: this.gameRef.ctx,
+            sprite: MouseBody,
+            sx: 0,
+            sy: 0,
+            sWidth: 100,
+            sHeight: 78,
+            // dx: 0,
+            // dy: 0,
+            // dWidth: 100,
+            // dHeight: 78,
+            // frame: 0,
+            // lastUpdate: 0,
+            // updateDiff: 1000 / 60 * 10
+        })
+    }
 
     initialize() {
         this.initializeBody()
@@ -133,6 +154,36 @@ export class MainPlayer extends PhysBall {
 
     draw() {
         // this.drawShadows()
-        this.drawPhysicsBody()
+        // this.drawPhysicsBody()
+        
+        rotateDraw({
+            c: this.gameRef.ctx,
+            x: this.body.position.x,
+            y: this.body.position.y,
+            // a: -this.gameRef.cameraRotation,
+            a: radToDeg(this.body.angle),
+            cameraPos: this.gameRef.cameraPos,
+            zoom: this.gameRef.cameraZoom
+          }, () => {
+
+            rotateDraw({
+                c: this.gameRef.ctx,
+                x: 0,
+                y: 0,
+                a: -this.gameRef.cameraRotation,
+                zoom: this.gameRef.cameraZoom
+            }, () => {
+                rotateDraw({
+                    c: this.gameRef.ctx,
+                    x: -this.mouseSprite.sWidth / 2 - 12,
+                    y: -this.mouseSprite.sHeight / 2 - 20,
+                    a: 0,
+                    zoom: this.gameRef.cameraZoom
+                }, () => {
+                    drawSVG(this.mouseSprite, { zoom: this.gameRef.cameraZoom })
+                })
+            })
+    
+          })
     }
 }

@@ -40,11 +40,6 @@ export function drawSVG(settings: {
   sy: number,
   sWidth: number,
   sHeight: number,
-  dx: number,
-  dy: number,
-  dWidth: number,
-  dHeight: number,
-  sprite: string,
   flipX?: boolean,
   flipY?: boolean,
 }, camera?: {
@@ -53,15 +48,10 @@ export function drawSVG(settings: {
 }) {
   const {
     c,
-    sprite,
     sx,
     sy,
     sWidth,
     sHeight,
-    dx,
-    dy,
-    dWidth,
-    dHeight,
     img,
     flipX,
     flipY,
@@ -105,7 +95,6 @@ export function drawImage(settings: {
 ) {
   const {
     c,
-    sprite,
     sx,
     sy,
     sWidth,

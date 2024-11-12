@@ -25,7 +25,7 @@ export class Level01 extends BasedLevel {
     bgMusicTrack: any = BGMusic
 
     // Camera related stuff
-    miniMapActive: boolean = false
+    miniMapActive: boolean = true
     followCam: any;
 
     mainPlayer: any
@@ -48,14 +48,22 @@ export class Level01 extends BasedLevel {
             sy: 0,
             sWidth: 100,
             sHeight: 100,
-            dx: 0,
-            dy: 0,
-            dWidth: 100,
-            dHeight: 100,
-            frame: 0,
-            lastUpdate: 0,
-            updateDiff: 1000 / 60 * 10
+            // dx: 0,
+            // dy: 0,
+            // dWidth: 100,
+            // dHeight: 78,
+            // frame: 0,
+            // lastUpdate: 0,
+            // updateDiff: 1000 / 60 * 10
         })
+
+        // setup level and players
+        this.mainPlayer = new MainPlayer({
+            key: 'mainPlayer',
+            gameRef: this.gameRef,
+        })
+        await this.mainPlayer.preload()
+        
     }
 
 
@@ -78,20 +86,17 @@ export class Level01 extends BasedLevel {
         this.followCam.initialize()
 
 
-        // setup level and players
-        this.mainPlayer = new MainPlayer({
-            key: 'mainPlayer',
-            gameRef: this.gameRef,
-        })
         this.mainPlayer.x = this.playerStartPosition.x
         this.mainPlayer.y = this.playerStartPosition.y
+        this.mainPlayer.targetPosition.x = this.playerStartPosition.x
+        this.mainPlayer.targetPosition.y = this.playerStartPosition.y
         this.mainPlayer.color = PRIMARY_COLOR
         this.mainPlayer.strokeColor = SECONDARY_COLOR
         this.mainPlayer.radius = 25
         this.mainPlayer.initialize()
         this.gameRef.addToWorld(this.mainPlayer.body)
+        
 
-        // 
         this.littleBox = new PhysBox({
             key: 'littleBox',
             gameRef: this.gameRef,
@@ -140,6 +145,8 @@ export class Level01 extends BasedLevel {
         }
     }
     onPhysicsUpdate() {
+        this.followCam.cameraRotationTarget += 1
+
         // do something on physics tick
         this.updateCamera()
         // this.movingPlatforms.forEach((plat: any) => {
@@ -236,31 +243,31 @@ export class Level01 extends BasedLevel {
                 }
             }
 
-            drawBox({
-                c: this.gameRef.ctx,
-                x: highlightedTile.x * tileSize,
-                y: highlightedTile.y * tileSize,
-                width: tileSize,
-                height: tileSize,
-                fillColor: tileColorHighlight,
-                strokeColor: tileColorStroke,
-                strokeWidth: tileStroke,
-                cameraPos: this.gameRef.cameraPos,
-                zoom: this.gameRef.cameraZoom
-            })
+            // drawBox({
+            //     c: this.gameRef.ctx,
+            //     x: highlightedTile.x * tileSize,
+            //     y: highlightedTile.y * tileSize,
+            //     width: tileSize,
+            //     height: tileSize,
+            //     fillColor: tileColorHighlight,
+            //     strokeColor: tileColorStroke,
+            //     strokeWidth: tileStroke,
+            //     cameraPos: this.gameRef.cameraPos,
+            //     zoom: this.gameRef.cameraZoom
+            // })
 
-            drawBox({
-                c: this.gameRef.ctx,
-                x: hoveredTile.x * tileSize,
-                y: hoveredTile.y * tileSize,
-                width: tileSize,
-                height: tileSize,
-                fillColor: tileColorHovered,
-                strokeColor: tileColorStroke,
-                strokeWidth: tileStroke,
-                cameraPos: this.gameRef.cameraPos,
-                zoom: this.gameRef.cameraZoom
-            })
+            // drawBox({
+            //     c: this.gameRef.ctx,
+            //     x: hoveredTile.x * tileSize,
+            //     y: hoveredTile.y * tileSize,
+            //     width: tileSize,
+            //     height: tileSize,
+            //     fillColor: tileColorHovered,
+            //     strokeColor: tileColorStroke,
+            //     strokeWidth: tileStroke,
+            //     cameraPos: this.gameRef.cameraPos,
+            //     zoom: this.gameRef.cameraZoom
+            // })
 
             drawBox({
                 c: this.gameRef.ctx,
@@ -276,17 +283,15 @@ export class Level01 extends BasedLevel {
             })
 
 
-            // draw the player
-            this.mainPlayer.draw()
-
-            // draw the little box
-            this.littleBox.draw()
+            
 
 
             rotateDraw({
                 c: this.gameRef.ctx,
-                x: (this.cheeseX - this.cheesePiece.sWidth / 2),
-                y: (this.cheeseY - this.cheesePiece.sHeight / 2),
+                x: (this.littleBox.body.position.x - this.cheesePiece.sWidth / 2),
+                // x: (this.cheeseX - this.cheesePiece.sWidth / 2),
+                y: (this.littleBox.body.position.y - this.cheesePiece.sHeight / 2),
+                // y: (this.cheeseY - this.cheesePiece.sHeight / 2),
                 a: 0,
                 cameraPos: this.gameRef.cameraPos,
                 zoom: this.gameRef.cameraZoom
@@ -295,17 +300,25 @@ export class Level01 extends BasedLevel {
                 drawSVG(this.cheesePiece, { zoom: this.gameRef.cameraZoom })
             })
 
-            drawCircle({
-                c: this.gameRef.ctx,
-                x: this.gameRef.cameraMouseInfo.x,
-                y: this.gameRef.cameraMouseInfo.y,
-                radius: 10,
-                fillColor: 'red',
-                cameraPos: this.gameRef.cameraPos,
-                zoom: this.gameRef.cameraZoom,
-            })
+            // draw the little box
+            // this.littleBox.draw()
 
             this.randomPoly.draw()
+
+            // draw the player
+            this.mainPlayer.draw()
+
+            // draw the mouse position
+            // drawCircle({
+            //     c: this.gameRef.ctx,
+            //     x: this.gameRef.cameraMouseInfo.x,
+            //     y: this.gameRef.cameraMouseInfo.y,
+            //     radius: 10,
+            //     fillColor: 'red',
+            //     cameraPos: this.gameRef.cameraPos,
+            //     zoom: this.gameRef.cameraZoom,
+            // })
+
         })
 
 

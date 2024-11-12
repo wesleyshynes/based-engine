@@ -92,6 +92,8 @@ export default class PhysBall extends BasedObject {
         strokeColor: this.strokeColor,
         strokeWidth: this.strokeWidth,
         // fillColor: 'red',
+        // cameraPos: this.gameRef.cameraPos,
+        zoom: this.gameRef.cameraZoom
       })
     })
   }
@@ -115,6 +117,8 @@ export default class PhysBall extends BasedObject {
         radiusX: this.radius * 1.1,
         radiusY: this.radius * .75,
         fillColor: this.shadowColor,
+        // cameraPos: this.gameRef.cameraPos,
+        zoom: this.gameRef.cameraZoom
       })
     })
 
