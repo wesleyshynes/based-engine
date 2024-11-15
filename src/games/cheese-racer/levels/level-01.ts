@@ -12,7 +12,7 @@ export class Level01 extends BasedLevel {
 
     physics: any
 
-    levelWidth: number = 1800
+    levelWidth: number = 1792
     levelHeight: number = 1600
 
     nextLevel: string = 'credits-screen'
@@ -25,7 +25,7 @@ export class Level01 extends BasedLevel {
     bgMusicTrack: any = BGMusic
 
     // Camera related stuff
-    miniMapActive: boolean = true
+    miniMapActive: boolean = false
     followCam: any;
 
     mainPlayer: any
@@ -35,9 +35,10 @@ export class Level01 extends BasedLevel {
     cheeseY: number = 400
 
     cheesePiece: any
-
     randomPoly: any
 
+    tileSize: number = 64
+    tileMap: any = []
 
     async preload() {
         this.cheesePiece = await createSprite({
@@ -66,7 +67,6 @@ export class Level01 extends BasedLevel {
         
     }
 
-
     initialize() {
         this.gameRef.initializePhysics()
         this.gameRef.physics.world.gravity.y = 0
@@ -81,7 +81,7 @@ export class Level01 extends BasedLevel {
         this.followCam.defaultBound = false
         this.followCam.fullScreenBound = false
 
-        this.followCam.cameraRotationTarget = 45
+        // this.followCam.cameraRotationTarget = 45
 
         this.followCam.initialize()
 
@@ -133,8 +133,147 @@ export class Level01 extends BasedLevel {
         this.randomPoly.initialize()
         this.gameRef.addToWorld(this.randomPoly.body)
 
+        this.generateTileMap()
 
     }
+
+    generateTileMap() {
+        this.tileMap = []
+        for (let i = 0; i < this.levelWidth / this.tileSize; i++) {
+            this.tileMap[i] = []
+            for (let j = 0; j < this.levelHeight / this.tileSize; j++) {
+                this.tileMap[i][j] = -1
+            }
+        }
+
+
+        const minBlockWidth = 5
+        const minBlockHeight = 5
+
+        const maxBlockWidth = 10
+        const maxBlockHeight = 10
+
+        const minBlockGap = 1
+        const maxBlockGap = 2
+
+
+        for (let i = 0; i < this.tileMap.length; i++) {
+            for (let j = 0; j < this.tileMap[0].length; j++) {
+                // draw the borders
+                if(j === 0) {
+                    this.tileMap[i][j] = 1
+                }
+                if (j === 1) {
+                    this.tileMap[i][j] = 1
+                }
+                if (j === this.tileMap[0].length - 1) {
+                    this.tileMap[i][j] = 1
+                }
+                if (j === this.tileMap[0].length - 2) {
+                    this.tileMap[i][j] = 1
+                }
+                if (i === 0) {
+                    this.tileMap[i][j] = 1
+                }
+                if (i === 1) {
+                    this.tileMap[i][j] = 1
+                }
+                if (i === this.tileMap.length - 1) {
+                    this.tileMap[i][j] = 1
+                }
+                if (i === this.tileMap.length - 2) {
+                    this.tileMap[i][j] = 1
+                }
+
+                if(this.tileMap[i][j] === -1) {
+
+                    // if tile above or to left is a 0 then this should be a 1
+                    if (this.tileMap[i - 1][j] === 0 || this.tileMap[i][j - 1] === 0) {
+                        this.tileMap[i][j] = 1
+                        continue
+                    }
+
+
+                    const generateValue = Math.random() > 0.5 ? 1 : 0
+                    if (generateValue === 1) {
+                        this.tileMap[i][j] = 1
+                        continue
+                    }
+                    this.tileMap[i][j] = 0
+                    const availableWidth = this.tileMap.length - i - 2
+                    const availableHeight = this.tileMap[0].length - j - 2
+                    if(availableWidth < 1 || availableHeight < 1) {
+                        continue
+                    }
+                    let blockWidth = Math.floor(Math.random() * (maxBlockWidth - minBlockWidth) + minBlockWidth)
+                    let blockHeight = Math.floor(Math.random() * (maxBlockHeight - minBlockHeight) + minBlockHeight)
+                    
+                    if (availableWidth < blockWidth) {
+                        blockWidth = availableWidth
+                    }
+                    if (availableHeight < blockHeight) {
+                        blockHeight = availableHeight
+                    }
+
+                    const blockGap = Math.floor(Math.random() * (maxBlockGap - minBlockGap) + minBlockGap)
+
+                    for (let k = 0; k < blockWidth; k++) {
+                        for (let l = 0; l < blockHeight; l++) {
+                            this.tileMap[i + k][j + l] = 0
+                        }
+                    }
+
+                    for (let k = 0; k < blockGap; k++) {
+                        for (let l = 0; l < blockWidth; l++) {
+                            this.tileMap[i + l][j - k] = 2
+                        }
+                        for (let l = 0; l < blockHeight; l++) {
+                            this.tileMap[i - k][j + l] = 2
+                        }
+                    }
+                    
+                }
+
+
+            }
+        }
+
+
+    }
+
+    drawTileMap() {
+        this.tileMap.forEach((row: any, i: number) => {
+            row.forEach((tile: any, j: number) => {
+                if (tile === 0) {
+                    drawBox({
+                        c: this.gameRef.ctx,
+                        x: i * this.tileSize,
+                        y: j * this.tileSize,
+                        width: this.tileSize + 1,
+                        height: this.tileSize + 1,
+                        fillColor: PRIMARY_COLOR,
+                        cameraPos: this.gameRef.cameraPos,
+                        zoom: this.gameRef.cameraZoom
+                    })
+                }
+                if (tile === 2) {
+                    drawBox({
+                        c: this.gameRef.ctx,
+                        x: i * this.tileSize,
+                        y: j * this.tileSize,
+                        width: this.tileSize + 1,
+                        height: this.tileSize + 1,
+                        fillColor: SECONDARY_COLOR,
+                        cameraPos: this.gameRef.cameraPos,
+                        zoom: this.gameRef.cameraZoom
+                    })
+                }
+            })
+        })
+    }
+
+
+
     update() {
         this.handlePhysics()
     }
@@ -145,7 +284,7 @@ export class Level01 extends BasedLevel {
         }
     }
     onPhysicsUpdate() {
-        this.followCam.cameraRotationTarget += 1
+        // this.followCam.cameraRotationTarget += 1
 
         // do something on physics tick
         this.updateCamera()
@@ -205,85 +344,11 @@ export class Level01 extends BasedLevel {
                 zoom: this.gameRef.cameraZoom
             })
 
-            const tileSize = 100
-            const tileColor = DARK_COLOR
-            const tileColor2 = LIGHT_COLOR
-            const tileColorHighlight = PRIMARY_COLOR
-            const tileColorHovered = SECONDARY_COLOR
-            const tileStroke = 2
-            const tileColorStroke2 = SECONDARY_COLOR
-            const tileColorStroke = PRIMARY_COLOR
-
-            const highlightedTile = {
-                x: Math.floor(this.mainPlayer.body.position.x / tileSize),
-                y: Math.floor(this.mainPlayer.body.position.y / tileSize)
-            }
-            const hoveredTile = {
-                x: Math.floor(this.gameRef.cameraMouseInfo.x / tileSize),
-                y: Math.floor(this.gameRef.cameraMouseInfo.y / tileSize)
-            }
-            const targetTile = {
-                x: Math.floor(this.mainPlayer.targetPosition.x / tileSize),
-                y: Math.floor(this.mainPlayer.targetPosition.y / tileSize)
-            }
-            for (let i = 0; i < this.levelWidth / tileSize; i++) {
-                for (let j = 0; j < this.levelHeight / tileSize; j++) {
-                    drawBox({
-                        c: this.gameRef.ctx,
-                        x: i * tileSize,
-                        y: j * tileSize,
-                        width: tileSize,
-                        height: tileSize,
-                        fillColor: (i + j) % 2 === 0 ? tileColor : tileColor2,
-                        strokeColor: (i + j) % 2 === 0 ? tileColorStroke : tileColorStroke2,
-                        strokeWidth: tileStroke,
-                        cameraPos: this.gameRef.cameraPos,
-                        zoom: this.gameRef.cameraZoom
-                    })
-                }
-            }
-
-            // drawBox({
-            //     c: this.gameRef.ctx,
-            //     x: highlightedTile.x * tileSize,
-            //     y: highlightedTile.y * tileSize,
-            //     width: tileSize,
-            //     height: tileSize,
-            //     fillColor: tileColorHighlight,
-            //     strokeColor: tileColorStroke,
-            //     strokeWidth: tileStroke,
-            //     cameraPos: this.gameRef.cameraPos,
-            //     zoom: this.gameRef.cameraZoom
-            // })
-
-            // drawBox({
-            //     c: this.gameRef.ctx,
-            //     x: hoveredTile.x * tileSize,
-            //     y: hoveredTile.y * tileSize,
-            //     width: tileSize,
-            //     height: tileSize,
-            //     fillColor: tileColorHovered,
-            //     strokeColor: tileColorStroke,
-            //     strokeWidth: tileStroke,
-            //     cameraPos: this.gameRef.cameraPos,
-            //     zoom: this.gameRef.cameraZoom
-            // })
-
-            drawBox({
-                c: this.gameRef.ctx,
-                x: targetTile.x * tileSize + 5,
-                y: targetTile.y * tileSize + 5,
-                width: tileSize - 10,
-                height: tileSize - 10,
-                fillColor: SECONDARY_COLOR,
-                strokeColor: PRIMARY_COLOR,
-                strokeWidth: 5,
-                cameraPos: this.gameRef.cameraPos,
-                zoom: this.gameRef.cameraZoom
-            })
-
 
             
+            // draw the tile map
+            this.drawTileMap()
+             
 
 
             rotateDraw({
@@ -309,15 +374,15 @@ export class Level01 extends BasedLevel {
             this.mainPlayer.draw()
 
             // draw the mouse position
-            // drawCircle({
-            //     c: this.gameRef.ctx,
-            //     x: this.gameRef.cameraMouseInfo.x,
-            //     y: this.gameRef.cameraMouseInfo.y,
-            //     radius: 10,
-            //     fillColor: 'red',
-            //     cameraPos: this.gameRef.cameraPos,
-            //     zoom: this.gameRef.cameraZoom,
-            // })
+            drawCircle({
+                c: this.gameRef.ctx,
+                x: this.gameRef.cameraMouseInfo.x,
+                y: this.gameRef.cameraMouseInfo.y,
+                radius: 10,
+                fillColor: 'red',
+                cameraPos: this.gameRef.cameraPos,
+                zoom: this.gameRef.cameraZoom,
+            })
 
         })
 
