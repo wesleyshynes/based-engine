@@ -7,6 +7,7 @@ export class TileGrid {
     maxWidth: number;
     minHeight: number;
     maxHeight: number;
+    buildingMinDistance: number;
 
     buildings: { row: number, col: number, width: number, height: number }[] = [];
 
@@ -16,7 +17,8 @@ export class TileGrid {
         minWidth: number = 5,
         maxWidth: number = 10,
         minHeight: number = 3,
-        maxHeight: number = 6
+        maxHeight: number = 6,
+        buildingMinDistance: number = 2
     ) {
         this.rows = rows;
         this.cols = cols;
@@ -24,13 +26,14 @@ export class TileGrid {
         this.maxWidth = maxWidth;
         this.minHeight = minHeight;
         this.maxHeight = maxHeight;
+        this.buildingMinDistance = buildingMinDistance;
         this.grid = Array.from({ length: rows }, () => Array(cols).fill('road'));
     }
 
     // Check if a building can be placed at a given position and size
     canPlaceBuilding(row: number, col: number, width: number, height: number): boolean {
-        for (let r = row - 2; r <= row + height + 1; r++) {
-            for (let c = col - 2; c <= col + width + 1; c++) {
+        for (let r = row - this.buildingMinDistance; r < row + height + this.buildingMinDistance; r++) {
+            for (let c = col - this.buildingMinDistance; c < col + width + this.buildingMinDistance; c++) {
                 if (
                     r >= 0 &&
                     r < this.rows &&
@@ -48,8 +51,8 @@ export class TileGrid {
     // Place a building at a valid position and size
     placeBuilding(row: number, col: number, width: number, height: number): boolean {
         if (
-            row + height <= this.rows - 2 &&
-            col + width <= this.cols - 2 &&
+            row + height <= this.rows - this.buildingMinDistance &&
+            col + width <= this.cols - this.buildingMinDistance &&
             this.canPlaceBuilding(row, col, width, height)
         ) {
             for (let r = row; r < row + height; r++) {
@@ -70,8 +73,8 @@ export class TileGrid {
 
         if(buildingCount > 0) {
             while (buildingCount === undefined || placedBuildings < buildingCount) {
-                const row = Math.floor(Math.random() * (this.rows - 2)) + 2;
-                const col = Math.floor(Math.random() * (this.cols - 2)) + 2;
+                const row = Math.floor(Math.random() * (this.rows - this.buildingMinDistance)) + this.buildingMinDistance;
+                const col = Math.floor(Math.random() * (this.cols - this.buildingMinDistance)) + this.buildingMinDistance;
     
                 const width = Math.floor(Math.random() * (this.maxWidth - this.minWidth + 1)) + this.minWidth;
                 const height = Math.floor(Math.random() * (this.maxHeight - this.minHeight + 1)) + this.minHeight;
