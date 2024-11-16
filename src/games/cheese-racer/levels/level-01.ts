@@ -7,19 +7,25 @@ import { DARK_COLOR, LIGHT_COLOR, PRIMARY_COLOR, SECONDARY_COLOR } from '../cons
 import { MainPlayer } from '../entities/mainPlayer';
 import CheesePiece from '../../../assets/cheese-racer/cheese-piece.svg'
 import PhysPoly from '../../../engine/physicsObjects/PhysPoly';
+import { TileGrid } from '../helpers';
 
 export class Level01 extends BasedLevel {
 
     physics: any
 
-    levelWidth: number = 1792
-    levelHeight: number = 1600
+    tileSize: number = 64
+    tileMap: any = []
+
+    levelWidth: number = 64 * 50
+    levelHeight: number = 64 * 30
 
     nextLevel: string = 'credits-screen'
 
     playerStartPosition: any = { 
-        x: this.levelWidth / 2,
-        y: this.levelHeight / 2
+        // x: this.levelWidth / 2,
+        // y: this.levelHeight / 2,
+        x: 0,
+        y: 0,
     }
 
     bgMusicTrack: any = BGMusic
@@ -35,10 +41,9 @@ export class Level01 extends BasedLevel {
     cheeseY: number = 400
 
     cheesePiece: any
-    randomPoly: any
+    // randomPoly: any
 
-    tileSize: number = 64
-    tileMap: any = []
+    buildings: any = []
 
     async preload() {
         this.cheesePiece = await createSprite({
@@ -101,8 +106,8 @@ export class Level01 extends BasedLevel {
             key: 'littleBox',
             gameRef: this.gameRef,
         })
-        this.littleBox.x = 300
-        this.littleBox.y = 300
+        this.littleBox.x = 200
+        this.littleBox.y = 20
         this.littleBox.width = 50
         this.littleBox.height = 50
         this.littleBox.color = SECONDARY_COLOR
@@ -116,139 +121,57 @@ export class Level01 extends BasedLevel {
         this.littleBox.initialize()
         this.gameRef.addToWorld(this.littleBox.body)
 
-        this.randomPoly = new PhysPoly({
-            key: 'randomPoly',
-            gameRef: this.gameRef,
-        })
-        this.randomPoly.bodyOptions = {
-            label: `randomPoly`,
-            inertia: Infinity,
-            density: 5,
-            friction: 0.9
-        }
-        this.randomPoly.x = 600
-        this.randomPoly.y = 400
-        this.randomPoly.color = SECONDARY_COLOR
-        this.randomPoly.strokeColor = PRIMARY_COLOR
-        this.randomPoly.initialize()
-        this.gameRef.addToWorld(this.randomPoly.body)
+        // this.randomPoly = new PhysPoly({
+        //     key: 'randomPoly',
+        //     gameRef: this.gameRef,
+        // })
+        // this.randomPoly.bodyOptions = {
+        //     label: `randomPoly`,
+        //     inertia: Infinity,
+        //     density: 5,
+        //     friction: 0.9
+        // }
+        // this.randomPoly.x = 600
+        // this.randomPoly.y = 400
+        // this.randomPoly.color = SECONDARY_COLOR
+        // this.randomPoly.strokeColor = PRIMARY_COLOR
+        // this.randomPoly.initialize()
+        // this.gameRef.addToWorld(this.randomPoly.body)
 
         this.generateTileMap()
 
+        this.buildings = this.tileMap.buildings.map((building: { row: number, col: number, width: number, height: number }) => {
+            const newBuilding = new PhysBox({
+                key: 'building',
+                gameRef: this.gameRef,
+            })
+            newBuilding.x = building.col * this.tileSize + (building.width * this.tileSize / 2)
+            newBuilding.y = building.row * this.tileSize + (building.height * this.tileSize / 2)
+            newBuilding.width = building.width * this.tileSize
+            newBuilding.height = building.height * this.tileSize
+            // newBuilding.strokeColor = PRIMARY_COLOR
+            newBuilding.color = SECONDARY_COLOR
+            newBuilding.strokeWidth = 0
+            newBuilding.bodyOptions = { label: `building`, isStatic: true }
+            newBuilding.initialize()
+            this.gameRef.addToWorld(newBuilding.body)
+            return newBuilding
+        })
     }
 
     generateTileMap() {
-        this.tileMap = []
-        for (let i = 0; i < this.levelWidth / this.tileSize; i++) {
-            this.tileMap[i] = []
-            for (let j = 0; j < this.levelHeight / this.tileSize; j++) {
-                this.tileMap[i][j] = -1
-            }
-        }
-
-
-        const minBlockWidth = 5
-        const minBlockHeight = 5
-
-        const maxBlockWidth = 10
-        const maxBlockHeight = 10
-
-        const minBlockGap = 1
-        const maxBlockGap = 2
-
-
-        for (let i = 0; i < this.tileMap.length; i++) {
-            for (let j = 0; j < this.tileMap[0].length; j++) {
-                // draw the borders
-                if(j === 0) {
-                    this.tileMap[i][j] = 1
-                }
-                if (j === 1) {
-                    this.tileMap[i][j] = 1
-                }
-                if (j === this.tileMap[0].length - 1) {
-                    this.tileMap[i][j] = 1
-                }
-                if (j === this.tileMap[0].length - 2) {
-                    this.tileMap[i][j] = 1
-                }
-                if (i === 0) {
-                    this.tileMap[i][j] = 1
-                }
-                if (i === 1) {
-                    this.tileMap[i][j] = 1
-                }
-                if (i === this.tileMap.length - 1) {
-                    this.tileMap[i][j] = 1
-                }
-                if (i === this.tileMap.length - 2) {
-                    this.tileMap[i][j] = 1
-                }
-
-                if(this.tileMap[i][j] === -1) {
-
-                    // if tile above or to left is a 0 then this should be a 1
-                    if (this.tileMap[i - 1][j] === 0 || this.tileMap[i][j - 1] === 0) {
-                        this.tileMap[i][j] = 1
-                        continue
-                    }
-
-
-                    const generateValue = Math.random() > 0.5 ? 1 : 0
-                    if (generateValue === 1) {
-                        this.tileMap[i][j] = 1
-                        continue
-                    }
-                    this.tileMap[i][j] = 0
-                    const availableWidth = this.tileMap.length - i - 2
-                    const availableHeight = this.tileMap[0].length - j - 2
-                    if(availableWidth < 1 || availableHeight < 1) {
-                        continue
-                    }
-                    let blockWidth = Math.floor(Math.random() * (maxBlockWidth - minBlockWidth) + minBlockWidth)
-                    let blockHeight = Math.floor(Math.random() * (maxBlockHeight - minBlockHeight) + minBlockHeight)
-                    
-                    if (availableWidth < blockWidth) {
-                        blockWidth = availableWidth
-                    }
-                    if (availableHeight < blockHeight) {
-                        blockHeight = availableHeight
-                    }
-
-                    const blockGap = Math.floor(Math.random() * (maxBlockGap - minBlockGap) + minBlockGap)
-
-                    for (let k = 0; k < blockWidth; k++) {
-                        for (let l = 0; l < blockHeight; l++) {
-                            this.tileMap[i + k][j + l] = 0
-                        }
-                    }
-
-                    for (let k = 0; k < blockGap; k++) {
-                        for (let l = 0; l < blockWidth; l++) {
-                            this.tileMap[i + l][j - k] = 2
-                        }
-                        for (let l = 0; l < blockHeight; l++) {
-                            this.tileMap[i - k][j + l] = 2
-                        }
-                    }
-                    
-                }
-
-
-            }
-        }
-
-
+        this.tileMap = new TileGrid(this.levelHeight / this.tileSize, this.levelWidth / this.tileSize)
+        this.tileMap.generate()
     }
 
     drawTileMap() {
-        this.tileMap.forEach((row: any, i: number) => {
+        this.tileMap.grid.forEach((row: any, i: number) => {
             row.forEach((tile: any, j: number) => {
-                if (tile === 0) {
+                if (tile === 'road') {
                     drawBox({
                         c: this.gameRef.ctx,
-                        x: i * this.tileSize,
-                        y: j * this.tileSize,
+                        x: j * this.tileSize,
+                        y: i * this.tileSize,
                         width: this.tileSize + 1,
                         height: this.tileSize + 1,
                         fillColor: PRIMARY_COLOR,
@@ -256,11 +179,11 @@ export class Level01 extends BasedLevel {
                         zoom: this.gameRef.cameraZoom
                     })
                 }
-                if (tile === 2) {
+                if (tile === 'building') {
                     drawBox({
                         c: this.gameRef.ctx,
-                        x: i * this.tileSize,
-                        y: j * this.tileSize,
+                        x: j * this.tileSize,
+                        y: i * this.tileSize,
                         width: this.tileSize + 1,
                         height: this.tileSize + 1,
                         fillColor: SECONDARY_COLOR,
@@ -293,7 +216,7 @@ export class Level01 extends BasedLevel {
         // })
         this.mainPlayer.update()
         this.littleBox.update()
-        this.randomPoly.update()
+        // this.randomPoly.update()
         // console.log(this.followCam.activeTarget)
 
         if(this.gameRef.mouseInfo.mouseDown) {
@@ -348,6 +271,10 @@ export class Level01 extends BasedLevel {
             
             // draw the tile map
             this.drawTileMap()
+
+            this.buildings.forEach((building: any) => {
+                building.draw()
+            })
              
 
 
@@ -368,7 +295,7 @@ export class Level01 extends BasedLevel {
             // draw the little box
             // this.littleBox.draw()
 
-            this.randomPoly.draw()
+            // this.randomPoly.draw()
 
             // draw the player
             this.mainPlayer.draw()
