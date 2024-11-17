@@ -8,6 +8,7 @@ import { MainPlayer } from '../entities/mainPlayer';
 import CheesePiece from '../../../assets/cheese-racer/cheese-piece.svg'
 import PhysPoly from '../../../engine/physicsObjects/PhysPoly';
 import { TileGrid } from '../helpers';
+import { Building } from '../entities/building';
 
 export class Level01 extends BasedLevel {
 
@@ -21,7 +22,7 @@ export class Level01 extends BasedLevel {
 
     nextLevel: string = 'credits-screen'
 
-    playerStartPosition: any = { 
+    playerStartPosition: any = {
         // x: this.levelWidth / 2,
         // y: this.levelHeight / 2,
         x: 0,
@@ -69,7 +70,7 @@ export class Level01 extends BasedLevel {
             gameRef: this.gameRef,
         })
         await this.mainPlayer.preload()
-        
+
     }
 
     initialize() {
@@ -100,7 +101,7 @@ export class Level01 extends BasedLevel {
         this.mainPlayer.radius = 25
         this.mainPlayer.initialize()
         this.gameRef.addToWorld(this.mainPlayer.body)
-        
+
 
         this.littleBox = new PhysBox({
             key: 'littleBox',
@@ -141,18 +142,36 @@ export class Level01 extends BasedLevel {
         this.generateTileMap()
 
         this.buildings = this.tileMap.buildings.map((building: { row: number, col: number, width: number, height: number }) => {
-            const newBuilding = new PhysBox({
-                key: 'building',
+            const newBuilding = new Building({
+                key: `building-${building.row}-${building.col}`,
                 gameRef: this.gameRef,
             })
+            newBuilding.tileSize = this.tileSize
+            newBuilding.row = building.height
+            newBuilding.col = building.width
             newBuilding.x = building.col * this.tileSize + (building.width * this.tileSize / 2)
             newBuilding.y = building.row * this.tileSize + (building.height * this.tileSize / 2)
             newBuilding.width = building.width * this.tileSize
             newBuilding.height = building.height * this.tileSize
-            // newBuilding.strokeColor = PRIMARY_COLOR
+
             newBuilding.color = SECONDARY_COLOR
-            newBuilding.strokeWidth = 0
+            newBuilding.strokeColor = PRIMARY_COLOR
+            newBuilding.windowStrokeColor = DARK_COLOR
+
+            // random 1 or 0
+            const randomColor = Math.floor(Math.random() * 2)
+            if (randomColor) {
+                newBuilding.color = PRIMARY_COLOR
+                newBuilding.strokeColor = SECONDARY_COLOR
+                newBuilding.windowStrokeColor = DARK_COLOR
+            }
+
+            newBuilding.doorColor = DARK_COLOR
+            newBuilding.strokeWidth = 2
             newBuilding.bodyOptions = { label: `building`, isStatic: true }
+            newBuilding.defaultWindowColor = PRIMARY_COLOR
+            newBuilding.darkWindowColor = DARK_COLOR
+            newBuilding.litWindowColor = LIGHT_COLOR
             newBuilding.initialize()
             this.gameRef.addToWorld(newBuilding.body)
             return newBuilding
@@ -167,30 +186,30 @@ export class Level01 extends BasedLevel {
     drawTileMap() {
         this.tileMap.grid.forEach((row: any, i: number) => {
             row.forEach((tile: any, j: number) => {
-                if (tile === 'road') {
-                    drawBox({
-                        c: this.gameRef.ctx,
-                        x: j * this.tileSize,
-                        y: i * this.tileSize,
-                        width: this.tileSize + 1,
-                        height: this.tileSize + 1,
-                        fillColor: PRIMARY_COLOR,
-                        cameraPos: this.gameRef.cameraPos,
-                        zoom: this.gameRef.cameraZoom
-                    })
-                }
-                if (tile === 'building') {
-                    drawBox({
-                        c: this.gameRef.ctx,
-                        x: j * this.tileSize,
-                        y: i * this.tileSize,
-                        width: this.tileSize + 1,
-                        height: this.tileSize + 1,
-                        fillColor: SECONDARY_COLOR,
-                        cameraPos: this.gameRef.cameraPos,
-                        zoom: this.gameRef.cameraZoom
-                    })
-                }
+                // if (tile === 'road') {
+                //     drawBox({
+                //         c: this.gameRef.ctx,
+                //         x: j * this.tileSize,
+                //         y: i * this.tileSize,
+                //         width: this.tileSize + 1,
+                //         height: this.tileSize + 1,
+                //         fillColor: PRIMARY_COLOR,
+                //         cameraPos: this.gameRef.cameraPos,
+                //         zoom: this.gameRef.cameraZoom
+                //     })
+                // }
+                // if (tile === 'building') {
+                //     drawBox({
+                //         c: this.gameRef.ctx,
+                //         x: j * this.tileSize,
+                //         y: i * this.tileSize,
+                //         width: this.tileSize + 1,
+                //         height: this.tileSize + 1,
+                //         fillColor: SECONDARY_COLOR,
+                //         cameraPos: this.gameRef.cameraPos,
+                //         zoom: this.gameRef.cameraZoom
+                //     })
+                // }
             })
         })
     }
@@ -219,7 +238,7 @@ export class Level01 extends BasedLevel {
         // this.randomPoly.update()
         // console.log(this.followCam.activeTarget)
 
-        if(this.gameRef.mouseInfo.mouseDown) {
+        if (this.gameRef.mouseInfo.mouseDown) {
             this.mainPlayer.setTargetPosition({
                 x: this.gameRef.cameraMouseInfo.x,
                 y: this.gameRef.cameraMouseInfo.y
@@ -268,27 +287,24 @@ export class Level01 extends BasedLevel {
             })
 
 
-            
+
             // draw the tile map
             this.drawTileMap()
 
             this.buildings.forEach((building: any) => {
                 building.draw()
             })
-             
+
 
 
             rotateDraw({
                 c: this.gameRef.ctx,
                 x: (this.littleBox.body.position.x - this.cheesePiece.sWidth / 2),
-                // x: (this.cheeseX - this.cheesePiece.sWidth / 2),
                 y: (this.littleBox.body.position.y - this.cheesePiece.sHeight / 2),
-                // y: (this.cheeseY - this.cheesePiece.sHeight / 2),
                 a: 0,
                 cameraPos: this.gameRef.cameraPos,
                 zoom: this.gameRef.cameraZoom
             }, () => {
-                // this.sprite.flipX = this.velocity.x < 0
                 drawSVG(this.cheesePiece, { zoom: this.gameRef.cameraZoom })
             })
 

@@ -101,15 +101,7 @@ export default class PhysBall extends BasedObject {
   drawShadows() {
     this.gameRef.ctx.globalAlpha = .3
 
-    rotateDraw({
-      c: this.gameRef.ctx,
-      x: this.body.position.x,
-      y: (this.body.position.y + this.radius * .75),
-      a: 0,
-      cameraPos: this.gameRef.cameraPos,
-      zoom: this.gameRef.cameraZoom
-    }, () => {
-
+    this.cameraDraw(() => {
       drawEllipse({
         c: this.gameRef.ctx,
         x: this.bodyCenter.x,
@@ -125,6 +117,18 @@ export default class PhysBall extends BasedObject {
     this.gameRef.ctx.globalAlpha = 1
   }
 
+  cameraDraw(cameraDrawFn = () => {}) {
+    rotateDraw({
+      c: this.gameRef.ctx,
+      x: this.body.position.x,
+      y: this.body.position.y,
+      a: radToDeg(this.body.angle),
+      cameraPos: this.gameRef.cameraPos,
+      zoom: this.gameRef.cameraZoom
+    }, () => {
+      cameraDrawFn()
+    })
+  }
 
 
   tearDown() { }

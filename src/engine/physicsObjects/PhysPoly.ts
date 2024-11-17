@@ -69,31 +69,7 @@ export default class PhysPoly extends BasedObject {
   }
 
   drawPhysicsBody() {
-    rotateDraw({
-      c: this.gameRef.ctx,
-      x: this.body.position.x,
-      y: this.body.position.y,
-      a: radToDeg(this.body.angle),
-      cameraPos: this.gameRef.cameraPos,
-      zoom: this.gameRef.cameraZoom
-    }, () => {
-
-      // const {ctx} = this.gameRef
-      // ctx.fillStyle = this.color;
-      // ctx.beginPath();
-      // // start line
-      // ctx.moveTo(this.vertices[0].x * this.gameRef.cameraZoom, this.vertices[0].y * this.gameRef.cameraZoom);
-
-      // for (let i = 1; i < this.vertices.length; i++) {
-      //   ctx.lineTo(this.vertices[i].x * this.gameRef.cameraZoom, this.vertices[i].y * this.gameRef.cameraZoom);
-      // }
-
-      // // go to start
-      // ctx.lineTo(this.vertices[0].x * this.gameRef.cameraZoom, this.vertices[0].y * this.gameRef.cameraZoom);
-
-      // ctx.closePath();
-      // ctx.fill();
-
+    this.cameraDraw(() => {
       drawPolygon({
         c: this.gameRef.ctx,
         vertices: this.vertices,
@@ -102,7 +78,19 @@ export default class PhysPoly extends BasedObject {
         strokeWidth: this.strokeWidth,
         zoom: this.gameRef.cameraZoom,
       })
+    })
+  }
 
+  cameraDraw(cameraDrawFn = () => {}) {
+    rotateDraw({
+      c: this.gameRef.ctx,
+      x: this.body.position.x,
+      y: this.body.position.y,
+      a: radToDeg(this.body.angle),
+      cameraPos: this.gameRef.cameraPos,
+      zoom: this.gameRef.cameraZoom
+    }, () => {
+      cameraDrawFn()
     })
   }
 

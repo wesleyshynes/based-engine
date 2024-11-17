@@ -76,15 +76,7 @@ export default class PhysBox extends BasedObject {
   }
 
   drawPhysicsBody() {
-    rotateDraw({
-      c: this.gameRef.ctx,
-      x: this.body.position.x,
-      y: this.body.position.y,
-      a: radToDeg(this.body.angle),
-      cameraPos: this.gameRef.cameraPos,
-      zoom: this.gameRef.cameraZoom
-    }, () => {
-
+    this.cameraDraw(() => {
       drawBox({
         c: this.gameRef.ctx,
         x: (-(this.width / 2) - this.bodyCenter.x),
@@ -98,6 +90,20 @@ export default class PhysBox extends BasedObject {
       })
     })
   }
+
+  cameraDraw(cameraDrawFn = () => {}) {
+    rotateDraw({
+      c: this.gameRef.ctx,
+      x: this.body.position.x,
+      y: this.body.position.y,
+      a: radToDeg(this.body.angle),
+      cameraPos: this.gameRef.cameraPos,
+      zoom: this.gameRef.cameraZoom
+    }, () => {
+      cameraDrawFn()
+    })
+  }
+
 
   tearDown() { }
 }
