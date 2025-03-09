@@ -2,9 +2,10 @@ import BGMusic from '../../../assets/the-squeeze/tunetank.com_5630_ready-to-play
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { FollowCam } from '../../../engine/cameras/FollowCam';
 import { createSprite, drawBox, drawCameraFrame, drawCircle, drawSVG, rotateDraw } from '../../../engine/libs/drawHelpers';
+import PhysBall from '../../../engine/physicsObjects/PhysBall';
 import PhysBox from '../../../engine/physicsObjects/PhysBox';
 import { DARK_COLOR, LIGHT_COLOR, PRIMARY_COLOR, SECONDARY_COLOR } from '../constants/gameColors';
-
+import Physics from 'matter-js';
 export class Level01 extends BasedLevel {
 
     physics: any
@@ -30,6 +31,7 @@ export class Level01 extends BasedLevel {
     miniMapActive: boolean = false
     followCam: any;
 
+    mouseTarget: any;
     simpleCard: any;
     simpleCardZone: any;
 
@@ -51,7 +53,75 @@ export class Level01 extends BasedLevel {
 
         // this.followCam.cameraRotationTarget = 45
 
+        this.setupSimpleCard()  
+        this.setupMouseTarget()          
+
         this.followCam.initialize()
+    }
+
+    setupMouseTarget() {
+        this.mouseTarget = new PhysBall({
+            key: `mouseTarget`,
+            gameRef: this.gameRef,
+            options: {
+                tags: {
+                    mouseTarget: true
+                }
+            }
+        })
+
+        this.mouseTarget.x = 0
+        this.mouseTarget.y = 0
+        this.mouseTarget.radius = 10
+
+        this.mouseTarget.bodyOptions = {
+            label: 'mouseTarget',
+            // isStatic: true,
+            isSensor: true
+        }
+
+        this.mouseTarget.initialize()
+        this.gameRef.addToWorld(this.mouseTarget.body)
+    }
+
+    setupSimpleCard() {
+        this.simpleCard = new PhysBox({
+            key: `simpleCard`,
+            gameRef: this.gameRef,
+            options: {
+                tags: {
+                    simpleCard: true
+                }
+            }
+        })
+
+        this.simpleCard.x = 100
+        this.simpleCard.y = 300
+        this.simpleCard.width = 100
+        this.simpleCard.height = 150
+
+        this.simpleCard.bodyOptions = {
+            label: 'simpleCard',
+            // isStatic: true,
+            isSensor: true
+        }
+
+        this.simpleCard.collisionStartFn = (o: any) => {
+            const otherBody = o.plugin.basedRef()
+            if (otherBody && otherBody.options && otherBody.options.tags.mouseTarget) {
+                this.simpleCard.strokeWidth = 5
+            }
+        }
+    
+        this.simpleCard.collisionEndFn = (o: any) => {
+            const otherBody = o.plugin.basedRef()
+            if (otherBody && otherBody.options && otherBody.options.tags.mouseTarget) {
+                this.simpleCard.strokeWidth = 0
+            }
+        }
+
+        this.simpleCard.initialize()
+        this.gameRef.addToWorld(this.simpleCard.body)
     }
 
     update() {
@@ -76,12 +146,17 @@ export class Level01 extends BasedLevel {
         // this.randomPoly.update()
         // console.log(this.followCam.activeTarget)
 
-        if (this.gameRef.mouseInfo.mouseDown) {
+        // if (this.gameRef.mouseInfo.mouseDown) {
             // this.mainPlayer.setTargetPosition({
             //     x: this.gameRef.cameraMouseInfo.x,
             //     y: this.gameRef.cameraMouseInfo.y
             // })
-        }
+
+            Physics.Body.setPosition(this.mouseTarget.body, {
+                x: this.gameRef.cameraMouseInfo.x,
+                y: this.gameRef.cameraMouseInfo.y
+            })
+        // }
     }
 
 
@@ -124,35 +199,23 @@ export class Level01 extends BasedLevel {
                 zoom: this.gameRef.cameraZoom
             })
 
-            // rotateDraw({
-            //     c: this.gameRef.ctx,
-            //     x: (this.littleBox.body.position.x - this.cheesePiece.sWidth / 2),
-            //     y: (this.littleBox.body.position.y - this.cheesePiece.sHeight / 2),
-            //     a: 0,
-            //     cameraPos: this.gameRef.cameraPos,
-            //     zoom: this.gameRef.cameraZoom
-            // }, () => {
-            //     drawSVG(this.cheesePiece, { zoom: this.gameRef.cameraZoom })
-            // })
+            // draw the simple card
+            this.simpleCard.draw()
 
-            // draw the little box
-            // this.littleBox.draw()
+            // draw the simple card zone
 
-            // this.randomPoly.draw()
-
-            // draw the player
-            // this.mainPlayer.draw()
 
             // draw the mouse position
-            drawCircle({
-                c: this.gameRef.ctx,
-                x: this.gameRef.cameraMouseInfo.x,
-                y: this.gameRef.cameraMouseInfo.y,
-                radius: 10,
-                fillColor: 'red',
-                cameraPos: this.gameRef.cameraPos,
-                zoom: this.gameRef.cameraZoom,
-            })
+            // drawCircle({
+            //     c: this.gameRef.ctx,
+            //     x: this.gameRef.cameraMouseInfo.x,
+            //     y: this.gameRef.cameraMouseInfo.y,
+            //     radius: 10,
+            //     fillColor: 'red',
+            //     cameraPos: this.gameRef.cameraPos,
+            //     zoom: this.gameRef.cameraZoom,
+            // })
+            this.mouseTarget.draw()
 
         })
 
