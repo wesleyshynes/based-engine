@@ -16,7 +16,7 @@ const TEXT_HOVER_COLOR = LIGHT_COLOR
 const BG_COLOR = DARK_COLOR
 export class StartScreen extends BasedLevel {
 
-  gameTitle: string = 'Cheese Racer'
+  gameTitle: string = 'Limited Cards'
 
   startButton: any;
   soundButton: any;
