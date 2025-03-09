@@ -2,6 +2,7 @@ import BGMusic from '../../../assets/the-squeeze/tunetank.com_5630_ready-to-play
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { FollowCam } from '../../../engine/cameras/FollowCam';
 import { createSprite, drawBox, drawCameraFrame, drawCircle, drawSVG, rotateDraw } from '../../../engine/libs/drawHelpers';
+import { XYCoordinateType } from '../../../engine/libs/mathHelpers';
 import PhysBall from '../../../engine/physicsObjects/PhysBall';
 import PhysBox from '../../../engine/physicsObjects/PhysBox';
 import { DARK_COLOR, LIGHT_COLOR, PRIMARY_COLOR, SECONDARY_COLOR } from '../constants/gameColors';
@@ -32,10 +33,19 @@ export class Level01 extends BasedLevel {
     followCam: any;
 
     mouseTarget: any;
-    simpleCard: any;
+    activeMouseTargetPool: any = {}
+    activeMouseTarget: any;
+    movingMouseTargetKey: string = ''
+    mouseTargetOffset: XYCoordinateType = { x: 0, y: 0 }
+    lastMouseDown: number = 0
+    lastMouseMove: number = 0
+    lastMousePos: XYCoordinateType = { x: 0, y: 0 }
+
+    // simpleCard: any;
+    simpleCards: any = []
     simpleCardZone: any;
 
-    async preload() {}
+    async preload() { }
 
     initialize() {
         this.gameRef.initializePhysics()
@@ -53,8 +63,19 @@ export class Level01 extends BasedLevel {
 
         // this.followCam.cameraRotationTarget = 45
 
-        this.setupSimpleCard()  
-        this.setupMouseTarget()          
+        this.setupSimpleCardZone()
+        this.setupMouseTarget()
+
+        this.simpleCards = [
+            { x: 400, y: 400, color: 'orange' },
+            { x: 200, y: 200, color: 'blue' },
+        ].map((card, i) => {
+            return this.setupSimpleCard({
+                key: `simpleCard-${i}`,
+                x: card.x,
+                y: card.y
+            })
+        })
 
         this.followCam.initialize()
     }
@@ -80,13 +101,39 @@ export class Level01 extends BasedLevel {
             isSensor: true
         }
 
+        this.mouseTarget.collisionStartFn = (o: any) => {
+            const otherBody = o.plugin.basedRef()
+            if (otherBody && otherBody.options && otherBody.options.tags.simpleCard) {
+                this.activeMouseTargetPool[otherBody.objectKey] = otherBody
+                // this.activeMouseTarget = otherBody
+                this.mouseTarget.color = 'red'
+            }
+        }
+
+        this.mouseTarget.collisionEndFn = (o: any) => {
+            const otherBody = o.plugin.basedRef()
+            if (otherBody && otherBody.options && otherBody.options.tags.simpleCard) {
+                delete this.activeMouseTargetPool[otherBody.objectKey]
+                // this.activeMouseTarget = null
+                // this.mouseTarget.color = 'white'
+            }
+            if (Object.keys(this.activeMouseTargetPool).length === 0) {
+                this.mouseTarget.color = 'white'
+            }
+        }
+
         this.mouseTarget.initialize()
         this.gameRef.addToWorld(this.mouseTarget.body)
     }
 
-    setupSimpleCard() {
-        this.simpleCard = new PhysBox({
-            key: `simpleCard`,
+    setupSimpleCard(newCardOptions: {
+        key: string,
+        x: number,
+        y: number,
+        color?: string
+    }) {
+        const newSimpleCard = new PhysBox({
+            key: newCardOptions.key || `simpleCard`,
             gameRef: this.gameRef,
             options: {
                 tags: {
@@ -95,33 +142,81 @@ export class Level01 extends BasedLevel {
             }
         })
 
-        this.simpleCard.x = 100
-        this.simpleCard.y = 300
-        this.simpleCard.width = 100
-        this.simpleCard.height = 150
+        newSimpleCard.x = newCardOptions.x || 400
+        newSimpleCard.y = newCardOptions.y || 400
+        newSimpleCard.width = 100
+        newSimpleCard.height = 150
 
-        this.simpleCard.bodyOptions = {
+        newSimpleCard.color = newCardOptions.color || 'blue'
+
+        newSimpleCard.bodyOptions = {
             label: 'simpleCard',
             // isStatic: true,
             isSensor: true
         }
 
-        this.simpleCard.collisionStartFn = (o: any) => {
+        newSimpleCard.collisionStartFn = (o: any) => {
             const otherBody = o.plugin.basedRef()
             if (otherBody && otherBody.options && otherBody.options.tags.mouseTarget) {
-                this.simpleCard.strokeWidth = 5
-            }
-        }
-    
-        this.simpleCard.collisionEndFn = (o: any) => {
-            const otherBody = o.plugin.basedRef()
-            if (otherBody && otherBody.options && otherBody.options.tags.mouseTarget) {
-                this.simpleCard.strokeWidth = 0
+                newSimpleCard.strokeWidth = 5
             }
         }
 
-        this.simpleCard.initialize()
-        this.gameRef.addToWorld(this.simpleCard.body)
+        newSimpleCard.collisionEndFn = (o: any) => {
+            const otherBody = o.plugin.basedRef()
+            if (otherBody && otherBody.options && otherBody.options.tags.mouseTarget) {
+                newSimpleCard.strokeWidth = 0
+            }
+        }
+
+        newSimpleCard.initialize()
+        this.gameRef.addToWorld(newSimpleCard.body)
+
+        return newSimpleCard
+    }
+
+    setupSimpleCardZone() {
+        this.simpleCardZone = new PhysBox({
+            key: `simpleCardZone`,
+            gameRef: this.gameRef,
+            options: {
+                tags: {
+                    simpleCardZone: true
+                }
+            }
+        })
+
+        this.simpleCardZone.x = 400
+        this.simpleCardZone.y = 600
+        this.simpleCardZone.width = 100 + 10
+        this.simpleCardZone.height = 150 + 10
+
+        this.simpleCardZone.strokeWidth = 0
+        this.simpleCardZone.strokeColor = 'red'
+        this.simpleCardZone.color = 'yellow'
+
+        this.simpleCardZone.bodyOptions = {
+            label: 'simpleCardZone',
+            isStatic: true,
+            isSensor: true
+        }
+
+        this.simpleCardZone.collisionStartFn = (o: any) => {
+            const otherBody = o.plugin.basedRef()
+            if (otherBody && otherBody.options && otherBody.options.tags.simpleCard) {
+                this.simpleCardZone.strokeWidth = 5
+            }
+        }
+
+        this.simpleCardZone.collisionEndFn = (o: any) => {
+            const otherBody = o.plugin.basedRef()
+            if (otherBody && otherBody.options && otherBody.options.tags.simpleCard) {
+                this.simpleCardZone.strokeWidth = 0
+            }
+        }
+
+        this.simpleCardZone.initialize()
+        this.gameRef.addToWorld(this.simpleCardZone.body)
     }
 
     update() {
@@ -130,6 +225,15 @@ export class Level01 extends BasedLevel {
 
     handlePhysics() {
         if (this.gameRef.updatePhysics()) {
+
+            if (this.movingMouseTargetKey && this.activeMouseTargetPool[this.movingMouseTargetKey]) {
+                this.activeMouseTarget = this.activeMouseTargetPool[this.movingMouseTargetKey]
+            } else if (Object.keys(this.activeMouseTargetPool).length > 0) {
+                this.activeMouseTarget = this.activeMouseTargetPool[Object.keys(this.activeMouseTargetPool)[0]]
+            } else {
+                this.activeMouseTarget = null
+            }
+
             this.onPhysicsUpdate()
         }
     }
@@ -138,25 +242,51 @@ export class Level01 extends BasedLevel {
 
         // do something on physics tick
         this.updateCamera()
-        // this.movingPlatforms.forEach((plat: any) => {
-        //     plat.update()
-        // })
-        // this.mainPlayer.update()
-        // this.littleBox.update()
-        // this.randomPoly.update()
-        // console.log(this.followCam.activeTarget)
 
-        // if (this.gameRef.mouseInfo.mouseDown) {
-            // this.mainPlayer.setTargetPosition({
-            //     x: this.gameRef.cameraMouseInfo.x,
-            //     y: this.gameRef.cameraMouseInfo.y
-            // })
+        const hasMouseMoved = this.lastMousePos.x !== this.gameRef.cameraMouseInfo.x || this.lastMousePos.y !== this.gameRef.cameraMouseInfo.y
 
+        if (hasMouseMoved) {
+            this.lastMouseMove = this.gameRef.lastUpdate
+        }
+
+        this.lastMousePos = {
+            x: this.gameRef.cameraMouseInfo.x,
+            y: this.gameRef.cameraMouseInfo.y
+        }
+
+        if (!hasMouseMoved && this.gameRef.lastUpdate - this.lastMouseDown > 500 && this.gameRef.lastUpdate - this.lastMouseMove > 500) {
+            Physics.Body.setPosition(this.mouseTarget.body, {
+                x: 2000,
+                y: 2000
+            })
+        } else {
             Physics.Body.setPosition(this.mouseTarget.body, {
                 x: this.gameRef.cameraMouseInfo.x,
                 y: this.gameRef.cameraMouseInfo.y
             })
-        // }
+        }
+
+
+        if (this.gameRef.mouseInfo.mouseDown) {
+            if (this.activeMouseTarget && this.activeMouseTarget.body && this.gameRef.lastUpdate - this.lastMouseDown < 100) {
+                if (!this.mouseTargetOffset.x && !this.mouseTargetOffset.y) {
+                    this.mouseTargetOffset = {
+                        x: this.activeMouseTarget.body.position.x - this.mouseTarget.body.position.x,
+                        y: this.activeMouseTarget.body.position.y - this.mouseTarget.body.position.y
+                    }
+                }
+                Physics.Body.setPosition(this.activeMouseTarget.body, {
+                    x: this.gameRef.cameraMouseInfo.x + this.mouseTargetOffset.x,
+                    y: this.gameRef.cameraMouseInfo.y + this.mouseTargetOffset.y
+                })
+                this.movingMouseTargetKey = this.activeMouseTarget.objectKey
+            }
+            this.lastMouseDown = this.gameRef.lastUpdate
+        } else {
+            this.mouseTargetOffset = { x: 0, y: 0 }
+        }
+
+
     }
 
 
@@ -199,10 +329,17 @@ export class Level01 extends BasedLevel {
                 zoom: this.gameRef.cameraZoom
             })
 
-            // draw the simple card
-            this.simpleCard.draw()
-
             // draw the simple card zone
+            this.simpleCardZone.draw()
+
+
+            // draw the simple card
+            // this.simpleCard.draw()
+
+            this.simpleCards.forEach((card: any) => {
+                card.draw()
+            })
+
 
 
             // draw the mouse position
