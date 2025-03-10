@@ -7,6 +7,8 @@ import PhysBall from '../../../engine/physicsObjects/PhysBall';
 import PhysBox from '../../../engine/physicsObjects/PhysBox';
 import { DARK_COLOR, LIGHT_COLOR, PRIMARY_COLOR, SECONDARY_COLOR } from '../constants/gameColors';
 import Physics from 'matter-js';
+import { SimpleCard } from '../entities/simpleCard';
+import { SimpleCardZone } from '../entities/simpleCardZone';
 export class Level01 extends BasedLevel {
 
     physics: any
@@ -43,7 +45,8 @@ export class Level01 extends BasedLevel {
 
     // simpleCard: any;
     simpleCards: any = []
-    simpleCardZone: any;
+    // simpleCardZone: any;
+    simpleCardZones: any = []
 
     async preload() { }
 
@@ -63,19 +66,36 @@ export class Level01 extends BasedLevel {
 
         // this.followCam.cameraRotationTarget = 45
 
-        this.setupSimpleCardZone()
+        // this.setupSimpleCardZone()
         this.setupMouseTarget()
 
         this.simpleCards = [
             { x: 400, y: 400, color: 'orange' },
             { x: 200, y: 200, color: 'blue' },
+            { x: 600, y: 200, color: 'red' },
+            { x: 600, y: 400, color: 'green' },
+            { x: 200, y: 400, color: 'purple' },
+            { x: 400, y: 200, color: 'yellow' },
         ].map((card, i) => {
             return this.setupSimpleCard({
                 key: `simpleCard-${i}`,
                 x: card.x,
-                y: card.y
+                y: card.y,
+                color: card.color
             })
         })
+
+        this.simpleCardZones = [
+            { x: 400, y: 600, color: 'black' },
+            { x: 200, y: 600, color: '#333333' },
+        ].map((card, i) => {
+            return this.setupSimpleCardZone({
+                key: `simpleCardZone-${i}`,
+                x: card.x,
+                y: card.y,
+                color: card.color
+            })
+        })  
 
         this.followCam.initialize()
     }
@@ -132,42 +152,14 @@ export class Level01 extends BasedLevel {
         y: number,
         color?: string
     }) {
-        const newSimpleCard = new PhysBox({
+        const newSimpleCard = new SimpleCard({
             key: newCardOptions.key || `simpleCard`,
             gameRef: this.gameRef,
-            options: {
-                tags: {
-                    simpleCard: true
-                }
-            }
         })
 
         newSimpleCard.x = newCardOptions.x || 400
         newSimpleCard.y = newCardOptions.y || 400
-        newSimpleCard.width = 100
-        newSimpleCard.height = 150
-
         newSimpleCard.color = newCardOptions.color || 'blue'
-
-        newSimpleCard.bodyOptions = {
-            label: 'simpleCard',
-            // isStatic: true,
-            isSensor: true
-        }
-
-        newSimpleCard.collisionStartFn = (o: any) => {
-            const otherBody = o.plugin.basedRef()
-            if (otherBody && otherBody.options && otherBody.options.tags.mouseTarget) {
-                newSimpleCard.strokeWidth = 5
-            }
-        }
-
-        newSimpleCard.collisionEndFn = (o: any) => {
-            const otherBody = o.plugin.basedRef()
-            if (otherBody && otherBody.options && otherBody.options.tags.mouseTarget) {
-                newSimpleCard.strokeWidth = 0
-            }
-        }
 
         newSimpleCard.initialize()
         this.gameRef.addToWorld(newSimpleCard.body)
@@ -175,48 +167,26 @@ export class Level01 extends BasedLevel {
         return newSimpleCard
     }
 
-    setupSimpleCardZone() {
-        this.simpleCardZone = new PhysBox({
-            key: `simpleCardZone`,
-            gameRef: this.gameRef,
-            options: {
-                tags: {
-                    simpleCardZone: true
-                }
-            }
+    setupSimpleCardZone(newCardZoneOptions: {
+        key: string,
+        x: number,
+        y: number,
+        color?: string
+    }) {
+        const newSimpleCardZone = new SimpleCardZone({
+            key: newCardZoneOptions.key || `simpleCardZone`,
+            gameRef: this.gameRef
         })
 
-        this.simpleCardZone.x = 400
-        this.simpleCardZone.y = 600
-        this.simpleCardZone.width = 100 + 10
-        this.simpleCardZone.height = 150 + 10
+        newSimpleCardZone.x = newCardZoneOptions.x || 400
+        newSimpleCardZone.y = newCardZoneOptions.y || 600
+        
+        newSimpleCardZone.color = newCardZoneOptions.color || 'yellow'
 
-        this.simpleCardZone.strokeWidth = 0
-        this.simpleCardZone.strokeColor = 'red'
-        this.simpleCardZone.color = 'yellow'
+        newSimpleCardZone.initialize()
+        this.gameRef.addToWorld(newSimpleCardZone.body)
 
-        this.simpleCardZone.bodyOptions = {
-            label: 'simpleCardZone',
-            isStatic: true,
-            isSensor: true
-        }
-
-        this.simpleCardZone.collisionStartFn = (o: any) => {
-            const otherBody = o.plugin.basedRef()
-            if (otherBody && otherBody.options && otherBody.options.tags.simpleCard) {
-                this.simpleCardZone.strokeWidth = 5
-            }
-        }
-
-        this.simpleCardZone.collisionEndFn = (o: any) => {
-            const otherBody = o.plugin.basedRef()
-            if (otherBody && otherBody.options && otherBody.options.tags.simpleCard) {
-                this.simpleCardZone.strokeWidth = 0
-            }
-        }
-
-        this.simpleCardZone.initialize()
-        this.gameRef.addToWorld(this.simpleCardZone.body)
+        return newSimpleCardZone
     }
 
     update() {
@@ -229,7 +199,14 @@ export class Level01 extends BasedLevel {
             if (this.movingMouseTargetKey && this.activeMouseTargetPool[this.movingMouseTargetKey]) {
                 this.activeMouseTarget = this.activeMouseTargetPool[this.movingMouseTargetKey]
             } else if (Object.keys(this.activeMouseTargetPool).length > 0) {
-                this.activeMouseTarget = this.activeMouseTargetPool[Object.keys(this.activeMouseTargetPool)[0]]
+                // use the one with the highest index in the array of cards
+                let highestIndex = -1
+                this.simpleCards.forEach((card: any, ixd: number) => {
+                    if(this.activeMouseTargetPool[card.objectKey] && ixd > highestIndex) {
+                        highestIndex = ixd
+                        this.activeMouseTarget = this.activeMouseTargetPool[card.objectKey]
+                    }
+                })
             } else {
                 this.activeMouseTarget = null
             }
@@ -274,6 +251,9 @@ export class Level01 extends BasedLevel {
                         x: this.activeMouseTarget.body.position.x - this.mouseTarget.body.position.x,
                         y: this.activeMouseTarget.body.position.y - this.mouseTarget.body.position.y
                     }
+                    // make it the last one in the array
+                    this.simpleCards = this.simpleCards.filter((card: any) => card.objectKey !== this.activeMouseTarget.objectKey)
+                    this.simpleCards.push(this.activeMouseTarget)
                 }
                 Physics.Body.setPosition(this.activeMouseTarget.body, {
                     x: this.gameRef.cameraMouseInfo.x + this.mouseTargetOffset.x,
@@ -284,8 +264,25 @@ export class Level01 extends BasedLevel {
             this.lastMouseDown = this.gameRef.lastUpdate
         } else {
             this.mouseTargetOffset = { x: 0, y: 0 }
+            this.movingMouseTargetKey = ''
         }
 
+        this.simpleCardZones.forEach((cardZone: any) => {
+            // cardZone.update()
+            Object.keys(cardZone.cardsInZone).forEach((cardKey: string, idx: number) => {
+                const card = cardZone.cardsInZone[cardKey]
+                if(card.objectKey === this.movingMouseTargetKey) {
+                    return
+                }
+                if (card && card.body && card.body.position) {
+                    card.targetPosition = {
+                        x: cardZone.body.position.x + (idx * 5),
+                        y: cardZone.body.position.y - (idx * 5)
+                    }
+                    card.moveTowardsTarget()
+                }
+            })
+        })
 
     }
 
@@ -330,7 +327,11 @@ export class Level01 extends BasedLevel {
             })
 
             // draw the simple card zone
-            this.simpleCardZone.draw()
+            // this.simpleCardZone.draw()
+
+            this.simpleCardZones.forEach((cardZone: any) => {
+                cardZone.draw()
+            })
 
 
             // draw the simple card
