@@ -216,7 +216,7 @@ export class StartScreen extends BasedLevel {
       weight: '700',
       fontFamily: 'sans-serif',
       fontSize: 32,
-      text: 'CHEESE RACER'
+      text: 'LIMITED CARDS'
     })
 
 
@@ -234,7 +234,7 @@ export class StartScreen extends BasedLevel {
       weight: '700',
       fontFamily: 'sans-serif',
       fontSize: 32,
-      text: 'CHEESE RACER'
+      text: 'LIMITED CARDS'
     })
 
 
