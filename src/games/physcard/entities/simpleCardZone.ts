@@ -48,9 +48,9 @@ export class SimpleCardZone extends PhysBox {
     update() {
         Object.keys(this.cardsInZone).forEach((cardKey: string, idx: number) => {
             const card = this.cardsInZone[cardKey]
-            if(card.targeted) {
-                return
-            }
+            // if(card.targeted) {
+            //     return
+            // }
             if (card && card.body && card.body.position) {
                 card.targetPosition = {
                     x: this.body.position.x + (idx * 5),

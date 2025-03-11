@@ -247,31 +247,6 @@ export class Level01 extends BasedLevel {
             })
         }
 
-
-        if (this.gameRef.mouseInfo.mouseDown) {
-            if (this.activeMouseTarget && this.activeMouseTarget.body && this.gameRef.lastUpdate - this.lastMouseDown < 100) {
-                if (!this.mouseTargetOffset.x && !this.mouseTargetOffset.y) {
-                    this.mouseTargetOffset = {
-                        x: this.activeMouseTarget.body.position.x - this.mouseTarget.body.position.x,
-                        y: this.activeMouseTarget.body.position.y - this.mouseTarget.body.position.y
-                    }
-                    // make it the last one in the array
-                    this.simpleCards = this.simpleCards.filter((card: any) => card.objectKey !== this.activeMouseTarget.objectKey)
-                    this.simpleCards.push(this.activeMouseTarget)
-                }
-                Physics.Body.setPosition(this.activeMouseTarget.body, {
-                    x: this.gameRef.cameraMouseInfo.x + this.mouseTargetOffset.x,
-                    y: this.gameRef.cameraMouseInfo.y + this.mouseTargetOffset.y
-                })
-                this.movingMouseTargetKey = this.activeMouseTarget.objectKey
-                this.activeMouseTarget.targeted = true
-            }
-            this.lastMouseDown = this.gameRef.lastUpdate
-        } else {
-            this.mouseTargetOffset = { x: 0, y: 0 }
-            this.movingMouseTargetKey = ''
-        }
-
         this.simpleCardZones.forEach((cardZone: any) => {
             cardZone.update()
             // Object.keys(cardZone.cardsInZone).forEach((cardKey: string, idx: number) => {
@@ -288,6 +263,38 @@ export class Level01 extends BasedLevel {
             //     }
             // })
         })
+
+
+        if (this.gameRef.mouseInfo.mouseDown) {
+            if (this.activeMouseTarget && this.activeMouseTarget.body && this.gameRef.lastUpdate - this.lastMouseDown < 100) {
+                if (!this.mouseTargetOffset.x && !this.mouseTargetOffset.y) {
+                    this.mouseTargetOffset = {
+                        x: this.activeMouseTarget.body.position.x - this.mouseTarget.body.position.x,
+                        y: this.activeMouseTarget.body.position.y - this.mouseTarget.body.position.y
+                    }
+                    // make it the last one in the array
+                    this.simpleCards = this.simpleCards.filter((card: any) => card.objectKey !== this.activeMouseTarget.objectKey)
+                    this.simpleCards.push(this.activeMouseTarget)
+                }
+                Physics.Body.setPosition(this.activeMouseTarget.body, {
+                    x: this.gameRef.cameraMouseInfo.x + this.mouseTargetOffset.x,
+                    y: this.gameRef.cameraMouseInfo.y + this.mouseTargetOffset.y
+                })
+                Physics.Body.setVelocity(this.activeMouseTarget.body, {
+                    x: 0,
+                    y: 0
+                })
+                this.movingMouseTargetKey = this.activeMouseTarget.objectKey
+                // this.activeMouseTarget.targeted = true
+            }
+            this.lastMouseDown = this.gameRef.lastUpdate
+        } else {
+            this.mouseTargetOffset = { x: 0, y: 0 }
+            this.movingMouseTargetKey = ''
+            
+        }
+
+        
 
     }
 
