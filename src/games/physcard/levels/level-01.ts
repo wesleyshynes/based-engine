@@ -1,7 +1,7 @@
 import BGMusic from '../../../assets/the-squeeze/tunetank.com_5630_ready-to-play_by_alexey-anisimov__1.mp3'
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { FollowCam } from '../../../engine/cameras/FollowCam';
-import { createSprite, drawBox, drawCameraFrame, drawCircle, drawSVG, rotateDraw } from '../../../engine/libs/drawHelpers';
+import { createSprite, drawBox, drawCameraFrame, drawCircle, drawSVG, drawText, rotateDraw } from '../../../engine/libs/drawHelpers';
 import { XYCoordinateType } from '../../../engine/libs/mathHelpers';
 import PhysBall from '../../../engine/physicsObjects/PhysBall';
 import PhysBox from '../../../engine/physicsObjects/PhysBox';
@@ -217,6 +217,10 @@ export class Level01 extends BasedLevel {
     onPhysicsUpdate() {
         // this.followCam.cameraRotationTarget += 1
 
+        this.simpleCards.forEach((card: any) => {
+            card.targeted = false
+        })
+
         // do something on physics tick
         this.updateCamera()
 
@@ -260,6 +264,7 @@ export class Level01 extends BasedLevel {
                     y: this.gameRef.cameraMouseInfo.y + this.mouseTargetOffset.y
                 })
                 this.movingMouseTargetKey = this.activeMouseTarget.objectKey
+                this.activeMouseTarget.targeted = true
             }
             this.lastMouseDown = this.gameRef.lastUpdate
         } else {
@@ -268,20 +273,20 @@ export class Level01 extends BasedLevel {
         }
 
         this.simpleCardZones.forEach((cardZone: any) => {
-            // cardZone.update()
-            Object.keys(cardZone.cardsInZone).forEach((cardKey: string, idx: number) => {
-                const card = cardZone.cardsInZone[cardKey]
-                if(card.objectKey === this.movingMouseTargetKey) {
-                    return
-                }
-                if (card && card.body && card.body.position) {
-                    card.targetPosition = {
-                        x: cardZone.body.position.x + (idx * 5),
-                        y: cardZone.body.position.y - (idx * 5)
-                    }
-                    card.moveTowardsTarget()
-                }
-            })
+            cardZone.update()
+            // Object.keys(cardZone.cardsInZone).forEach((cardKey: string, idx: number) => {
+            //     const card = cardZone.cardsInZone[cardKey]
+            //     if(card.objectKey === this.movingMouseTargetKey) {
+            //         return
+            //     }
+            //     if (card && card.body && card.body.position) {
+            //         card.targetPosition = {
+            //             x: cardZone.body.position.x + (idx * 5),
+            //             y: cardZone.body.position.y - (idx * 5)
+            //         }
+            //         card.moveTowardsTarget()
+            //     }
+            // })
         })
 
     }

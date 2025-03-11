@@ -29,6 +29,8 @@ export class SimpleCard extends PhysBox {
     targetThreshold = 5
     baseSpeed = 40
 
+    targeted: boolean = false
+
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
         if (otherBody && otherBody.options && otherBody.options.tags.mouseTarget) {
@@ -44,6 +46,7 @@ export class SimpleCard extends PhysBox {
     }
 
     moveTowardsTarget() {
+        console.log('moveTowardsTarget', this.objectKey)
         const distanceToTarget = distanceBetween(this.body.position, this.targetPosition)
         if (distanceToTarget < this.targetThreshold) {
             Physics.Body.setVelocity(this.body, {
