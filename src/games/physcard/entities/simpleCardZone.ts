@@ -74,6 +74,7 @@ export class SimpleCardZone extends PhysBox {
                 fillColor: 'red',
                 align: 'center',
                 fontFamily: 'Arial',
+                zoom: this.gameRef.cameraZoom
             })
         })
     }

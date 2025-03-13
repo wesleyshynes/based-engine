@@ -17,7 +17,7 @@ export class Level01 extends BasedLevel {
     tileMap: any = []
 
     levelWidth: number = 800
-    levelHeight: number = 800
+    levelHeight: number = 1000
 
     nextLevel: string = 'credits-screen'
 
@@ -31,7 +31,7 @@ export class Level01 extends BasedLevel {
     bgMusicTrack: any = BGMusic
 
     // Camera related stuff
-    miniMapActive: boolean = false
+    miniMapActive: boolean = true
     followCam: any;
 
     mouseTarget: any;
@@ -81,13 +81,19 @@ export class Level01 extends BasedLevel {
                 key: `simpleCard-${i}`,
                 x: card.x,
                 y: card.y,
+                // x: 300 + (i * 50),
+                // y: 100 + (i * 10),
                 color: card.color
             })
         })
 
         this.simpleCardZones = [
-            { x: 400, y: 600, color: 'black' },
+            { x: 400, y: 600, color: '#000000' },
             { x: 200, y: 600, color: '#333333' },
+            { x: 600, y: 600, color: '#666666' },
+            { x: 600, y: 800, color: '#999999' },
+            { x: 200, y: 800, color: '#CCCCCC' },
+            { x: 400, y: 800, color: '#FFFFFF' },
         ].map((card, i) => {
             return this.setupSimpleCardZone({
                 key: `simpleCardZone-${i}`,
@@ -249,19 +255,6 @@ export class Level01 extends BasedLevel {
 
         this.simpleCardZones.forEach((cardZone: any) => {
             cardZone.update()
-            // Object.keys(cardZone.cardsInZone).forEach((cardKey: string, idx: number) => {
-            //     const card = cardZone.cardsInZone[cardKey]
-            //     if(card.objectKey === this.movingMouseTargetKey) {
-            //         return
-            //     }
-            //     if (card && card.body && card.body.position) {
-            //         card.targetPosition = {
-            //             x: cardZone.body.position.x + (idx * 5),
-            //             y: cardZone.body.position.y - (idx * 5)
-            //         }
-            //         card.moveTowardsTarget()
-            //     }
-            // })
         })
 
 
@@ -338,38 +331,42 @@ export class Level01 extends BasedLevel {
                 zoom: this.gameRef.cameraZoom
             })
 
-            // draw the simple card zone
-            // this.simpleCardZone.draw()
-
+            // draw the simple card zones
             this.simpleCardZones.forEach((cardZone: any) => {
                 cardZone.draw()
             })
 
-
-            // draw the simple card
-            // this.simpleCard.draw()
-
+            // draw the simple cards
             this.simpleCards.forEach((card: any) => {
                 card.draw()
             })
 
-
-
             // draw the mouse position
-            // drawCircle({
-            //     c: this.gameRef.ctx,
-            //     x: this.gameRef.cameraMouseInfo.x,
-            //     y: this.gameRef.cameraMouseInfo.y,
-            //     radius: 10,
-            //     fillColor: 'red',
-            //     cameraPos: this.gameRef.cameraPos,
-            //     zoom: this.gameRef.cameraZoom,
-            // })
             this.mouseTarget.draw()
 
         })
 
+        drawText({
+            c: this.gameRef.ctx,
+            x: 20,
+            y: 20,
+            text: `Cam Mouse: ${this.gameRef.cameraMouseInfo.x.toFixed(2)}, ${this.gameRef.cameraMouseInfo.y.toFixed(2)}`,
+            fontSize: 20,
+            fillColor: 'white',
+            align: 'left',
+            fontFamily: 'Arial'
+        })
 
+        drawText({
+            c: this.gameRef.ctx,
+            x: 20,
+            y: 50,
+            text: `Real Mouse: ${this.gameRef.mouseInfo.x.toFixed(2)}, ${this.gameRef.mouseInfo.y.toFixed(2)}`,
+            fontSize: 20,
+            fillColor: 'white',
+            align: 'left',
+            fontFamily: 'Arial'
+        })
 
         // Add any additional drawing logic here
     }
