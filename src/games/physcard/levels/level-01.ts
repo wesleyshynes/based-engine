@@ -9,6 +9,7 @@ import { DARK_COLOR, LIGHT_COLOR, PRIMARY_COLOR, SECONDARY_COLOR } from '../cons
 import Physics from 'matter-js';
 import { SimpleCard } from '../entities/simpleCard';
 import { SimpleCardZone } from '../entities/simpleCardZone';
+import { BasedButton } from '../../../engine/BasedButton';
 export class Level01 extends BasedLevel {
 
     physics: any
@@ -37,6 +38,7 @@ export class Level01 extends BasedLevel {
     mouseTarget: any;
     activeMouseTargetPool: any = {}
     activeMouseTarget: any;
+    // movingMouseTarget: boolean = false
     movingMouseTargetKey: string = ''
     mouseTargetOffset: XYCoordinateType = { x: 0, y: 0 }
     lastMouseDown: number = 0
@@ -48,9 +50,16 @@ export class Level01 extends BasedLevel {
     // simpleCardZone: any;
     simpleCardZones: any = []
 
+    simpleButton: any;
+
+    winConditionMet: boolean = false
+
     async preload() { }
 
     initialize() {
+
+        this.winConditionMet = false
+
         this.gameRef.initializePhysics()
         this.gameRef.physics.world.gravity.y = 0
 
@@ -102,6 +111,8 @@ export class Level01 extends BasedLevel {
                 color: card.color
             })
         })  
+
+        this.setupSimpleButton()
 
         this.followCam.initialize()
     }
@@ -195,8 +206,45 @@ export class Level01 extends BasedLevel {
         return newSimpleCardZone
     }
 
+    setupSimpleButton() {
+        this.simpleButton = new BasedButton({
+            key: 'simpleButton',
+            gameRef: this.gameRef,
+        })
+
+        this.simpleButton.x = 20
+        this.simpleButton.y = 60
+
+        this.simpleButton.clickFunction = () => {
+            // make all the simpleCardZones black
+            this.simpleCardZones.forEach((cardZone: any) => {
+                cardZone.color = 'black'
+                if(this.winConditionMet) {
+                    this.gameRef.loadLevel('start-screen')
+                }
+            })
+        }
+    }
+
+    checkWinCondition() {
+        let cardsInZones = 0
+        this.simpleCardZones.forEach((cardZone: any) => {
+            cardsInZones += Object.keys(cardZone.cardsInZone).length
+        })
+
+        if(cardsInZones >= this.simpleCards.length) {
+            this.winConditionMet = true
+            this.simpleButton.buttonText = 'You Win!'
+            return
+        }
+
+        this.winConditionMet = false
+        this.simpleButton.buttonText = 'Color Zones'
+    }
+
     update() {
         this.handlePhysics()
+        this.checkWinCondition()
     }
 
     handlePhysics() {
@@ -220,6 +268,7 @@ export class Level01 extends BasedLevel {
             this.onPhysicsUpdate()
         }
     }
+
     onPhysicsUpdate() {
         // this.followCam.cameraRotationTarget += 1
 
@@ -283,14 +332,14 @@ export class Level01 extends BasedLevel {
             this.lastMouseDown = this.gameRef.lastUpdate
         } else {
             this.mouseTargetOffset = { x: 0, y: 0 }
-            this.movingMouseTargetKey = ''
-            
+            this.movingMouseTargetKey = ''       
+        }
+        
+        if (!this.movingMouseTargetKey) {
+            this.simpleButton.update()
         }
 
-        
-
     }
-
 
     updateCamera() {
         this.followCam.setTarget({
@@ -307,7 +356,6 @@ export class Level01 extends BasedLevel {
         this.followCam.update()
         this.gameRef.handleCameraShake()
     }
-
 
     draw(): void {
         this.gameRef.ctx.beginPath();
@@ -368,8 +416,13 @@ export class Level01 extends BasedLevel {
             fontFamily: 'Arial'
         })
 
+        if (!this.movingMouseTargetKey) {
+            this.simpleButton.draw()
+        }
+
         // Add any additional drawing logic here
     }
+
     onResize() { }
     tearDown() { }
 }
