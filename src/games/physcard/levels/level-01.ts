@@ -10,6 +10,7 @@ import Physics from 'matter-js';
 import { SimpleCard } from '../entities/simpleCard';
 import { SimpleCardZone } from '../entities/simpleCardZone';
 import { BasedButton } from '../../../engine/BasedButton';
+import { MainPlayer } from '../entities/mainPlayer';
 export class Level01 extends BasedLevel {
 
     physics: any
@@ -22,6 +23,7 @@ export class Level01 extends BasedLevel {
 
     nextLevel: string = 'credits-screen'
 
+    mainPlayer: any
     playerStartPosition: any = {
         x: this.levelWidth / 2,
         y: this.levelHeight / 2,
@@ -32,7 +34,7 @@ export class Level01 extends BasedLevel {
     bgMusicTrack: any = BGMusic
 
     // Camera related stuff
-    miniMapActive: boolean = true
+    viewFullMap: boolean = true
     followCam: any;
 
     mouseTarget: any;
@@ -51,6 +53,7 @@ export class Level01 extends BasedLevel {
     simpleCardZones: any = []
 
     simpleButton: any;
+    viewButton: any;
 
     winConditionMet: boolean = false
 
@@ -74,6 +77,18 @@ export class Level01 extends BasedLevel {
         this.followCam.fullScreenBound = false
 
         // this.followCam.cameraRotationTarget = 45
+
+        this.mainPlayer = new MainPlayer({
+            key: `mainPlayer`,
+            gameRef: this.gameRef
+        })
+        this.mainPlayer.x = this.playerStartPosition.x
+        this.mainPlayer.y = this.playerStartPosition.y
+        this.mainPlayer.color = 'pink'
+        this.mainPlayer.radius = 10
+        this.mainPlayer.baseSpeed = 8
+        this.mainPlayer.initialize()
+        this.gameRef.addToWorld(this.mainPlayer.body)
 
         // this.setupSimpleCardZone()
         this.setupMouseTarget()
@@ -113,6 +128,8 @@ export class Level01 extends BasedLevel {
         })  
 
         this.setupSimpleButton()
+
+        this.setupViewButton()
 
         this.followCam.initialize()
     }
@@ -206,6 +223,23 @@ export class Level01 extends BasedLevel {
         return newSimpleCardZone
     }
 
+    setupViewButton() {
+        this.viewButton = new BasedButton({
+            key: 'viewButton',
+            gameRef: this.gameRef,
+        })
+
+        this.viewButton.x = 20
+        this.viewButton.y = 120
+        this.viewButton.width = 120
+        this.viewButton.buttonText = 'View Full Map'
+
+        this.viewButton.clickFunction = () => {
+            this.viewFullMap = !this.viewFullMap
+            this.viewButton.buttonText = this.viewFullMap ? 'View Level' : 'View Player'
+        }
+    }
+
     setupSimpleButton() {
         this.simpleButton = new BasedButton({
             key: 'simpleButton',
@@ -214,6 +248,7 @@ export class Level01 extends BasedLevel {
 
         this.simpleButton.x = 20
         this.simpleButton.y = 60
+        this.simpleButton.width = 120
 
         this.simpleButton.clickFunction = () => {
             // make all the simpleCardZones black
@@ -302,11 +337,6 @@ export class Level01 extends BasedLevel {
             })
         }
 
-        this.simpleCardZones.forEach((cardZone: any) => {
-            cardZone.update()
-        })
-
-
         if (this.gameRef.mouseInfo.mouseDown) {
             if (this.activeMouseTarget && this.activeMouseTarget.body && this.gameRef.lastUpdate - this.lastMouseDown < 100) {
                 if (!this.mouseTargetOffset.x && !this.mouseTargetOffset.y) {
@@ -326,19 +356,46 @@ export class Level01 extends BasedLevel {
                     x: 0,
                     y: 0
                 })
+
                 this.movingMouseTargetKey = this.activeMouseTarget.objectKey
                 // this.activeMouseTarget.targeted = true
             }
+
             this.lastMouseDown = this.gameRef.lastUpdate
         } else {
             this.mouseTargetOffset = { x: 0, y: 0 }
             this.movingMouseTargetKey = ''       
         }
+
+        this.simpleCardZones.forEach((cardZone: any) => {
+            cardZone.update()
+        })
+
         
         if (!this.movingMouseTargetKey) {
             this.simpleButton.update()
+            this.viewButton.update()
         }
-
+        
+        if(!this.simpleButton.hovered && !this.viewButton.hovered) {
+            if (!this.activeMouseTarget && this.gameRef.mouseInfo.mouseDown) {
+                let mouseTargetInLevel = true
+                if (this.gameRef.cameraMouseInfo.x < 0 || this.gameRef.cameraMouseInfo.x > this.levelWidth) {
+                    mouseTargetInLevel = false
+                }
+                if (this.gameRef.cameraMouseInfo.y < 0 || this.gameRef.cameraMouseInfo.y > this.levelHeight) {
+                    mouseTargetInLevel = false
+                }
+                if (mouseTargetInLevel) {
+                    // set main player target to the mouse
+                    this.mainPlayer.setTargetPosition({
+                        x: this.gameRef.cameraMouseInfo.x,
+                        y: this.gameRef.cameraMouseInfo.y
+                    })
+                }
+            }
+            this.mainPlayer.update()
+        }
     }
 
     updateCamera() {
@@ -347,12 +404,12 @@ export class Level01 extends BasedLevel {
             y: this.levelHeight / 2,
         })
 
-        const activeTarget: any = this.playerStartPosition
+        const activeTarget: any = this.mainPlayer.body.position
         if (activeTarget) {
             this.followCam.setTarget(activeTarget)
         }
 
-        this.followCam.setFullScreen(this.miniMapActive)
+        this.followCam.setFullScreen(this.viewFullMap)
         this.followCam.update()
         this.gameRef.handleCameraShake()
     }
@@ -418,7 +475,11 @@ export class Level01 extends BasedLevel {
 
         if (!this.movingMouseTargetKey) {
             this.simpleButton.draw()
+            this.viewButton.draw()
         }
+
+        // draw the player
+        this.mainPlayer.draw()
 
         // Add any additional drawing logic here
     }
