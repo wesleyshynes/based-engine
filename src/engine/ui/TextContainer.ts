@@ -179,45 +179,53 @@ export default class TextContainer extends BasedObject {
     // const maxLineLength = Math.floor(this.containerWidth/textSize)
 
     this.textToDisplay = textToSet
-    this.textToDisplay.split(' ').map(word => {
-      // const availableLineLength = maxLineLength - currentLine.length
-      const currentLineLength = textLength(currentLine)
-      const wordLength = textLength(' ' + word)
-      if (currentLineLength + wordLength < this.containerWidth) {
-        currentLine += ' ' + word
-      } else if (wordLength > this.containerWidth) {
-        if (this.containerWidth - currentLineLength < 6 * safeSize) {
-          this.textLines.push(currentLine.trim())
-          currentLine = ''
-        } else {
-          currentLine += ' '
-        }
-        word.split('').map(letter => {
-          const activeLineLength = textLength(currentLine)
-          const availableLineSpace = this.containerWidth - activeLineLength
-          if (availableLineSpace <= safeSize) {
+    this.textToDisplay.split('\n').map(line => {
+
+      line.split(' ').map(word => {
+        const currentLineLength = textLength(currentLine)
+        const wordLength = textLength(' ' + word)
+        if (currentLineLength + wordLength < this.containerWidth) {
+          currentLine += ' ' + word
+        } else if (wordLength > this.containerWidth) {
+          if (this.containerWidth - currentLineLength < 6 * safeSize) {
             this.textLines.push(currentLine.trim())
-            currentLine = letter
-          } else if (availableLineSpace > safeSize && availableLineSpace <= safeSize * 2) {
-            currentLine += '-'
-            this.textLines.push(currentLine.trim())
-            currentLine = letter
+            currentLine = ''
           } else {
-            currentLine += letter
+            currentLine += ' '
           }
-        })
-        if (currentLine.length > 0) {
-          currentLine += ' '
+          word.split('').map(letter => {
+            const activeLineLength = textLength(currentLine)
+            const availableLineSpace = this.containerWidth - activeLineLength
+            if (availableLineSpace <= safeSize) {
+              this.textLines.push(currentLine.trim())
+              currentLine = letter
+            } else if (availableLineSpace > safeSize && availableLineSpace <= safeSize * 2) {
+              currentLine += '-'
+              this.textLines.push(currentLine.trim())
+              currentLine = letter
+            } else {
+              currentLine += letter
+            }
+          })
+          if (currentLine.length > 0) {
+            currentLine += ' '
+          }
+        } else {
+          this.textLines.push(currentLine.trim())
+          currentLine = word
         }
-      } else {
+      })
+
+      if (currentLine.length > 0) {
         this.textLines.push(currentLine.trim())
-        currentLine = word
       }
+
+      // this.textLines.push('')
+      currentLine = ''
+
     })
 
-    if (currentLine.length > 0) {
-      this.textLines.push(currentLine.trim())
-    }
+
 
     this.maxLinesBasedOnHeight = Math.floor(this.height / this.lineHeight)
 

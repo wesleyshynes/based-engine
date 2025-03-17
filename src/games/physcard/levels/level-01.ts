@@ -514,7 +514,7 @@ const generateBigLoremIpsum = (times: number = 10) => {
     let ipsum = 'START START START '
     for (let i = 0; i < times; i++) {
     //   ipsum += 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec magna nec sapien tincidunt ultricies. Nullam auctor, nunc vel aliquam fermentum, justo purus varius odio, nec tristique orci nunc eget massa. Sed nec scelerisque libero. Suspendisse potent. '   
-      ipsum += 'Sally sells seas shells by the sea shore. The shells she sells are surely seashells. So if she sells shells on the seashore, I\'m sure she sells seashore shells. '  
+      ipsum += 'Sally sells seas shells by the sea shore.\n\nThe shells she sells are surely seashells. So if she sells shells on the seashore, I\'m sure she sells seashore shells.\n'  
     }
     ipsum += ' this is the END END END'
     return ipsum
