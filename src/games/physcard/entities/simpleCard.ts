@@ -46,7 +46,6 @@ export class SimpleCard extends PhysBox {
     }
 
     moveTowardsTarget() {
-        console.log('moveTowardsTarget', this.objectKey)
         const distanceToTarget = distanceBetween(this.body.position, this.targetPosition)
         if (distanceToTarget < this.targetThreshold) {
             Physics.Body.setVelocity(this.body, {

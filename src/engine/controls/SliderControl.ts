@@ -28,6 +28,7 @@ export class SliderControl extends BasedObject {
   tickAmount: number = 0.25;
   tickFunction: () => void = () => null
 
+  btnTextColor: string = '#fff'
   bgColor: string = 'rgba(255,255,255,0.5)'
   btnColor: string = 'rgba(0,0,0,0.5)'
   knobColor: string = 'rgba(0,0,0,0.5)'
@@ -42,6 +43,7 @@ export class SliderControl extends BasedObject {
     this.increaseBtn.height = this.btnHeight
     this.increaseBtn.buttonText = '+'
     this.increaseBtn.fillColor = this.btnColor
+    this.increaseBtn.textColor = this.btnTextColor
     this.increaseBtn.clickFunction = () => {
       this.tick(this.tickAmount)
     }
@@ -51,6 +53,7 @@ export class SliderControl extends BasedObject {
     this.decreaseBtn.height = this.btnHeight
     this.decreaseBtn.buttonText = '-'
     this.decreaseBtn.fillColor = this.btnColor
+    this.decreaseBtn.textColor = this.btnTextColor
     this.decreaseBtn.clickFunction = () => {
       this.tick(-this.tickAmount)
     }
@@ -78,6 +81,10 @@ export class SliderControl extends BasedObject {
 
   onResize() {
     this.positionButtons()
+  }
+
+  verticalOffsetAmount() {
+    return this.btnHeight + this.btnOffset
   }
 
   positionButtons() {

@@ -11,6 +11,7 @@ import { SimpleCard } from '../entities/simpleCard';
 import { SimpleCardZone } from '../entities/simpleCardZone';
 import { BasedButton } from '../../../engine/BasedButton';
 import { MainPlayer } from '../entities/mainPlayer';
+import TextContainer from '../../../engine/ui/TextContainer';
 export class Level01 extends BasedLevel {
 
     physics: any
@@ -56,6 +57,8 @@ export class Level01 extends BasedLevel {
     viewButton: any;
 
     winConditionMet: boolean = false
+
+    levelText: any;
 
     async preload() { }
 
@@ -128,9 +131,8 @@ export class Level01 extends BasedLevel {
         })  
 
         this.setupSimpleButton()
-
         this.setupViewButton()
-
+        this.setupLevelText()
         this.followCam.initialize()
     }
 
@@ -261,6 +263,20 @@ export class Level01 extends BasedLevel {
         }
     }
 
+    setupLevelText() {
+        this.levelText = new TextContainer({
+            key: 'levelText',
+            gameRef: this.gameRef
+        })
+
+        this.levelText.x = 20
+        this.levelText.y = 140
+        const levelTextString = generateBigLoremIpsum(30)
+        this.levelText.initialize()
+        this.levelText.containerFillColor = 'white'
+        this.levelText.setText(levelTextString)
+    }
+
     checkWinCondition() {
         let cardsInZones = 0
         this.simpleCardZones.forEach((cardZone: any) => {
@@ -280,6 +296,7 @@ export class Level01 extends BasedLevel {
     update() {
         this.handlePhysics()
         this.checkWinCondition()
+        this.levelText.update()
     }
 
     handlePhysics() {
@@ -466,7 +483,8 @@ export class Level01 extends BasedLevel {
             c: this.gameRef.ctx,
             x: 20,
             y: 50,
-            text: `Real Mouse: ${this.gameRef.mouseInfo.x.toFixed(2)}, ${this.gameRef.mouseInfo.y.toFixed(2)}`,
+            // text: `Real Mouse: ${this.gameRef.mouseInfo.x.toFixed(2)}, ${this.gameRef.mouseInfo.y.toFixed(2)}`,
+            text: `${this.levelText.scrollBar.x.toFixed(2)}, ${this.levelText.scrollBar.y.toFixed(2)}`,
             fontSize: 20,
             fillColor: 'white',
             align: 'left',
@@ -481,9 +499,23 @@ export class Level01 extends BasedLevel {
         // draw the player
         this.mainPlayer.draw()
 
+        this.levelText.draw()
+
         // Add any additional drawing logic here
     }
 
-    onResize() { }
+    onResize() {
+        this.levelText.onResize()
+    }
     tearDown() { }
 }
+
+const generateBigLoremIpsum = (times: number = 10) => {
+    let ipsum = 'START START START '
+    for (let i = 0; i < times; i++) {
+    //   ipsum += 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec magna nec sapien tincidunt ultricies. Nullam auctor, nunc vel aliquam fermentum, justo purus varius odio, nec tristique orci nunc eget massa. Sed nec scelerisque libero. Suspendisse potent. '   
+      ipsum += 'Sally sells seas shells by the sea shore. The shells she sells are surely seashells. So if she sells shells on the seashore, I\'m sure she sells seashore shells. '  
+    }
+    ipsum += ' this is the END END END'
+    return ipsum
+  }
