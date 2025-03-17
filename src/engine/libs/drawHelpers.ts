@@ -152,7 +152,9 @@ export function drawLine(settings: {
   toX: number,
   toY: number,
   strokeWidth: number,
-  strokeColor: string
+  strokeColor: string,
+  cameraPos?: any,
+  zoom?: number
 }) {
   const {
     c,
@@ -161,13 +163,21 @@ export function drawLine(settings: {
     toX,
     toY,
     strokeWidth,
-    strokeColor
+    strokeColor,
+    cameraPos,
+    zoom = 1
   } = settings
   c.beginPath()
-  c.moveTo(x, y);
-  c.lineTo(toX, toY);
+  c.moveTo(
+    x * zoom + (cameraPos ? cameraPos.x : 0),
+    y * zoom + (cameraPos ? cameraPos.y : 0)
+  );
+  c.lineTo(
+    toX * zoom + (cameraPos ? cameraPos.x : 0),
+    toY * zoom + (cameraPos ? cameraPos.y : 0)
+  );
   c.strokeStyle = strokeColor
-  c.lineWidth = strokeWidth
+  c.lineWidth = strokeWidth * zoom
   c.stroke()
 }
 

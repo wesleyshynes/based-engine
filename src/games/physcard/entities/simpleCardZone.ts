@@ -10,6 +10,7 @@ export class SimpleCardZone extends PhysBox {
 
     color = 'yellow'
     strokeColor = 'red'
+    textColor = 'red'
     strokeWidth: number = 0
 
     options = {
@@ -71,7 +72,7 @@ export class SimpleCardZone extends PhysBox {
                 y: this.height / 2 + 20,
                 text: Object.keys(this.cardsInZone).length.toString(),
                 fontSize: 20,
-                fillColor: 'red',
+                fillColor: this.textColor,
                 align: 'center',
                 fontFamily: 'Arial',
                 zoom: this.gameRef.cameraZoom

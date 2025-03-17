@@ -6,7 +6,7 @@ export class MainPlayer extends PhysBall {
     x: number = 100
     y: number = 100
 
-    color: string = 'pink'
+    color: string = 'white'
 
     radius: number = 50
 

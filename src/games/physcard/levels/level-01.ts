@@ -1,7 +1,7 @@
 import BGMusic from '../../../assets/the-squeeze/tunetank.com_5630_ready-to-play_by_alexey-anisimov__1.mp3'
 import { BasedLevel } from "../../../engine/BasedLevel";
 import { FollowCam } from '../../../engine/cameras/FollowCam';
-import { createSprite, drawBox, drawCameraFrame, drawCircle, drawSVG, drawText, rotateDraw } from '../../../engine/libs/drawHelpers';
+import { createSprite, drawBox, drawCameraFrame, drawCircle, drawLine, drawSVG, drawText, rotateDraw } from '../../../engine/libs/drawHelpers';
 import { XYCoordinateType } from '../../../engine/libs/mathHelpers';
 import PhysBall from '../../../engine/physicsObjects/PhysBall';
 import PhysBox from '../../../engine/physicsObjects/PhysBox';
@@ -87,7 +87,8 @@ export class Level01 extends BasedLevel {
         })
         this.mainPlayer.x = this.playerStartPosition.x
         this.mainPlayer.y = this.playerStartPosition.y
-        this.mainPlayer.color = 'pink'
+        this.mainPlayer.color = LIGHT_COLOR // 'white'
+        this.mainPlayer.strokeColor = DARK_COLOR // 'black'
         this.mainPlayer.radius = 10
         this.mainPlayer.baseSpeed = 8
         this.mainPlayer.initialize()
@@ -128,7 +129,7 @@ export class Level01 extends BasedLevel {
                 y: card.y,
                 color: card.color
             })
-        })  
+        })
 
         this.setupSimpleButton()
         this.setupViewButton()
@@ -157,12 +158,16 @@ export class Level01 extends BasedLevel {
             isSensor: true
         }
 
+        this.mouseTarget.color = LIGHT_COLOR // 'white'
+        this.mouseTarget.strokeColor = DARK_COLOR // 'black'
+
         this.mouseTarget.collisionStartFn = (o: any) => {
             const otherBody = o.plugin.basedRef()
             if (otherBody && otherBody.options && otherBody.options.tags.simpleCard) {
                 this.activeMouseTargetPool[otherBody.objectKey] = otherBody
                 // this.activeMouseTarget = otherBody
-                this.mouseTarget.color = 'red'
+                this.mouseTarget.color = PRIMARY_COLOR // 'red'
+                this.mouseTarget.strokeColor = SECONDARY_COLOR // 'blue'
             }
         }
 
@@ -174,7 +179,8 @@ export class Level01 extends BasedLevel {
                 // this.mouseTarget.color = 'white'
             }
             if (Object.keys(this.activeMouseTargetPool).length === 0) {
-                this.mouseTarget.color = 'white'
+                this.mouseTarget.color = LIGHT_COLOR // 'white'
+                this.mouseTarget.strokeColor = DARK_COLOR // 'black'
             }
         }
 
@@ -195,7 +201,8 @@ export class Level01 extends BasedLevel {
 
         newSimpleCard.x = newCardOptions.x || 400
         newSimpleCard.y = newCardOptions.y || 400
-        newSimpleCard.color = newCardOptions.color || 'blue'
+        newSimpleCard.color = PRIMARY_COLOR // newCardOptions.color || 'blue'
+        newSimpleCard.strokeColor = DARK_COLOR // 'black'
 
         newSimpleCard.initialize()
         this.gameRef.addToWorld(newSimpleCard.body)
@@ -216,8 +223,10 @@ export class Level01 extends BasedLevel {
 
         newSimpleCardZone.x = newCardZoneOptions.x || 400
         newSimpleCardZone.y = newCardZoneOptions.y || 600
-        
-        newSimpleCardZone.color = newCardZoneOptions.color || 'yellow'
+
+        newSimpleCardZone.color = SECONDARY_COLOR // newCardZoneOptions.color || 'yellow'
+        newSimpleCardZone.textColor = DARK_COLOR
+        newSimpleCardZone.strokeColor = DARK_COLOR
 
         newSimpleCardZone.initialize()
         this.gameRef.addToWorld(newSimpleCardZone.body)
@@ -255,8 +264,9 @@ export class Level01 extends BasedLevel {
         this.simpleButton.clickFunction = () => {
             // make all the simpleCardZones black
             this.simpleCardZones.forEach((cardZone: any) => {
-                cardZone.color = 'black'
-                if(this.winConditionMet) {
+                cardZone.color = DARK_COLOR // 'black'
+                cardZone.strokeColor = SECONDARY_COLOR
+                if (this.winConditionMet) {
                     this.gameRef.loadLevel('start-screen')
                 }
             })
@@ -283,7 +293,7 @@ export class Level01 extends BasedLevel {
             cardsInZones += Object.keys(cardZone.cardsInZone).length
         })
 
-        if(cardsInZones >= this.simpleCards.length) {
+        if (cardsInZones >= this.simpleCards.length) {
             this.winConditionMet = true
             this.simpleButton.buttonText = 'You Win!'
             return
@@ -308,7 +318,7 @@ export class Level01 extends BasedLevel {
                 // use the one with the highest index in the array of cards
                 let highestIndex = -1
                 this.simpleCards.forEach((card: any, ixd: number) => {
-                    if(this.activeMouseTargetPool[card.objectKey] && ixd > highestIndex) {
+                    if (this.activeMouseTargetPool[card.objectKey] && ixd > highestIndex) {
                         highestIndex = ixd
                         this.activeMouseTarget = this.activeMouseTargetPool[card.objectKey]
                     }
@@ -381,20 +391,20 @@ export class Level01 extends BasedLevel {
             this.lastMouseDown = this.gameRef.lastUpdate
         } else {
             this.mouseTargetOffset = { x: 0, y: 0 }
-            this.movingMouseTargetKey = ''       
+            this.movingMouseTargetKey = ''
         }
 
         this.simpleCardZones.forEach((cardZone: any) => {
             cardZone.update()
         })
 
-        
+
         if (!this.movingMouseTargetKey) {
             this.simpleButton.update()
             this.viewButton.update()
         }
-        
-        if(!this.simpleButton.hovered && !this.viewButton.hovered) {
+
+        if (!this.simpleButton.hovered && !this.viewButton.hovered) {
             if (!this.activeMouseTarget && this.gameRef.mouseInfo.mouseDown) {
                 let mouseTargetInLevel = true
                 if (this.gameRef.cameraMouseInfo.x < 0 || this.gameRef.cameraMouseInfo.x > this.levelWidth) {
@@ -464,7 +474,51 @@ export class Level01 extends BasedLevel {
             })
 
             // draw the mouse position
-            this.mouseTarget.draw()
+            // this.mouseTarget.draw()
+            drawLine({
+                c: this.gameRef.ctx,
+                x: this.mouseTarget.body.position.x - 10,
+                y: this.mouseTarget.body.position.y - 10,
+                toX: this.mouseTarget.body.position.x + 10,
+                toY: this.mouseTarget.body.position.y + 10,
+                strokeColor: SECONDARY_COLOR,
+                strokeWidth: 10,
+                cameraPos: this.gameRef.cameraPos,
+                zoom: this.gameRef.cameraZoom
+            })
+            drawLine({
+                c: this.gameRef.ctx,
+                x: this.mouseTarget.body.position.x + 10,
+                y: this.mouseTarget.body.position.y - 10,
+                toX: this.mouseTarget.body.position.x - 10,
+                toY: this.mouseTarget.body.position.y + 10,
+                strokeColor: SECONDARY_COLOR,
+                strokeWidth: 10,
+                cameraPos: this.gameRef.cameraPos,
+                zoom: this.gameRef.cameraZoom
+            })
+            drawLine({
+                c: this.gameRef.ctx,
+                x: this.mouseTarget.body.position.x - 10,
+                y: this.mouseTarget.body.position.y - 10,
+                toX: this.mouseTarget.body.position.x + 10,
+                toY: this.mouseTarget.body.position.y + 10,
+                strokeColor: PRIMARY_COLOR,
+                strokeWidth: 4,
+                cameraPos: this.gameRef.cameraPos,
+                zoom: this.gameRef.cameraZoom
+            })
+            drawLine({
+                c: this.gameRef.ctx,
+                x: this.mouseTarget.body.position.x + 10,
+                y: this.mouseTarget.body.position.y - 10,
+                toX: this.mouseTarget.body.position.x - 10,
+                toY: this.mouseTarget.body.position.y + 10,
+                strokeColor: PRIMARY_COLOR,
+                strokeWidth: 4,
+                cameraPos: this.gameRef.cameraPos,
+                zoom: this.gameRef.cameraZoom
+            })
 
         })
 
@@ -513,9 +567,9 @@ export class Level01 extends BasedLevel {
 const generateBigLoremIpsum = (times: number = 10) => {
     let ipsum = ''
     for (let i = 0; i < times; i++) {
-    //   ipsum += 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec magna nec sapien tincidunt ultricies. Nullam auctor, nunc vel aliquam fermentum, justo purus varius odio, nec tristique orci nunc eget massa. Sed nec scelerisque libero. Suspendisse potent. '   
-      ipsum += `Welcome to Simple Card\n\n I have no idea what to put here\n\n at some point i am sure this game will be interesting.\n\n Enjoy this in the meantime.`  
+        //   ipsum += 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec magna nec sapien tincidunt ultricies. Nullam auctor, nunc vel aliquam fermentum, justo purus varius odio, nec tristique orci nunc eget massa. Sed nec scelerisque libero. Suspendisse potent. '   
+        ipsum += `Welcome to Simple Card\n\n I have no idea what to put here\n\n at some point i am sure this game will be interesting.\n\n Enjoy this in the meantime.`
     }
     // ipsum += ''
     return ipsum
-  }
+}
