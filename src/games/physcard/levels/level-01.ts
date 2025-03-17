@@ -271,7 +271,7 @@ export class Level01 extends BasedLevel {
 
         this.levelText.x = 20
         this.levelText.y = 140
-        const levelTextString = generateBigLoremIpsum(30)
+        const levelTextString = generateBigLoremIpsum(1)
         this.levelText.initialize()
         this.levelText.containerFillColor = 'white'
         this.levelText.setText(levelTextString)
@@ -511,11 +511,11 @@ export class Level01 extends BasedLevel {
 }
 
 const generateBigLoremIpsum = (times: number = 10) => {
-    let ipsum = 'START START START '
+    let ipsum = ''
     for (let i = 0; i < times; i++) {
     //   ipsum += 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec magna nec sapien tincidunt ultricies. Nullam auctor, nunc vel aliquam fermentum, justo purus varius odio, nec tristique orci nunc eget massa. Sed nec scelerisque libero. Suspendisse potent. '   
-      ipsum += 'Sally sells seas shells by the sea shore.\n\nThe shells she sells are surely seashells. So if she sells shells on the seashore, I\'m sure she sells seashore shells.\n'  
+      ipsum += `Welcome to Simple Card\n\n I have no idea what to put here\n\n at some point i am sure this game will be interesting.\n\n Enjoy this in the meantime.`  
     }
-    ipsum += ' this is the END END END'
+    // ipsum += ''
     return ipsum
   }
