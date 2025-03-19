@@ -1,3 +1,4 @@
+import { drawBox } from '../../../engine/libs/drawHelpers';
 import { distanceBetween, normalizeVector } from '../../../engine/libs/mathHelpers';
 import PhysBox from '../../../engine/physicsObjects/PhysBox';
 import Physics from 'matter-js'
@@ -8,6 +9,7 @@ export class SimpleCard extends PhysBox {
     height = 150
 
     color = 'blue'
+    faceColor = 'red'
     strokeWidth: number = 1
 
     bodyOptions = {
@@ -15,6 +17,8 @@ export class SimpleCard extends PhysBox {
         // isStatic: true,
         isSensor: true
     }
+
+    faceUp: boolean = false
 
     options = {
         tags: {
@@ -74,5 +78,20 @@ export class SimpleCard extends PhysBox {
         }
     }
 
+    draw() {
+        this.cameraDraw(() => {
+            drawBox({
+                c: this.gameRef.ctx,
+                x: (-(this.width / 2) - this.bodyCenter.x),
+                y: (-(this.height / 2) - this.bodyCenter.y),
+                width: this.width,
+                height: this.height,
+                fillColor: this.faceUp ? this.faceColor : this.color,
+                strokeColor: this.strokeColor,
+                strokeWidth: this.strokeWidth,
+                zoom: this.gameRef.cameraZoom
+            })
+        })
+    }
 
 }

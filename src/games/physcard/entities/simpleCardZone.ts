@@ -12,6 +12,7 @@ export class SimpleCardZone extends PhysBox {
     strokeColor = 'red'
     textColor = 'red'
     strokeWidth: number = 0
+    zoneText: string = 'Zone Text'
 
     options = {
         tags: {
@@ -66,6 +67,21 @@ export class SimpleCardZone extends PhysBox {
         this.drawPhysicsBody()
 
         this.cameraDraw(() => {
+            if(this.zoneText) {
+                drawText({
+                    c: this.gameRef.ctx,
+                    x: 0,
+                    y: -this.height / 2 - 5,
+                    // y: this.height / 2 - 20,
+                    text: this.zoneText,
+                    fontSize: 20,
+                    fillColor: this.textColor,
+                    align: 'center',
+                    fontFamily: 'Arial',
+                    zoom: this.gameRef.cameraZoom
+                })
+            }
+
             drawText({
                 c: this.gameRef.ctx,
                 x: 0,

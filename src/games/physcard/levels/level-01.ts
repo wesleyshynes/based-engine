@@ -53,6 +53,9 @@ export class Level01 extends BasedLevel {
     // simpleCardZone: any;
     simpleCardZones: any = []
 
+    deckZone: any;
+    discardZone: any;
+
     simpleButton: any;
     viewButton: any;
 
@@ -119,9 +122,9 @@ export class Level01 extends BasedLevel {
             { x: 400, y: 600, color: '#000000' },
             { x: 200, y: 600, color: '#333333' },
             { x: 600, y: 600, color: '#666666' },
-            { x: 600, y: 800, color: '#999999' },
-            { x: 200, y: 800, color: '#CCCCCC' },
-            { x: 400, y: 800, color: '#FFFFFF' },
+            { x: 600, y: 850, color: '#999999' },
+            { x: 200, y: 850, color: '#CCCCCC' },
+            { x: 400, y: 850, color: '#FFFFFF' },
         ].map((card, i) => {
             return this.setupSimpleCardZone({
                 key: `simpleCardZone-${i}`,
@@ -130,6 +133,46 @@ export class Level01 extends BasedLevel {
                 color: card.color
             })
         })
+
+        this.deckZone = this.setupSimpleCardZone({
+            key: `deckZone`,
+            x: 200,
+            y: 200,
+            color: '#000000'
+        })
+        this.deckZone.zoneText = 'Deck'
+        this.simpleCards.forEach((card: any) => {
+            this.deckZone.cardsInZone[card.objectKey] = card
+        })
+        this.deckZone.collisionStartFn = (o: any) => {
+            const otherBody = o.plugin.basedRef()
+            if (otherBody && otherBody.options && otherBody.options.tags.simpleCard) {
+                console.log('collisionStartFn', otherBody.objectKey)
+                this.deckZone.strokeWidth = 5
+                this.deckZone.cardsInZone[otherBody.objectKey] = otherBody
+                otherBody.faceUp = false
+            }
+        }
+
+        this.discardZone = this.setupSimpleCardZone({
+            key: `discardZone`,
+            x: 600,
+            y: 200,
+            color: '#000000'
+        })
+        this.discardZone.zoneText = 'Discard'
+        this.discardZone.collisionStartFn = (o: any) => {
+            const otherBody = o.plugin.basedRef()
+            if (otherBody && otherBody.options && otherBody.options.tags.simpleCard) {
+                console.log('collisionStartFn', otherBody.objectKey)
+                this.discardZone.strokeWidth = 5
+                this.discardZone.cardsInZone[otherBody.objectKey] = otherBody
+                otherBody.faceUp = true
+            }
+        }
+        // this.simpleCards.forEach((card: any) => {
+        //     this.discardZone.cardsInZone[card.objectKey] = card
+        // })
 
         this.setupSimpleButton()
         this.setupViewButton()
@@ -398,6 +441,9 @@ export class Level01 extends BasedLevel {
             cardZone.update()
         })
 
+        this.discardZone.update()
+        this.deckZone.update()
+
 
         if (!this.movingMouseTargetKey) {
             this.simpleButton.update()
@@ -468,10 +514,14 @@ export class Level01 extends BasedLevel {
                 cardZone.draw()
             })
 
+            this.discardZone.draw()
+            this.deckZone.draw()
+
             // draw the simple cards
             this.simpleCards.forEach((card: any) => {
                 card.draw()
             })
+
 
             // draw the mouse position
             // this.mouseTarget.draw()
