@@ -30,6 +30,14 @@ export class Overworld extends BasedLevel {
         // y: 0,
     }
 
+    otherPlayer: any
+    otherPlayerStartPosition: any = {
+        x: this.levelWidth / 4,
+        y: this.levelHeight / 4,
+    }
+    otherPlayerColor: string = 'red'
+    otherPlayerStrokeColor: string = 'black'
+
     bgMusicTrack: any = BGMusic
 
     // Camera related stuff
@@ -44,6 +52,7 @@ export class Overworld extends BasedLevel {
     viewButton: any;
 
     levelText: any;
+    levelMode: string = 'text'
 
     levelExit: any;
 
@@ -66,18 +75,37 @@ export class Overworld extends BasedLevel {
 
         // this.followCam.cameraRotationTarget = 45
 
-        this.mainPlayer = new MainPlayer({
-            key: `mainPlayer`,
-            gameRef: this.gameRef
+        this.mainPlayer = this.setupPlayer({
+            playerKey: 'mainPlayer',
+            x: this.playerStartPosition.x,
+            y: this.playerStartPosition.y,
         })
-        this.mainPlayer.x = this.playerStartPosition.x
-        this.mainPlayer.y = this.playerStartPosition.y
-        this.mainPlayer.color = LIGHT_COLOR // 'white'
-        this.mainPlayer.strokeColor = DARK_COLOR // 'black'
-        this.mainPlayer.radius = 10
-        this.mainPlayer.baseSpeed = 8
-        this.mainPlayer.initialize()
-        this.gameRef.addToWorld(this.mainPlayer.body)
+
+        this.otherPlayer = this.setupPlayer({
+            playerKey: 'otherPlayer',
+            x: this.otherPlayerStartPosition.x,
+            y: this.otherPlayerStartPosition.y,
+            color: this.otherPlayerColor,
+            strokeColor: this.otherPlayerStrokeColor
+        })
+
+        this.otherPlayer.hasSpoken = false
+        this.otherPlayer.collisionStartFn = (o: any) => {
+            const otherBody = o.plugin.basedRef()
+            if (otherBody && otherBody.options && otherBody.options.tags) {
+                if (otherBody.options.tags.player) {
+                    // this.otherPlayer.hasSpoken = true
+                    this.levelText.setText('Please pass through the exit to continue.')
+                    this.levelText.active = true
+                    this.levelMode = 'text'
+                    this.levelText.closeFunction = () => {
+                        this.levelMode = 'game'
+                        this.otherPlayer.hasSpoken = true
+                    }
+                }
+    
+            }
+        }
 
         this.setupMouseTarget()
         this.setupLevelExit()
@@ -85,6 +113,43 @@ export class Overworld extends BasedLevel {
         this.setupViewButton()
         this.setupLevelText()
         this.followCam.initialize()
+    }
+
+    setupPlayer(options: {
+        playerKey: string,
+        x: number,
+        y: number,
+        color?: string,
+        strokeColor?: string,
+        radius?: number,
+        baseSpeed?: number,
+    }) {
+        const {
+            playerKey,
+            x,
+            y,
+            color = 'white',
+            strokeColor = 'black',
+            radius = 10,
+            baseSpeed = 8
+        } = options
+        const newPlayer = new MainPlayer({
+            key: playerKey,
+            gameRef: this.gameRef
+        })
+        newPlayer.x = x
+        newPlayer.y = y
+        newPlayer.color = color
+        newPlayer.strokeColor = strokeColor
+        newPlayer.radius = radius
+        newPlayer.baseSpeed = baseSpeed
+        newPlayer.targetPosition = {
+            x,
+            y
+        }
+        newPlayer.initialize()
+        this.gameRef.addToWorld(newPlayer.body)
+        return newPlayer
     }
 
     setupMouseTarget() {
@@ -195,14 +260,22 @@ export class Overworld extends BasedLevel {
         this.levelText.initialize()
         this.levelText.containerFillColor = 'white'
         this.levelText.setText(levelTextString)
+        this.levelText.closeFunction = () => {
+            this.levelMode = 'game'
+        }
     }
 
     checkWinCondition() { }
 
     update() {
-        this.handlePhysics()
-        this.checkWinCondition()
-        this.levelText.update()
+        this.updateCamera()
+        if (this.levelMode === 'game') {
+            this.handlePhysics()
+            this.checkWinCondition()
+        }
+        if (this.levelMode === 'text') {
+            this.levelText.update()
+        }
     }
 
     handlePhysics() {
@@ -215,7 +288,6 @@ export class Overworld extends BasedLevel {
         // this.followCam.cameraRotationTarget += 1
 
         // do something on physics tick
-        this.updateCamera()
 
         const hasMouseMoved = this.lastMousePos.x !== this.gameRef.cameraMouseInfo.x || this.lastMousePos.y !== this.gameRef.cameraMouseInfo.y
 
@@ -266,6 +338,7 @@ export class Overworld extends BasedLevel {
                 }
             }
             this.mainPlayer.update()
+            this.otherPlayer.update()
         }
     }
 
@@ -307,7 +380,9 @@ export class Overworld extends BasedLevel {
                 zoom: this.gameRef.cameraZoom
             })
 
-            this.levelExit.draw()
+            if(this.otherPlayer.hasSpoken) {
+                this.levelExit.draw()
+            }
 
 
             // draw the mouse position
@@ -387,6 +462,8 @@ export class Overworld extends BasedLevel {
 
         // draw the player
         this.mainPlayer.draw()
+
+        this.otherPlayer.draw()
 
         this.levelText.draw()
 

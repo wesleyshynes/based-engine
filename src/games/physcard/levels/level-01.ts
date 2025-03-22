@@ -94,6 +94,10 @@ export class Level01 extends BasedLevel {
         this.mainPlayer.strokeColor = DARK_COLOR // 'black'
         this.mainPlayer.radius = 10
         this.mainPlayer.baseSpeed = 8
+        this.mainPlayer.targetPosition = {
+            x: this.playerStartPosition.x,
+            y: this.playerStartPosition.y
+        }
         this.mainPlayer.initialize()
         this.gameRef.addToWorld(this.mainPlayer.body)
 
