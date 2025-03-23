@@ -103,7 +103,7 @@ export class Overworld extends BasedLevel {
                         this.otherPlayer.hasSpoken = true
                     }
                 }
-    
+
             }
         }
 
@@ -112,6 +112,8 @@ export class Overworld extends BasedLevel {
 
         this.setupViewButton()
         this.setupLevelText()
+        this.levelMode = 'text'
+        
         this.followCam.initialize()
     }
 
@@ -122,6 +124,7 @@ export class Overworld extends BasedLevel {
         color?: string,
         strokeColor?: string,
         radius?: number,
+        sensorRadius?: number,
         baseSpeed?: number,
     }) {
         const {
@@ -131,6 +134,7 @@ export class Overworld extends BasedLevel {
             color = 'white',
             strokeColor = 'black',
             radius = 10,
+            sensorRadius = 100,
             baseSpeed = 8
         } = options
         const newPlayer = new MainPlayer({
@@ -142,13 +146,14 @@ export class Overworld extends BasedLevel {
         newPlayer.color = color
         newPlayer.strokeColor = strokeColor
         newPlayer.radius = radius
+        newPlayer.sensorRadius = sensorRadius
         newPlayer.baseSpeed = baseSpeed
         newPlayer.targetPosition = {
             x,
             y
         }
         newPlayer.initialize()
-        this.gameRef.addToWorld(newPlayer.body)
+        this.gameRef.addToWorld(newPlayer.compositeRef)
         return newPlayer
     }
 
@@ -380,7 +385,7 @@ export class Overworld extends BasedLevel {
                 zoom: this.gameRef.cameraZoom
             })
 
-            if(this.otherPlayer.hasSpoken) {
+            if (this.otherPlayer.hasSpoken) {
                 this.levelExit.draw()
             }
 
@@ -432,30 +437,46 @@ export class Overworld extends BasedLevel {
                 zoom: this.gameRef.cameraZoom
             })
 
+            if (this.otherPlayer.playerInRadius && !this.otherPlayer.hasSpoken) {
+                // draw some text just above the player
+                drawText({
+                    c: this.gameRef.ctx,
+                    x: this.otherPlayer.body.position.x,
+                    y: this.otherPlayer.body.position.y - 40,
+                    text: 'Bump me!',
+                    fontSize: 20,
+                    fillColor: 'black',
+                    align: 'center',
+                    fontFamily: 'Arial',
+                    cameraPos: this.gameRef.cameraPos,
+                    zoom: this.gameRef.cameraZoom
+                })
+            }
+
         })
 
-        drawText({
-            c: this.gameRef.ctx,
-            x: 20,
-            y: 20,
-            text: `Cam Mouse: ${this.gameRef.cameraMouseInfo.x.toFixed(2)}, ${this.gameRef.cameraMouseInfo.y.toFixed(2)}`,
-            fontSize: 20,
-            fillColor: 'white',
-            align: 'left',
-            fontFamily: 'Arial'
-        })
+        // drawText({
+        //     c: this.gameRef.ctx,
+        //     x: 20,
+        //     y: 20,
+        //     text: `Cam Mouse: ${this.gameRef.cameraMouseInfo.x.toFixed(2)}, ${this.gameRef.cameraMouseInfo.y.toFixed(2)}`,
+        //     fontSize: 20,
+        //     fillColor: 'white',
+        //     align: 'left',
+        //     fontFamily: 'Arial'
+        // })
 
-        drawText({
-            c: this.gameRef.ctx,
-            x: 20,
-            y: 50,
-            // text: `Real Mouse: ${this.gameRef.mouseInfo.x.toFixed(2)}, ${this.gameRef.mouseInfo.y.toFixed(2)}`,
-            text: `${this.levelText.scrollBar.x.toFixed(2)}, ${this.levelText.scrollBar.y.toFixed(2)}`,
-            fontSize: 20,
-            fillColor: 'white',
-            align: 'left',
-            fontFamily: 'Arial'
-        })
+        // drawText({
+        //     c: this.gameRef.ctx,
+        //     x: 20,
+        //     y: 50,
+        //     // text: `Real Mouse: ${this.gameRef.mouseInfo.x.toFixed(2)}, ${this.gameRef.mouseInfo.y.toFixed(2)}`,
+        //     text: `${this.levelText.scrollBar.x.toFixed(2)}, ${this.levelText.scrollBar.y.toFixed(2)}`,
+        //     fontSize: 20,
+        //     fillColor: 'white',
+        //     align: 'left',
+        //     fontFamily: 'Arial'
+        // })
 
 
         this.viewButton.draw()

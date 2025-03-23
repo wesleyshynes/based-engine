@@ -1,3 +1,4 @@
+import { drawCircle } from "../../../engine/libs/drawHelpers";
 import { distanceBetween, normalizeVector, radToDeg, XYCoordinateType } from "../../../engine/libs/mathHelpers";
 import PhysBall from "../../../engine/physicsObjects/PhysBall";
 import Physics from 'matter-js'
@@ -18,6 +19,19 @@ export class MainPlayer extends PhysBall {
         }
     }
 
+    // sensor stuff
+    sensor: any;
+    sensorRadius: number = 100
+
+    sensorOptions = {
+        tags: {
+            sensor: true,
+            playerSensor: true,
+        }
+    }
+
+    // composite stuff 
+    compositeRef: any;
     collisionGroup: any = Physics.Body.nextGroup(true)
 
     bodyOptions = {
@@ -34,6 +48,8 @@ export class MainPlayer extends PhysBall {
     targetThreshold: number = 5
 
     // mouseSprite: any
+
+    playerInRadius: boolean = false
 
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
@@ -56,11 +72,68 @@ export class MainPlayer extends PhysBall {
         }
     }
 
+    sensorCollisionStartFn = (o: any) => {
+        const otherBody = o.plugin.basedRef()
+        if (otherBody && otherBody.options && otherBody.options.tags) {
+            if (otherBody.options.tags.playerSensor) {
+                this.playerInRadius = true
+            }
+        }
+    }
+
+    sensorCollisionEndFn = (o: any) => {
+        const otherBody = o.plugin.basedRef()
+        if (otherBody && otherBody.options && otherBody.options.tags) {
+            if (otherBody.options.tags.playerSensor) {
+                this.playerInRadius = false
+            }
+        }
+    }
+
     async preload() { }
 
     initialize() {
+        // setup sensor
+        this.sensor = Physics.Bodies.circle(this.x, this.y, this.sensorRadius, {
+            label: `sensor-${this.objectKey}`,
+            isSensor: true,
+            collisionFilter: { group: this.collisionGroup },
+            density: 0.0000000001,
+            // restitution: 0,
+            plugin: {
+                collisionStart: (x: any) => {
+                    // console.log('sensor collision start', x
+                    this.sensorCollisionStartFn(x)
+                },
+                collisionEnd: (x: any) => {
+                    // console.log('sensor collision end', x)
+                    this.sensorCollisionEndFn(x)
+                },
+                basedRef: () => ({
+                    options: this.sensorOptions
+                }),
+            }
+        });
+
         this.initializeBody()
-        this.setCenter()
+        // this.setCenter()
+
+        this.compositeRef = Physics.Composite.create({ label: `player-composite-${this.objectKey}` })
+        Physics.Composite.add(this.compositeRef, this.body)
+        Physics.Composite.add(this.compositeRef, this.sensor)
+
+        const sensorMount = Physics.Constraint.create({
+            bodyB: this.body,
+            pointB: { x: 0, y: 0 },
+            // pointB: { x: wheelBOffset, y: wheelYOffset },
+            bodyA: this.sensor,
+            stiffness: 1,
+            length: 0
+        })
+
+        Physics.Composite.add(this.compositeRef, sensorMount)
+
+
     }
 
     update() {
@@ -133,7 +206,22 @@ export class MainPlayer extends PhysBall {
         }
     }
 
+    drawSensor() {
+        this.cameraDraw(() => {
+            drawCircle({
+                c: this.gameRef.ctx,
+                x: this.bodyCenter.x,
+                y: this.bodyCenter.y,
+                radius: this.sensorRadius,
+                fillColor: 'rgba(233, 124, 0, 0.5)',
+                // fillColor: 'red',
+                zoom: this.gameRef.cameraZoom
+            })
+        })
+    }
+
     draw() {
+        this.drawSensor()
         this.drawShadows()
         this.drawPhysicsBody()
     }
