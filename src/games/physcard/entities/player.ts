@@ -3,7 +3,7 @@ import { distanceBetween, normalizeVector, radToDeg, XYCoordinateType } from "..
 import PhysBall from "../../../engine/physicsObjects/PhysBall";
 import Physics from 'matter-js'
 
-export class MainPlayer extends PhysBall {
+export class Player extends PhysBall {
     x: number = 100
     y: number = 100
 
@@ -18,6 +18,11 @@ export class MainPlayer extends PhysBall {
             player: true,
         }
     }
+
+    controlType: string = 'auto'
+
+    // control related stuff
+    moveKnob: any
 
     // sensor stuff
     sensor: any;
@@ -132,14 +137,21 @@ export class MainPlayer extends PhysBall {
         })
 
         Physics.Composite.add(this.compositeRef, sensorMount)
+    }
 
-
+    setMoveKnob(knob: any) {
+        this.moveKnob = knob
     }
 
     update() {
+        if(this.controlType === 'auto') {
+            this.moveTowardsTarget()
+        } else {
+            this.handleKeys()
+        }
         // this.handleKeys()
         // this.validatePosition()
-        this.moveTowardsTarget()
+        // this.moveTowardsTarget()
     }
 
     setTargetPosition(target: XYCoordinateType) {
@@ -190,6 +202,13 @@ export class MainPlayer extends PhysBall {
         }
         if (pressedKeys['KeyS'] || pressedKeys['ArrowDown']) {
             moveY += activeSpeed
+        }
+
+        // touch stuff
+        if (this.moveKnob && this.moveKnob.knobActive) {
+            const speedFactor = activeSpeed * this.gameRef.diffMulti
+            moveX += (this.moveKnob.knobCoord.x / this.moveKnob.maxOffset) * speedFactor
+            moveY += (this.moveKnob.knobCoord.y / this.moveKnob.maxOffset) * speedFactor
         }
 
 

@@ -10,7 +10,7 @@ import Physics from 'matter-js';
 import { SimpleCard } from '../entities/simpleCard';
 import { SimpleCardZone } from '../entities/simpleCardZone';
 import { BasedButton } from '../../../engine/BasedButton';
-import { MainPlayer } from '../entities/mainPlayer';
+import { Player } from '../entities/player';
 import TextContainer from '../../../engine/ui/TextContainer';
 export class Level01 extends BasedLevel {
 
@@ -84,7 +84,7 @@ export class Level01 extends BasedLevel {
 
         // this.followCam.cameraRotationTarget = 45
 
-        this.mainPlayer = new MainPlayer({
+        this.mainPlayer = new Player({
             key: `mainPlayer`,
             gameRef: this.gameRef
         })

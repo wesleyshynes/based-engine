@@ -7,9 +7,10 @@ import PhysBall from '../../../engine/physicsObjects/PhysBall';
 import { DARK_COLOR, LIGHT_COLOR, PRIMARY_COLOR, SECONDARY_COLOR } from '../constants/gameColors';
 import Physics from 'matter-js';
 import { BasedButton } from '../../../engine/BasedButton';
-import { MainPlayer } from '../entities/mainPlayer';
+import { Player } from '../entities/player';
 import TextContainer from '../../../engine/ui/TextContainer';
 import PhysBox from '../../../engine/physicsObjects/PhysBox';
+import { TouchKnob } from '../../../engine/controls/TouchKnob';
 export class Overworld extends BasedLevel {
 
     physics: any
@@ -21,6 +22,8 @@ export class Overworld extends BasedLevel {
     levelHeight: number = 1000
 
     nextLevel: string = 'credits-screen'
+
+    moveKnob: any
 
     mainPlayer: any
     playerStartPosition: any = {
@@ -75,11 +78,18 @@ export class Overworld extends BasedLevel {
 
         // this.followCam.cameraRotationTarget = 45
 
+        this.moveKnob = new TouchKnob({ key: 'move-knob', gameRef: this.gameRef })
+        this.moveKnob.height = 160
+        this.moveKnob.width = 160
+        this.positionKnobs()
+
         this.mainPlayer = this.setupPlayer({
             playerKey: 'mainPlayer',
             x: this.playerStartPosition.x,
             y: this.playerStartPosition.y,
         })
+        this.mainPlayer.controlType = 'manual'
+        this.mainPlayer.setMoveKnob(this.moveKnob)
 
         this.otherPlayer = this.setupPlayer({
             playerKey: 'otherPlayer',
@@ -113,7 +123,7 @@ export class Overworld extends BasedLevel {
         this.setupViewButton()
         this.setupLevelText()
         this.levelMode = 'text'
-        
+
         this.followCam.initialize()
     }
 
@@ -137,7 +147,7 @@ export class Overworld extends BasedLevel {
             sensorRadius = 100,
             baseSpeed = 8
         } = options
-        const newPlayer = new MainPlayer({
+        const newPlayer = new Player({
             key: playerKey,
             gameRef: this.gameRef
         })
@@ -226,7 +236,7 @@ export class Overworld extends BasedLevel {
 
         this.levelExit.collisionStartFn = (o: any) => {
             const otherBody = o.plugin.basedRef()
-            if (otherBody && otherBody.options && otherBody.options.tags.player) {
+            if (this.otherPlayer.hasSpoken && otherBody && otherBody.options && otherBody.options.tags.player) {
                 this.gameRef.loadLevel('level-01')
             }
         }
@@ -261,7 +271,7 @@ export class Overworld extends BasedLevel {
 
         this.levelText.x = 20
         this.levelText.y = 140
-        const levelTextString = generateBigLoremIpsum(1)
+        const levelTextString = generateBigLoremIpsum(10)
         this.levelText.initialize()
         this.levelText.containerFillColor = 'white'
         this.levelText.setText(levelTextString)
@@ -287,6 +297,7 @@ export class Overworld extends BasedLevel {
         if (this.gameRef.updatePhysics()) {
             this.onPhysicsUpdate()
         }
+        this.moveKnob.update()
     }
 
     onPhysicsUpdate() {
@@ -334,17 +345,17 @@ export class Overworld extends BasedLevel {
                 if (this.gameRef.cameraMouseInfo.y < 0 || this.gameRef.cameraMouseInfo.y > this.levelHeight) {
                     mouseTargetInLevel = false
                 }
-                if (mouseTargetInLevel) {
-                    // set main player target to the mouse
-                    this.mainPlayer.setTargetPosition({
-                        x: this.gameRef.cameraMouseInfo.x,
-                        y: this.gameRef.cameraMouseInfo.y
-                    })
-                }
+                // if (mouseTargetInLevel) {
+                //     // set main player target to the mouse
+                //     this.mainPlayer.setTargetPosition({
+                //         x: this.gameRef.cameraMouseInfo.x,
+                //         y: this.gameRef.cameraMouseInfo.y
+                //     })
+                // }
             }
-            this.mainPlayer.update()
-            this.otherPlayer.update()
         }
+        this.mainPlayer.update()
+        this.otherPlayer.update()
     }
 
     updateCamera() {
@@ -481,6 +492,8 @@ export class Overworld extends BasedLevel {
 
         this.viewButton.draw()
 
+        this.moveKnob.draw()
+
         // draw the player
         this.mainPlayer.draw()
 
@@ -491,8 +504,15 @@ export class Overworld extends BasedLevel {
         // Add any additional drawing logic here
     }
 
+    positionKnobs() {
+        this.moveKnob.width = this.moveKnob.width > this.gameRef.gameWidth / 2 ? this.gameRef.gameWidth / 2 - 5 : this.moveKnob.width
+        this.moveKnob.x = 0 // this.gameRef.gameWidth - this.moveKnob.width
+        this.moveKnob.y = this.gameRef.gameHeight - this.moveKnob.height
+    }
+
     onResize() {
         this.levelText.onResize()
+        this.positionKnobs()
     }
     tearDown() { }
 }
@@ -500,8 +520,8 @@ export class Overworld extends BasedLevel {
 const generateBigLoremIpsum = (times: number = 10) => {
     let ipsum = ''
     for (let i = 0; i < times; i++) {
-        //   ipsum += 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec magna nec sapien tincidunt ultricies. Nullam auctor, nunc vel aliquam fermentum, justo purus varius odio, nec tristique orci nunc eget massa. Sed nec scelerisque libero. Suspendisse potent. '   
-        ipsum += `Welcome to Simple Card\n\n I have no idea what to put here\n\n at some point i am sure this game will be interesting.\n\n Enjoy this in the meantime.`
+          ipsum += 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec magna nec sapien tincidunt ultricies. Nullam auctor, nunc vel aliquam fermentum, justo purus varius odio, nec tristique orci nunc eget massa. Sed nec scelerisque libero. Suspendisse potent. '   
+        // ipsum += `Welcome to Simple Card\n\n I have no idea what to put here\n\n at some point i am sure this game will be interesting.\n\n Enjoy this in the meantime.`
     }
     // ipsum += ''
     return ipsum

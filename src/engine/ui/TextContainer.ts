@@ -48,6 +48,10 @@ export default class TextContainer extends BasedObject {
 
   nextPageButton: any;
 
+  keyDownDelay: number = 300;
+  lastKeyDown: number = 0;
+  nextPageKey: string = 'KeyK';
+
   async preload() { }
   initialize() {
     this.setupCloseButton()
@@ -120,6 +124,15 @@ export default class TextContainer extends BasedObject {
         this.nextPageButton.update()
       }
       this.scrollBar.update()
+
+      if(this.gameRef.pressedKeys[this.nextPageKey] && this.gameRef.lastUpdate - this.lastKeyDown > this.keyDownDelay) {
+        this.lastKeyDown = this.gameRef.lastUpdate
+        if (this.scrollBar.value !== 0 && this.textLines.length > this.maxLinesBasedOnHeight) {
+          this.handleNextPage()
+        } else {
+          this.handleCloseFunction()
+        }
+      }
     }
   }
 
