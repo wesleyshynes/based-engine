@@ -24,6 +24,7 @@ export class Overworld extends BasedLevel {
     nextLevel: string = 'credits-screen'
 
     moveKnob: any
+    actionButton: any
 
     mainPlayer: any
     playerStartPosition: any = {
@@ -105,13 +106,7 @@ export class Overworld extends BasedLevel {
             if (otherBody && otherBody.options && otherBody.options.tags) {
                 if (otherBody.options.tags.player) {
                     // this.otherPlayer.hasSpoken = true
-                    this.levelText.setText('Please pass through the exit to continue.')
-                    this.levelText.active = true
-                    this.levelMode = 'text'
-                    this.levelText.closeFunction = () => {
-                        this.levelMode = 'game'
-                        this.otherPlayer.hasSpoken = true
-                    }
+                    this.passThroughExitMessage()
                 }
 
             }
@@ -120,6 +115,7 @@ export class Overworld extends BasedLevel {
         this.setupMouseTarget()
         this.setupLevelExit()
 
+        this.setupActionButton()
         this.setupViewButton()
         this.setupLevelText()
         this.levelMode = 'text'
@@ -263,6 +259,25 @@ export class Overworld extends BasedLevel {
         }
     }
 
+    setupActionButton() {
+        // should be in the bottom right of the screen
+        this.actionButton = new BasedButton({
+            key: 'actionButton',
+            gameRef: this.gameRef,
+        })
+        this.actionButton.x = this.gameRef.gameWidth - 120
+        this.actionButton.y = this.gameRef.gameHeight - 120
+        this.actionButton.width = 100
+        this.actionButton.buttonText = 'Action'
+
+        this.actionButton.clickFunction = () => {
+            // do something
+            if(this.otherPlayer.playerInRadius) {
+                this.passThroughExitMessage()
+            }
+        }
+    }
+
     setupLevelText() {
         this.levelText = new TextContainer({
             key: 'levelText',
@@ -277,6 +292,16 @@ export class Overworld extends BasedLevel {
         this.levelText.setText(levelTextString)
         this.levelText.closeFunction = () => {
             this.levelMode = 'game'
+        }
+    }
+
+    passThroughExitMessage() {
+        this.levelText.setText('Please pass through the exit to continue.')
+        this.levelText.active = true
+        this.levelMode = 'text'
+        this.levelText.closeFunction = () => {
+            this.levelMode = 'game'
+            this.otherPlayer.hasSpoken = true
         }
     }
 
@@ -335,6 +360,7 @@ export class Overworld extends BasedLevel {
         }
 
         this.viewButton.update()
+        this.actionButton.update()
 
         if (!this.viewButton.hovered) {
             if (this.gameRef.mouseInfo.mouseDown) {
@@ -356,6 +382,7 @@ export class Overworld extends BasedLevel {
         }
         this.mainPlayer.update()
         this.otherPlayer.update()
+
     }
 
     updateCamera() {
@@ -492,6 +519,10 @@ export class Overworld extends BasedLevel {
 
         this.viewButton.draw()
 
+        if(this.otherPlayer.playerInRadius) {
+            this.actionButton.draw()
+        }
+
         this.moveKnob.draw()
 
         // draw the player
@@ -510,9 +541,15 @@ export class Overworld extends BasedLevel {
         this.moveKnob.y = this.gameRef.gameHeight - this.moveKnob.height
     }
 
+    positionActionButton() {
+        this.actionButton.x = this.gameRef.gameWidth - 120
+        this.actionButton.y = this.gameRef.gameHeight - 120
+    }
+
     onResize() {
         this.levelText.onResize()
         this.positionKnobs()
+        this.positionActionButton()
     }
     tearDown() { }
 }
@@ -520,7 +557,7 @@ export class Overworld extends BasedLevel {
 const generateBigLoremIpsum = (times: number = 10) => {
     let ipsum = ''
     for (let i = 0; i < times; i++) {
-          ipsum += 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec magna nec sapien tincidunt ultricies. Nullam auctor, nunc vel aliquam fermentum, justo purus varius odio, nec tristique orci nunc eget massa. Sed nec scelerisque libero. Suspendisse potent. '   
+        ipsum += 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec magna nec sapien tincidunt ultricies. Nullam auctor, nunc vel aliquam fermentum, justo purus varius odio, nec tristique orci nunc eget massa. Sed nec scelerisque libero. Suspendisse potent. '
         // ipsum += `Welcome to Simple Card\n\n I have no idea what to put here\n\n at some point i am sure this game will be interesting.\n\n Enjoy this in the meantime.`
     }
     // ipsum += ''
