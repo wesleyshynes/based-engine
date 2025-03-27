@@ -95,6 +95,10 @@ export class Player extends PhysBall {
         }
     }
 
+    actionFunction = () => {
+        console.log('action function')
+    }
+
     async preload() { }
 
     initialize() {
@@ -115,7 +119,8 @@ export class Player extends PhysBall {
                     this.sensorCollisionEndFn(x)
                 },
                 basedRef: () => ({
-                    options: this.sensorOptions
+                    options: this.sensorOptions,
+                    mainRef: this
                 }),
             }
         });
@@ -202,6 +207,10 @@ export class Player extends PhysBall {
         }
         if (pressedKeys['KeyS'] || pressedKeys['ArrowDown']) {
             moveY += activeSpeed
+        }
+
+        if(pressedKeys['KeyT']){
+            this.actionFunction()
         }
 
         // touch stuff

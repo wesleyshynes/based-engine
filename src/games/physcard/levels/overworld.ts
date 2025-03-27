@@ -112,6 +112,34 @@ export class Overworld extends BasedLevel {
             }
         }
 
+        this.otherPlayer.sensorCollisionStartFn = (o: any) => {
+            const otherBody = o.plugin.basedRef()
+            if (otherBody && otherBody.options && otherBody.options.tags) {
+                if (otherBody.options.tags.playerSensor) {
+                    this.otherPlayer.playerInRadius = true
+                    if (otherBody.mainRef) {
+                        otherBody.mainRef.actionFunction = () => {
+                            this.passThroughExitMessage()
+                        }
+                    }
+                }
+            }
+        }
+
+        this.otherPlayer.sensorCollisionEndFn = (o: any) => {
+            const otherBody = o.plugin.basedRef()
+            if (otherBody && otherBody.options && otherBody.options.tags) {
+                if (otherBody.options.tags.playerSensor) {
+                    this.otherPlayer.playerInRadius = false
+                    if (otherBody.mainRef) {
+                        otherBody.mainRef.actionFunction = () => {
+                            console.log('action function')
+                        }
+                    }
+                }
+            }
+        }
+
         this.setupMouseTarget()
         this.setupLevelExit()
 
@@ -361,10 +389,6 @@ export class Overworld extends BasedLevel {
 
         this.viewButton.update()
         this.actionButton.update()
-
-        if(this.gameRef.pressedKeys['KeyT']){
-            this.passThroughExitMessage()
-        }
 
         if (!this.viewButton.hovered) {
             if (this.gameRef.mouseInfo.mouseDown) {
