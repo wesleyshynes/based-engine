@@ -272,9 +272,7 @@ export class Overworld extends BasedLevel {
 
         this.actionButton.clickFunction = () => {
             // do something
-            if(this.otherPlayer.playerInRadius) {
-                this.passThroughExitMessage()
-            }
+            this.passThroughExitMessage()
         }
     }
 
@@ -286,7 +284,7 @@ export class Overworld extends BasedLevel {
 
         this.levelText.x = 20
         this.levelText.y = 140
-        const levelTextString = generateBigLoremIpsum(10)
+        const levelTextString = generateBigLoremIpsum(1)
         this.levelText.initialize()
         this.levelText.containerFillColor = 'white'
         this.levelText.setText(levelTextString)
@@ -296,12 +294,14 @@ export class Overworld extends BasedLevel {
     }
 
     passThroughExitMessage() {
-        this.levelText.setText('Please pass through the exit to continue.')
-        this.levelText.active = true
-        this.levelMode = 'text'
-        this.levelText.closeFunction = () => {
-            this.levelMode = 'game'
-            this.otherPlayer.hasSpoken = true
+        if (this.otherPlayer.playerInRadius) {
+            this.levelText.setText('Please pass through the exit to continue.')
+            this.levelText.active = true
+            this.levelMode = 'text'
+            this.levelText.closeFunction = () => {
+                this.levelMode = 'game'
+                this.otherPlayer.hasSpoken = true
+            }
         }
     }
 
@@ -361,6 +361,10 @@ export class Overworld extends BasedLevel {
 
         this.viewButton.update()
         this.actionButton.update()
+
+        if(this.gameRef.pressedKeys['KeyT']){
+            this.passThroughExitMessage()
+        }
 
         if (!this.viewButton.hovered) {
             if (this.gameRef.mouseInfo.mouseDown) {
@@ -519,7 +523,7 @@ export class Overworld extends BasedLevel {
 
         this.viewButton.draw()
 
-        if(this.otherPlayer.playerInRadius) {
+        if (this.otherPlayer.playerInRadius) {
             this.actionButton.draw()
         }
 
@@ -557,8 +561,8 @@ export class Overworld extends BasedLevel {
 const generateBigLoremIpsum = (times: number = 10) => {
     let ipsum = ''
     for (let i = 0; i < times; i++) {
-        ipsum += 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec magna nec sapien tincidunt ultricies. Nullam auctor, nunc vel aliquam fermentum, justo purus varius odio, nec tristique orci nunc eget massa. Sed nec scelerisque libero. Suspendisse potent. '
-        // ipsum += `Welcome to Simple Card\n\n I have no idea what to put here\n\n at some point i am sure this game will be interesting.\n\n Enjoy this in the meantime.`
+        // ipsum += 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec magna nec sapien tincidunt ultricies. Nullam auctor, nunc vel aliquam fermentum, justo purus varius odio, nec tristique orci nunc eget massa. Sed nec scelerisque libero. Suspendisse potent. '
+        ipsum += `Welcome to Simple Card\n\n I have no idea what to put here\n\n at some point i am sure this game will be interesting.\n\n Enjoy this in the meantime.`
     }
     // ipsum += ''
     return ipsum
