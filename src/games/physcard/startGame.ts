@@ -5,9 +5,8 @@ import { Level01 } from "./levels/level-01"
 import { Overworld } from "./levels/overworld"
 import { StartScreen } from "./levels/startScreen"
 
-export const START_LEVEL = 'card-battle' 
-// export const START_LEVEL = 'level-01' 
-// export const START_LEVEL = 'standard-level' 
+// export const START_LEVEL = 'card-battle' 
+export const START_LEVEL = 'level-01' 
 
 
 export function startGame() {
