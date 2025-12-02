@@ -26,6 +26,11 @@ export class SimpleCardZone extends PhysBox {
         isSensor: true
     }
 
+    cardOffset = {
+        x: 5,
+        y: 5
+    }
+
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
         if (otherBody && otherBody.options && otherBody.options.tags.simpleCard) {
@@ -55,8 +60,8 @@ export class SimpleCardZone extends PhysBox {
             // }
             if (card && card.body && card.body.position) {
                 card.targetPosition = {
-                    x: this.body.position.x + (idx * 5),
-                    y: this.body.position.y - (idx * 5)
+                    x: this.body.position.x + (idx * this.cardOffset.x),
+                    y: this.body.position.y - (idx * this.cardOffset.y)
                 }
                 card.moveTowardsTarget()
             }

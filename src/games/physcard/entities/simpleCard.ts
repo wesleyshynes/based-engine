@@ -1,4 +1,4 @@
-import { drawBox } from '../../../engine/libs/drawHelpers';
+import { drawBox, drawText } from '../../../engine/libs/drawHelpers';
 import { distanceBetween, normalizeVector } from '../../../engine/libs/mathHelpers';
 import PhysBox from '../../../engine/physicsObjects/PhysBox';
 import Physics from 'matter-js'
@@ -19,6 +19,11 @@ export class SimpleCard extends PhysBox {
     }
 
     faceUp: boolean = false
+
+    // Card properties for blackjack
+    suit: string = ''
+    value: string = ''
+    cardText: string = ''
 
     options = {
         tags: {
@@ -91,6 +96,24 @@ export class SimpleCard extends PhysBox {
                 strokeWidth: this.strokeWidth,
                 zoom: this.gameRef.cameraZoom
             })
+
+            // Draw card text if face up
+            if (this.faceUp && this.cardText) {
+                drawText({
+                    c: this.gameRef.ctx,
+                    // x: 0,
+                    // y: 0,
+                    // top left corner
+                    x: -(this.width / 2) + 20 - this.bodyCenter.x,
+                    y: -(this.height / 2) + 25 - this.bodyCenter.y,
+                    text: this.cardText,
+                    fontSize: 24,
+                    fillColor: 'white',
+                    align: 'center',
+                    fontFamily: 'Arial',
+                    zoom: this.gameRef.cameraZoom
+                })
+            }
         })
     }
 
