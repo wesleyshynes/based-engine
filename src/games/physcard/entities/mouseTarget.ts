@@ -11,7 +11,7 @@ export class MouseTarget extends PhysBall {
 
     bodyOptions = {
         label: 'mouseTarget',
-        isStatic: true,
+        isStatic: false,
         isSensor: true
     }
 

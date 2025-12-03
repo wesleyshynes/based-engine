@@ -2,12 +2,13 @@ import { BasedLevel } from "../../../engine/BasedLevel";
 import { FollowCam } from '../../../engine/cameras/FollowCam';
 import { drawBox, drawCameraFrame, drawLine, drawText } from '../../../engine/libs/drawHelpers';
 import { XYCoordinateType } from '../../../engine/libs/mathHelpers';
-import PhysBall from '../../../engine/physicsObjects/PhysBall';
 import { DARK_COLOR, LIGHT_COLOR, PRIMARY_COLOR, SECONDARY_COLOR } from '../constants/gameColors';
 import Physics from 'matter-js';
 import { SimpleCard } from '../entities/simpleCard';
 import { SimpleCardZone } from '../entities/simpleCardZone';
 import { MouseTarget } from "../entities/mouseTarget";
+import { BlackJackPlayerZone } from "../entities/blackJackPlayerZone";
+import { has } from "lodash";
 
 export class BlackJack extends BasedLevel {
 
@@ -108,7 +109,7 @@ export class BlackJack extends BasedLevel {
         // Create 52 cards and add them to the deck
         const suits = ['♠', '♥', '♦', '♣']
         const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
-        
+
         suits.forEach((suit, suitIdx) => {
             values.forEach((value, valueIdx) => {
                 const card = new SimpleCard({
@@ -130,7 +131,7 @@ export class BlackJack extends BasedLevel {
 
                 card.initialize()
                 this.gameRef.addToWorld(card.body)
-                
+
                 this.deck.push(card)
                 this.deckZone.cardsInZone[card.objectKey] = card
             })
@@ -152,7 +153,7 @@ export class BlackJack extends BasedLevel {
         ]
 
         zonePositions.forEach((pos, idx) => {
-            const zone = new SimpleCardZone({
+            const zone = new BlackJackPlayerZone({
                 key: `playZone-${idx}`,
                 gameRef: this.gameRef
             })
@@ -162,17 +163,6 @@ export class BlackJack extends BasedLevel {
             zone.textColor = DARK_COLOR
             zone.strokeColor = DARK_COLOR
             zone.zoneText = `Play ${idx + 1}`
-
-            zone.cardOffset = { x: 0, y: -30 }
-            
-            zone.collisionStartFn = (o: any) => {
-                const otherBody = o.plugin.basedRef()
-                if (otherBody && otherBody.options && otherBody.options.tags.simpleCard) {
-                    zone.strokeWidth = 5
-                    zone.cardsInZone[otherBody.objectKey] = otherBody
-                    otherBody.faceUp = true
-                }
-            }
 
             zone.initialize()
             this.gameRef.addToWorld(zone.body)
@@ -225,12 +215,19 @@ export class BlackJack extends BasedLevel {
         }
 
         // Hide mouse target when idle
-        if (!hasMouseMoved && this.gameRef.lastUpdate - this.lastMouseDown > 500 && this.gameRef.lastUpdate - this.lastMouseMove > 500) {
-            Physics.Body.setPosition(this.mouseTarget.body, {
-                x: 2000,
-                y: 2000
-            })
-        } else {
+        // if (!hasMouseMoved && this.gameRef.lastUpdate - this.lastMouseDown > 500 && this.gameRef.lastUpdate - this.lastMouseMove > 500) {
+        //     Physics.Body.setPosition(this.mouseTarget.body, {
+        //         x: 2000,
+        //         y: 2000
+        //     })
+        // } else {
+        //     Physics.Body.setPosition(this.mouseTarget.body, {
+        //         x: this.gameRef.cameraMouseInfo.x,
+        //         y: this.gameRef.cameraMouseInfo.y
+        //     })
+        // }
+
+        if (hasMouseMoved) {
             Physics.Body.setPosition(this.mouseTarget.body, {
                 x: this.gameRef.cameraMouseInfo.x,
                 y: this.gameRef.cameraMouseInfo.y
@@ -322,6 +319,17 @@ export class BlackJack extends BasedLevel {
 
             // Draw mouse crosshair
             this.mouseTarget.draw()
+        })
+
+        drawText({
+            c: this.gameRef.ctx,
+            x: 21,
+            y: 21,
+            text: `BlackJack - Click and drag cards from deck to play zones`,
+            fontSize: 20,
+            fillColor: 'black',
+            align: 'left',
+            fontFamily: 'Arial'
         })
 
         drawText({

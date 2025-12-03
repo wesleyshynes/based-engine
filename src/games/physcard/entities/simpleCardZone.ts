@@ -31,6 +31,11 @@ export class SimpleCardZone extends PhysBox {
         y: 5
     }
 
+    cardPositionOffset = {
+        x: 0,
+        y: 0
+    }
+
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
         if (otherBody && otherBody.options && otherBody.options.tags.simpleCard) {
@@ -43,7 +48,7 @@ export class SimpleCardZone extends PhysBox {
     collisionEndFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
         if (otherBody && otherBody.options && otherBody.options.tags.simpleCard) {
-            console.log('collisionEndFn', otherBody.objectKey)
+            // console.log('collisionEndFn', otherBody.objectKey)
             delete this.cardsInZone[otherBody.objectKey]
         }
 
@@ -53,15 +58,16 @@ export class SimpleCardZone extends PhysBox {
     }
 
     update() {
+        this.handleCardAlignment()
+    }
+
+    handleCardAlignment() {
         Object.keys(this.cardsInZone).forEach((cardKey: string, idx: number) => {
             const card = this.cardsInZone[cardKey]
-            // if(card.targeted) {
-            //     return
-            // }
             if (card && card.body && card.body.position) {
                 card.targetPosition = {
-                    x: this.body.position.x + (idx * this.cardOffset.x),
-                    y: this.body.position.y - (idx * this.cardOffset.y)
+                    x: this.body.position.x + (idx * this.cardOffset.x) + this.cardPositionOffset.x,
+                    y: this.body.position.y - (idx * this.cardOffset.y) + this.cardPositionOffset.y
                 }
                 card.moveTowardsTarget()
             }
@@ -72,7 +78,7 @@ export class SimpleCardZone extends PhysBox {
         this.drawPhysicsBody()
 
         this.cameraDraw(() => {
-            if(this.zoneText) {
+            if (this.zoneText) {
                 drawText({
                     c: this.gameRef.ctx,
                     x: 0,
