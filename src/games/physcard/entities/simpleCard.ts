@@ -1,4 +1,4 @@
-import { drawBox, drawText } from '../../../engine/libs/drawHelpers';
+import { drawBox, drawText, rotateDraw } from '../../../engine/libs/drawHelpers';
 import { distanceBetween, normalizeVector } from '../../../engine/libs/mathHelpers';
 import PhysBox from '../../../engine/physicsObjects/PhysBox';
 import Physics from 'matter-js'
@@ -31,6 +31,7 @@ export class SimpleCard extends PhysBox {
         }
     }
 
+    atTarget: boolean = true
     targetPosition = {
         x: 0,
         y: 0
@@ -61,6 +62,7 @@ export class SimpleCard extends PhysBox {
                 x: 0,
                 y: 0
             })
+            this.atTarget = true
             return
         }
         const moveX = this.targetPosition.x - this.body.position.x
@@ -83,6 +85,17 @@ export class SimpleCard extends PhysBox {
         }
     }
 
+    setTargetedPosition(x: number, y: number) {
+        this.targetPosition = { x, y }
+        this.atTarget = false
+    }
+
+    update() {
+        if (!this.atTarget && !this.targeted) {
+            this.moveTowardsTarget()
+        }
+    }
+
     draw() {
         this.cameraDraw(() => {
             drawBox({
@@ -91,7 +104,8 @@ export class SimpleCard extends PhysBox {
                 y: (-(this.height / 2) - this.bodyCenter.y),
                 width: this.width,
                 height: this.height,
-                fillColor: this.faceUp ? this.faceColor : this.color,
+                fillColor: this.faceUp ? 'white' : this.color,
+                // fillColor: this.faceUp ? this.faceColor : this.color,
                 strokeColor: this.strokeColor,
                 strokeWidth: this.strokeWidth,
                 zoom: this.gameRef.cameraZoom
@@ -108,11 +122,35 @@ export class SimpleCard extends PhysBox {
                     y: -(this.height / 2) + 25 - this.bodyCenter.y,
                     text: this.cardText,
                     fontSize: 24,
-                    fillColor: 'white',
+                    // fillColor: 'white',
+                    fillColor: this.faceColor,
                     align: 'center',
                     fontFamily: 'Arial',
                     zoom: this.gameRef.cameraZoom
                 })
+                // bottom right of card as well upside down
+                rotateDraw({
+                    c: this.gameRef.ctx,
+                    x: this.width/2 - 20 - this.bodyCenter.x,
+                    y: this.height/2 - 25 - this.bodyCenter.y,
+                    a: 180,
+                    zoom: this.gameRef.cameraZoom
+                },
+                    () => {
+                        drawText({
+                            c: this.gameRef.ctx,
+                            x: 0,
+                            y: 0,
+                            text: this.cardText,
+                            fontSize: 24,
+                            // fillColor: 'white',
+                            fillColor: this.faceColor,
+                            align: 'center',
+                            fontFamily: 'Arial',
+                            zoom: this.gameRef.cameraZoom
+                        })
+
+                    })
             }
         })
     }

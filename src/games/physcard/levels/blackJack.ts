@@ -142,6 +142,7 @@ export class BlackJack extends BasedLevel {
             const j = Math.floor(Math.random() * (i + 1));
             [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
         }
+
     }
 
     setupPlayZones() {
@@ -249,6 +250,12 @@ export class BlackJack extends BasedLevel {
                     // Remove from deck zone when dragging
                     delete this.deckZone.cardsInZone[this.activeMouseTarget.objectKey]
                 }
+                if (this.activeMouseTarget.setTargetedPosition) {
+                    this.activeMouseTarget.setTargetedPosition(
+                        this.gameRef.cameraMouseInfo.x + this.mouseTargetOffset.x,
+                        this.gameRef.cameraMouseInfo.y + this.mouseTargetOffset.y
+                    )
+                }
                 Physics.Body.setPosition(this.activeMouseTarget.body, {
                     x: this.gameRef.cameraMouseInfo.x + this.mouseTargetOffset.x,
                     y: this.gameRef.cameraMouseInfo.y + this.mouseTargetOffset.y
@@ -271,6 +278,9 @@ export class BlackJack extends BasedLevel {
         this.deckZone.update()
         this.playZones.forEach((zone: any) => {
             zone.update()
+        })
+        this.deck.forEach((card: any) => {
+            card.update()
         })
     }
 
@@ -307,15 +317,32 @@ export class BlackJack extends BasedLevel {
             // Draw deck zone
             this.deckZone.draw()
 
+
+            const drawnCards: { [key: string]: boolean } = {}
             // Draw play zones
             this.playZones.forEach((zone: any) => {
                 zone.draw()
+
+                Object.keys(zone.cardsInZone).forEach((cardKey: string) => {
+                    if (this.activeMouseTarget && this.activeMouseTarget.objectKey === cardKey) {
+                        return
+                    }
+                    const card = zone.cardsInZone[cardKey]
+                    card.draw()
+                    drawnCards[card.objectKey] = true
+                })
             })
 
             // Draw cards
             this.deck.forEach((card: any) => {
-                card.draw()
+                // card.draw()
+                if (!drawnCards[card.objectKey] && !(this.activeMouseTarget && this.activeMouseTarget.objectKey === card.objectKey)) {
+                    card.draw()
+                    drawnCards[card.objectKey] = true
+                }
             })
+
+            this.activeMouseTarget?.draw()
 
             // Draw mouse crosshair
             this.mouseTarget.draw()

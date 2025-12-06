@@ -6,7 +6,7 @@ export class BlackJackPlayerZone extends SimpleCardZone {
 
     cardTotal: number = 0
 
-    cardOffset = { x: 0, y: -30 }
+    cardOffset = { x: 5, y: -30 }
     cardOffsetStack = { x: 0, y: -30 }
     cardOffsetSplit = { x: 40, y: 0 }
 
@@ -17,16 +17,15 @@ export class BlackJackPlayerZone extends SimpleCardZone {
             this.cardsInZone[otherBody.objectKey] = otherBody
             otherBody.faceUp = true
         }
-        console.log(otherBody)
 
-        if (otherBody && otherBody.options && otherBody.options.tags.mouseTarget) {
-            this.strokeWidth = 3
-            this.cardOffset = this.cardOffsetSplit
-            this.cardPositionOffset = { 
-                x: (Object.keys(this.cardsInZone).length - 1) * -20, 
-                y: 0 
-            }
-        }
+        // if (otherBody && otherBody.options && otherBody.options.tags.mouseTarget) {
+        //     this.strokeWidth = 3
+        //     this.cardOffset = this.cardOffsetSplit
+        //     this.cardPositionOffset = { 
+        //         x: (Object.keys(this.cardsInZone).length - 1) * -20, 
+        //         y: 0 
+        //     }
+        // }
     }
 
     collisionEndFn = (o: any) => {
@@ -36,11 +35,12 @@ export class BlackJackPlayerZone extends SimpleCardZone {
             delete this.cardsInZone[otherBody.objectKey]
         }
 
-        if (otherBody && otherBody.options && otherBody.options.tags.mouseTarget) {
-            this.strokeWidth = 0
-            this.cardOffset = this.cardOffsetStack
-            this.cardPositionOffset = { x: 0, y: 0 }
-        }
+
+        // if (otherBody && otherBody.options && otherBody.options.tags.mouseTarget) {
+        //     this.strokeWidth = 0
+        //     this.cardOffset = this.cardOffsetStack
+        //     this.cardPositionOffset = { x: 0, y: 0 }
+        // }
     }
 
     update() {

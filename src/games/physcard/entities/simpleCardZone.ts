@@ -1,5 +1,6 @@
 import { drawText } from "../../../engine/libs/drawHelpers";
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
+import { SimpleCard } from "./simpleCard";
 
 export class SimpleCardZone extends PhysBox {
 
@@ -39,7 +40,6 @@ export class SimpleCardZone extends PhysBox {
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
         if (otherBody && otherBody.options && otherBody.options.tags.simpleCard) {
-            console.log('collisionStartFn', otherBody.objectKey)
             this.strokeWidth = 5
             this.cardsInZone[otherBody.objectKey] = otherBody
         }
@@ -48,7 +48,6 @@ export class SimpleCardZone extends PhysBox {
     collisionEndFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
         if (otherBody && otherBody.options && otherBody.options.tags.simpleCard) {
-            // console.log('collisionEndFn', otherBody.objectKey)
             delete this.cardsInZone[otherBody.objectKey]
         }
 
@@ -63,13 +62,12 @@ export class SimpleCardZone extends PhysBox {
 
     handleCardAlignment() {
         Object.keys(this.cardsInZone).forEach((cardKey: string, idx: number) => {
-            const card = this.cardsInZone[cardKey]
-            if (card && card.body && card.body.position) {
-                card.targetPosition = {
-                    x: this.body.position.x + (idx * this.cardOffset.x) + this.cardPositionOffset.x,
-                    y: this.body.position.y - (idx * this.cardOffset.y) + this.cardPositionOffset.y
-                }
-                card.moveTowardsTarget()
+            const card: SimpleCard = this.cardsInZone[cardKey]
+            if (card && card.body && card.body.position && !card.targeted) {
+                card.setTargetedPosition(
+                    this.body.position.x + (idx * this.cardOffset.x) + this.cardPositionOffset.x,
+                    this.body.position.y - (idx * this.cardOffset.y) + this.cardPositionOffset.y
+                )
             }
         })
     }
