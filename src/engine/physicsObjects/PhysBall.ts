@@ -74,15 +74,7 @@ export default class PhysBall extends BasedObject {
   }
 
   drawPhysicsBody() {
-    rotateDraw({
-      c: this.gameRef.ctx,
-      x: this.body.position.x,
-      y: this.body.position.y,
-      a: radToDeg(this.body.angle),
-      cameraPos: this.gameRef.cameraPos,
-      zoom: this.gameRef.cameraZoom
-    }, () => {
-
+    this.cameraDraw( () => {
       drawCircle({
         c: this.gameRef.ctx,
         x: this.bodyCenter.x,
