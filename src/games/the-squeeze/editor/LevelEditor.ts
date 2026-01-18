@@ -22,6 +22,8 @@ const FILL_COLOR = '#81B622'
 const HOVER_COLOR = '#ECF87F'
 const TEXT_COLOR = '#FFFFFF'
 const TEXT_HOVER_COLOR = '#000000'
+const TOOL_BUTTON_FILL = '#333'
+const TOOL_BUTTON_HOVER = '#555'
 
 export class LevelEditor extends BasedLevel {
     
@@ -43,6 +45,10 @@ export class LevelEditor extends BasedLevel {
     dragOffset: { x: number, y: number } = { x: 0, y: 0 }
     isPlacing: boolean = false
     placingPreview: { x: number, y: number } | null = null
+    
+    // Handle dragging
+    activeHandle: string | null = null  // 'n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw', 'minX', 'maxX', 'minY', 'maxY'
+    handleSize: number = 10
     
     // UI Elements
     toolButtons: Map<EditorTool, any> = new Map()
@@ -122,8 +128,8 @@ export class LevelEditor extends BasedLevel {
         }
         
         tools.forEach((tool, index) => {
-            const btn = this.createButton(toolLabels[tool], 10 + index * 75, 55, 70, 35)
-            btn.fillColor = this.currentTool === tool ? HOVER_COLOR : '#333'
+            const btn = this.createButton(toolLabels[tool], 10 + index * 75, 55, 70, 30)
+            btn.fillColor = this.currentTool === tool ? TOOL_BUTTON_HOVER : TOOL_BUTTON_FILL
             btn.clickFunction = () => {
                 this.currentTool = tool
                 this.selectedObject = null
@@ -194,7 +200,7 @@ export class LevelEditor extends BasedLevel {
         btn.width = width
         btn.height = height
         btn.buttonText = text
-        btn.fillColor = '#333'
+        btn.fillColor = FILL_COLOR
         btn.hoverColor = HOVER_COLOR
         btn.textColor = TEXT_COLOR
         btn.textHoverColor = TEXT_HOVER_COLOR
@@ -204,7 +210,7 @@ export class LevelEditor extends BasedLevel {
 
     updateToolButtonColors() {
         this.toolButtons.forEach((btn, tool) => {
-            btn.fillColor = this.currentTool === tool ? HOVER_COLOR : '#333'
+            btn.fillColor = this.currentTool === tool ? TOOL_BUTTON_HOVER : TOOL_BUTTON_FILL
         })
     }
 
@@ -300,10 +306,19 @@ export class LevelEditor extends BasedLevel {
         }
 
         // Handle mouse down
-        if (mouse.mouseDown && !this.isDragging && !this.isPanning) {
+        if (mouse.mouseDown && !this.isDragging && !this.isPanning && !this.activeHandle) {
             // Check if clicking on UI areas
             if (mouse.y < 100 || this.isClickOnPanel(mouse.x, mouse.y)) {
                 return
+            }
+
+            // Check if clicking on a handle first (only in select mode with selected object)
+            if (this.currentTool === 'select' && this.selectedObject) {
+                const handle = this.getHandleAtPosition(worldPos.x, worldPos.y)
+                if (handle) {
+                    this.activeHandle = handle
+                    return
+                }
             }
 
             if (this.currentTool === 'pan') {
@@ -332,16 +347,35 @@ export class LevelEditor extends BasedLevel {
             }
         }
 
+        // Handle active handle dragging
+        if (this.activeHandle && this.selectedObject && mouse.mouseDown) {
+            this.handleHandleDrag(worldPos.x, worldPos.y)
+        }
+
         // Handle dragging
-        if (this.isDragging && this.selectedObject && mouse.mouseDown) {
+        if (this.isDragging && this.selectedObject && mouse.mouseDown && !this.activeHandle) {
             const snappedX = Math.round((worldPos.x - this.dragOffset.x) / GRID_SIZE) * GRID_SIZE
             const snappedY = Math.round((worldPos.y - this.dragOffset.y) / GRID_SIZE) * GRID_SIZE
+            
+            // Calculate delta for relative movement
+            const deltaX = snappedX - this.selectedObject.x
+            const deltaY = snappedY - this.selectedObject.y
+            
             this.selectedObject.x = snappedX
             this.selectedObject.y = snappedY
             
             // Update playerStart if it's being moved
             if (this.selectedObject.type === 'playerStart' && this.currentLevel) {
                 this.currentLevel.playerStart = { x: snappedX, y: snappedY }
+            }
+            
+            // Update moving platform bounds relatively
+            if (this.selectedObject.type === 'movingPlatform') {
+                const plat = this.selectedObject as any
+                plat.minX += deltaX
+                plat.maxX += deltaX
+                plat.minY += deltaY
+                plat.maxY += deltaY
             }
         }
 
@@ -354,11 +388,133 @@ export class LevelEditor extends BasedLevel {
 
         // Handle mouse up
         if (!mouse.mouseDown) {
-            if (this.isDragging) {
+            if (this.isDragging || this.activeHandle) {
                 this.saveCurrentLevel()
             }
             this.isDragging = false
             this.isPanning = false
+            this.activeHandle = null
+        }
+    }
+
+    getHandleAtPosition(x: number, y: number): string | null {
+        if (!this.selectedObject) return null
+        
+        const handleRadius = this.handleSize / this.zoom
+        
+        // For moving platforms, check the min/max endpoint handles first
+        if (this.selectedObject.type === 'movingPlatform') {
+            const plat = this.selectedObject as EditorMovingPlatform
+            
+            // Min point handle
+            if (Math.abs(x - plat.minX) < handleRadius && Math.abs(y - plat.minY) < handleRadius) {
+                return 'minPoint'
+            }
+            // Max point handle
+            if (Math.abs(x - plat.maxX) < handleRadius && Math.abs(y - plat.maxY) < handleRadius) {
+                return 'maxPoint'
+            }
+        }
+        
+        // Check resize handles for objects with width/height
+        if ('width' in this.selectedObject && 'height' in this.selectedObject) {
+            const obj = this.selectedObject as any
+            const halfW = obj.width / 2
+            const halfH = obj.height / 2
+            
+            // Corner handles
+            if (Math.abs(x - (obj.x + halfW)) < handleRadius && Math.abs(y - (obj.y + halfH)) < handleRadius) return 'se'
+            if (Math.abs(x - (obj.x - halfW)) < handleRadius && Math.abs(y - (obj.y + halfH)) < handleRadius) return 'sw'
+            if (Math.abs(x - (obj.x + halfW)) < handleRadius && Math.abs(y - (obj.y - halfH)) < handleRadius) return 'ne'
+            if (Math.abs(x - (obj.x - halfW)) < handleRadius && Math.abs(y - (obj.y - halfH)) < handleRadius) return 'nw'
+            
+            // Edge handles
+            if (Math.abs(x - (obj.x + halfW)) < handleRadius && Math.abs(y - obj.y) < handleRadius) return 'e'
+            if (Math.abs(x - (obj.x - halfW)) < handleRadius && Math.abs(y - obj.y) < handleRadius) return 'w'
+            if (Math.abs(x - obj.x) < handleRadius && Math.abs(y - (obj.y - halfH)) < handleRadius) return 'n'
+            if (Math.abs(x - obj.x) < handleRadius && Math.abs(y - (obj.y + halfH)) < handleRadius) return 's'
+        }
+        
+        return null
+    }
+
+    handleHandleDrag(worldX: number, worldY: number) {
+        if (!this.selectedObject || !this.activeHandle) return
+        
+        const snappedX = Math.round(worldX / GRID_SIZE) * GRID_SIZE
+        const snappedY = Math.round(worldY / GRID_SIZE) * GRID_SIZE
+        
+        // Handle moving platform endpoint dragging
+        if (this.selectedObject.type === 'movingPlatform') {
+            const plat = this.selectedObject as EditorMovingPlatform
+            
+            if (this.activeHandle === 'minPoint') {
+                plat.minX = snappedX
+                plat.minY = snappedY
+                return
+            }
+            if (this.activeHandle === 'maxPoint') {
+                plat.maxX = snappedX
+                plat.maxY = snappedY
+                return
+            }
+        }
+        
+        // Handle resize for objects with width/height
+        if ('width' in this.selectedObject && 'height' in this.selectedObject) {
+            const obj = this.selectedObject as any
+            const minSize = 20
+            
+            switch (this.activeHandle) {
+                case 'e': {
+                    const newWidth = Math.max(minSize, (snappedX - obj.x) * 2)
+                    obj.width = newWidth
+                    break
+                }
+                case 'w': {
+                    const newWidth = Math.max(minSize, (obj.x - snappedX) * 2)
+                    obj.width = newWidth
+                    break
+                }
+                case 'n': {
+                    const newHeight = Math.max(minSize, (obj.y - snappedY) * 2)
+                    obj.height = newHeight
+                    break
+                }
+                case 's': {
+                    const newHeight = Math.max(minSize, (snappedY - obj.y) * 2)
+                    obj.height = newHeight
+                    break
+                }
+                case 'ne': {
+                    const newWidth = Math.max(minSize, (snappedX - obj.x) * 2)
+                    const newHeight = Math.max(minSize, (obj.y - snappedY) * 2)
+                    obj.width = newWidth
+                    obj.height = newHeight
+                    break
+                }
+                case 'nw': {
+                    const newWidth = Math.max(minSize, (obj.x - snappedX) * 2)
+                    const newHeight = Math.max(minSize, (obj.y - snappedY) * 2)
+                    obj.width = newWidth
+                    obj.height = newHeight
+                    break
+                }
+                case 'se': {
+                    const newWidth = Math.max(minSize, (snappedX - obj.x) * 2)
+                    const newHeight = Math.max(minSize, (snappedY - obj.y) * 2)
+                    obj.width = newWidth
+                    obj.height = newHeight
+                    break
+                }
+                case 'sw': {
+                    const newWidth = Math.max(minSize, (obj.x - snappedX) * 2)
+                    const newHeight = Math.max(minSize, (snappedY - obj.y) * 2)
+                    obj.width = newWidth
+                    obj.height = newHeight
+                    break
+                }
+            }
         }
     }
 
@@ -631,11 +787,10 @@ export class LevelEditor extends BasedLevel {
 
         // Draw moving platforms
         this.currentLevel.movingPlatforms.forEach(plat => {
-            this.drawEditorRect(plat, plat.color, this.selectedObject?.id === plat.id)
-            // Draw movement range
-            if (this.selectedObject?.id === plat.id) {
-                this.drawMovementRange(plat)
-            }
+            const isSelected = this.selectedObject?.id === plat.id
+            // Always draw movement range, but with different opacity
+            this.drawMovementRange(plat, isSelected)
+            this.drawEditorRect(plat, plat.color, isSelected)
         })
 
         // Draw exit doors
@@ -720,12 +875,63 @@ export class LevelEditor extends BasedLevel {
         ctx.strokeStyle = selected ? '#fff' : '#666'
         ctx.lineWidth = selected ? 3 : 1
         ctx.strokeRect(pos.x - w/2, pos.y - h/2, w, h)
+
+        // Draw resize handles if selected
+        if (selected) {
+            this.drawResizeHandles(obj)
+        }
     }
 
-    drawMovementRange(plat: EditorMovingPlatform) {
+    drawResizeHandles(obj: { x: number, y: number, width: number, height: number }) {
         const ctx = this.gameRef.ctx
-        ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)'
-        ctx.lineWidth = 2
+        const pos = this.worldToScreen(obj.x, obj.y)
+        const halfW = (obj.width / 2) * this.zoom
+        const halfH = (obj.height / 2) * this.zoom
+        const size = this.handleSize
+
+        const handleColor = '#81B622'
+        const handleBorder = '#fff'
+
+        // Corner handles
+        const corners = [
+            { x: pos.x - halfW, y: pos.y - halfH }, // nw
+            { x: pos.x + halfW, y: pos.y - halfH }, // ne
+            { x: pos.x - halfW, y: pos.y + halfH }, // sw
+            { x: pos.x + halfW, y: pos.y + halfH }, // se
+        ]
+
+        corners.forEach(corner => {
+            ctx.fillStyle = handleColor
+            ctx.fillRect(corner.x - size/2, corner.y - size/2, size, size)
+            ctx.strokeStyle = handleBorder
+            ctx.lineWidth = 1
+            ctx.strokeRect(corner.x - size/2, corner.y - size/2, size, size)
+        })
+
+        // Edge handles
+        const edges = [
+            { x: pos.x, y: pos.y - halfH }, // n
+            { x: pos.x, y: pos.y + halfH }, // s
+            { x: pos.x - halfW, y: pos.y }, // w
+            { x: pos.x + halfW, y: pos.y }, // e
+        ]
+
+        edges.forEach(edge => {
+            ctx.fillStyle = handleColor
+            ctx.fillRect(edge.x - size/2, edge.y - size/2, size, size)
+            ctx.strokeStyle = handleBorder
+            ctx.lineWidth = 1
+            ctx.strokeRect(edge.x - size/2, edge.y - size/2, size, size)
+        })
+    }
+
+    drawMovementRange(plat: EditorMovingPlatform, selected: boolean = false) {
+        const ctx = this.gameRef.ctx
+        const opacity = selected ? 1 : 0.3
+        
+        ctx.globalAlpha = opacity
+        ctx.strokeStyle = selected ? 'rgba(255, 255, 0, 0.7)' : 'rgba(255, 255, 0, 0.5)'
+        ctx.lineWidth = selected ? 2 : 1
         ctx.setLineDash([5, 5])
 
         const minPos = this.worldToScreen(plat.minX, plat.minY)
@@ -736,11 +942,64 @@ export class LevelEditor extends BasedLevel {
         ctx.lineTo(maxPos.x, maxPos.y)
         ctx.stroke()
 
-        // Draw endpoints
-        drawCircle({ c: ctx, x: minPos.x, y: minPos.y, radius: 5, fillColor: '#ff0' })
-        drawCircle({ c: ctx, x: maxPos.x, y: maxPos.y, radius: 5, fillColor: '#ff0' })
-
         ctx.setLineDash([])
+
+        // Draw endpoint handles (smaller when not selected)
+        const handleSize = selected ? this.handleSize + 4 : 6
+
+        // Min point handle (green)
+        ctx.fillStyle = '#00ff00'
+        ctx.beginPath()
+        ctx.arc(minPos.x, minPos.y, handleSize/2, 0, Math.PI * 2)
+        ctx.fill()
+        if (selected) {
+            ctx.strokeStyle = '#fff'
+            ctx.lineWidth = 2
+            ctx.stroke()
+        }
+
+        // Max point handle (red)
+        ctx.fillStyle = '#ff4444'
+        ctx.beginPath()
+        ctx.arc(maxPos.x, maxPos.y, handleSize/2, 0, Math.PI * 2)
+        ctx.fill()
+        if (selected) {
+            ctx.strokeStyle = '#fff'
+            ctx.lineWidth = 2
+            ctx.stroke()
+        }
+
+        // Labels (only when selected)
+        if (selected) {
+            ctx.globalAlpha = 1
+            drawText({
+                c: ctx,
+                x: minPos.x,
+                y: minPos.y - handleSize,
+                align: 'center',
+                fillColor: '#0f0',
+                fontSize: 10,
+                fontFamily: 'sans-serif',
+                weight: 'bold',
+                style: '',
+                text: 'MIN'
+            })
+
+            drawText({
+                c: ctx,
+                x: maxPos.x,
+                y: maxPos.y - handleSize,
+                align: 'center',
+                fillColor: '#f44',
+                fontSize: 10,
+                fontFamily: 'sans-serif',
+                weight: 'bold',
+                style: '',
+                text: 'MAX'
+            })
+        }
+        
+        ctx.globalAlpha = 1
     }
 
     drawUI() {
