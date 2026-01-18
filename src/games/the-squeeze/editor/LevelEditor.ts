@@ -105,6 +105,25 @@ export class LevelEditor extends BasedLevel {
         
         this.setupUI()
         this.onResize()
+        
+        // Center camera on player start position
+        if (this.currentLevel) {
+            this.centerOnPlayerStart()
+        }
+    }
+    
+    centerOnPlayerStart() {
+        if (!this.currentLevel) return
+        const ps = this.currentLevel.playerStart
+        this.cameraX = this.gameRef.gameWidth / 2 - ps.x * this.zoom
+        this.cameraY = this.gameRef.gameHeight / 2 - ps.y * this.zoom
+    }
+    
+    removeExportTextareas() {
+        const textarea1 = document.getElementById('export-constants')
+        if (textarea1) textarea1.remove()
+        const textarea2 = document.getElementById('export-class')
+        if (textarea2) textarea2.remove()
     }
 
     setupUI() {
@@ -681,6 +700,11 @@ export class LevelEditor extends BasedLevel {
     update() {
         this.handleInput()
         this.handleMouse()
+        
+        // Remove export textareas if panel is closed
+        if (!this.showExportPanel) {
+            this.removeExportTextareas()
+        }
 
         // Update buttons
         this.backButton.update()
@@ -785,12 +809,19 @@ export class LevelEditor extends BasedLevel {
             this.drawEditorRect(box, '#d4c9b2', this.selectedObject?.id === box.id)
         })
 
-        // Draw moving platforms
+        // Draw moving platforms (draw range first, then platform, then handles on top)
         this.currentLevel.movingPlatforms.forEach(plat => {
             const isSelected = this.selectedObject?.id === plat.id
-            // Always draw movement range, but with different opacity
-            this.drawMovementRange(plat, isSelected)
+            // Draw the path line first (behind everything)
+            this.drawMovementRangeLine(plat, isSelected)
+            // Then draw the platform
             this.drawEditorRect(plat, plat.color, isSelected)
+        })
+        
+        // Draw moving platform handles on top of everything
+        this.currentLevel.movingPlatforms.forEach(plat => {
+            const isSelected = this.selectedObject?.id === plat.id
+            this.drawMovementRangeHandles(plat, isSelected)
         })
 
         // Draw exit doors
@@ -925,7 +956,7 @@ export class LevelEditor extends BasedLevel {
         })
     }
 
-    drawMovementRange(plat: EditorMovingPlatform, selected: boolean = false) {
+    drawMovementRangeLine(plat: EditorMovingPlatform, selected: boolean = false) {
         const ctx = this.gameRef.ctx
         const opacity = selected ? 1 : 0.3
         
@@ -943,6 +974,17 @@ export class LevelEditor extends BasedLevel {
         ctx.stroke()
 
         ctx.setLineDash([])
+        ctx.globalAlpha = 1
+    }
+
+    drawMovementRangeHandles(plat: EditorMovingPlatform, selected: boolean = false) {
+        const ctx = this.gameRef.ctx
+        const opacity = selected ? 1 : 0.3
+        
+        ctx.globalAlpha = opacity
+
+        const minPos = this.worldToScreen(plat.minX, plat.minY)
+        const maxPos = this.worldToScreen(plat.maxX, plat.maxY)
 
         // Draw endpoint handles (smaller when not selected)
         const handleSize = selected ? this.handleSize + 4 : 6
