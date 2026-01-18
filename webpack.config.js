@@ -18,7 +18,7 @@ module.exports = {
   devServer: {
     contentBase: './dist',
     // host: '10.0.0.241' // set to your local ip to test on your phone or other network devices
-    host: '192.168.1.171' // set to your local ip to test on your phone or other network devices
+    host: '192.168.1.143' // set to your local ip to test on your phone or other network devices
   },
   module: {
     rules: [

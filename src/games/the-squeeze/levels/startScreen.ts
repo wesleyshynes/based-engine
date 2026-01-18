@@ -21,6 +21,7 @@ export class StartScreen extends BasedLevel {
   soundButton: any;
   creditsButton: any;
   resetScoreButton: any;
+  editorButton: any;
 
   activeSound: any = {
     playing: false,
@@ -180,6 +181,26 @@ export class StartScreen extends BasedLevel {
     }
     this.buttonGroup.push(this.resetScoreButton)
 
+    // EDITOR BUTTON
+    this.editorButton = new BasedButton({
+      key: `editor-button`,
+      gameRef: this.gameRef,
+    })
+    this.editorButton.fillColor = '#444'
+    this.editorButton.hoverColor = HOVER_COLOR
+    this.editorButton.focusColor = HOVER_COLOR
+    this.editorButton.textColor = TEXT_COLOR
+    this.editorButton.textHoverColor = TEXT_HOVER_COLOR
+    this.editorButton.x = 100
+    this.editorButton.y = this.gameRef.gameHeight - 200
+    this.editorButton.buttonText = 'Level Editor'
+    this.editorButton.width = this.gameRef.gameWidth - 200
+    this.editorButton.height = 50
+    this.editorButton.clickFunction = () => {
+      this.gameRef.loadLevel('level-editor')
+    }
+    this.buttonGroup.push(this.editorButton)
+
     this.onResize()
 
     this.levelLoadedTime = this.gameRef.lastUpdate
@@ -229,6 +250,7 @@ export class StartScreen extends BasedLevel {
       this.soundButton.update()
       this.creditsButton.update()
       this.resetScoreButton.update()
+      this.editorButton.update()
     }
   }
 
@@ -260,6 +282,7 @@ export class StartScreen extends BasedLevel {
     this.soundButton.draw()
     this.creditsButton.draw()
     this.resetScoreButton.draw()
+    this.editorButton.draw()
 
     // rotateDraw({
     //   c: this.gameRef.ctx,
@@ -385,6 +408,7 @@ export class StartScreen extends BasedLevel {
     this.startButton.tearDown()
     this.soundButton.tearDown()
     this.creditsButton.tearDown()
+    this.editorButton.tearDown()
     if (this.activeSound.playing && this.activeSound.soundRef) {
       this.activeSound.soundRef.stop()
     }

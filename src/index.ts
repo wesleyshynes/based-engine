@@ -7,9 +7,9 @@ import './assets/style.scss';
 // import { startGame } from './games/dice-grid/startGame';
 // import { startGame } from './games/lead-cub/startGame';
 // import { startGame } from './games/bad-hands/startGame';
-// import { startGame } from './games/the-squeeze/startGame';
+import { startGame } from './games/the-squeeze/startGame';
 // import { startGame } from './games/cheese-racer/startGame';
-import { startGame } from './games/physcard/startGame';
+// import { startGame } from './games/physcard/startGame';
 
 const startBtn = document.getElementById('start-game')
 const gameDesc = document.getElementById('game-description')
