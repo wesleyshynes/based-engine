@@ -327,6 +327,8 @@ export class LevelEditor extends BasedLevel {
             } else {
                 // Place new object
                 this.placeObject(worldPos.x, worldPos.y)
+                // Set isDragging to prevent placing multiple objects while mouse is held
+                this.isDragging = true
             }
         }
 
