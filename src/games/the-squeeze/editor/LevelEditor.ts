@@ -1095,7 +1095,8 @@ export class LevelEditor extends BasedLevel {
         const panelX = this.gameRef.gameWidth - 210
         const panelY = 110
         const panelW = 200
-        const panelH = 400
+        // const panelH = 400
+        const panelH = (OBJECT_PROPERTIES[this.selectedObject.type]?.length || 0) * 40 + 60
 
         // Panel background
         ctx.fillStyle = 'rgba(0, 0, 0, 0.9)'
