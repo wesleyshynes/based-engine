@@ -51,7 +51,7 @@ export class MainPlayer extends PhysBall {
 
     lastBoxThud: number = 0
     boxThuds: any[] = []
-    
+
 
     options = {
         tags: {
@@ -79,14 +79,14 @@ export class MainPlayer extends PhysBall {
                 } else {
                     this.maxRadius = this.activeMaxRadius
                 }
-                if(otherBody.options.tags.pushBox) {
-                    if(this.boxThuds.length > 0 && this.gameRef.lastUpdate - this.lastBoxThud > 300) {
+                if (otherBody.options.tags.pushBox) {
+                    if (this.boxThuds.length > 0 && this.gameRef.lastUpdate - this.lastBoxThud > 300) {
                         const randomThud = this.boxThuds[Math.floor(Math.random() * this.boxThuds.length)]
                         this.gameRef.soundPlayer.playSound(randomThud)
                         this.lastBoxThud = this.gameRef.lastUpdate
                     }
                 } else {
-                    if(this.wallThuds.length > 0 && this.gameRef.lastUpdate - this.lastThud > 600) {
+                    if (this.wallThuds.length > 0 && this.gameRef.lastUpdate - this.lastThud > 600) {
                         // this.gameRef.soundPlayer.playSound(this.wallThud)
                         const randomThud = this.wallThuds[Math.floor(Math.random() * this.wallThuds.length)]
                         this.gameRef.soundPlayer.playSound(randomThud)
@@ -115,7 +115,7 @@ export class MainPlayer extends PhysBall {
         }
     }
 
-    async preload() {}
+    async preload() { }
 
     initialize() {
         this.initializeBody()
@@ -169,19 +169,19 @@ export class MainPlayer extends PhysBall {
             moveY += activeSpeed
         }
 
-        if (this.wallCount < 2 && pressedKeys['KeyX']) {
+        if ((pressedKeys['KeyX'] || pressedKeys['KeyM']) && this.wallCount < 2) {
             scale += this.sizeSpeed
         }
 
-        if (pressedKeys['KeyZ'] || (this.shrinkButton && this.shrinkButton.focused)) {
+        if ((pressedKeys['KeyZ'] || pressedKeys['KeyN']) || (this.shrinkButton && this.shrinkButton.focused)) {
             scale -= this.sizeSpeed
         }
 
-        if(this.gameRef.touchMode) {
-            if(this.shrinkButton && this.shrinkButton.hovered) {
+        if (this.gameRef.touchMode) {
+            if (this.shrinkButton && this.shrinkButton.hovered) {
                 scale -= this.sizeSpeed
             }
-            if(this.growButton && this.growButton.hovered) {
+            if (this.growButton && this.growButton.hovered) {
                 scale += this.sizeSpeed
             }
         }
@@ -202,7 +202,7 @@ export class MainPlayer extends PhysBall {
                 y: moveY,
                 x: moveX
             }, activeSpeed))
-            if(this.gameRef.lastUpdate - this.lastStep > 100) {
+            if (this.gameRef.lastUpdate - this.lastStep > 100) {
                 const randomStep = this.walkingSounds[Math.floor(Math.random() * this.walkingSounds.length)]
                 this.gameRef.soundPlayer.playSound(randomStep)
                 this.lastStep = this.gameRef.lastUpdate
