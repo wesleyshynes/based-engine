@@ -1,8 +1,11 @@
 import { generateLevelBoundaries } from "../helpers"
 
+export const LEVEL_03_WIDTH = 800
+export const LEVEL_03_HEIGHT = 600
+
 export const LEVEL_03_BOUNDARIES = generateLevelBoundaries({
-    width: 800,
-    height: 600,
+    width: LEVEL_03_WIDTH,
+    height: LEVEL_03_HEIGHT,
     offset: 200,
 }).map(x => {
     return {

@@ -90,10 +90,14 @@ export class LevelEditorStorage {
         
         let code = `import { generateLevelBoundaries } from "../helpers"\n\n`
 
+        // Level dimensions
+        code += `export const ${sanitizedName}_WIDTH = ${level.levelWidth}\n`
+        code += `export const ${sanitizedName}_HEIGHT = ${level.levelHeight}\n\n`
+
         // Boundaries
         code += `export const ${sanitizedName}_BOUNDARIES = generateLevelBoundaries({\n`
-        code += `    width: ${level.levelWidth},\n`
-        code += `    height: ${level.levelHeight},\n`
+        code += `    width: ${sanitizedName}_WIDTH,\n`
+        code += `    height: ${sanitizedName}_HEIGHT,\n`
         code += `    offset: 200,\n`
         code += `}).map(x => {\n`
         code += `    return {\n`
@@ -195,11 +199,11 @@ export class LevelEditorStorage {
         const constantName = sanitizedName.toUpperCase()
 
         let code = `import { SqueezeBaseLevel } from "./SqueezeBaseLevel";\n`
-        code += `import { ${constantName}_BOUNDARIES, ${constantName}_EXIT_DOORS, ${constantName}_MOVING_PLATFORMS, ${constantName}_PUSH_BOXES, ${constantName}_WALLS, ${constantName}_PLAYER_START } from "../constants/${sanitizedName.toLowerCase()}Constants";\n\n`
+        code += `import { ${constantName}_BOUNDARIES, ${constantName}_EXIT_DOORS, ${constantName}_MOVING_PLATFORMS, ${constantName}_PUSH_BOXES, ${constantName}_WALLS, ${constantName}_PLAYER_START, ${constantName}_WIDTH, ${constantName}_HEIGHT } from "../constants/${sanitizedName.toLowerCase()}Constants";\n\n`
         
         code += `export class ${pascalName} extends SqueezeBaseLevel {\n\n`
-        code += `    levelWidth: number = ${level.levelWidth}\n`
-        code += `    levelHeight: number = ${level.levelHeight}\n\n`
+        code += `    levelWidth: number = ${constantName}_WIDTH\n`
+        code += `    levelHeight: number = ${constantName}_HEIGHT\n\n`
         code += `    nextLevel: string = 'start-screen'\n\n`
         code += `    playerStartPosition: any = ${constantName}_PLAYER_START\n`
         code += `    levelWalls: any[] = []\n`

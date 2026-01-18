@@ -1,11 +1,11 @@
-import { LEVEL_01_BOUNDARIES, LEVEL_01_EXIT_DOORS, LEVEL_01_PUSH_BOXES, LEVEL_01_WALLS } from "../constants/level01Constants";
+import { LEVEL_01_BOUNDARIES, LEVEL_01_EXIT_DOORS, LEVEL_01_PUSH_BOXES, LEVEL_01_WALLS, LEVEL_01_WIDTH, LEVEL_01_HEIGHT } from "../constants/level01Constants";
 import { SqueezeBaseLevel } from "./SqueezeBaseLevel";
 import BGMusic from '../../../assets/the-squeeze/tunetank.com_5630_ready-to-play_by_alexey-anisimov__1.mp3'
 
 export class Level01 extends SqueezeBaseLevel {
 
-    levelWidth: number = 800
-    levelHeight: number = 600
+    levelWidth: number = LEVEL_01_WIDTH
+    levelHeight: number = LEVEL_01_HEIGHT
 
     nextLevel: string = 'level-02'
 
