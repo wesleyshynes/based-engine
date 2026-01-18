@@ -1486,7 +1486,7 @@ export class LevelEditor extends BasedLevel {
         const panelX = this.gameRef.gameWidth - 310
         const panelY = 50
         const panelW = 300
-        const panelH = 250
+        const panelH = 295
 
         ctx.fillStyle = 'rgba(0, 0, 0, 0.95)'
         ctx.fillRect(panelX, panelY, panelW, panelH)
@@ -1510,6 +1510,7 @@ export class LevelEditor extends BasedLevel {
             { key: 'name', label: 'Level Name', value: this.currentLevel.name },
             { key: 'levelWidth', label: 'Width', value: this.currentLevel.levelWidth },
             { key: 'levelHeight', label: 'Height', value: this.currentLevel.levelHeight },
+            { key: 'nextLevel', label: 'Next Level', value: this.currentLevel.nextLevel || 'start-screen' },
         ]
 
         let y = panelY + 50
@@ -1649,6 +1650,8 @@ export class LevelEditor extends BasedLevel {
             this.currentLevel.levelWidth = Math.max(200, parseInt(value) || 800)
         } else if (settingKey === 'levelHeight') {
             this.currentLevel.levelHeight = Math.max(200, parseInt(value) || 600)
+        } else if (settingKey === 'nextLevel') {
+            this.currentLevel.nextLevel = value || 'start-screen'
         }
 
         this.saveCurrentLevel()

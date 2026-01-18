@@ -18,6 +18,7 @@ export class LevelEditorStorage {
             name,
             levelWidth: 800,
             levelHeight: 600,
+            nextLevel: 'start-screen',
             playerStart: { x: 100, y: 100 },
             walls: [],
             pushBoxes: [],
@@ -188,7 +189,10 @@ export class LevelEditorStorage {
         code += `]\n\n`
 
         // Player Start
-        code += `export const ${sanitizedName}_PLAYER_START = { x: ${level.playerStart.x}, y: ${level.playerStart.y} }\n`
+        code += `export const ${sanitizedName}_PLAYER_START = { x: ${level.playerStart.x}, y: ${level.playerStart.y} }\n\n`
+
+        // Next Level
+        code += `export const ${sanitizedName}_NEXT_LEVEL = '${level.nextLevel}'\n`
 
         return code
     }
@@ -199,12 +203,12 @@ export class LevelEditorStorage {
         const constantName = sanitizedName.toUpperCase()
 
         let code = `import { SqueezeBaseLevel } from "./SqueezeBaseLevel";\n`
-        code += `import { ${constantName}_BOUNDARIES, ${constantName}_EXIT_DOORS, ${constantName}_MOVING_PLATFORMS, ${constantName}_PUSH_BOXES, ${constantName}_WALLS, ${constantName}_PLAYER_START, ${constantName}_WIDTH, ${constantName}_HEIGHT } from "../constants/${sanitizedName.toLowerCase()}Constants";\n\n`
+        code += `import { ${constantName}_BOUNDARIES, ${constantName}_EXIT_DOORS, ${constantName}_MOVING_PLATFORMS, ${constantName}_PUSH_BOXES, ${constantName}_WALLS, ${constantName}_PLAYER_START, ${constantName}_WIDTH, ${constantName}_HEIGHT, ${constantName}_NEXT_LEVEL } from "../constants/${sanitizedName.toLowerCase()}Constants";\n\n`
         
         code += `export class ${pascalName} extends SqueezeBaseLevel {\n\n`
         code += `    levelWidth: number = ${constantName}_WIDTH\n`
         code += `    levelHeight: number = ${constantName}_HEIGHT\n\n`
-        code += `    nextLevel: string = 'start-screen'\n\n`
+        code += `    nextLevel: string = ${constantName}_NEXT_LEVEL\n\n`
         code += `    playerStartPosition: any = ${constantName}_PLAYER_START\n`
         code += `    levelWalls: any[] = []\n`
         code += `    _levelBoundaries: any[] = ${constantName}_BOUNDARIES\n`

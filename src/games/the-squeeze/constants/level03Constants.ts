@@ -2,6 +2,7 @@ import { generateLevelBoundaries } from "../helpers"
 
 export const LEVEL_03_WIDTH = 800
 export const LEVEL_03_HEIGHT = 600
+export const LEVEL_03_NEXT_LEVEL = 'level-04'
 
 export const LEVEL_03_BOUNDARIES = generateLevelBoundaries({
     width: LEVEL_03_WIDTH,

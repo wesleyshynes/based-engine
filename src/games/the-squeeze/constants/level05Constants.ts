@@ -2,6 +2,7 @@ import { generateLevelBoundaries } from "../helpers"
 
 export const LEVEL_05_WIDTH = 1600
 export const LEVEL_05_HEIGHT = 1200
+export const LEVEL_05_NEXT_LEVEL = 'credits-screen'
 
 export const LEVEL_05_BOUNDARIES = generateLevelBoundaries({
     width: LEVEL_05_WIDTH,

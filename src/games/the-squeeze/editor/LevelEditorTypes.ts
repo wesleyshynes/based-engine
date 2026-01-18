@@ -64,6 +64,7 @@ export interface EditorLevelData {
     name: string
     levelWidth: number
     levelHeight: number
+    nextLevel: string
     playerStart: { x: number, y: number }
     walls: EditorWall[]
     pushBoxes: EditorPushBox[]
