@@ -277,7 +277,19 @@ export class LevelEditor extends BasedLevel {
         this.saveCurrentLevel()
     }
 
+    isInputFocused(): boolean {
+        const activeElement = document.activeElement
+        return activeElement instanceof HTMLInputElement || 
+               activeElement instanceof HTMLTextAreaElement ||
+               activeElement instanceof HTMLSelectElement
+    }
+
     handleInput() {
+        // Skip keyboard controls if an input is focused
+        if (this.isInputFocused()) {
+            return
+        }
+
         const keys = this.gameRef.pressedKeys
         
         // Pan with arrow keys or WASD
