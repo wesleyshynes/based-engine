@@ -156,6 +156,8 @@ export class MainPlayer extends PhysBall {
 
         const activeSpeed = this.baseSpeed
 
+
+        // keyboard stuff
         if (pressedKeys['KeyA'] || pressedKeys['ArrowLeft']) {
             moveX -= activeSpeed
         }
@@ -176,15 +178,7 @@ export class MainPlayer extends PhysBall {
         if ((pressedKeys['KeyZ'] || pressedKeys['KeyN']) || (this.shrinkButton && this.shrinkButton.focused)) {
             scale -= this.sizeSpeed
         }
-
-        if (this.gameRef.touchMode) {
-            if (this.shrinkButton && this.shrinkButton.hovered) {
-                scale -= this.sizeSpeed
-            }
-            if (this.growButton && this.growButton.hovered) {
-                scale += this.sizeSpeed
-            }
-        }
+        // end keyboard stuff
 
 
 
@@ -195,6 +189,15 @@ export class MainPlayer extends PhysBall {
             moveY += (this.moveKnob.knobCoord.y / this.moveKnob.maxOffset) * speedFactor
         }
 
+        if (this.gameRef.touchMode) {
+            if (this.shrinkButton && this.shrinkButton.hovered) {
+                scale -= this.sizeSpeed
+            }
+            if (this.growButton && this.growButton.hovered) {
+                scale += this.sizeSpeed
+            }
+        }
+        // end touch stuff
 
 
         if (moveX !== 0 || moveY !== 0) {
