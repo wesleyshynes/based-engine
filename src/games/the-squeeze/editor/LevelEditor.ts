@@ -312,6 +312,11 @@ export class LevelEditor extends BasedLevel {
                 this.deleteSelectedObject()
             }
         }
+
+        // P to toggle pan tool
+        if (keys['KeyP']) {
+            this.currentTool = this.currentTool === 'pan' ? 'select' : 'pan'
+        }
         
         // Escape to deselect
         if (keys['Escape']) {
