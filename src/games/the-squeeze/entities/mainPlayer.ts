@@ -1,3 +1,5 @@
+import { BasedButton } from "../../../engine/BasedButton";
+import { TouchKnob } from "../../../engine/controls/TouchKnob";
 import { drawCircle, drawEllipse, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { normalizeVector } from "../../../engine/libs/mathHelpers";
 import PhysBall from "../../../engine/physicsObjects/PhysBall";
@@ -122,14 +124,16 @@ export class MainPlayer extends PhysBall {
         this.setCenter()
     }
 
-    setMoveKnob(knob: any) {
+    setMoveKnob(knob: TouchKnob) {
         this.moveKnob = knob
     }
-    setShrinkButton(button: any) {
+    setActionButton1(button: BasedButton) {
         this.shrinkButton = button
+        button.buttonText = '→ ←'
     }
-    setGrowButton(button: any) {
+    setActionButton2(button: BasedButton) {
         this.growButton = button
+        button.buttonText = '← →'
     }
 
     setWallThuds(thuds: any[]) {

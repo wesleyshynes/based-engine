@@ -55,8 +55,8 @@ export class SqueezeBaseLevel extends BasedLevel {
     // Interface stuff
     cameraZoomButton: any
     moveKnob: any;
-    shrinkButton: any;
-    growButton: any;
+    actionButton1: any;
+    actionButton2: any;
     nextLevelButton: any;
     resetButton: any;
 
@@ -196,25 +196,25 @@ export class SqueezeBaseLevel extends BasedLevel {
         }
 
 
-        this.shrinkButton = new BasedButton({ gameRef: this.gameRef, key: 'shrinkButton' })
-        this.shrinkButton.width = 60
-        this.shrinkButton.height = 60
-        this.shrinkButton.x = this.gameRef.gameWidth - this.shrinkButton.width - 10
-        this.shrinkButton.y = this.gameRef.gameHeight - this.shrinkButton.height - 10
-        this.shrinkButton.buttonText = '→ ←'
-        this.shrinkButton.fillColor = 'rgba(255,165,0,0.7)'
-        this.shrinkButton.roundButton = true
-        this.shrinkButton.holdFunction = (_: any) => {}
+        this.actionButton1 = new BasedButton({ gameRef: this.gameRef, key: 'actionButton1' })
+        this.actionButton1.width = 60
+        this.actionButton1.height = 60
+        this.actionButton1.x = this.gameRef.gameWidth - this.actionButton1.width - 10
+        this.actionButton1.y = this.gameRef.gameHeight - this.actionButton1.height - 10
+        this.actionButton1.buttonText = '→ ←'
+        this.actionButton1.fillColor = 'rgba(255,165,0,0.7)'
+        this.actionButton1.roundButton = true
+        this.actionButton1.holdFunction = (_: any) => {}
 
-        this.growButton = new BasedButton({ gameRef: this.gameRef, key: 'growButton' })
-        this.growButton.width = 60
-        this.growButton.height = 60
-        this.growButton.x = this.gameRef.gameWidth - this.growButton.width - 10
-        this.growButton.y = this.gameRef.gameHeight - this.growButton.height - 10
-        this.growButton.buttonText = '← →'
-        this.growButton.fillColor = 'rgba(255,0,0,0.7)'
-        this.growButton.roundButton = true
-        this.growButton.holdFunction = (_: any) => {}
+        this.actionButton2 = new BasedButton({ gameRef: this.gameRef, key: 'actionButton2' })
+        this.actionButton2.width = 60
+        this.actionButton2.height = 60
+        this.actionButton2.x = this.gameRef.gameWidth - this.actionButton2.width - 10
+        this.actionButton2.y = this.gameRef.gameHeight - this.actionButton2.height - 10
+        this.actionButton2.buttonText = '← →'
+        this.actionButton2.fillColor = 'rgba(255,0,0,0.7)'
+        this.actionButton2.roundButton = true
+        this.actionButton2.holdFunction = (_: any) => {}
 
 
         this.moveKnob = new TouchKnob({ key: 'move-knob', gameRef: this.gameRef })
@@ -232,8 +232,8 @@ export class SqueezeBaseLevel extends BasedLevel {
         this.mainPlayer.initialize()
         this.gameRef.addToWorld(this.mainPlayer.body)
         this.mainPlayer.setMoveKnob(this.moveKnob)
-        this.mainPlayer.setShrinkButton(this.shrinkButton)
-        this.mainPlayer.setGrowButton(this.growButton)
+        this.mainPlayer.setActionButton1(this.actionButton1)
+        this.mainPlayer.setActionButton2(this.actionButton2)
         this.mainPlayer.setWallThuds([
             this.wallThud1,
             this.wallThud2,
@@ -299,8 +299,8 @@ export class SqueezeBaseLevel extends BasedLevel {
         })
 
         this.cameraZoomButton.update()
-        this.shrinkButton.update()
-        this.growButton.update()
+        this.actionButton1.update()
+        this.actionButton2.update()
         this.moveKnob.update()
         this.nextLevelButton.update()
         this.resetButton.update()
@@ -347,11 +347,11 @@ export class SqueezeBaseLevel extends BasedLevel {
         this.cameraZoomButton.x = this.gameRef.gameWidth - this.cameraZoomButton.width - 10
         this.cameraZoomButton.y = this.gameRef.gameHeight - this.cameraZoomButton.height - 10
 
-        this.shrinkButton.x = this.gameRef.gameWidth - this.shrinkButton.width - 30
-        this.shrinkButton.y = this.gameRef.gameHeight - this.shrinkButton.height - this.cameraZoomButton.height - 50
+        this.actionButton1.x = this.gameRef.gameWidth - this.actionButton1.width - 30
+        this.actionButton1.y = this.gameRef.gameHeight - this.actionButton1.height - this.cameraZoomButton.height - 50
 
-        this.growButton.x = this.gameRef.gameWidth - this.growButton.width - this.shrinkButton.width - 50
-        this.growButton.y = this.gameRef.gameHeight - this.growButton.height - 30
+        this.actionButton2.x = this.gameRef.gameWidth - this.actionButton2.width - this.actionButton1.width - 50
+        this.actionButton2.y = this.gameRef.gameHeight - this.actionButton2.height - 30
 
         this.nextLevelButton.x = this.gameRef.gameWidth - this.nextLevelButton.width - 10
         this.nextLevelButton.y = 10
@@ -438,8 +438,8 @@ export class SqueezeBaseLevel extends BasedLevel {
         this.resetButton.draw()
         if(this.gameRef.touchMode){
             this.moveKnob.draw()
-            this.shrinkButton.draw()
-            this.growButton.draw()
+            this.actionButton1.draw()
+            this.actionButton2.draw()
         } else {
             this.textLines.forEach((line: string, idx: number) => {
                 drawText({
