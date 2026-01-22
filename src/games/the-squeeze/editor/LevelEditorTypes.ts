@@ -1,8 +1,7 @@
 // Level Editor Types and Interfaces
 
-export interface EditorWall {
-    id: string
-    type: 'wall'
+// Base types for level data (used by both editor and game levels)
+export interface LevelWall {
     x: number
     y: number
     width: number
@@ -10,9 +9,7 @@ export interface EditorWall {
     color: string
 }
 
-export interface EditorPushBox {
-    id: string
-    type: 'pushBox'
+export interface LevelPushBox {
     x: number
     y: number
     width: number
@@ -21,9 +18,7 @@ export interface EditorPushBox {
     sizeToMove: number
 }
 
-export interface EditorMovingPlatform {
-    id: string
-    type: 'movingPlatform'
+export interface LevelMovingPlatform {
     x: number
     y: number
     width: number
@@ -39,15 +34,56 @@ export interface EditorMovingPlatform {
     maxY: number
 }
 
-export interface EditorExitDoor {
-    id: string
-    type: 'exitDoor'
+export interface LevelExitDoor {
     x: number
     y: number
     width: number
     height: number
     color: string
     doorPath: string
+}
+
+export interface LevelBoundary {
+    x: number
+    y: number
+    width: number
+    height: number
+    color: string
+}
+
+// LevelData interface - used for game level constants
+export interface LevelData {
+    name: string
+    levelWidth: number
+    levelHeight: number
+    nextLevel: string
+    playerStart: { x: number, y: number }
+    boundaries: LevelBoundary[]
+    walls: LevelWall[]
+    pushBoxes: LevelPushBox[]
+    movingPlatforms: LevelMovingPlatform[]
+    exitDoors: LevelExitDoor[]
+}
+
+// Editor-specific types (extend base types with id and type)
+export interface EditorWall extends LevelWall {
+    id: string
+    type: 'wall'
+}
+
+export interface EditorPushBox extends LevelPushBox {
+    id: string
+    type: 'pushBox'
+}
+
+export interface EditorMovingPlatform extends LevelMovingPlatform {
+    id: string
+    type: 'movingPlatform'
+}
+
+export interface EditorExitDoor extends LevelExitDoor {
+    id: string
+    type: 'exitDoor'
 }
 
 export interface EditorPlayerStart {

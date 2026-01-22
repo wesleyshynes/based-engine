@@ -1,73 +1,28 @@
+import { LevelData } from "../editor/LevelEditorTypes"
 import { generateLevelBoundaries } from "../helpers"
 
-export const LEVEL_02_WIDTH = 800
-export const LEVEL_02_HEIGHT = 600
-export const LEVEL_02_NEXT_LEVEL = 'level-03'
+const WIDTH = 800
+const HEIGHT = 600
 
-export const LEVEL_02_BOUNDARIES = generateLevelBoundaries({
-    width: LEVEL_02_WIDTH,
-    height: LEVEL_02_HEIGHT,
-    offset: 200,
-}).map(x => {
-    return {
-        ...x,
-        color: '#111'
-    }
-})
-
-export const LEVEL_02_WALLS: {
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    color: string,
-}[] = [
-    // middle wall
-    '300 300 50 502 #000',
-
-    // exit boundaries
-    '700 113 200 226 #000',
-    '700 489 200 226 #000',
-
-
-].map(w => {
-    const [x, y, width, height, color] = w.split(' ')
-    return {
-        x: parseInt(x),
-        y: parseInt(y),
-        width: parseInt(width),
-        height: parseInt(height),
-        color,
-    }
-})
-
-export const LEVEL_02_PUSH_BOXES: {
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    color: string,
-    sizeToMove: number,
-}[] = [
-    // push box
-    '463 315 262 220 red 60',
-].map(w => {
-    const [x, y, width, height, color, sizeToMove] = w.split(' ')
-    return {
-        x: parseInt(x),
-        y: parseInt(y),
-        width: parseInt(width),
-        height: parseInt(height),
-        color,
-        sizeToMove: sizeToMove ? +sizeToMove : (+width + +height)/4,
-    }
-})
-
-export const LEVEL_02_EXIT_DOORS = [{
-    x: 730,
-    y: 315,
-    width: 100,
-    height: 100,
-    color: 'yellow',
-    doorPath: 'level-03'
-}]
+export const LEVEL_02: LevelData = {
+    name: 'Level 02',
+    levelWidth: WIDTH,
+    levelHeight: HEIGHT,
+    nextLevel: 'level-03',
+    playerStart: { x: 64, y: 535 },
+    boundaries: generateLevelBoundaries({ width: WIDTH, height: HEIGHT, offset: 200 }).map(x => ({ ...x, color: '#111' })),
+    walls: [
+        // middle wall
+        { x: 300, y: 300, width: 50, height: 502, color: '#000' },
+        // exit boundaries
+        { x: 700, y: 113, width: 200, height: 226, color: '#000' },
+        { x: 700, y: 489, width: 200, height: 226, color: '#000' },
+    ],
+    pushBoxes: [
+        { x: 463, y: 315, width: 262, height: 220, color: 'red', sizeToMove: 60 },
+    ],
+    movingPlatforms: [],
+    exitDoors: [
+        { x: 730, y: 315, width: 100, height: 100, color: 'yellow', doorPath: 'level-03' },
+    ],
+}

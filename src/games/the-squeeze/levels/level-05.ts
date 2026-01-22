@@ -1,24 +1,24 @@
+import { LEVEL_05 } from "../constants/level05Constants";
 import { SqueezeBaseLevel } from "./SqueezeBaseLevel";
 import BGMusic from '../../../assets/the-squeeze/tunetank.com_6408_rich-slide_by_cloudsystem_5.mp3'
-import { LEVEL_05_BOUNDARIES, LEVEL_05_EXIT_DOORS, LEVEL_05_MOVING_PLATFORMS, LEVEL_05_PUSH_BOXES, LEVEL_05_WALLS, LEVEL_05_WIDTH, LEVEL_05_HEIGHT, LEVEL_05_NEXT_LEVEL } from "../constants/level05Constants";
 
 export class Level05 extends SqueezeBaseLevel {
 
-    levelWidth: number = LEVEL_05_WIDTH
-    levelHeight: number = LEVEL_05_HEIGHT
+    levelWidth: number = LEVEL_05.levelWidth
+    levelHeight: number = LEVEL_05.levelHeight
 
-    nextLevel: string = LEVEL_05_NEXT_LEVEL
+    nextLevel: string = LEVEL_05.nextLevel
     
-    playerStartPosition: any = { x: 800, y: 88 }
+    playerStartPosition: any = LEVEL_05.playerStart
     levelWalls: any[] = []
-    _levelBoundaries: any[] = LEVEL_05_BOUNDARIES
-    _levelWalls: any[] = LEVEL_05_WALLS
+    _levelBoundaries: any[] = LEVEL_05.boundaries
+    _levelWalls: any[] = LEVEL_05.walls
     pushBoxes: any[] = []
-    _pushBoxes: any[] = LEVEL_05_PUSH_BOXES
+    _pushBoxes: any[] = LEVEL_05.pushBoxes
     movingPlatforms: any[] = []
-    _movingPlatforms: any[] = LEVEL_05_MOVING_PLATFORMS
+    _movingPlatforms: any[] = LEVEL_05.movingPlatforms
     exitDoors: any[] = []
-    _exitDoors: any[] = LEVEL_05_EXIT_DOORS
+    _exitDoors: any[] = LEVEL_05.exitDoors
 
     bgMusicTrack: any = BGMusic
 
