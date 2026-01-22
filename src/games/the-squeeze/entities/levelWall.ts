@@ -16,6 +16,15 @@ export class LevelWall extends PhysBox {
     strokeColor: string = BORDER_COLOR
     color: string = FILL_COLOR
 
+    options = {
+        tags: {
+            wall: true,
+            terrain: true,
+        }
+    }
+
+    bodyOptions = { label: `wall`, isStatic: true }
+
     initialize() {
 
         // this.color = GREY_SHADES[Math.floor(Math.random() * GREY_SHADES.length)]

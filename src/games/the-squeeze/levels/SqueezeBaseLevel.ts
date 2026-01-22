@@ -466,19 +466,13 @@ export class SqueezeBaseLevel extends BasedLevel {
             ...this._levelWalls,
         ].map((obj: any, idx: number) => {
             const tempObj = new LevelWall({
-                key: `wall-${idx}`, gameRef: this.gameRef, options: {
-                    tags: {
-                        wall: true,
-                        terrain: true,
-                    }
-                }
+                key: `wall-${idx}`, gameRef: this.gameRef
             })
             tempObj.x = obj.x
             tempObj.y = obj.y
             tempObj.width = obj.width
             tempObj.height = obj.height
             tempObj.color = obj.color
-            tempObj.bodyOptions = { label: `wall`, isStatic: true }
             tempObj.initialize()
             this.gameRef.addToWorld(tempObj.body)
             return tempObj
