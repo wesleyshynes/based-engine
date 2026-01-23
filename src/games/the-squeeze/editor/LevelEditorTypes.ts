@@ -51,6 +51,13 @@ export interface LevelBoundary {
     color: string
 }
 
+export interface LevelHazardBlock {
+    x: number
+    y: number
+    width: number
+    height: number
+}
+
 // LevelData interface - used for game level constants
 export interface LevelData {
     name: string
@@ -59,10 +66,11 @@ export interface LevelData {
     nextLevel: string
     playerStart: { x: number, y: number }
     boundaries: LevelBoundary[]
-    walls: LevelWall[]
-    pushBoxes: LevelPushBox[]
-    movingPlatforms: LevelMovingPlatform[]
-    exitDoors: LevelExitDoor[]
+    walls?: LevelWall[]
+    pushBoxes?: LevelPushBox[]
+    movingPlatforms?: LevelMovingPlatform[]
+    exitDoors?: LevelExitDoor[]
+    hazardBlocks?: LevelHazardBlock[]
 }
 
 // Editor-specific types (extend base types with id and type)

@@ -30,4 +30,7 @@ export const LEVEL_01: LevelData = {
     exitDoors: [
         { x: 730, y: 530, width: 100, height: 100, color: 'yellow', doorPath: 'level-02' },
     ],
+    hazardBlocks: [
+        { x: 300, y: 200, width: 80, height: 80 },
+    ],
 }

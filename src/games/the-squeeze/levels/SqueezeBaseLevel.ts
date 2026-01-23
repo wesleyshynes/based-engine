@@ -6,6 +6,7 @@ import { MainPlayer } from "../entities/mainPlayer";
 import { PushableBox } from "../entities/pushableBox";
 import { ExitDoor } from "../entities/exitDoor";
 import { LevelWall } from "../entities/levelWall";
+import { HazardBlock } from "../entities/hazardBlock";
 import { TouchKnob } from "../../../engine/controls/TouchKnob";
 import { MovingPlatform } from "../entities/movingPlatform";
 
@@ -77,6 +78,8 @@ export class SqueezeBaseLevel extends BasedLevel {
     _movingPlatforms: any[] = []
     exitDoors: any[] = []
     _exitDoors: any[] = []
+    hazardBlocks: any[] = []
+    _hazardBlocks: any[] = []
 
     // SOUNDS
     wallThud1: any;
@@ -259,6 +262,7 @@ export class SqueezeBaseLevel extends BasedLevel {
         this.setupPushBoxes()
         this.setupMovingPlatforms()
         this.setupExitDoors()
+        this.setupHazardBlocks()
 
         // BEGIN
         this.onResize()
@@ -296,6 +300,10 @@ export class SqueezeBaseLevel extends BasedLevel {
 
         this.pushBoxes.forEach((box: any) => {
             box.update()
+        })
+
+        this.hazardBlocks.forEach((hazard: any) => {
+            hazard.update()
         })
 
         this.cameraZoomButton.update()
@@ -424,6 +432,11 @@ export class SqueezeBaseLevel extends BasedLevel {
             plat.draw()
         })
 
+        // draw hazard blocks
+        this.hazardBlocks.forEach((hazard: any) => {
+            hazard.draw()
+        })
+
         // draw exit doors
         this.exitDoors.forEach((door: any) => {
             door.draw()
@@ -550,6 +563,23 @@ export class SqueezeBaseLevel extends BasedLevel {
             }
             tempObj.initialize()
             tempObj.setupStairsNoise(this.runningStairs)
+            this.gameRef.addToWorld(tempObj.body)
+            return tempObj
+        })
+    }
+
+    setupHazardBlocks() {
+        this.hazardBlocks = [
+            ...this._hazardBlocks,
+        ].map((obj: any, idx: number) => {
+            const tempObj = new HazardBlock({
+                key: `hazardBlock-${idx}`, gameRef: this.gameRef
+            })
+            tempObj.x = obj.x
+            tempObj.y = obj.y
+            tempObj.width = obj.width
+            tempObj.height = obj.height
+            tempObj.initialize()
             this.gameRef.addToWorld(tempObj.body)
             return tempObj
         })
