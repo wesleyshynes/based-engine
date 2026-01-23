@@ -24,4 +24,13 @@ export class BasedObject {
   update() { }
   draw() { }
   tearDown() { }
+
+  setTag(tagKey: string, value: any) {
+    this.options.tags = this.options.tags || {}
+    this.options.tags[tagKey] = value
+  }
+  getTag(tagKey: string): any {
+    this.options.tags = this.options.tags || {}
+    return this.options.tags[tagKey]
+  }
 }

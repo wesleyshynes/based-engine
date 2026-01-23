@@ -97,6 +97,11 @@ export class MainPlayer extends PhysBall {
                 }
             }
 
+            if (otherBody.options.tags.hazard) {
+                // reset the level
+                this.gameRef.loadLevel(this.gameRef.activeLevel)
+            }
+
             this.gameRef.shakeCamera(5 * (this.radius / this.originalRadius))
 
         }
