@@ -1,7 +1,7 @@
 import { BasedButton } from "../../../engine/BasedButton"
 import { BasedLevel } from "../../../engine/BasedLevel"
 import { drawBox, drawCircle, drawText, rotateDraw } from "../../../engine/libs/drawHelpers"
-import { EditorLevelData, EditorObject, EditorTool, DEFAULT_OBJECTS, OBJECT_PROPERTIES, EditorWall, EditorPushBox, EditorMovingPlatform, EditorExitDoor } from "./LevelEditorTypes"
+import { EditorLevelData, EditorObject, EditorTool, DEFAULT_OBJECTS, OBJECT_PROPERTIES, EditorWall, EditorPushBox, EditorMovingPlatform, EditorExitDoor, EditorHazardBlock } from "./LevelEditorTypes"
 import { LevelEditorStorage } from "./LevelEditorStorage"
 
 const BG_COLOR = '#1a1a1a'
@@ -15,6 +15,7 @@ const TOOL_COLORS: Record<EditorTool, string> = {
     movingPlatform: '#222',
     exitDoor: '#000',
     playerStart: '#ff0',
+    hazardBlock: '#800000',
     pan: '#888',
 }
 
@@ -135,11 +136,12 @@ export class LevelEditor extends BasedLevel {
         }
 
         // Tool buttons
-        const tools: EditorTool[] = ['select', 'pan', 'wall', 'pushBox', 'movingPlatform', 'exitDoor', 'playerStart']
+        const tools: EditorTool[] = ['select', 'pan', 'wall', 'pushBox', 'movingPlatform', 'exitDoor', 'playerStart', 'hazardBlock']
         const toolLabels: Record<EditorTool, string> = {
             select: 'Select',
             pan: 'Pan',
             wall: 'Wall',
+            hazardBlock: 'Hazard',
             pushBox: 'Box',
             movingPlatform: 'Platform',
             exitDoor: 'Exit',
@@ -621,6 +623,11 @@ export class LevelEditor extends BasedLevel {
             if (this.isPointInRect(x, y, wall)) return wall
         }
 
+        // Check hazard blocks
+        for (const hazard of this.currentLevel.hazardBlocks) {
+            if (this.isPointInRect(x, y, hazard)) return hazard
+        }
+
         return null
     }
 
@@ -702,6 +709,19 @@ export class LevelEditor extends BasedLevel {
                 }
                 this.currentLevel.exitDoors.push(door)
                 this.selectedObject = door
+                break
+
+            case 'hazardBlock':
+                const hazard: EditorHazardBlock = {
+                    id,
+                    type: 'hazardBlock',
+                    x: snappedX,
+                    y: snappedY,
+                    width: 100,
+                    height: 50,
+                }
+                this.currentLevel.hazardBlocks.push(hazard)
+                this.selectedObject = hazard
                 break
 
             case 'playerStart':
@@ -858,6 +878,11 @@ export class LevelEditor extends BasedLevel {
                 style: '',
                 text: 'EXIT'
             })
+        })
+
+        // Draw hazards
+        this.currentLevel.hazardBlocks.forEach(hazard => {
+            this.drawEditorRect(hazard, '#f00', this.selectedObject?.id === hazard.id)
         })
 
         // Draw player start

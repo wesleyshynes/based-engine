@@ -6,7 +6,7 @@ const STORAGE_KEY = 'the-squeeze-editor-levels'
 const CURRENT_LEVEL_KEY = 'the-squeeze-editor-current-level'
 
 export class LevelEditorStorage {
-    
+
     static generateId(): string {
         return `level-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     }
@@ -24,6 +24,7 @@ export class LevelEditorStorage {
             pushBoxes: [],
             movingPlatforms: [],
             exitDoors: [],
+            hazardBlocks: [],
             createdAt: now,
             updatedAt: now,
         }
@@ -45,15 +46,15 @@ export class LevelEditorStorage {
         try {
             const levels = this.getAllLevels()
             const existingIndex = levels.findIndex(l => l.id === level.id)
-            
+
             level.updatedAt = Date.now()
-            
+
             if (existingIndex >= 0) {
                 levels[existingIndex] = level
             } else {
                 levels.push(level)
             }
-            
+
             localStorage.setItem(STORAGE_KEY, JSON.stringify(levels))
         } catch (e) {
             console.error('Error saving level to localStorage:', e)
@@ -88,7 +89,7 @@ export class LevelEditorStorage {
 
     static exportLevelAsCode(level: EditorLevelData): string {
         const sanitizedName = level.name.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()
-        
+
         let code = `import { LevelData } from "../editor/LevelEditorTypes"\n`
         code += `import { generateLevelBoundaries } from "../helpers"\n\n`
 
@@ -146,6 +147,13 @@ export class LevelEditorStorage {
         })
         code += `    ],\n`
 
+        // Hazard Blocks
+        code += `    hazardBlocks: [\n`
+        level.hazardBlocks.forEach(block => {
+            code += `        { x: ${block.x}, y: ${block.y}, width: ${block.width}, height: ${block.height}, },\n`
+        })
+        code += `    ],\n`
+
         code += `}\n`
 
         return code
@@ -158,7 +166,7 @@ export class LevelEditorStorage {
 
         let code = `import { ${constantName} } from "../constants/${sanitizedName.toLowerCase()}Constants";\n`
         code += `import { SqueezeBaseLevel } from "./SqueezeBaseLevel";\n\n`
-        
+
         code += `export class ${pascalName} extends SqueezeBaseLevel {\n\n`
         code += `    levelWidth: number = ${constantName}.levelWidth\n`
         code += `    levelHeight: number = ${constantName}.levelHeight\n\n`
@@ -173,6 +181,8 @@ export class LevelEditorStorage {
         code += `    _movingPlatforms: any[] = ${constantName}.movingPlatforms\n`
         code += `    exitDoors: any[] = []\n`
         code += `    _exitDoors: any[] = ${constantName}.exitDoors\n\n`
+        code += `    hazardBlocks: any[] = []\n`
+        code += `    _hazardBlocks: any[] = ${constantName}.hazardBlocks\n\n`
         code += `}\n`
 
         return code

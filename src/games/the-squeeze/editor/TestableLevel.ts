@@ -20,6 +20,9 @@ export class TestableLevel extends SqueezeBaseLevel {
     exitDoors: any[] = []
     _exitDoors: any[] = []
 
+    hazardBlocks: any[] = []
+    _hazardBlocks: any[] = []
+
     textLines: string[] = [
         'Move: ←↑↓→ or W A S D',
         'Shrink: Z',
@@ -90,6 +93,14 @@ export class TestableLevel extends SqueezeBaseLevel {
                 height: door.height,
                 color: door.color,
                 doorPath: 'level-editor', // Always go back to editor when testing
+            }))
+
+            // Map hazard blocks
+            this._hazardBlocks = levelData.hazardBlocks.map(hazard => ({
+                x: hazard.x,
+                y: hazard.y,
+                width: hazard.width,
+                height: hazard.height,
             }))
         }
 

@@ -94,6 +94,11 @@ export interface EditorExitDoor extends LevelExitDoor {
     type: 'exitDoor'
 }
 
+export interface EditorHazardBlock extends LevelHazardBlock {
+    id: string
+    type: 'hazardBlock'
+}
+
 export interface EditorPlayerStart {
     id: string
     type: 'playerStart'
@@ -101,7 +106,7 @@ export interface EditorPlayerStart {
     y: number
 }
 
-export type EditorObject = EditorWall | EditorPushBox | EditorMovingPlatform | EditorExitDoor | EditorPlayerStart
+export type EditorObject = EditorWall | EditorPushBox | EditorMovingPlatform | EditorExitDoor | EditorPlayerStart | EditorHazardBlock
 
 export interface EditorLevelData {
     id: string
@@ -114,11 +119,12 @@ export interface EditorLevelData {
     pushBoxes: EditorPushBox[]
     movingPlatforms: EditorMovingPlatform[]
     exitDoors: EditorExitDoor[]
+    hazardBlocks: EditorHazardBlock[]
     createdAt: number
     updatedAt: number
 }
 
-export type EditorTool = 'select' | 'wall' | 'pushBox' | 'movingPlatform' | 'exitDoor' | 'playerStart' | 'pan'
+export type EditorTool = 'select' | 'wall' | 'pushBox' | 'movingPlatform' | 'exitDoor' | 'playerStart' | 'pan' | 'hazardBlock'
 
 export interface PropertyField {
     key: string
@@ -165,6 +171,12 @@ export const OBJECT_PROPERTIES: Record<string, PropertyField[]> = {
         { key: 'width', label: 'Width', type: 'number', min: 50, max: 200 },
         { key: 'height', label: 'Height', type: 'number', min: 50, max: 200 },
         { key: 'doorPath', label: 'Door Path', type: 'string' },
+    ],
+    hazardBlock: [
+        { key: 'x', label: 'X', type: 'number' },
+        { key: 'y', label: 'Y', type: 'number' },
+        { key: 'width', label: 'Width', type: 'number', min: 20, max: 500 },
+        { key: 'height', label: 'Height', type: 'number', min: 20, max: 500 },
     ],
     playerStart: [
         { key: 'x', label: 'X', type: 'number' },
