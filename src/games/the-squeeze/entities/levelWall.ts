@@ -5,12 +5,6 @@ import PhysBox from "../../../engine/physicsObjects/PhysBox";
 const FILL_COLOR = '#222222'
 const BORDER_COLOR = '#111111'
 
-// const GREY_SHADES = [
-//     '#222222',
-//     '#121212',
-//     '#11111',
-// ]
-
 export class LevelWall extends PhysBox {
 
     strokeColor: string = BORDER_COLOR
@@ -26,10 +20,6 @@ export class LevelWall extends PhysBox {
     bodyOptions = { label: `wall`, isStatic: true }
 
     initialize() {
-
-        // this.color = GREY_SHADES[Math.floor(Math.random() * GREY_SHADES.length)]
-        // const filteredShades = GREY_SHADES.filter((shade) => shade !== this.color)
-        // this.strokeColor = filteredShades[Math.floor(Math.random() * filteredShades.length)]
 
         this.color = FILL_COLOR
         this.strokeColor = BORDER_COLOR
