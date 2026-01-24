@@ -1001,8 +1001,14 @@ export class LevelEditor extends BasedLevel {
         const ctx = this.gameRef.ctx
 
         // Background
-        ctx.fillStyle = BG_COLOR
-        ctx.fillRect(0, 0, this.gameRef.gameWidth, this.gameRef.gameHeight)
+        drawBox({
+            c: ctx,
+            x: 0,
+            y: 0,
+            width: this.gameRef.gameWidth,
+            height: this.gameRef.gameHeight,
+            fillColor: BG_COLOR
+        })
 
         // Draw level area
         if (this.currentLevel) {
@@ -1036,30 +1042,39 @@ export class LevelEditor extends BasedLevel {
 
         // Level background
         const levelScreen = this.worldToScreen(0, 0)
-        ctx.fillStyle = '#444'
-        ctx.fillRect(
-            levelScreen.x,
-            levelScreen.y,
-            this.currentLevel.levelWidth * this.zoom,
-            this.currentLevel.levelHeight * this.zoom
-        )
+        drawBox({
+            c: ctx,
+            x: levelScreen.x,
+            y: levelScreen.y,
+            width: this.currentLevel.levelWidth * this.zoom,
+            height: this.currentLevel.levelHeight * this.zoom,
+            fillColor: '#444'
+        })
 
         // Grid
-        ctx.strokeStyle = GRID_COLOR
-        ctx.lineWidth = 1
         for (let x = 0; x <= this.currentLevel.levelWidth; x += GRID_SIZE) {
             const screenX = levelScreen.x + x * this.zoom
-            ctx.beginPath()
-            ctx.moveTo(screenX, levelScreen.y)
-            ctx.lineTo(screenX, levelScreen.y + this.currentLevel.levelHeight * this.zoom)
-            ctx.stroke()
+            drawLine({
+                c: ctx,
+                x: screenX,
+                y: levelScreen.y,
+                toX: screenX,
+                toY: levelScreen.y + this.currentLevel.levelHeight * this.zoom,
+                strokeColor: GRID_COLOR,
+                strokeWidth: 1
+            })
         }
         for (let y = 0; y <= this.currentLevel.levelHeight; y += GRID_SIZE) {
             const screenY = levelScreen.y + y * this.zoom
-            ctx.beginPath()
-            ctx.moveTo(levelScreen.x, screenY)
-            ctx.lineTo(levelScreen.x + this.currentLevel.levelWidth * this.zoom, screenY)
-            ctx.stroke()
+            drawLine({
+                c: ctx,
+                x: levelScreen.x,
+                y: screenY,
+                toX: levelScreen.x + this.currentLevel.levelWidth * this.zoom,
+                toY: screenY,
+                strokeColor: GRID_COLOR,
+                strokeWidth: 1
+            })
         }
 
         // Draw walls
@@ -1159,8 +1174,14 @@ export class LevelEditor extends BasedLevel {
                 const defaults = DEFAULT_OBJECTS[this.currentTool] as any
                 const w = (defaults?.width || 100) * this.zoom
                 const h = (defaults?.height || 50) * this.zoom
-                ctx.fillStyle = TOOL_COLORS[this.currentTool]
-                ctx.fillRect(previewScreen.x - w/2, previewScreen.y - h/2, w, h)
+                drawBox({
+                    c: ctx,
+                    x: previewScreen.x - w/2,
+                    y: previewScreen.y - h/2,
+                    width: w,
+                    height: h,
+                    fillColor: TOOL_COLORS[this.currentTool]
+                })
             }
             
             ctx.globalAlpha = 1
@@ -1178,12 +1199,16 @@ export class LevelEditor extends BasedLevel {
         const w = obj.width * this.zoom
         const h = obj.height * this.zoom
 
-        ctx.fillStyle = color
-        ctx.fillRect(pos.x - w/2, pos.y - h/2, w, h)
-
-        ctx.strokeStyle = selected ? '#fff' : '#666'
-        ctx.lineWidth = selected ? 3 : 1
-        ctx.strokeRect(pos.x - w/2, pos.y - h/2, w, h)
+        drawBox({
+            c: ctx,
+            x: pos.x - w/2,
+            y: pos.y - h/2,
+            width: w,
+            height: h,
+            fillColor: color,
+            strokeColor: selected ? '#fff' : '#666',
+            strokeWidth: selected ? 3 : 1
+        })
 
         // Draw resize handles if selected
         if (selected) {
@@ -1210,11 +1235,16 @@ export class LevelEditor extends BasedLevel {
         ]
 
         corners.forEach(corner => {
-            ctx.fillStyle = handleColor
-            ctx.fillRect(corner.x - size/2, corner.y - size/2, size, size)
-            ctx.strokeStyle = handleBorder
-            ctx.lineWidth = 1
-            ctx.strokeRect(corner.x - size/2, corner.y - size/2, size, size)
+            drawBox({
+                c: ctx,
+                x: corner.x - size/2,
+                y: corner.y - size/2,
+                width: size,
+                height: size,
+                fillColor: handleColor,
+                strokeColor: handleBorder,
+                strokeWidth: 1
+            })
         })
 
         // Edge handles
@@ -1226,42 +1256,43 @@ export class LevelEditor extends BasedLevel {
         ]
 
         edges.forEach(edge => {
-            ctx.fillStyle = handleColor
-            ctx.fillRect(edge.x - size/2, edge.y - size/2, size, size)
-            ctx.strokeStyle = handleBorder
-            ctx.lineWidth = 1
-            ctx.strokeRect(edge.x - size/2, edge.y - size/2, size, size)
+            drawBox({
+                c: ctx,
+                x: edge.x - size/2,
+                y: edge.y - size/2,
+                width: size,
+                height: size,
+                fillColor: handleColor,
+                strokeColor: handleBorder,
+                strokeWidth: 1
+            })
         })
     }
 
     drawEditorPolygon(poly: EditorPolygon, selected: boolean) {
         const ctx = this.gameRef.ctx
         const pos = this.worldToScreen(poly.x, poly.y)
-        const angleRad = (poly.angle || 0) * Math.PI / 180
         
-        ctx.save()
-        ctx.translate(pos.x, pos.y)
-        ctx.rotate(angleRad)
+        // Scale vertices for zoom
+        const scaledVertices = poly.vertices.map(v => ({
+            x: v.x * this.zoom,
+            y: v.y * this.zoom
+        }))
         
-        // Draw filled polygon
-        ctx.beginPath()
-        poly.vertices.forEach((v, i) => {
-            const vx = v.x * this.zoom
-            const vy = v.y * this.zoom
-            if (i === 0) {
-                ctx.moveTo(vx, vy)
-            } else {
-                ctx.lineTo(vx, vy)
-            }
+        rotateDraw({
+            c: ctx,
+            x: pos.x,
+            y: pos.y,
+            a: poly.angle || 0
+        }, () => {
+            drawPolygon({
+                c: ctx,
+                vertices: scaledVertices,
+                fillColor: poly.color || '#222',
+                strokeColor: selected ? '#fff' : '#666',
+                strokeWidth: selected ? 3 : 1
+            })
         })
-        ctx.closePath()
-        ctx.fillStyle = poly.color || '#222'
-        ctx.fill()
-        ctx.strokeStyle = selected ? '#fff' : '#666'
-        ctx.lineWidth = selected ? 3 : 1
-        ctx.stroke()
-        
-        ctx.restore()
         
         // Draw vertex handles and rotation handle if selected
         if (selected) {
@@ -1287,29 +1318,39 @@ export class LevelEditor extends BasedLevel {
             const rotY = v.x * sinA + v.y * cosA
             const screenPos = this.worldToScreen(poly.x + rotX, poly.y + rotY)
             
-            ctx.fillStyle = handleColor
-            ctx.fillRect(screenPos.x - size/2, screenPos.y - size/2, size, size)
-            ctx.strokeStyle = handleBorder
-            ctx.lineWidth = 1
-            ctx.strokeRect(screenPos.x - size/2, screenPos.y - size/2, size, size)
+            drawBox({
+                c: ctx,
+                x: screenPos.x - size/2,
+                y: screenPos.y - size/2,
+                width: size,
+                height: size,
+                fillColor: handleColor,
+                strokeColor: handleBorder,
+                strokeWidth: 1
+            })
         })
         
         // Draw rotation handle (above the polygon center)
         const rotHandleY = pos.y - 60 * this.zoom
-        ctx.beginPath()
-        ctx.moveTo(pos.x, pos.y)
-        ctx.lineTo(pos.x, rotHandleY)
-        ctx.strokeStyle = '#88f'
-        ctx.lineWidth = 2
-        ctx.stroke()
+        drawLine({
+            c: ctx,
+            x: pos.x,
+            y: pos.y,
+            toX: pos.x,
+            toY: rotHandleY,
+            strokeColor: '#88f',
+            strokeWidth: 2
+        })
         
-        ctx.beginPath()
-        ctx.arc(pos.x, rotHandleY, size, 0, Math.PI * 2)
-        ctx.fillStyle = '#88f'
-        ctx.fill()
-        ctx.strokeStyle = handleBorder
-        ctx.lineWidth = 1
-        ctx.stroke()
+        drawCircle({
+            c: ctx,
+            x: pos.x,
+            y: rotHandleY,
+            radius: size,
+            fillColor: '#88f',
+            strokeColor: handleBorder,
+            strokeWidth: 1
+        })
         
         // Label
         drawText({
@@ -1334,27 +1375,41 @@ export class LevelEditor extends BasedLevel {
             x: Math.round(mouseWorld.x / GRID_SIZE) * GRID_SIZE,
             y: Math.round(mouseWorld.y / GRID_SIZE) * GRID_SIZE
         }
+        const mouseScreen = this.worldToScreen(snappedMouse.x, snappedMouse.y)
         
         ctx.globalAlpha = 0.7
         
         // Draw lines connecting vertices
-        ctx.beginPath()
-        this.polygonVertices.forEach((v, i) => {
-            const screenPos = this.worldToScreen(v.x, v.y)
-            if (i === 0) {
-                ctx.moveTo(screenPos.x, screenPos.y)
-            } else {
-                ctx.lineTo(screenPos.x, screenPos.y)
-            }
-        })
+        for (let i = 0; i < this.polygonVertices.length - 1; i++) {
+            const fromScreen = this.worldToScreen(this.polygonVertices[i].x, this.polygonVertices[i].y)
+            const toScreen = this.worldToScreen(this.polygonVertices[i + 1].x, this.polygonVertices[i + 1].y)
+            drawLine({
+                c: ctx,
+                x: fromScreen.x,
+                y: fromScreen.y,
+                toX: toScreen.x,
+                toY: toScreen.y,
+                strokeColor: '#81B622',
+                strokeWidth: 2
+            })
+        }
         
-        // Line to current mouse position
-        const mouseScreen = this.worldToScreen(snappedMouse.x, snappedMouse.y)
-        ctx.lineTo(mouseScreen.x, mouseScreen.y)
-        
-        ctx.strokeStyle = '#81B622'
-        ctx.lineWidth = 2
-        ctx.stroke()
+        // Line from last vertex to current mouse position
+        if (this.polygonVertices.length > 0) {
+            const lastScreen = this.worldToScreen(
+                this.polygonVertices[this.polygonVertices.length - 1].x,
+                this.polygonVertices[this.polygonVertices.length - 1].y
+            )
+            drawLine({
+                c: ctx,
+                x: lastScreen.x,
+                y: lastScreen.y,
+                toX: mouseScreen.x,
+                toY: mouseScreen.y,
+                strokeColor: '#81B622',
+                strokeWidth: 2
+            })
+        }
         
         // Draw vertices as circles
         this.polygonVertices.forEach((v, i) => {
@@ -1437,26 +1492,26 @@ export class LevelEditor extends BasedLevel {
         const handleSize = selected ? this.handleSize + 4 : 6
 
         // Min point handle (green)
-        ctx.fillStyle = '#00ff00'
-        ctx.beginPath()
-        ctx.arc(minPos.x, minPos.y, handleSize/2, 0, Math.PI * 2)
-        ctx.fill()
-        if (selected) {
-            ctx.strokeStyle = '#fff'
-            ctx.lineWidth = 2
-            ctx.stroke()
-        }
+        drawCircle({
+            c: ctx,
+            x: minPos.x,
+            y: minPos.y,
+            radius: handleSize/2,
+            fillColor: '#00ff00',
+            strokeColor: selected ? '#fff' : undefined,
+            strokeWidth: selected ? 2 : undefined
+        })
 
         // Max point handle (red)
-        ctx.fillStyle = '#ff4444'
-        ctx.beginPath()
-        ctx.arc(maxPos.x, maxPos.y, handleSize/2, 0, Math.PI * 2)
-        ctx.fill()
-        if (selected) {
-            ctx.strokeStyle = '#fff'
-            ctx.lineWidth = 2
-            ctx.stroke()
-        }
+        drawCircle({
+            c: ctx,
+            x: maxPos.x,
+            y: maxPos.y,
+            radius: handleSize/2,
+            fillColor: '#ff4444',
+            strokeColor: selected ? '#fff' : undefined,
+            strokeWidth: selected ? 2 : undefined
+        })
 
         // Labels (only when selected)
         if (selected) {
@@ -1495,8 +1550,14 @@ export class LevelEditor extends BasedLevel {
         const ctx = this.gameRef.ctx
 
         // Top bar background
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-        ctx.fillRect(0, 0, this.gameRef.gameWidth, 100)
+        drawBox({
+            c: ctx,
+            x: 0,
+            y: 0,
+            width: this.gameRef.gameWidth,
+            height: 100,
+            fillColor: 'rgba(0, 0, 0, 0.8)'
+        })
 
         // Draw level name
         if (this.currentLevel) {
@@ -1588,11 +1649,16 @@ export class LevelEditor extends BasedLevel {
         const panelH = (OBJECT_PROPERTIES[this.selectedObject.type]?.length || 0) * 40 + 60
 
         // Panel background
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)'
-        ctx.fillRect(panelX, panelY, panelW, panelH)
-        ctx.strokeStyle = '#444'
-        ctx.lineWidth = 1
-        ctx.strokeRect(panelX, panelY, panelW, panelH)
+        drawBox({
+            c: ctx,
+            x: panelX,
+            y: panelY,
+            width: panelW,
+            height: panelH,
+            fillColor: 'rgba(0, 0, 0, 0.9)',
+            strokeColor: '#444',
+            strokeWidth: 1
+        })
 
         // Title
         drawText({
@@ -1630,10 +1696,16 @@ export class LevelEditor extends BasedLevel {
             })
 
             // Value box
-            ctx.fillStyle = isEditing ? '#444' : '#222'
-            ctx.fillRect(panelX + 10, y + 5, panelW - 20, 25)
-            ctx.strokeStyle = isEditing ? '#81B622' : '#444'
-            ctx.strokeRect(panelX + 10, y + 5, panelW - 20, 25)
+            drawBox({
+                c: ctx,
+                x: panelX + 10,
+                y: y + 5,
+                width: panelW - 20,
+                height: 25,
+                fillColor: isEditing ? '#444' : '#222',
+                strokeColor: isEditing ? '#81B622' : '#444',
+                strokeWidth: 1
+            })
 
             drawText({
                 c: ctx,
@@ -1742,10 +1814,16 @@ export class LevelEditor extends BasedLevel {
         const panelW = 300
         const panelH = 350
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.95)'
-        ctx.fillRect(panelX, panelY, panelW, panelH)
-        ctx.strokeStyle = '#444'
-        ctx.strokeRect(panelX, panelY, panelW, panelH)
+        drawBox({
+            c: ctx,
+            x: panelX,
+            y: panelY,
+            width: panelW,
+            height: panelH,
+            fillColor: 'rgba(0, 0, 0, 0.95)',
+            strokeColor: '#444',
+            strokeWidth: 1
+        })
 
         drawText({
             c: ctx,
@@ -1768,8 +1846,14 @@ export class LevelEditor extends BasedLevel {
                              mouse.y > y && mouse.y < y + 30
             const isCurrent = level.id === this.currentLevel?.id
 
-            ctx.fillStyle = isHovered ? '#444' : (isCurrent ? '#333' : '#222')
-            ctx.fillRect(panelX + 10, y, panelW - 20, 30)
+            drawBox({
+                c: ctx,
+                x: panelX + 10,
+                y: y,
+                width: panelW - 20,
+                height: 30,
+                fillColor: isHovered ? '#444' : (isCurrent ? '#333' : '#222')
+            })
 
             drawText({
                 c: ctx,
@@ -1806,10 +1890,16 @@ export class LevelEditor extends BasedLevel {
         const panelW = this.gameRef.gameWidth - 100
         const panelH = this.gameRef.gameHeight - 100
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.95)'
-        ctx.fillRect(panelX, panelY, panelW, panelH)
-        ctx.strokeStyle = '#444'
-        ctx.strokeRect(panelX, panelY, panelW, panelH)
+        drawBox({
+            c: ctx,
+            x: panelX,
+            y: panelY,
+            width: panelW,
+            height: panelH,
+            fillColor: 'rgba(0, 0, 0, 0.95)',
+            strokeColor: '#444',
+            strokeWidth: 1
+        })
 
         drawText({
             c: ctx,
@@ -1923,10 +2013,16 @@ export class LevelEditor extends BasedLevel {
         const panelW = 300
         const panelH = 295
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.95)'
-        ctx.fillRect(panelX, panelY, panelW, panelH)
-        ctx.strokeStyle = '#444'
-        ctx.strokeRect(panelX, panelY, panelW, panelH)
+        drawBox({
+            c: ctx,
+            x: panelX,
+            y: panelY,
+            width: panelW,
+            height: panelH,
+            fillColor: 'rgba(0, 0, 0, 0.95)',
+            strokeColor: '#444',
+            strokeWidth: 1
+        })
 
         drawText({
             c: ctx,
@@ -1967,10 +2063,16 @@ export class LevelEditor extends BasedLevel {
                 text: setting.label
             })
 
-            ctx.fillStyle = isEditing ? '#444' : '#222'
-            ctx.fillRect(panelX + 10, y + 5, panelW - 20, 25)
-            ctx.strokeStyle = isEditing ? '#81B622' : '#444'
-            ctx.strokeRect(panelX + 10, y + 5, panelW - 20, 25)
+            drawBox({
+                c: ctx,
+                x: panelX + 10,
+                y: y + 5,
+                width: panelW - 20,
+                height: 25,
+                fillColor: isEditing ? '#444' : '#222',
+                strokeColor: isEditing ? '#81B622' : '#444',
+                strokeWidth: 1
+            })
 
             drawText({
                 c: ctx,
@@ -2004,8 +2106,14 @@ export class LevelEditor extends BasedLevel {
         const isDeleteHovered = mouse.x > panelX + 10 && mouse.x < panelX + panelW - 10 &&
                                mouse.y > deleteY && mouse.y < deleteY + 35
 
-        ctx.fillStyle = isDeleteHovered ? '#a33' : '#633'
-        ctx.fillRect(panelX + 10, deleteY, panelW - 20, 35)
+        drawBox({
+            c: ctx,
+            x: panelX + 10,
+            y: deleteY,
+            width: panelW - 20,
+            height: 35,
+            fillColor: isDeleteHovered ? '#a33' : '#633'
+        })
 
         drawText({
             c: ctx,
