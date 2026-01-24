@@ -18,7 +18,10 @@ export class LevelPolygon extends PhysPoly {
         }
     }
 
-    bodyOptions = { label: `polygon`, isStatic: true }
+    bodyOptions = {
+        label: `polygon`,
+        isStatic: true
+    }
 
     initialize() {
         this.color = FILL_COLOR
@@ -46,5 +49,16 @@ export class LevelPolygon extends PhysPoly {
             cameraPos: this.gameRef.cameraPos,
             zoom: this.gameRef.cameraZoom,
         })
+        // this.cameraDraw(() => {
+        //     drawPolygon({
+        //         c: this.gameRef.ctx,
+        //         vertices: this.vertices,
+        //         fillColor: 'rgba(255,0,0,0.5)',
+        //         strokeColor: `rgba(255,0,0,0.25)`,
+        //         strokeWidth: 2 * this.gameRef.cameraZoom,
+        //         // cameraPos: this.gameRef.cameraPos,
+        //         zoom: this.gameRef.cameraZoom,
+        //     })
+        // })
     }
 }

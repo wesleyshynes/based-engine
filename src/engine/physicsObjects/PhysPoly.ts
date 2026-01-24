@@ -12,12 +12,12 @@ export default class PhysPoly extends BasedObject {
   angle: number = 0
 
   vertices: XYCoordinateType[] = [
-    {x: 0, y: 0},
-    {x: 560, y: 0},
-    {x: 560, y: 20},
-    {x: 540, y: 40},
-    {x: 20, y: 40},
-    {x: 0, y: 20},
+    { x: 0, y: 0 },
+    { x: 560, y: 0 },
+    { x: 560, y: 20 },
+    { x: 540, y: 40 },
+    { x: 20, y: 40 },
+    { x: 0, y: 20 },
   ]
 
   bodyOptions: any = {
@@ -25,12 +25,12 @@ export default class PhysPoly extends BasedObject {
     restitution: 0.8
   }
   body: any;
-  bodyCenter: XYCoordinateType = {x: 0, y: 0}
+  bodyCenter: XYCoordinateType = { x: 0, y: 0 }
 
   collisionStartFn: (o: any) => void = (o: any) => null;
   collisionEndFn: (o: any) => void = (o: any) => null;
 
-  async preload() {}
+  async preload() { }
   initialize() {
     this.initializeBody()
     this.setCenter()
@@ -47,13 +47,48 @@ export default class PhysPoly extends BasedObject {
       }
     });
     this.bodyCenter = {
-      x: (this.body.bounds.max.x - this.body.bounds.min.x)/-2,
-      y: (this.body.bounds.max.y - this.body.bounds.min.y)/-2
+      x: (this.body.bounds.max.x - this.body.bounds.min.x) / -2,
+      y: (this.body.bounds.max.y - this.body.bounds.min.y) / -2
+    }
+  }
+
+  offsetSelfByOffset() {
+    if (this.body) {
+      // const mappedVerts = this.vertices.map((v: any) => ({ x: v.x + this.x, y: v.y + this.y }));
+      // rotated mapped vertices
+      const mappedVerts = this.vertices.map((v: any) => {
+        const cosA = Math.cos(this.angle);
+        const sinA = Math.sin(this.angle);
+        return {
+          x: v.x * cosA - v.y * sinA + this.x,
+          y: v.x * sinA + v.y * cosA + this.y
+        };
+      });
+      let deltaX = 0;
+      let deltaY = 0;
+      let smallestAbsoluteDiff = Infinity
+      const firstMappedVert = mappedVerts[0];
+      // find the first vertex in the body's vertices that matches the first mapped vertex use the smalles abs difference
+      for (let i = 0; i < this.body.vertices.length; i++) {
+        const bodyVert = this.body.vertices[i];
+        const diffX = bodyVert.x - firstMappedVert.x;
+        const diffY = bodyVert.y - firstMappedVert.y;
+        const absDiff = Math.abs(diffX) + Math.abs(diffY);
+        if (absDiff < smallestAbsoluteDiff) {
+          smallestAbsoluteDiff = absDiff;
+          deltaX = diffX;
+          deltaY = diffY;
+        }
+      }
+      Physics.Body.setPosition(this.body, {
+        x: this.body.position.x - deltaX,
+        y: this.body.position.y - deltaY,
+      });
     }
   }
 
   setCenter() {
-    if(this.body) {
+    if (this.body) {
       Physics.Body.setCentre(this.body, this.bodyCenter, true)
     }
   }
@@ -63,7 +98,7 @@ export default class PhysPoly extends BasedObject {
   onCollisionEnd(otherBody: any) {
     this.collisionEndFn(otherBody)
   }
-  update() {}
+  update() { }
   draw() {
     this.drawPhysicsBody()
   }
@@ -81,7 +116,7 @@ export default class PhysPoly extends BasedObject {
     })
   }
 
-  cameraDraw(cameraDrawFn = () => {}) {
+  cameraDraw(cameraDrawFn = () => { }) {
     rotateDraw({
       c: this.gameRef.ctx,
       x: this.body.position.x,
@@ -95,6 +130,6 @@ export default class PhysPoly extends BasedObject {
   }
 
 
-  tearDown() {}
+  tearDown() { }
 
 }

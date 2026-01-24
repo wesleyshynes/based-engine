@@ -515,6 +515,7 @@ export class SqueezeBaseLevel extends BasedLevel {
             tempObj.color = obj.color
             tempObj.initialize()
             this.gameRef.addToWorld(tempObj.body)
+            tempObj.offsetSelfByOffset()
             return tempObj
         })
     }
