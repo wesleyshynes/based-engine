@@ -21,6 +21,7 @@ export class LevelEditorStorage {
             nextLevel: 'start-screen',
             playerStart: { x: 100, y: 100 },
             walls: [],
+            polygons: [],
             pushBoxes: [],
             movingPlatforms: [],
             exitDoors: [],
@@ -34,12 +35,29 @@ export class LevelEditorStorage {
         try {
             const data = localStorage.getItem(STORAGE_KEY)
             if (data) {
-                return JSON.parse(data)
+                const levels = JSON.parse(data) as EditorLevelData[]
+                // Ensure all levels have all required fields (migration for old data)
+                return levels.map(level => this.sanitizeLevel(level))
             }
         } catch (e) {
             console.error('Error loading levels from localStorage:', e)
         }
         return []
+    }
+
+    static sanitizeLevel(level: EditorLevelData): EditorLevelData {
+        // Ensure all arrays exist to prevent crashes when loading old data
+        return {
+            ...level,
+            walls: level.walls || [],
+            polygons: level.polygons || [],
+            pushBoxes: level.pushBoxes || [],
+            movingPlatforms: level.movingPlatforms || [],
+            exitDoors: level.exitDoors || [],
+            hazardBlocks: level.hazardBlocks || [],
+            playerStart: level.playerStart || { x: 100, y: 100 },
+            nextLevel: level.nextLevel || 'start-screen',
+        }
     }
 
     static saveLevel(level: EditorLevelData): void {
@@ -63,7 +81,8 @@ export class LevelEditorStorage {
 
     static getLevel(id: string): EditorLevelData | null {
         const levels = this.getAllLevels()
-        return levels.find(l => l.id === id) || null
+        const level = levels.find(l => l.id === id)
+        return level ? this.sanitizeLevel(level) : null
     }
 
     static deleteLevel(id: string): void {
@@ -109,6 +128,14 @@ export class LevelEditorStorage {
         code += `    walls: [\n`
         level.walls.forEach(wall => {
             code += `        { x: ${wall.x}, y: ${wall.y}, width: ${wall.width}, height: ${wall.height}, color: '${wall.color}' },\n`
+        })
+        code += `    ],\n`
+
+        // Polygons
+        code += `    polygons: [\n`
+        ;(level.polygons || []).forEach(poly => {
+            const verticesStr = JSON.stringify(poly.vertices)
+            code += `        { x: ${poly.x}, y: ${poly.y}, vertices: ${verticesStr}, angle: ${poly.angle}, color: '${poly.color}' },\n`
         })
         code += `    ],\n`
 
@@ -175,6 +202,8 @@ export class LevelEditorStorage {
         code += `    levelWalls: any[] = []\n`
         code += `    _levelBoundaries: any[] = ${constantName}.boundaries\n`
         code += `    _levelWalls: any[] = ${constantName}.walls\n`
+        code += `    levelPolygons: any[] = []\n`
+        code += `    _levelPolygons: any[] = ${constantName}.polygons || []\n`
         code += `    pushBoxes: any[] = []\n`
         code += `    _pushBoxes: any[] = ${constantName}.pushBoxes\n`
         code += `    movingPlatforms: any[] = []\n`

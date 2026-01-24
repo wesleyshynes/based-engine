@@ -14,6 +14,8 @@ export class Level01 extends SqueezeBaseLevel {
     levelWalls: any[] = []
     _levelBoundaries: any[] = LEVEL_01.boundaries
     _levelWalls: any[] = LEVEL_01.walls
+    levelPolygons: any[] = []
+    _levelPolygons: any[] = LEVEL_01.polygons || []
     pushBoxes: any[] = []
     _pushBoxes: any[] = LEVEL_01.pushBoxes
     movingPlatforms: any[] = []

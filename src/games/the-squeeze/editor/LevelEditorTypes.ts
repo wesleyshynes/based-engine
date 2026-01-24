@@ -1,11 +1,25 @@
 // Level Editor Types and Interfaces
 
+// Vertex type for polygon shapes
+export interface VertexPoint {
+    x: number
+    y: number
+}
+
 // Base types for level data (used by both editor and game levels)
 export interface LevelWall {
     x: number
     y: number
     width: number
     height: number
+    color: string
+}
+
+export interface LevelPolygon {
+    x: number
+    y: number
+    vertices: VertexPoint[]
+    angle: number
     color: string
 }
 
@@ -67,6 +81,7 @@ export interface LevelData {
     playerStart: { x: number, y: number }
     boundaries: LevelBoundary[]
     walls?: LevelWall[]
+    polygons?: LevelPolygon[]
     pushBoxes?: LevelPushBox[]
     movingPlatforms?: LevelMovingPlatform[]
     exitDoors?: LevelExitDoor[]
@@ -77,6 +92,11 @@ export interface LevelData {
 export interface EditorWall extends LevelWall {
     id: string
     type: 'wall'
+}
+
+export interface EditorPolygon extends LevelPolygon {
+    id: string
+    type: 'polygon'
 }
 
 export interface EditorPushBox extends LevelPushBox {
@@ -106,7 +126,7 @@ export interface EditorPlayerStart {
     y: number
 }
 
-export type EditorObject = EditorWall | EditorPushBox | EditorMovingPlatform | EditorExitDoor | EditorPlayerStart | EditorHazardBlock
+export type EditorObject = EditorWall | EditorPolygon | EditorPushBox | EditorMovingPlatform | EditorExitDoor | EditorPlayerStart | EditorHazardBlock
 
 export interface EditorLevelData {
     id: string
@@ -116,6 +136,7 @@ export interface EditorLevelData {
     nextLevel: string
     playerStart: { x: number, y: number }
     walls: EditorWall[]
+    polygons: EditorPolygon[]
     pushBoxes: EditorPushBox[]
     movingPlatforms: EditorMovingPlatform[]
     exitDoors: EditorExitDoor[]
@@ -124,7 +145,7 @@ export interface EditorLevelData {
     updatedAt: number
 }
 
-export type EditorTool = 'select' | 'wall' | 'pushBox' | 'movingPlatform' | 'exitDoor' | 'playerStart' | 'pan' | 'hazardBlock'
+export type EditorTool = 'select' | 'wall' | 'polygon' | 'pushBox' | 'movingPlatform' | 'exitDoor' | 'playerStart' | 'pan' | 'hazardBlock'
 
 export interface PropertyField {
     key: string
@@ -178,6 +199,12 @@ export const OBJECT_PROPERTIES: Record<string, PropertyField[]> = {
         { key: 'width', label: 'Width', type: 'number', min: 20, max: 500 },
         { key: 'height', label: 'Height', type: 'number', min: 20, max: 500 },
     ],
+    polygon: [
+        { key: 'x', label: 'X', type: 'number' },
+        { key: 'y', label: 'Y', type: 'number' },
+        { key: 'angle', label: 'Angle (deg)', type: 'number', min: 0, max: 360 },
+        { key: 'color', label: 'Color', type: 'color' },
+    ],
     playerStart: [
         { key: 'x', label: 'X', type: 'number' },
         { key: 'y', label: 'Y', type: 'number' },
@@ -218,6 +245,17 @@ export const DEFAULT_OBJECTS: Record<string, Partial<EditorObject>> = {
         height: 100,
         color: 'yellow',
         doorPath: 'credits-screen',
+    },
+    polygon: {
+        type: 'polygon',
+        vertices: [
+            { x: -50, y: -25 },
+            { x: 50, y: -25 },
+            { x: 50, y: 25 },
+            { x: -50, y: 25 },
+        ],
+        angle: 0,
+        color: '#000',
     },
     playerStart: {
         type: 'playerStart',

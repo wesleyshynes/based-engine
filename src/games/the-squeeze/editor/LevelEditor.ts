@@ -1,7 +1,7 @@
 import { BasedButton } from "../../../engine/BasedButton"
 import { BasedLevel } from "../../../engine/BasedLevel"
-import { drawBox, drawCircle, drawText, rotateDraw } from "../../../engine/libs/drawHelpers"
-import { EditorLevelData, EditorObject, EditorTool, DEFAULT_OBJECTS, OBJECT_PROPERTIES, EditorWall, EditorPushBox, EditorMovingPlatform, EditorExitDoor, EditorHazardBlock } from "./LevelEditorTypes"
+import { drawBox, drawCircle, drawText, rotateDraw, drawLine, drawPolygon } from "../../../engine/libs/drawHelpers"
+import { EditorLevelData, EditorObject, EditorTool, DEFAULT_OBJECTS, OBJECT_PROPERTIES, EditorWall, EditorPushBox, EditorMovingPlatform, EditorExitDoor, EditorHazardBlock, EditorPolygon, VertexPoint } from "./LevelEditorTypes"
 import { LevelEditorStorage } from "./LevelEditorStorage"
 
 const BG_COLOR = '#1a1a1a'
@@ -11,6 +11,7 @@ const GRID_SIZE = 25
 const TOOL_COLORS: Record<EditorTool, string> = {
     select: '#fff',
     wall: '#222',
+    polygon: '#222',
     pushBox: '#d4c9b2',
     movingPlatform: '#222',
     exitDoor: '#000',
@@ -48,8 +49,17 @@ export class LevelEditor extends BasedLevel {
     placingPreview: { x: number, y: number } | null = null
     
     // Handle dragging
-    activeHandle: string | null = null  // 'n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw', 'minX', 'maxX', 'minY', 'maxY'
+    activeHandle: string | null = null  // 'n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw', 'minX', 'maxX', 'minY', 'maxY', 'vertex-N', 'rotate'
     handleSize: number = 10
+    
+    // Polygon creation state
+    isDrawingPolygon: boolean = false
+    polygonVertices: VertexPoint[] = []
+    lastClickTime: number = 0
+    doubleClickThreshold: number = 300  // ms
+    lastPolygonClickTime: number = 0
+    polygonClickDelay: number = 150  // ms minimum between polygon vertex clicks
+    minVertexDistance: number = 20   // minimum distance between polygon vertices
     
     // UI Elements
     toolButtons: Map<EditorTool, any> = new Map()
@@ -136,22 +146,27 @@ export class LevelEditor extends BasedLevel {
         }
 
         // Tool buttons
-        const tools: EditorTool[] = ['select', 'pan', 'wall', 'pushBox', 'movingPlatform', 'exitDoor', 'playerStart', 'hazardBlock']
+        const tools: EditorTool[] = ['select', 'pan', 'wall', 'polygon', 'pushBox', 'movingPlatform', 'exitDoor', 'playerStart', 'hazardBlock']
         const toolLabels: Record<EditorTool, string> = {
-            select: 'Select',
+            select: 'Sel',
             pan: 'Pan',
             wall: 'Wall',
-            hazardBlock: 'Hazard',
+            polygon: 'Poly',
+            hazardBlock: 'Hazd',
             pushBox: 'Box',
-            movingPlatform: 'Platform',
+            movingPlatform: 'Plat',
             exitDoor: 'Exit',
             playerStart: 'Start',
         }
         
         tools.forEach((tool, index) => {
-            const btn = this.createButton(toolLabels[tool], 10 + index * 75, 55, 70, 30)
+            const btn = this.createButton(toolLabels[tool], 10 + index * 55, 55, 50, 30)
             btn.fillColor = this.currentTool === tool ? TOOL_BUTTON_HOVER : TOOL_BUTTON_FILL
             btn.clickFunction = () => {
+                // Cancel polygon drawing if switching away
+                if (this.isDrawingPolygon && tool !== 'polygon') {
+                    this.cancelPolygonDrawing()
+                }
                 this.currentTool = tool
                 this.selectedObject = null
                 this.showPropertyPanel = false
@@ -263,6 +278,9 @@ export class LevelEditor extends BasedLevel {
             case 'wall':
                 this.currentLevel.walls = this.currentLevel.walls.filter(w => w.id !== obj.id)
                 break
+            case 'polygon':
+                this.currentLevel.polygons = this.currentLevel.polygons.filter(p => p.id !== obj.id)
+                break
             case 'pushBox':
                 this.currentLevel.pushBoxes = this.currentLevel.pushBoxes.filter(b => b.id !== obj.id)
                 break
@@ -271,6 +289,9 @@ export class LevelEditor extends BasedLevel {
                 break
             case 'exitDoor':
                 this.currentLevel.exitDoors = this.currentLevel.exitDoors.filter(d => d.id !== obj.id)
+                break
+            case 'hazardBlock':
+                this.currentLevel.hazardBlocks = this.currentLevel.hazardBlocks.filter(h => h.id !== obj.id)
                 break
         }
         
@@ -320,15 +341,24 @@ export class LevelEditor extends BasedLevel {
             this.currentTool = this.currentTool === 'pan' ? 'select' : 'pan'
         }
         
-        // Escape to deselect
+        // Enter to finalize polygon drawing
+        if (keys['Enter'] && this.isDrawingPolygon) {
+            this.finalizePolygon()
+        }
+        
+        // Escape to deselect or cancel polygon drawing
         if (keys['Escape']) {
-            this.selectedObject = null
-            this.showPropertyPanel = false
-            this.showLevelList = false
-            this.showExportPanel = false
-            this.showLevelSettings = false
-            this.editingProperty = null
-            this.editingLevelSetting = null
+            if (this.isDrawingPolygon) {
+                this.cancelPolygonDrawing()
+            } else {
+                this.selectedObject = null
+                this.showPropertyPanel = false
+                this.showLevelList = false
+                this.showExportPanel = false
+                this.showLevelSettings = false
+                this.editingProperty = null
+                this.editingLevelSetting = null
+            }
         }
     }
 
@@ -362,6 +392,9 @@ export class LevelEditor extends BasedLevel {
             if (this.currentTool === 'pan') {
                 this.isPanning = true
                 this.panStart = { x: mouse.x, y: mouse.y }
+            } else if (this.currentTool === 'polygon') {
+                // Handle polygon drawing
+                this.handlePolygonClick(worldPos.x, worldPos.y)
             } else if (this.currentTool === 'select') {
                 // Try to select an object
                 const clicked = this.getObjectAtPosition(worldPos.x, worldPos.y)
@@ -440,6 +473,34 @@ export class LevelEditor extends BasedLevel {
         
         const handleRadius = this.handleSize / this.zoom
         
+        // For polygons, check vertex handles and rotation handle
+        if (this.selectedObject.type === 'polygon') {
+            const poly = this.selectedObject as EditorPolygon
+            const angleRad = (poly.angle || 0) * Math.PI / 180
+            const cosA = Math.cos(angleRad)
+            const sinA = Math.sin(angleRad)
+            
+            // Check rotation handle (positioned above the polygon)
+            const rotHandleX = poly.x
+            const rotHandleY = poly.y - 60
+            if (Math.abs(x - rotHandleX) < handleRadius && Math.abs(y - rotHandleY) < handleRadius) {
+                return 'rotate'
+            }
+            
+            // Check vertex handles
+            for (let i = 0; i < poly.vertices.length; i++) {
+                const v = poly.vertices[i]
+                // Apply rotation to vertex position
+                const rotX = v.x * cosA - v.y * sinA
+                const rotY = v.x * sinA + v.y * cosA
+                const worldVX = poly.x + rotX
+                const worldVY = poly.y + rotY
+                if (Math.abs(x - worldVX) < handleRadius && Math.abs(y - worldVY) < handleRadius) {
+                    return `vertex-${i}`
+                }
+            }
+        }
+        
         // For moving platforms, check the min/max endpoint handles first
         if (this.selectedObject.type === 'movingPlatform') {
             const plat = this.selectedObject as EditorMovingPlatform
@@ -481,6 +542,41 @@ export class LevelEditor extends BasedLevel {
         
         const snappedX = Math.round(worldX / GRID_SIZE) * GRID_SIZE
         const snappedY = Math.round(worldY / GRID_SIZE) * GRID_SIZE
+        
+        // Handle polygon vertex dragging and rotation
+        if (this.selectedObject.type === 'polygon') {
+            const poly = this.selectedObject as EditorPolygon
+            
+            if (this.activeHandle === 'rotate') {
+                // Calculate angle from center to mouse position
+                const dx = worldX - poly.x
+                const dy = worldY - poly.y
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI + 90  // +90 because handle is above
+                poly.angle = Math.round(angle / 5) * 5  // Snap to 5 degree increments
+                return
+            }
+            
+            if (this.activeHandle.startsWith('vertex-')) {
+                const vertexIndex = parseInt(this.activeHandle.split('-')[1])
+                if (vertexIndex >= 0 && vertexIndex < poly.vertices.length) {
+                    // Convert world position to local vertex position (relative to polygon center)
+                    // Account for current rotation
+                    const angleRad = (poly.angle || 0) * Math.PI / 180
+                    const cosA = Math.cos(-angleRad)  // Negative for inverse rotation
+                    const sinA = Math.sin(-angleRad)
+                    
+                    const localX = snappedX - poly.x
+                    const localY = snappedY - poly.y
+                    
+                    // Apply inverse rotation to get local vertex coordinates
+                    poly.vertices[vertexIndex] = {
+                        x: localX * cosA - localY * sinA,
+                        y: localX * sinA + localY * cosA
+                    }
+                }
+                return
+            }
+        }
         
         // Handle moving platform endpoint dragging
         if (this.selectedObject.type === 'movingPlatform') {
@@ -623,6 +719,11 @@ export class LevelEditor extends BasedLevel {
             if (this.isPointInRect(x, y, wall)) return wall
         }
 
+        // Check polygons
+        for (const poly of (this.currentLevel.polygons || [])) {
+            if (this.isPointInPolygon(x, y, poly)) return poly
+        }
+
         // Check hazard blocks
         for (const hazard of this.currentLevel.hazardBlocks) {
             if (this.isPointInRect(x, y, hazard)) return hazard
@@ -635,6 +736,131 @@ export class LevelEditor extends BasedLevel {
         const halfW = obj.width / 2
         const halfH = obj.height / 2
         return x >= obj.x - halfW && x <= obj.x + halfW && y >= obj.y - halfH && y <= obj.y + halfH
+    }
+    
+    isPointInPolygon(x: number, y: number, poly: EditorPolygon): boolean {
+        // Transform point to polygon local coordinates (accounting for rotation)
+        const angleRad = (poly.angle || 0) * Math.PI / 180
+        const cosA = Math.cos(-angleRad)
+        const sinA = Math.sin(-angleRad)
+        
+        const localX = (x - poly.x) * cosA - (y - poly.y) * sinA
+        const localY = (x - poly.x) * sinA + (y - poly.y) * cosA
+        
+        // Ray casting algorithm for point-in-polygon
+        const vertices = poly.vertices
+        let inside = false
+        
+        for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
+            const xi = vertices[i].x, yi = vertices[i].y
+            const xj = vertices[j].x, yj = vertices[j].y
+            
+            if (((yi > localY) !== (yj > localY)) &&
+                (localX < (xj - xi) * (localY - yi) / (yj - yi) + xi)) {
+                inside = !inside
+            }
+        }
+        
+        return inside
+    }
+
+    // Polygon creation methods
+    handlePolygonClick(worldX: number, worldY: number) {
+        const snappedX = Math.round(worldX / GRID_SIZE) * GRID_SIZE
+        const snappedY = Math.round(worldY / GRID_SIZE) * GRID_SIZE
+        
+        const now = Date.now()
+        
+        // Check for click delay (prevent rapid clicks)
+        if ((now - this.lastPolygonClickTime) < this.polygonClickDelay) {
+            return
+        }
+        
+        const isDoubleClick = (now - this.lastClickTime) < this.doubleClickThreshold
+        this.lastClickTime = now
+        this.lastPolygonClickTime = now
+        
+        if (isDoubleClick && this.polygonVertices.length >= 3) {
+            // Double-click to finalize
+            this.finalizePolygon()
+            return
+        }
+        
+        // Check minimum distance from previous vertex
+        if (this.polygonVertices.length > 0) {
+            const lastVertex = this.polygonVertices[this.polygonVertices.length - 1]
+            const dist = Math.sqrt(Math.pow(snappedX - lastVertex.x, 2) + Math.pow(snappedY - lastVertex.y, 2))
+            if (dist < this.minVertexDistance) {
+                return  // Too close to the last point, ignore
+            }
+        }
+        
+        // Start or continue drawing polygon
+        this.isDrawingPolygon = true
+        this.polygonVertices.push({ x: snappedX, y: snappedY })
+        
+        // Auto-finalize if we have a good shape and click near the first point
+        if (this.polygonVertices.length >= 3) {
+            const first = this.polygonVertices[0]
+            const dist = Math.sqrt(Math.pow(snappedX - first.x, 2) + Math.pow(snappedY - first.y, 2))
+            if (dist < GRID_SIZE * 2) {
+                // Remove the last duplicate point and finalize
+                this.polygonVertices.pop()
+                this.finalizePolygon()
+            }
+        }
+    }
+    
+    finalizePolygon() {
+        if (!this.currentLevel || this.polygonVertices.length < 3) {
+            this.cancelPolygonDrawing()
+            return
+        }
+        
+        // Calculate center of polygon
+        let centerX = 0, centerY = 0
+        this.polygonVertices.forEach(v => {
+            centerX += v.x
+            centerY += v.y
+        })
+        centerX /= this.polygonVertices.length
+        centerY /= this.polygonVertices.length
+        
+        // Snap center to grid
+        centerX = Math.round(centerX / GRID_SIZE) * GRID_SIZE
+        centerY = Math.round(centerY / GRID_SIZE) * GRID_SIZE
+        
+        // Convert vertices to be relative to center
+        const localVertices = this.polygonVertices.map(v => ({
+            x: v.x - centerX,
+            y: v.y - centerY
+        }))
+        
+        const poly: EditorPolygon = {
+            id: LevelEditorStorage.generateId(),
+            type: 'polygon',
+            x: centerX,
+            y: centerY,
+            vertices: localVertices,
+            angle: 0,
+            color: '#000'
+        }
+        
+        this.currentLevel.polygons.push(poly)
+        this.selectedObject = poly
+        this.showPropertyPanel = true
+        this.saveCurrentLevel()
+        
+        // Reset polygon drawing state
+        this.isDrawingPolygon = false
+        this.polygonVertices = []
+        
+        this.showMessage('Polygon created!')
+    }
+    
+    cancelPolygonDrawing() {
+        this.isDrawingPolygon = false
+        this.polygonVertices = []
     }
 
     placeObject(x: number, y: number) {
@@ -841,6 +1067,11 @@ export class LevelEditor extends BasedLevel {
             this.drawEditorRect(wall, wall.color, this.selectedObject?.id === wall.id)
         })
 
+        // Draw polygons
+        ;(this.currentLevel.polygons || []).forEach(poly => {
+            this.drawEditorPolygon(poly, this.selectedObject?.id === poly.id)
+        })
+
         // Draw push boxes
         this.currentLevel.pushBoxes.forEach(box => {
             this.drawEditorRect(box, '#d4c9b2', this.selectedObject?.id === box.id)
@@ -912,7 +1143,7 @@ export class LevelEditor extends BasedLevel {
         })
 
         // Draw placement preview
-        if (this.placingPreview && this.currentTool !== 'select' && this.currentTool !== 'pan') {
+        if (this.placingPreview && this.currentTool !== 'select' && this.currentTool !== 'pan' && this.currentTool !== 'polygon') {
             const previewScreen = this.worldToScreen(this.placingPreview.x, this.placingPreview.y)
             ctx.globalAlpha = 0.5
             
@@ -933,6 +1164,11 @@ export class LevelEditor extends BasedLevel {
             }
             
             ctx.globalAlpha = 1
+        }
+        
+        // Draw polygon being created
+        if (this.isDrawingPolygon && this.polygonVertices.length > 0) {
+            this.drawPolygonInProgress()
         }
     }
 
@@ -995,6 +1231,175 @@ export class LevelEditor extends BasedLevel {
             ctx.strokeStyle = handleBorder
             ctx.lineWidth = 1
             ctx.strokeRect(edge.x - size/2, edge.y - size/2, size, size)
+        })
+    }
+
+    drawEditorPolygon(poly: EditorPolygon, selected: boolean) {
+        const ctx = this.gameRef.ctx
+        const pos = this.worldToScreen(poly.x, poly.y)
+        const angleRad = (poly.angle || 0) * Math.PI / 180
+        
+        ctx.save()
+        ctx.translate(pos.x, pos.y)
+        ctx.rotate(angleRad)
+        
+        // Draw filled polygon
+        ctx.beginPath()
+        poly.vertices.forEach((v, i) => {
+            const vx = v.x * this.zoom
+            const vy = v.y * this.zoom
+            if (i === 0) {
+                ctx.moveTo(vx, vy)
+            } else {
+                ctx.lineTo(vx, vy)
+            }
+        })
+        ctx.closePath()
+        ctx.fillStyle = poly.color || '#222'
+        ctx.fill()
+        ctx.strokeStyle = selected ? '#fff' : '#666'
+        ctx.lineWidth = selected ? 3 : 1
+        ctx.stroke()
+        
+        ctx.restore()
+        
+        // Draw vertex handles and rotation handle if selected
+        if (selected) {
+            this.drawPolygonHandles(poly)
+        }
+    }
+    
+    drawPolygonHandles(poly: EditorPolygon) {
+        const ctx = this.gameRef.ctx
+        const pos = this.worldToScreen(poly.x, poly.y)
+        const angleRad = (poly.angle || 0) * Math.PI / 180
+        const cosA = Math.cos(angleRad)
+        const sinA = Math.sin(angleRad)
+        const size = this.handleSize
+        
+        const handleColor = '#81B622'
+        const handleBorder = '#fff'
+        
+        // Draw vertex handles
+        poly.vertices.forEach((v) => {
+            // Apply rotation to get world position
+            const rotX = v.x * cosA - v.y * sinA
+            const rotY = v.x * sinA + v.y * cosA
+            const screenPos = this.worldToScreen(poly.x + rotX, poly.y + rotY)
+            
+            ctx.fillStyle = handleColor
+            ctx.fillRect(screenPos.x - size/2, screenPos.y - size/2, size, size)
+            ctx.strokeStyle = handleBorder
+            ctx.lineWidth = 1
+            ctx.strokeRect(screenPos.x - size/2, screenPos.y - size/2, size, size)
+        })
+        
+        // Draw rotation handle (above the polygon center)
+        const rotHandleY = pos.y - 60 * this.zoom
+        ctx.beginPath()
+        ctx.moveTo(pos.x, pos.y)
+        ctx.lineTo(pos.x, rotHandleY)
+        ctx.strokeStyle = '#88f'
+        ctx.lineWidth = 2
+        ctx.stroke()
+        
+        ctx.beginPath()
+        ctx.arc(pos.x, rotHandleY, size, 0, Math.PI * 2)
+        ctx.fillStyle = '#88f'
+        ctx.fill()
+        ctx.strokeStyle = handleBorder
+        ctx.lineWidth = 1
+        ctx.stroke()
+        
+        // Label
+        drawText({
+            c: ctx,
+            x: pos.x + 15,
+            y: rotHandleY + 4,
+            align: 'left',
+            fillColor: '#88f',
+            fontSize: 10,
+            fontFamily: 'sans-serif',
+            weight: 'bold',
+            style: '',
+            text: 'ROT'
+        })
+    }
+    
+    drawPolygonInProgress() {
+        const ctx = this.gameRef.ctx
+        const mouse = this.gameRef.mouseInfo
+        const mouseWorld = this.screenToWorld(mouse.x, mouse.y)
+        const snappedMouse = {
+            x: Math.round(mouseWorld.x / GRID_SIZE) * GRID_SIZE,
+            y: Math.round(mouseWorld.y / GRID_SIZE) * GRID_SIZE
+        }
+        
+        ctx.globalAlpha = 0.7
+        
+        // Draw lines connecting vertices
+        ctx.beginPath()
+        this.polygonVertices.forEach((v, i) => {
+            const screenPos = this.worldToScreen(v.x, v.y)
+            if (i === 0) {
+                ctx.moveTo(screenPos.x, screenPos.y)
+            } else {
+                ctx.lineTo(screenPos.x, screenPos.y)
+            }
+        })
+        
+        // Line to current mouse position
+        const mouseScreen = this.worldToScreen(snappedMouse.x, snappedMouse.y)
+        ctx.lineTo(mouseScreen.x, mouseScreen.y)
+        
+        ctx.strokeStyle = '#81B622'
+        ctx.lineWidth = 2
+        ctx.stroke()
+        
+        // Draw vertices as circles
+        this.polygonVertices.forEach((v, i) => {
+            const screenPos = this.worldToScreen(v.x, v.y)
+            drawCircle({
+                c: ctx,
+                x: screenPos.x,
+                y: screenPos.y,
+                radius: 6,
+                fillColor: i === 0 ? '#ff0' : '#81B622',
+                strokeColor: '#fff',
+                strokeWidth: 2
+            })
+        })
+        
+        // Preview point at mouse
+        drawCircle({
+            c: ctx,
+            x: mouseScreen.x,
+            y: mouseScreen.y,
+            radius: 6,
+            fillColor: '#81B622',
+            strokeColor: '#fff',
+            strokeWidth: 2
+        })
+        
+        ctx.globalAlpha = 1
+        
+        // Instruction text
+        const vertCount = this.polygonVertices.length
+        const instructionText = vertCount < 3 
+            ? `Click to add points (${vertCount}/3 min)` 
+            : `Click to add, double-click or Enter to finish, Esc to cancel`
+        
+        drawText({
+            c: ctx,
+            x: this.gameRef.gameWidth / 2,
+            y: this.gameRef.gameHeight - 40,
+            align: 'center',
+            fillColor: '#81B622',
+            fontSize: 14,
+            fontFamily: 'sans-serif',
+            weight: 'bold',
+            style: '',
+            text: instructionText
         })
     }
 

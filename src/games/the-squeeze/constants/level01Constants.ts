@@ -23,6 +23,20 @@ export const LEVEL_01: LevelData = {
         { x: 700, y: 430, width: 200, height: 50, color: '#000' },
         { x: 625, y: 555, width: 50, height: 90, color: '#000' },
     ],
+    polygons: [
+        // Triangle obstacle near the center
+        {
+            x: 550,
+            y: 300,
+            vertices: [
+                { x: 0, y: -40 },
+                { x: 35, y: 30 },
+                { x: -35, y: 30 },
+            ],
+            angle: 0,
+            color: '#222'
+        },
+    ],
     pushBoxes: [
         { x: 545, y: 450, width: 90, height: 90, color: 'red', sizeToMove: 45 },
     ],

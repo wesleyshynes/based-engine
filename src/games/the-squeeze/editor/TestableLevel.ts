@@ -13,6 +13,8 @@ export class TestableLevel extends SqueezeBaseLevel {
     levelWalls: any[] = []
     _levelBoundaries: any[] = []
     _levelWalls: any[] = []
+    levelPolygons: any[] = []
+    _levelPolygons: any[] = []
     pushBoxes: any[] = []
     _pushBoxes: any[] = []
     movingPlatforms: any[] = []
@@ -56,6 +58,15 @@ export class TestableLevel extends SqueezeBaseLevel {
                 width: wall.width,
                 height: wall.height,
                 color: wall.color,
+            }))
+
+            // Map polygons
+            this._levelPolygons = (levelData.polygons || []).map(poly => ({
+                x: poly.x,
+                y: poly.y,
+                vertices: poly.vertices,
+                angle: poly.angle,
+                color: poly.color,
             }))
 
             // Map push boxes

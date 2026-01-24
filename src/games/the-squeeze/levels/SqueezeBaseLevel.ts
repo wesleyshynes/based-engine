@@ -6,6 +6,7 @@ import { MainPlayer } from "../entities/mainPlayer";
 import { PushableBox } from "../entities/pushableBox";
 import { ExitDoor } from "../entities/exitDoor";
 import { LevelWall } from "../entities/levelWall";
+import { LevelPolygon } from "../entities/levelPolygon";
 import { HazardBlock } from "../entities/hazardBlock";
 import { TouchKnob } from "../../../engine/controls/TouchKnob";
 import { MovingPlatform } from "../entities/movingPlatform";
@@ -72,6 +73,8 @@ export class SqueezeBaseLevel extends BasedLevel {
     levelWalls: any[] = []
     _levelBoundaries: any[] = []
     _levelWalls: any[] = []
+    levelPolygons: any[] = []
+    _levelPolygons: any[] = []
     pushBoxes: any[] = []
     _pushBoxes: any[] = []
     movingPlatforms: any[] = []
@@ -259,6 +262,7 @@ export class SqueezeBaseLevel extends BasedLevel {
         ])
 
         this.setupWalls()
+        this.setupPolygons()
         this.setupPushBoxes()
         this.setupMovingPlatforms()
         this.setupExitDoors()
@@ -422,6 +426,11 @@ export class SqueezeBaseLevel extends BasedLevel {
             wall.draw()
         })
 
+        // draw level polygons
+        this.levelPolygons.forEach((poly: any) => {
+            poly.draw()
+        })
+
         // draw push boxes
         this.pushBoxes.forEach((box: any) => {
             box.draw()
@@ -485,6 +494,24 @@ export class SqueezeBaseLevel extends BasedLevel {
             tempObj.y = obj.y
             tempObj.width = obj.width
             tempObj.height = obj.height
+            tempObj.color = obj.color
+            tempObj.initialize()
+            this.gameRef.addToWorld(tempObj.body)
+            return tempObj
+        })
+    }
+
+    setupPolygons() {
+        this.levelPolygons = [
+            ...this._levelPolygons,
+        ].map((obj: any, idx: number) => {
+            const tempObj = new LevelPolygon({
+                key: `polygon-${idx}`, gameRef: this.gameRef
+            })
+            tempObj.x = obj.x
+            tempObj.y = obj.y
+            tempObj.vertices = obj.vertices || []
+            tempObj.angle = obj.angle // (obj.angle || 0) * Math.PI / 180  // Convert degrees to radians
             tempObj.color = obj.color
             tempObj.initialize()
             this.gameRef.addToWorld(tempObj.body)
