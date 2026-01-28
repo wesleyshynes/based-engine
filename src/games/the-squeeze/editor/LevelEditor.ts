@@ -366,9 +366,15 @@ export class LevelEditor extends BasedLevel {
         const mouse = this.gameRef.mouseInfo
         const worldPos = this.screenToWorld(mouse.x, mouse.y)
         
-        // Update placing preview
+        // Update placing preview - snap the top-left corner position, then offset to center
         if (this.currentTool !== 'select' && this.currentTool !== 'pan') {
-            this.placingPreview = { x: Math.round(worldPos.x / GRID_SIZE) * GRID_SIZE, y: Math.round(worldPos.y / GRID_SIZE) * GRID_SIZE }
+            const defaults = DEFAULT_OBJECTS[this.currentTool] as any
+            const previewW = defaults?.width || 100
+            const previewH = defaults?.height || 50
+            // Snap to grid (this will be the center position)
+            const snappedX = Math.round(worldPos.x / GRID_SIZE) * GRID_SIZE
+            const snappedY = Math.round(worldPos.y / GRID_SIZE) * GRID_SIZE
+            this.placingPreview = { x: snappedX, y: snappedY }
         } else {
             this.placingPreview = null
         }
@@ -595,57 +601,96 @@ export class LevelEditor extends BasedLevel {
         }
         
         // Handle resize for objects with width/height
+        // Resizing anchors the opposite edge - dragging east edge keeps west edge fixed, etc.
         if ('width' in this.selectedObject && 'height' in this.selectedObject) {
             const obj = this.selectedObject as any
             const minSize = 20
             
+            // Calculate current edges
+            const currentLeft = obj.x - obj.width / 2
+            const currentRight = obj.x + obj.width / 2
+            const currentTop = obj.y - obj.height / 2
+            const currentBottom = obj.y + obj.height / 2
+            
             switch (this.activeHandle) {
                 case 'e': {
-                    const newWidth = Math.max(minSize, (snappedX - obj.x) * 2)
+                    // East handle: anchor west edge
+                    const newRight = snappedX
+                    const newWidth = Math.max(minSize, newRight - currentLeft)
                     obj.width = newWidth
+                    obj.x = currentLeft + newWidth / 2
                     break
                 }
                 case 'w': {
-                    const newWidth = Math.max(minSize, (obj.x - snappedX) * 2)
+                    // West handle: anchor east edge
+                    const newLeft = snappedX
+                    const newWidth = Math.max(minSize, currentRight - newLeft)
                     obj.width = newWidth
+                    obj.x = currentRight - newWidth / 2
                     break
                 }
                 case 'n': {
-                    const newHeight = Math.max(minSize, (obj.y - snappedY) * 2)
+                    // North handle: anchor south edge
+                    const newTop = snappedY
+                    const newHeight = Math.max(minSize, currentBottom - newTop)
                     obj.height = newHeight
+                    obj.y = currentBottom - newHeight / 2
                     break
                 }
                 case 's': {
-                    const newHeight = Math.max(minSize, (snappedY - obj.y) * 2)
+                    // South handle: anchor north edge
+                    const newBottom = snappedY
+                    const newHeight = Math.max(minSize, newBottom - currentTop)
                     obj.height = newHeight
+                    obj.y = currentTop + newHeight / 2
                     break
                 }
                 case 'ne': {
-                    const newWidth = Math.max(minSize, (snappedX - obj.x) * 2)
-                    const newHeight = Math.max(minSize, (obj.y - snappedY) * 2)
+                    // Northeast corner: anchor southwest corner
+                    const newRight = snappedX
+                    const newTop = snappedY
+                    const newWidth = Math.max(minSize, newRight - currentLeft)
+                    const newHeight = Math.max(minSize, currentBottom - newTop)
                     obj.width = newWidth
                     obj.height = newHeight
+                    obj.x = currentLeft + newWidth / 2
+                    obj.y = currentBottom - newHeight / 2
                     break
                 }
                 case 'nw': {
-                    const newWidth = Math.max(minSize, (obj.x - snappedX) * 2)
-                    const newHeight = Math.max(minSize, (obj.y - snappedY) * 2)
+                    // Northwest corner: anchor southeast corner
+                    const newLeft = snappedX
+                    const newTop = snappedY
+                    const newWidth = Math.max(minSize, currentRight - newLeft)
+                    const newHeight = Math.max(minSize, currentBottom - newTop)
                     obj.width = newWidth
                     obj.height = newHeight
+                    obj.x = currentRight - newWidth / 2
+                    obj.y = currentBottom - newHeight / 2
                     break
                 }
                 case 'se': {
-                    const newWidth = Math.max(minSize, (snappedX - obj.x) * 2)
-                    const newHeight = Math.max(minSize, (snappedY - obj.y) * 2)
+                    // Southeast corner: anchor northwest corner
+                    const newRight = snappedX
+                    const newBottom = snappedY
+                    const newWidth = Math.max(minSize, newRight - currentLeft)
+                    const newHeight = Math.max(minSize, newBottom - currentTop)
                     obj.width = newWidth
                     obj.height = newHeight
+                    obj.x = currentLeft + newWidth / 2
+                    obj.y = currentTop + newHeight / 2
                     break
                 }
                 case 'sw': {
-                    const newWidth = Math.max(minSize, (obj.x - snappedX) * 2)
-                    const newHeight = Math.max(minSize, (snappedY - obj.y) * 2)
+                    // Southwest corner: anchor northeast corner
+                    const newLeft = snappedX
+                    const newBottom = snappedY
+                    const newWidth = Math.max(minSize, currentRight - newLeft)
+                    const newHeight = Math.max(minSize, newBottom - currentTop)
                     obj.width = newWidth
                     obj.height = newHeight
+                    obj.x = currentRight - newWidth / 2
+                    obj.y = currentTop + newHeight / 2
                     break
                 }
             }
