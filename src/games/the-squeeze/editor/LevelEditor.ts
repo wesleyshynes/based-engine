@@ -422,7 +422,10 @@ export class LevelEditor extends BasedLevel {
                 if (this.placingPreview) {
                     this.placeObject(this.placingPreview.x, this.placingPreview.y)
                 } else {
-                    this.placeObject(worldPos.x, worldPos.y)
+                    // Fallback: snap coordinates before placing (shouldn't normally reach here)
+                    const snappedX = Math.round(worldPos.x / GRID_SIZE) * GRID_SIZE
+                    const snappedY = Math.round(worldPos.y / GRID_SIZE) * GRID_SIZE
+                    this.placeObject(snappedX, snappedY)
                 }
                 // Set isDragging to prevent placing multiple objects while mouse is held
                 this.isDragging = true
@@ -916,8 +919,8 @@ export class LevelEditor extends BasedLevel {
     placeObject(x: number, y: number) {
         if (!this.currentLevel) return
 
-        const snappedX = Math.round(x / GRID_SIZE) * GRID_SIZE
-        const snappedY = Math.round(y / GRID_SIZE) * GRID_SIZE
+        // Use coordinates directly - they should already be snapped by the caller
+        // Re-snapping can cause off-by-one errors due to floating point precision
         const id = LevelEditorStorage.generateId()
 
         switch (this.currentTool) {
@@ -925,8 +928,8 @@ export class LevelEditor extends BasedLevel {
                 const wall: EditorWall = {
                     id,
                     type: 'wall',
-                    x: snappedX,
-                    y: snappedY,
+                    x: x,
+                    y: y,
                     width: 100,
                     height: 50,
                     color: '#000'
@@ -939,8 +942,8 @@ export class LevelEditor extends BasedLevel {
                 const box: EditorPushBox = {
                     id,
                     type: 'pushBox',
-                    x: snappedX,
-                    y: snappedY,
+                    x: x,
+                    y: y,
                     width: 90,
                     height: 90,
                     color: 'red',
@@ -954,8 +957,8 @@ export class LevelEditor extends BasedLevel {
                 const plat: EditorMovingPlatform = {
                     id,
                     type: 'movingPlatform',
-                    x: snappedX,
-                    y: snappedY,
+                    x: x,
+                    y: y,
                     width: 100,
                     height: 50,
                     color: 'purple',
@@ -963,10 +966,10 @@ export class LevelEditor extends BasedLevel {
                     yDirection: 0,
                     xSpeed: 3,
                     ySpeed: 0,
-                    minX: snappedX - 100,
-                    maxX: snappedX + 100,
-                    minY: snappedY,
-                    maxY: snappedY
+                    minX: x - 100,
+                    maxX: x + 100,
+                    minY: y,
+                    maxY: y
                 }
                 this.currentLevel.movingPlatforms.push(plat)
                 this.selectedObject = plat
@@ -976,8 +979,8 @@ export class LevelEditor extends BasedLevel {
                 const door: EditorExitDoor = {
                     id,
                     type: 'exitDoor',
-                    x: snappedX,
-                    y: snappedY,
+                    x: x,
+                    y: y,
                     width: 100,
                     height: 100,
                     color: 'yellow',
@@ -991,8 +994,8 @@ export class LevelEditor extends BasedLevel {
                 const hazard: EditorHazardBlock = {
                     id,
                     type: 'hazardBlock',
-                    x: snappedX,
-                    y: snappedY,
+                    x: x,
+                    y: y,
                     width: 100,
                     height: 50,
                 }
@@ -1001,8 +1004,8 @@ export class LevelEditor extends BasedLevel {
                 break
 
             case 'playerStart':
-                this.currentLevel.playerStart = { x: snappedX, y: snappedY }
-                this.selectedObject = { id: 'playerStart', type: 'playerStart', x: snappedX, y: snappedY }
+                this.currentLevel.playerStart = { x: x, y: y }
+                this.selectedObject = { id: 'playerStart', type: 'playerStart', x: x, y: y }
                 break
         }
 
