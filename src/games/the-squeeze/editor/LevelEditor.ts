@@ -417,8 +417,13 @@ export class LevelEditor extends BasedLevel {
                     this.showPropertyPanel = false
                 }
             } else {
-                // Place new object
-                this.placeObject(worldPos.x, worldPos.y)
+                // Place new object at the preview position (already snapped to grid)
+                // This ensures the object is placed exactly where the preview shows
+                if (this.placingPreview) {
+                    this.placeObject(this.placingPreview.x, this.placingPreview.y)
+                } else {
+                    this.placeObject(worldPos.x, worldPos.y)
+                }
                 // Set isDragging to prevent placing multiple objects while mouse is held
                 this.isDragging = true
             }
