@@ -246,6 +246,11 @@ export const DEFAULT_OBJECTS: Record<string, Partial<EditorObject>> = {
         color: 'yellow',
         doorPath: 'credits-screen',
     },
+    hazardBlock: {
+        type: 'hazardBlock',
+        width: 100,
+        height: 50,
+    },
     polygon: {
         type: 'polygon',
         vertices: [

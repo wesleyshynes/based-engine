@@ -28,7 +28,7 @@ const TOOL_BUTTON_FILL = '#333'
 const TOOL_BUTTON_HOVER = '#555'
 
 export class LevelEditor extends BasedLevel {
-    
+
     // Camera/Viewport
     cameraX: number = 0
     cameraY: number = 0
@@ -36,10 +36,10 @@ export class LevelEditor extends BasedLevel {
     panSpeed: number = 10
     isPanning: boolean = false
     panStart: { x: number, y: number } = { x: 0, y: 0 }
-    
+
     // Level Data
     currentLevel: EditorLevelData | null = null
-    
+
     // Editor State
     currentTool: EditorTool = 'select'
     selectedObject: EditorObject | null = null
@@ -47,11 +47,11 @@ export class LevelEditor extends BasedLevel {
     dragOffset: { x: number, y: number } = { x: 0, y: 0 }
     isPlacing: boolean = false
     placingPreview: { x: number, y: number } | null = null
-    
+
     // Handle dragging
     activeHandle: string | null = null  // 'n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw', 'minX', 'maxX', 'minY', 'maxY', 'vertex-N', 'rotate'
     handleSize: number = 10
-    
+
     // Polygon creation state
     isDrawingPolygon: boolean = false
     polygonVertices: VertexPoint[] = []
@@ -60,7 +60,7 @@ export class LevelEditor extends BasedLevel {
     lastPolygonClickTime: number = 0
     polygonClickDelay: number = 150  // ms minimum between polygon vertex clicks
     minVertexDistance: number = 20   // minimum distance between polygon vertices
-    
+
     // UI Elements
     toolButtons: Map<EditorTool, any> = new Map()
     backButton: any
@@ -71,18 +71,18 @@ export class LevelEditor extends BasedLevel {
     loadButton: any
     deleteObjectButton: any
     levelSettingsButton: any
-    
+
     // Panels
     showPropertyPanel: boolean = false
     showLevelList: boolean = false
     showExportPanel: boolean = false
     showLevelSettings: boolean = false
     savedLevels: EditorLevelData[] = []
-    
+
     // Property editing
     editingProperty: string | null = null
     propertyInputValue: string = ''
-    
+
     // Level settings editing
     editingLevelSetting: string | null = null
     levelSettingInputValue: string = ''
@@ -100,7 +100,7 @@ export class LevelEditor extends BasedLevel {
         this.gameRef.cameraZoom = 1
         this.cameraX = 0
         this.cameraY = 0
-        
+
         // Load current level or create new
         const currentId = LevelEditorStorage.getCurrentLevelId()
         if (currentId) {
@@ -111,25 +111,25 @@ export class LevelEditor extends BasedLevel {
             LevelEditorStorage.saveLevel(this.currentLevel)
             LevelEditorStorage.setCurrentLevelId(this.currentLevel.id)
         }
-        
+
         this.savedLevels = LevelEditorStorage.getAllLevels()
-        
+
         this.setupUI()
         this.onResize()
-        
+
         // Center camera on player start position
         if (this.currentLevel) {
             this.centerOnPlayerStart()
         }
     }
-    
+
     centerOnPlayerStart() {
         if (!this.currentLevel) return
         const ps = this.currentLevel.playerStart
         this.cameraX = this.gameRef.gameWidth / 2 - ps.x * this.zoom
         this.cameraY = this.gameRef.gameHeight / 2 - ps.y * this.zoom
     }
-    
+
     removeExportTextareas() {
         const textarea1 = document.getElementById('export-constants')
         if (textarea1) textarea1.remove()
@@ -158,7 +158,7 @@ export class LevelEditor extends BasedLevel {
             exitDoor: 'Exit',
             playerStart: 'Start',
         }
-        
+
         tools.forEach((tool, index) => {
             const btn = this.createButton(toolLabels[tool], 10 + index * 55, 55, 50, 30)
             btn.fillColor = this.currentTool === tool ? TOOL_BUTTON_HOVER : TOOL_BUTTON_FILL
@@ -170,6 +170,10 @@ export class LevelEditor extends BasedLevel {
                 this.currentTool = tool
                 this.selectedObject = null
                 this.showPropertyPanel = false
+                // Reset any drag/handle state to prevent stale state affecting new tool
+                this.isDragging = false
+                this.activeHandle = null
+                this.dragOffset = { x: 0, y: 0 }
                 this.updateToolButtonColors()
             }
             this.toolButtons.set(tool, btn)
@@ -177,7 +181,7 @@ export class LevelEditor extends BasedLevel {
 
         // Action buttons (top right)
         const rightX = this.gameRef.gameWidth - 75
-        
+
         this.saveButton = this.createButton('Save', rightX, 10, 65, 35)
         this.saveButton.clickFunction = () => {
             this.saveCurrentLevel()
@@ -294,7 +298,7 @@ export class LevelEditor extends BasedLevel {
                 this.currentLevel.hazardBlocks = this.currentLevel.hazardBlocks.filter(h => h.id !== obj.id)
                 break
         }
-        
+
         this.selectedObject = null
         this.showPropertyPanel = false
         this.saveCurrentLevel()
@@ -302,9 +306,9 @@ export class LevelEditor extends BasedLevel {
 
     isInputFocused(): boolean {
         const activeElement = document.activeElement
-        return activeElement instanceof HTMLInputElement || 
-               activeElement instanceof HTMLTextAreaElement ||
-               activeElement instanceof HTMLSelectElement
+        return activeElement instanceof HTMLInputElement ||
+            activeElement instanceof HTMLTextAreaElement ||
+            activeElement instanceof HTMLSelectElement
     }
 
     handleInput() {
@@ -314,13 +318,13 @@ export class LevelEditor extends BasedLevel {
         }
 
         const keys = this.gameRef.pressedKeys
-        
+
         // Pan with arrow keys or WASD
         if (keys['ArrowLeft'] || keys['KeyA']) this.cameraX += this.panSpeed
         if (keys['ArrowRight'] || keys['KeyD']) this.cameraX -= this.panSpeed
         if (keys['ArrowUp'] || keys['KeyW']) this.cameraY += this.panSpeed
         if (keys['ArrowDown'] || keys['KeyS']) this.cameraY -= this.panSpeed
-        
+
         // Zoom with +/-
         if (keys['Equal'] || keys['NumpadAdd']) {
             this.zoom = Math.min(2, this.zoom + 0.02)
@@ -328,7 +332,7 @@ export class LevelEditor extends BasedLevel {
         if (keys['Minus'] || keys['NumpadSubtract']) {
             this.zoom = Math.max(0.25, this.zoom - 0.02)
         }
-        
+
         // Delete selected object
         if (keys['Delete'] || keys['Backspace']) {
             if (this.selectedObject && !this.editingProperty && !this.editingLevelSetting) {
@@ -338,14 +342,19 @@ export class LevelEditor extends BasedLevel {
 
         // P to toggle pan tool
         if (keys['KeyP']) {
-            this.currentTool = this.currentTool === 'pan' ? 'select' : 'pan'
+            this.currentTool = 'pan'
         }
-        
+
+        // V to toggle select tool
+        if (keys['KeyV']) {
+            this.currentTool = 'select'
+        }
+
         // Enter to finalize polygon drawing
         if (keys['Enter'] && this.isDrawingPolygon) {
             this.finalizePolygon()
         }
-        
+
         // Escape to deselect or cancel polygon drawing
         if (keys['Escape']) {
             if (this.isDrawingPolygon) {
@@ -365,7 +374,7 @@ export class LevelEditor extends BasedLevel {
     handleMouse() {
         const mouse = this.gameRef.mouseInfo
         const worldPos = this.screenToWorld(mouse.x, mouse.y)
-        
+
         // Update placing preview - snap the top-left corner position, then offset to center
         if (this.currentTool !== 'select' && this.currentTool !== 'pan') {
             const defaults = DEFAULT_OBJECTS[this.currentTool] as any
@@ -437,23 +446,23 @@ export class LevelEditor extends BasedLevel {
             this.handleHandleDrag(worldPos.x, worldPos.y)
         }
 
-        // Handle dragging
-        if (this.isDragging && this.selectedObject && mouse.mouseDown && !this.activeHandle) {
+        // Handle dragging (only in select tool to avoid affecting just-placed objects)
+        if (this.isDragging && this.selectedObject && mouse.mouseDown && !this.activeHandle && this.currentTool === 'select') {
             const snappedX = Math.round((worldPos.x - this.dragOffset.x) / GRID_SIZE) * GRID_SIZE
             const snappedY = Math.round((worldPos.y - this.dragOffset.y) / GRID_SIZE) * GRID_SIZE
-            
+
             // Calculate delta for relative movement
             const deltaX = snappedX - this.selectedObject.x
             const deltaY = snappedY - this.selectedObject.y
-            
+
             this.selectedObject.x = snappedX
             this.selectedObject.y = snappedY
-            
+
             // Update playerStart if it's being moved
             if (this.selectedObject.type === 'playerStart' && this.currentLevel) {
                 this.currentLevel.playerStart = { x: snappedX, y: snappedY }
             }
-            
+
             // Update moving platform bounds relatively
             if (this.selectedObject.type === 'movingPlatform') {
                 const plat = this.selectedObject as any
@@ -484,23 +493,23 @@ export class LevelEditor extends BasedLevel {
 
     getHandleAtPosition(x: number, y: number): string | null {
         if (!this.selectedObject) return null
-        
+
         const handleRadius = this.handleSize / this.zoom
-        
+
         // For polygons, check vertex handles and rotation handle
         if (this.selectedObject.type === 'polygon') {
             const poly = this.selectedObject as EditorPolygon
             const angleRad = (poly.angle || 0) * Math.PI / 180
             const cosA = Math.cos(angleRad)
             const sinA = Math.sin(angleRad)
-            
+
             // Check rotation handle (positioned above the polygon)
             const rotHandleX = poly.x
             const rotHandleY = poly.y - 60
             if (Math.abs(x - rotHandleX) < handleRadius && Math.abs(y - rotHandleY) < handleRadius) {
                 return 'rotate'
             }
-            
+
             // Check vertex handles
             for (let i = 0; i < poly.vertices.length; i++) {
                 const v = poly.vertices[i]
@@ -514,11 +523,11 @@ export class LevelEditor extends BasedLevel {
                 }
             }
         }
-        
+
         // For moving platforms, check the min/max endpoint handles first
         if (this.selectedObject.type === 'movingPlatform') {
             const plat = this.selectedObject as EditorMovingPlatform
-            
+
             // Min point handle
             if (Math.abs(x - plat.minX) < handleRadius && Math.abs(y - plat.minY) < handleRadius) {
                 return 'minPoint'
@@ -528,39 +537,39 @@ export class LevelEditor extends BasedLevel {
                 return 'maxPoint'
             }
         }
-        
+
         // Check resize handles for objects with width/height
         if ('width' in this.selectedObject && 'height' in this.selectedObject) {
             const obj = this.selectedObject as any
             const halfW = obj.width / 2
             const halfH = obj.height / 2
-            
+
             // Corner handles
             if (Math.abs(x - (obj.x + halfW)) < handleRadius && Math.abs(y - (obj.y + halfH)) < handleRadius) return 'se'
             if (Math.abs(x - (obj.x - halfW)) < handleRadius && Math.abs(y - (obj.y + halfH)) < handleRadius) return 'sw'
             if (Math.abs(x - (obj.x + halfW)) < handleRadius && Math.abs(y - (obj.y - halfH)) < handleRadius) return 'ne'
             if (Math.abs(x - (obj.x - halfW)) < handleRadius && Math.abs(y - (obj.y - halfH)) < handleRadius) return 'nw'
-            
+
             // Edge handles
             if (Math.abs(x - (obj.x + halfW)) < handleRadius && Math.abs(y - obj.y) < handleRadius) return 'e'
             if (Math.abs(x - (obj.x - halfW)) < handleRadius && Math.abs(y - obj.y) < handleRadius) return 'w'
             if (Math.abs(x - obj.x) < handleRadius && Math.abs(y - (obj.y - halfH)) < handleRadius) return 'n'
             if (Math.abs(x - obj.x) < handleRadius && Math.abs(y - (obj.y + halfH)) < handleRadius) return 's'
         }
-        
+
         return null
     }
 
     handleHandleDrag(worldX: number, worldY: number) {
         if (!this.selectedObject || !this.activeHandle) return
-        
+
         const snappedX = Math.round(worldX / GRID_SIZE) * GRID_SIZE
         const snappedY = Math.round(worldY / GRID_SIZE) * GRID_SIZE
-        
+
         // Handle polygon vertex dragging and rotation
         if (this.selectedObject.type === 'polygon') {
             const poly = this.selectedObject as EditorPolygon
-            
+
             if (this.activeHandle === 'rotate') {
                 // Calculate angle from center to mouse position
                 const dx = worldX - poly.x
@@ -569,7 +578,7 @@ export class LevelEditor extends BasedLevel {
                 poly.angle = Math.round(angle / 5) * 5  // Snap to 5 degree increments
                 return
             }
-            
+
             if (this.activeHandle.startsWith('vertex-')) {
                 const vertexIndex = parseInt(this.activeHandle.split('-')[1])
                 if (vertexIndex >= 0 && vertexIndex < poly.vertices.length) {
@@ -578,10 +587,10 @@ export class LevelEditor extends BasedLevel {
                     const angleRad = (poly.angle || 0) * Math.PI / 180
                     const cosA = Math.cos(-angleRad)  // Negative for inverse rotation
                     const sinA = Math.sin(-angleRad)
-                    
+
                     const localX = snappedX - poly.x
                     const localY = snappedY - poly.y
-                    
+
                     // Apply inverse rotation to get local vertex coordinates
                     poly.vertices[vertexIndex] = {
                         x: localX * cosA - localY * sinA,
@@ -591,11 +600,11 @@ export class LevelEditor extends BasedLevel {
                 return
             }
         }
-        
+
         // Handle moving platform endpoint dragging
         if (this.selectedObject.type === 'movingPlatform') {
             const plat = this.selectedObject as EditorMovingPlatform
-            
+
             if (this.activeHandle === 'minPoint') {
                 plat.minX = snappedX
                 plat.minY = snappedY
@@ -607,19 +616,19 @@ export class LevelEditor extends BasedLevel {
                 return
             }
         }
-        
+
         // Handle resize for objects with width/height
         // Resizing anchors the opposite edge - dragging east edge keeps west edge fixed, etc.
         if ('width' in this.selectedObject && 'height' in this.selectedObject) {
             const obj = this.selectedObject as any
             const minSize = 20
-            
+
             // Calculate current edges
             const currentLeft = obj.x - obj.width / 2
             const currentRight = obj.x + obj.width / 2
             const currentTop = obj.y - obj.height / 2
             const currentBottom = obj.y + obj.height / 2
-            
+
             switch (this.activeHandle) {
                 case 'e': {
                     // East handle: anchor west edge
@@ -790,30 +799,30 @@ export class LevelEditor extends BasedLevel {
         const halfH = obj.height / 2
         return x >= obj.x - halfW && x <= obj.x + halfW && y >= obj.y - halfH && y <= obj.y + halfH
     }
-    
+
     isPointInPolygon(x: number, y: number, poly: EditorPolygon): boolean {
         // Transform point to polygon local coordinates (accounting for rotation)
         const angleRad = (poly.angle || 0) * Math.PI / 180
         const cosA = Math.cos(-angleRad)
         const sinA = Math.sin(-angleRad)
-        
+
         const localX = (x - poly.x) * cosA - (y - poly.y) * sinA
         const localY = (x - poly.x) * sinA + (y - poly.y) * cosA
-        
+
         // Ray casting algorithm for point-in-polygon
         const vertices = poly.vertices
         let inside = false
-        
+
         for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
             const xi = vertices[i].x, yi = vertices[i].y
             const xj = vertices[j].x, yj = vertices[j].y
-            
+
             if (((yi > localY) !== (yj > localY)) &&
                 (localX < (xj - xi) * (localY - yi) / (yj - yi) + xi)) {
                 inside = !inside
             }
         }
-        
+
         return inside
     }
 
@@ -821,24 +830,24 @@ export class LevelEditor extends BasedLevel {
     handlePolygonClick(worldX: number, worldY: number) {
         const snappedX = Math.round(worldX / GRID_SIZE) * GRID_SIZE
         const snappedY = Math.round(worldY / GRID_SIZE) * GRID_SIZE
-        
+
         const now = Date.now()
-        
+
         // Check for click delay (prevent rapid clicks)
         if ((now - this.lastPolygonClickTime) < this.polygonClickDelay) {
             return
         }
-        
+
         const isDoubleClick = (now - this.lastClickTime) < this.doubleClickThreshold
         this.lastClickTime = now
         this.lastPolygonClickTime = now
-        
+
         if (isDoubleClick && this.polygonVertices.length >= 3) {
             // Double-click to finalize
             this.finalizePolygon()
             return
         }
-        
+
         // Check minimum distance from previous vertex
         if (this.polygonVertices.length > 0) {
             const lastVertex = this.polygonVertices[this.polygonVertices.length - 1]
@@ -847,11 +856,11 @@ export class LevelEditor extends BasedLevel {
                 return  // Too close to the last point, ignore
             }
         }
-        
+
         // Start or continue drawing polygon
         this.isDrawingPolygon = true
         this.polygonVertices.push({ x: snappedX, y: snappedY })
-        
+
         // Auto-finalize if we have a good shape and click near the first point
         if (this.polygonVertices.length >= 3) {
             const first = this.polygonVertices[0]
@@ -863,13 +872,13 @@ export class LevelEditor extends BasedLevel {
             }
         }
     }
-    
+
     finalizePolygon() {
         if (!this.currentLevel || this.polygonVertices.length < 3) {
             this.cancelPolygonDrawing()
             return
         }
-        
+
         // Calculate center of polygon
         let centerX = 0, centerY = 0
         this.polygonVertices.forEach(v => {
@@ -878,17 +887,17 @@ export class LevelEditor extends BasedLevel {
         })
         centerX /= this.polygonVertices.length
         centerY /= this.polygonVertices.length
-        
+
         // Snap center to grid
         centerX = Math.round(centerX / GRID_SIZE) * GRID_SIZE
         centerY = Math.round(centerY / GRID_SIZE) * GRID_SIZE
-        
+
         // Convert vertices to be relative to center
         const localVertices = this.polygonVertices.map(v => ({
             x: v.x - centerX,
             y: v.y - centerY
         }))
-        
+
         const poly: EditorPolygon = {
             id: LevelEditorStorage.generateId(),
             type: 'polygon',
@@ -898,19 +907,19 @@ export class LevelEditor extends BasedLevel {
             angle: 0,
             color: '#000'
         }
-        
+
         this.currentLevel.polygons.push(poly)
         this.selectedObject = poly
         this.showPropertyPanel = true
         this.saveCurrentLevel()
-        
+
         // Reset polygon drawing state
         this.isDrawingPolygon = false
         this.polygonVertices = []
-        
+
         this.showMessage('Polygon created!')
     }
-    
+
     cancelPolygonDrawing() {
         this.isDrawingPolygon = false
         this.polygonVertices = []
@@ -1016,7 +1025,7 @@ export class LevelEditor extends BasedLevel {
     update() {
         this.handleInput()
         this.handleMouse()
-        
+
         // Remove export textareas if panel is closed
         if (!this.showExportPanel) {
             this.removeExportTextareas()
@@ -1030,7 +1039,7 @@ export class LevelEditor extends BasedLevel {
         this.newButton.update()
         this.loadButton.update()
         this.levelSettingsButton.update()
-        
+
         if (this.selectedObject) {
             this.deleteObjectButton.update()
         }
@@ -1070,7 +1079,7 @@ export class LevelEditor extends BasedLevel {
 
         // Draw UI
         this.drawUI()
-        
+
         // Draw message
         if (this.messageText && this.gameRef.lastUpdate - this.messageTime < this.messageDuration) {
             drawText({
@@ -1135,10 +1144,10 @@ export class LevelEditor extends BasedLevel {
             this.drawEditorRect(wall, wall.color, this.selectedObject?.id === wall.id)
         })
 
-        // Draw polygons
-        ;(this.currentLevel.polygons || []).forEach(poly => {
-            this.drawEditorPolygon(poly, this.selectedObject?.id === poly.id)
-        })
+            // Draw polygons
+            ; (this.currentLevel.polygons || []).forEach(poly => {
+                this.drawEditorPolygon(poly, this.selectedObject?.id === poly.id)
+            })
 
         // Draw push boxes
         this.currentLevel.pushBoxes.forEach(box => {
@@ -1153,7 +1162,7 @@ export class LevelEditor extends BasedLevel {
             // Then draw the platform
             this.drawEditorRect(plat, plat.color, isSelected)
         })
-        
+
         // Draw moving platform handles on top of everything
         this.currentLevel.movingPlatforms.forEach(plat => {
             const isSelected = this.selectedObject?.id === plat.id
@@ -1214,7 +1223,7 @@ export class LevelEditor extends BasedLevel {
         if (this.placingPreview && this.currentTool !== 'select' && this.currentTool !== 'pan' && this.currentTool !== 'polygon') {
             const previewScreen = this.worldToScreen(this.placingPreview.x, this.placingPreview.y)
             ctx.globalAlpha = 0.5
-            
+
             if (this.currentTool === 'playerStart') {
                 drawCircle({
                     c: ctx,
@@ -1229,17 +1238,17 @@ export class LevelEditor extends BasedLevel {
                 const h = (defaults?.height || 50) * this.zoom
                 drawBox({
                     c: ctx,
-                    x: previewScreen.x - w/2,
-                    y: previewScreen.y - h/2,
+                    x: previewScreen.x - w / 2,
+                    y: previewScreen.y - h / 2,
                     width: w,
                     height: h,
                     fillColor: TOOL_COLORS[this.currentTool]
                 })
             }
-            
+
             ctx.globalAlpha = 1
         }
-        
+
         // Draw polygon being created
         if (this.isDrawingPolygon && this.polygonVertices.length > 0) {
             this.drawPolygonInProgress()
@@ -1254,8 +1263,8 @@ export class LevelEditor extends BasedLevel {
 
         drawBox({
             c: ctx,
-            x: pos.x - w/2,
-            y: pos.y - h/2,
+            x: pos.x - w / 2,
+            y: pos.y - h / 2,
             width: w,
             height: h,
             fillColor: color,
@@ -1290,8 +1299,8 @@ export class LevelEditor extends BasedLevel {
         corners.forEach(corner => {
             drawBox({
                 c: ctx,
-                x: corner.x - size/2,
-                y: corner.y - size/2,
+                x: corner.x - size / 2,
+                y: corner.y - size / 2,
                 width: size,
                 height: size,
                 fillColor: handleColor,
@@ -1311,8 +1320,8 @@ export class LevelEditor extends BasedLevel {
         edges.forEach(edge => {
             drawBox({
                 c: ctx,
-                x: edge.x - size/2,
-                y: edge.y - size/2,
+                x: edge.x - size / 2,
+                y: edge.y - size / 2,
                 width: size,
                 height: size,
                 fillColor: handleColor,
@@ -1325,13 +1334,13 @@ export class LevelEditor extends BasedLevel {
     drawEditorPolygon(poly: EditorPolygon, selected: boolean) {
         const ctx = this.gameRef.ctx
         const pos = this.worldToScreen(poly.x, poly.y)
-        
+
         // Scale vertices for zoom
         const scaledVertices = poly.vertices.map(v => ({
             x: v.x * this.zoom,
             y: v.y * this.zoom
         }))
-        
+
         rotateDraw({
             c: ctx,
             x: pos.x,
@@ -1346,13 +1355,13 @@ export class LevelEditor extends BasedLevel {
                 strokeWidth: selected ? 3 : 1
             })
         })
-        
+
         // Draw vertex handles and rotation handle if selected
         if (selected) {
             this.drawPolygonHandles(poly)
         }
     }
-    
+
     drawPolygonHandles(poly: EditorPolygon) {
         const ctx = this.gameRef.ctx
         const pos = this.worldToScreen(poly.x, poly.y)
@@ -1360,21 +1369,21 @@ export class LevelEditor extends BasedLevel {
         const cosA = Math.cos(angleRad)
         const sinA = Math.sin(angleRad)
         const size = this.handleSize
-        
+
         const handleColor = '#81B622'
         const handleBorder = '#fff'
-        
+
         // Draw vertex handles
         poly.vertices.forEach((v) => {
             // Apply rotation to get world position
             const rotX = v.x * cosA - v.y * sinA
             const rotY = v.x * sinA + v.y * cosA
             const screenPos = this.worldToScreen(poly.x + rotX, poly.y + rotY)
-            
+
             drawBox({
                 c: ctx,
-                x: screenPos.x - size/2,
-                y: screenPos.y - size/2,
+                x: screenPos.x - size / 2,
+                y: screenPos.y - size / 2,
                 width: size,
                 height: size,
                 fillColor: handleColor,
@@ -1382,7 +1391,7 @@ export class LevelEditor extends BasedLevel {
                 strokeWidth: 1
             })
         })
-        
+
         // Draw rotation handle (above the polygon center)
         const rotHandleY = pos.y - 60 * this.zoom
         drawLine({
@@ -1394,7 +1403,7 @@ export class LevelEditor extends BasedLevel {
             strokeColor: '#88f',
             strokeWidth: 2
         })
-        
+
         drawCircle({
             c: ctx,
             x: pos.x,
@@ -1404,7 +1413,7 @@ export class LevelEditor extends BasedLevel {
             strokeColor: handleBorder,
             strokeWidth: 1
         })
-        
+
         // Label
         drawText({
             c: ctx,
@@ -1419,7 +1428,7 @@ export class LevelEditor extends BasedLevel {
             text: 'ROT'
         })
     }
-    
+
     drawPolygonInProgress() {
         const ctx = this.gameRef.ctx
         const mouse = this.gameRef.mouseInfo
@@ -1429,9 +1438,9 @@ export class LevelEditor extends BasedLevel {
             y: Math.round(mouseWorld.y / GRID_SIZE) * GRID_SIZE
         }
         const mouseScreen = this.worldToScreen(snappedMouse.x, snappedMouse.y)
-        
+
         ctx.globalAlpha = 0.7
-        
+
         // Draw lines connecting vertices
         for (let i = 0; i < this.polygonVertices.length - 1; i++) {
             const fromScreen = this.worldToScreen(this.polygonVertices[i].x, this.polygonVertices[i].y)
@@ -1446,7 +1455,7 @@ export class LevelEditor extends BasedLevel {
                 strokeWidth: 2
             })
         }
-        
+
         // Line from last vertex to current mouse position
         if (this.polygonVertices.length > 0) {
             const lastScreen = this.worldToScreen(
@@ -1463,7 +1472,7 @@ export class LevelEditor extends BasedLevel {
                 strokeWidth: 2
             })
         }
-        
+
         // Draw vertices as circles
         this.polygonVertices.forEach((v, i) => {
             const screenPos = this.worldToScreen(v.x, v.y)
@@ -1477,7 +1486,7 @@ export class LevelEditor extends BasedLevel {
                 strokeWidth: 2
             })
         })
-        
+
         // Preview point at mouse
         drawCircle({
             c: ctx,
@@ -1488,15 +1497,15 @@ export class LevelEditor extends BasedLevel {
             strokeColor: '#fff',
             strokeWidth: 2
         })
-        
+
         ctx.globalAlpha = 1
-        
+
         // Instruction text
         const vertCount = this.polygonVertices.length
-        const instructionText = vertCount < 3 
-            ? `Click to add points (${vertCount}/3 min)` 
+        const instructionText = vertCount < 3
+            ? `Click to add points (${vertCount}/3 min)`
             : `Click to add, double-click or Enter to finish, Esc to cancel`
-        
+
         drawText({
             c: ctx,
             x: this.gameRef.gameWidth / 2,
@@ -1514,7 +1523,7 @@ export class LevelEditor extends BasedLevel {
     drawMovementRangeLine(plat: EditorMovingPlatform, selected: boolean = false) {
         const ctx = this.gameRef.ctx
         const opacity = selected ? 1 : 0.3
-        
+
         ctx.globalAlpha = opacity
         ctx.strokeStyle = selected ? 'rgba(255, 255, 0, 0.7)' : 'rgba(255, 255, 0, 0.5)'
         ctx.lineWidth = selected ? 2 : 1
@@ -1535,7 +1544,7 @@ export class LevelEditor extends BasedLevel {
     drawMovementRangeHandles(plat: EditorMovingPlatform, selected: boolean = false) {
         const ctx = this.gameRef.ctx
         const opacity = selected ? 1 : 0.3
-        
+
         ctx.globalAlpha = opacity
 
         const minPos = this.worldToScreen(plat.minX, plat.minY)
@@ -1549,7 +1558,7 @@ export class LevelEditor extends BasedLevel {
             c: ctx,
             x: minPos.x,
             y: minPos.y,
-            radius: handleSize/2,
+            radius: handleSize / 2,
             fillColor: '#00ff00',
             strokeColor: selected ? '#fff' : undefined,
             strokeWidth: selected ? 2 : undefined
@@ -1560,7 +1569,7 @@ export class LevelEditor extends BasedLevel {
             c: ctx,
             x: maxPos.x,
             y: maxPos.y,
-            radius: handleSize/2,
+            radius: handleSize / 2,
             fillColor: '#ff4444',
             strokeColor: selected ? '#fff' : undefined,
             strokeWidth: selected ? 2 : undefined
@@ -1595,7 +1604,7 @@ export class LevelEditor extends BasedLevel {
                 text: 'MAX'
             })
         }
-        
+
         ctx.globalAlpha = 1
     }
 
@@ -1626,7 +1635,7 @@ export class LevelEditor extends BasedLevel {
                 style: '',
                 text: this.currentLevel.name
             })
-            
+
             drawText({
                 c: ctx,
                 x: this.gameRef.gameWidth / 2,
@@ -1896,7 +1905,7 @@ export class LevelEditor extends BasedLevel {
 
         this.savedLevels.forEach((level, index) => {
             const isHovered = mouse.x > panelX + 10 && mouse.x < panelX + panelW - 10 &&
-                             mouse.y > y && mouse.y < y + 30
+                mouse.y > y && mouse.y < y + 30
             const isCurrent = level.id === this.currentLevel?.id
 
             drawBox({
@@ -1982,7 +1991,7 @@ export class LevelEditor extends BasedLevel {
         })
 
         const constantsCode = LevelEditorStorage.exportLevelAsCode(this.currentLevel)
-        
+
         // Create a textarea for easy copying
         let textarea = document.getElementById('export-constants') as HTMLTextAreaElement
         if (!textarea) {
@@ -2020,7 +2029,7 @@ export class LevelEditor extends BasedLevel {
         })
 
         const classCode = LevelEditorStorage.exportLevelClassCode(this.currentLevel)
-        
+
         let textarea2 = document.getElementById('export-class') as HTMLTextAreaElement
         if (!textarea2) {
             textarea2 = document.createElement('textarea')
@@ -2157,7 +2166,7 @@ export class LevelEditor extends BasedLevel {
         // Delete level button
         const deleteY = panelY + panelH - 45
         const isDeleteHovered = mouse.x > panelX + 10 && mouse.x < panelX + panelW - 10 &&
-                               mouse.y > deleteY && mouse.y < deleteY + 35
+            mouse.y > deleteY && mouse.y < deleteY + 35
 
         drawBox({
             c: ctx,
@@ -2258,13 +2267,13 @@ export class LevelEditor extends BasedLevel {
         // Remove any HTML elements we created
         const input1 = document.getElementById('editor-property-input')
         if (input1) input1.remove()
-        
+
         const input2 = document.getElementById('editor-setting-input')
         if (input2) input2.remove()
-        
+
         const textarea1 = document.getElementById('export-constants')
         if (textarea1) textarea1.remove()
-        
+
         const textarea2 = document.getElementById('export-class')
         if (textarea2) textarea2.remove()
 
