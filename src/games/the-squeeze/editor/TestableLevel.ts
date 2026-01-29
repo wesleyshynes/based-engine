@@ -25,6 +25,9 @@ export class TestableLevel extends SqueezeBaseLevel {
     hazardBlocks: any[] = []
     _hazardBlocks: any[] = []
 
+    levelTexts: any[] = []
+    _levelTexts: any[] = []
+
     textLines: string[] = [
         'Move: ←↑↓→ or W A S D',
         'Shrink: Z',
@@ -112,6 +115,16 @@ export class TestableLevel extends SqueezeBaseLevel {
                 y: hazard.y,
                 width: hazard.width,
                 height: hazard.height,
+            }))
+
+            // Map level texts
+            this._levelTexts = (levelData.levelTexts || []).map(text => ({
+                x: text.x,
+                y: text.y,
+                text: text.text,
+                fontSize: text.fontSize,
+                color: text.color,
+                angle: text.angle,
             }))
         }
 

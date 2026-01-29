@@ -47,4 +47,7 @@ export const LEVEL_01: LevelData = {
     hazardBlocks: [
         { x: 300, y: 200, width: 80, height: 80 },
     ],
+    levelTexts: [
+        { x: 100, y: 50, text: 'The Squeeze - Level 01', fontSize: 24, color: '#fff', angle: 0, fontFamily: 'Arial', fontWeight: 'bold' },
+    ]
 }

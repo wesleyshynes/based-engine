@@ -26,6 +26,7 @@ export class LevelEditorStorage {
             movingPlatforms: [],
             exitDoors: [],
             hazardBlocks: [],
+            levelTexts: [],
             createdAt: now,
             updatedAt: now,
         }
@@ -55,6 +56,7 @@ export class LevelEditorStorage {
             movingPlatforms: level.movingPlatforms || [],
             exitDoors: level.exitDoors || [],
             hazardBlocks: level.hazardBlocks || [],
+            levelTexts: level.levelTexts || [],
             playerStart: level.playerStart || { x: 100, y: 100 },
             nextLevel: level.nextLevel || 'start-screen',
         }
@@ -181,6 +183,13 @@ export class LevelEditorStorage {
         })
         code += `    ],\n`
 
+        // Level Texts
+        code += `    levelTexts: [\n`
+        ;(level.levelTexts || []).forEach(text => {
+            code += `        { x: ${text.x}, y: ${text.y}, text: '${text.text.replace(/'/g, "\\'")}', fontSize: ${text.fontSize}, color: '${text.color}', angle: ${text.angle} },\n`
+        })
+        code += `    ],\n`
+
         code += `}\n`
 
         return code
@@ -212,6 +221,8 @@ export class LevelEditorStorage {
         code += `    _exitDoors: any[] = ${constantName}.exitDoors\n\n`
         code += `    hazardBlocks: any[] = []\n`
         code += `    _hazardBlocks: any[] = ${constantName}.hazardBlocks\n\n`
+        code += `    levelTexts: any[] = []\n`
+        code += `    _levelTexts: any[] = ${constantName}.levelTexts || []\n\n`
         code += `}\n`
 
         return code

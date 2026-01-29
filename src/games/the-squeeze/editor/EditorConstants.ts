@@ -18,6 +18,7 @@ export const TOOL_COLORS: Record<EditorTool, string> = {
     playerStart: '#ff0',
     hazardBlock: '#800000',
     pan: '#888',
+    levelText: '#ffffff',
 }
 
 // Button colors
@@ -59,10 +60,11 @@ export const TOOL_LABELS: Record<EditorTool, string> = {
     movingPlatform: 'Plat',
     exitDoor: 'Exit',
     playerStart: 'Start',
+    levelText: 'Text',
 }
 
 // Tool order for toolbar
 export const TOOL_ORDER: EditorTool[] = [
     'select', 'pan', 'wall', 'polygon', 'pushBox', 
-    'movingPlatform', 'exitDoor', 'playerStart', 'hazardBlock'
+    'movingPlatform', 'exitDoor', 'playerStart', 'hazardBlock', 'levelText'
 ]

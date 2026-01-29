@@ -8,6 +8,7 @@ import { ExitDoor } from "../entities/exitDoor";
 import { LevelWall } from "../entities/levelWall";
 import { LevelPolygon } from "../entities/levelPolygon";
 import { HazardBlock } from "../entities/hazardBlock";
+import { LevelText } from "../entities/levelText";
 import { TouchKnob } from "../../../engine/controls/TouchKnob";
 import { MovingPlatform } from "../entities/movingPlatform";
 
@@ -83,6 +84,8 @@ export class SqueezeBaseLevel extends BasedLevel {
     _exitDoors: any[] = []
     hazardBlocks: any[] = []
     _hazardBlocks: any[] = []
+    levelTexts: any[] = []
+    _levelTexts: any[] = []
 
     // SOUNDS
     wallThud1: any;
@@ -267,6 +270,7 @@ export class SqueezeBaseLevel extends BasedLevel {
         this.setupMovingPlatforms()
         this.setupExitDoors()
         this.setupHazardBlocks()
+        this.setupLevelTexts()
 
         // BEGIN
         this.onResize()
@@ -431,6 +435,11 @@ export class SqueezeBaseLevel extends BasedLevel {
             poly.draw()
         })
 
+        // draw level texts
+        this.levelTexts.forEach((textObj: any) => {
+            textObj.draw()
+        })
+        
         // draw push boxes
         this.pushBoxes.forEach((box: any) => {
             box.draw()
@@ -450,6 +459,7 @@ export class SqueezeBaseLevel extends BasedLevel {
         this.exitDoors.forEach((door: any) => {
             door.draw()
         })
+
 
         // draw the main player
         this.mainPlayer.draw()
@@ -609,6 +619,26 @@ export class SqueezeBaseLevel extends BasedLevel {
             tempObj.height = obj.height
             tempObj.initialize()
             this.gameRef.addToWorld(tempObj.body)
+            return tempObj
+        })
+    }
+
+    setupLevelTexts() {
+        this.levelTexts = [
+            ...this._levelTexts,
+        ].map((obj: any, idx: number) => {
+            const tempObj = new LevelText({
+                key: `levelText-${idx}`, gameRef: this.gameRef
+            })
+            tempObj.x = obj.x
+            tempObj.y = obj.y
+            tempObj.text = obj.text || 'Text'
+            tempObj.fontSize = obj.fontSize || 24
+            tempObj.color = obj.color || '#ffffff'
+            tempObj.angle = obj.angle || 0
+            tempObj.fontFamily = obj.fontFamily || 'sans-serif'
+            tempObj.fontWeight = obj.fontWeight || '700'
+            tempObj.initialize()
             return tempObj
         })
     }

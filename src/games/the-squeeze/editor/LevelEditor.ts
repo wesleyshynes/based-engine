@@ -1,7 +1,7 @@
 import { BasedButton } from "../../../engine/BasedButton"
 import { BasedLevel } from "../../../engine/BasedLevel"
 import { drawBox, drawCircle, drawText, rotateDraw, drawLine, drawPolygon } from "../../../engine/libs/drawHelpers"
-import { EditorLevelData, EditorObject, EditorTool, DEFAULT_OBJECTS, EditorWall, EditorPushBox, EditorMovingPlatform, EditorExitDoor, EditorHazardBlock, EditorPolygon, VertexPoint } from "./LevelEditorTypes"
+import { EditorLevelData, EditorObject, EditorTool, DEFAULT_OBJECTS, EditorWall, EditorPushBox, EditorMovingPlatform, EditorExitDoor, EditorHazardBlock, EditorPolygon, EditorText, VertexPoint } from "./LevelEditorTypes"
 import { LevelEditorStorage } from "./LevelEditorStorage"
 import { EditorInputManager } from "./EditorInputManager"
 import { 
@@ -314,6 +314,9 @@ export class LevelEditor extends BasedLevel {
             case 'hazardBlock':
                 this.currentLevel.hazardBlocks = this.currentLevel.hazardBlocks.filter(h => h.id !== obj.id)
                 break
+            case 'levelText':
+                this.currentLevel.levelTexts = this.currentLevel.levelTexts.filter(t => t.id !== obj.id)
+                break
         }
 
         this.selectedObject = null
@@ -545,6 +548,18 @@ export class LevelEditor extends BasedLevel {
             }
         }
 
+        // For level text rotation
+        if (this.selectedObject.type === 'levelText') {
+            const textObj = this.selectedObject as EditorText
+            const angleRad = (textObj.angle || 0) * Math.PI / 180
+            const rotHandleDistance = 60
+            const rotHandleX = textObj.x - Math.sin(angleRad) * rotHandleDistance
+            const rotHandleY = textObj.y - Math.cos(angleRad) * rotHandleDistance
+            if (Math.abs(x - rotHandleX) < handleRadius && Math.abs(y - rotHandleY) < handleRadius) {
+                return 'rotate'
+            }
+        }
+
         // For moving platforms
         if (this.selectedObject.type === 'movingPlatform') {
             const plat = this.selectedObject as EditorMovingPlatform
@@ -606,6 +621,19 @@ export class LevelEditor extends BasedLevel {
                         y: localX * sinA + localY * cosA
                     }
                 }
+                return
+            }
+        }
+
+        // Level text rotation
+        if (this.selectedObject.type === 'levelText') {
+            const textObj = this.selectedObject as EditorText
+
+            if (this.activeHandle === 'rotate') {
+                const dx = worldX - textObj.x
+                const dy = worldY - textObj.y
+                const angle = Math.atan2(dx, dy) * 180 / Math.PI
+                textObj.angle = Math.round(-angle / 5) * 5
                 return
             }
         }
@@ -752,6 +780,9 @@ export class LevelEditor extends BasedLevel {
         for (const hazard of this.currentLevel.hazardBlocks) {
             if (this.isPointInRect(x, y, hazard)) return hazard
         }
+        for (const text of (this.currentLevel.levelTexts || [])) {
+            if (this.isPointInText(x, y, text)) return text
+        }
 
         return null
     }
@@ -781,6 +812,24 @@ export class LevelEditor extends BasedLevel {
             }
         }
         return inside
+    }
+
+    isPointInText(x: number, y: number, text: EditorText): boolean {
+        // Estimate text bounds (approximate width based on text length and font size)
+        const estimatedWidth = text.text.length * text.fontSize * 0.6
+        const estimatedHeight = text.fontSize * 1.2
+
+        // Transform point to text's local coordinate system (accounting for rotation)
+        const angleRad = (text.angle || 0) * Math.PI / 180
+        const cosA = Math.cos(-angleRad)
+        const sinA = Math.sin(-angleRad)
+        const localX = (x - text.x) * cosA - (y - text.y) * sinA
+        const localY = (x - text.x) * sinA + (y - text.y) * cosA
+
+        // Check if point is within bounding box (centered on text position)
+        const halfW = estimatedWidth / 2
+        const halfH = estimatedHeight / 2
+        return localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH
     }
 
     // Polygon creation
@@ -897,6 +946,11 @@ export class LevelEditor extends BasedLevel {
                 this.currentLevel.hazardBlocks.push(hazard)
                 this.selectedObject = hazard
                 break
+            case 'levelText':
+                const textObj: EditorText = { id, type: 'levelText', x, y, text: 'Text', fontSize: 24, color: '#ffffff', angle: 0 }
+                this.currentLevel.levelTexts.push(textObj)
+                this.selectedObject = textObj
+                break
             case 'playerStart':
                 this.currentLevel.playerStart = { x, y }
                 this.selectedObject = { id: 'playerStart', type: 'playerStart', x, y }
@@ -992,7 +1046,12 @@ export class LevelEditor extends BasedLevel {
 
         // Draw objects
         this.currentLevel.walls.forEach(wall => this.drawEditorRect(wall, wall.color, this.selectedObject?.id === wall.id))
-        ;(this.currentLevel.polygons || []).forEach(poly => this.drawEditorPolygon(poly, this.selectedObject?.id === poly.id))
+        this.currentLevel.polygons.forEach(poly => this.drawEditorPolygon(poly, this.selectedObject?.id === poly.id))
+
+        // Level Texts
+        this.currentLevel.levelTexts.forEach(text => this.drawEditorText(text, this.selectedObject?.id === text.id));
+
+        // Push boxes
         this.currentLevel.pushBoxes.forEach(box => this.drawEditorRect(box, '#d4c9b2', this.selectedObject?.id === box.id))
 
         // Moving platforms (draw range, platform, then handles)
@@ -1011,7 +1070,8 @@ export class LevelEditor extends BasedLevel {
         })
 
         // Hazards
-        this.currentLevel.hazardBlocks.forEach(hazard => this.drawEditorRect(hazard, '#f00', this.selectedObject?.id === hazard.id))
+        this.currentLevel.hazardBlocks.forEach(hazard => this.drawEditorRect(hazard, '#f00', this.selectedObject?.id === hazard.id));
+
 
         // Player start
         const ps = this.currentLevel.playerStart
@@ -1089,6 +1149,62 @@ export class LevelEditor extends BasedLevel {
         })
 
         if (selected) this.drawPolygonHandles(poly)
+    }
+
+    drawEditorText(textObj: EditorText, selected: boolean) {
+        const ctx = this.gameRef.ctx
+        const pos = this.worldToScreen(textObj.x, textObj.y)
+        const fontSize = textObj.fontSize * this.zoom
+
+        // Draw the text with rotation
+        rotateDraw({ c: ctx, x: pos.x, y: pos.y, a: textObj.angle || 0 }, () => {
+            drawText({
+                c: ctx,
+                x: 0,
+                // y: fontSize * 0.35,
+                y: 0,
+                align: 'center',
+                fillColor: textObj.color || '#ffffff',
+                fontSize: fontSize,
+                fontFamily: 'sans-serif',
+                weight: 'bold',
+                style: '',
+                text: textObj.text || 'Text'
+            })
+        })
+
+        // Draw selection outline and handles
+        if (selected) {
+            this.drawTextHandles(textObj)
+        }
+    }
+
+    drawTextHandles(textObj: EditorText) {
+        const ctx = this.gameRef.ctx
+        const pos = this.worldToScreen(textObj.x, textObj.y)
+        const size = this.handleSize
+
+        // Draw bounding box outline (rotated)
+        const estimatedWidth = textObj.text.length * textObj.fontSize * 0.6 * this.zoom
+        const estimatedHeight = textObj.fontSize * 1.2 * this.zoom
+
+        rotateDraw({ c: ctx, x: pos.x, y: pos.y, a: textObj.angle || 0 }, () => {
+            ctx.strokeStyle = '#fff'
+            ctx.lineWidth = 2
+            ctx.setLineDash([5, 5])
+            ctx.strokeRect(-estimatedWidth / 2, -estimatedHeight / 2, estimatedWidth, estimatedHeight)
+            ctx.setLineDash([])
+        })
+
+        // Rotation handle (above the text)
+        const angleRad = (textObj.angle || 0) * Math.PI / 180
+        const rotHandleDistance = 60 * this.zoom
+        const rotHandleX = pos.x - Math.sin(angleRad) * rotHandleDistance
+        const rotHandleY = pos.y - Math.cos(angleRad) * rotHandleDistance
+
+        drawLine({ c: ctx, x: pos.x, y: pos.y, toX: rotHandleX, toY: rotHandleY, strokeColor: '#88f', strokeWidth: 2 })
+        drawCircle({ c: ctx, x: rotHandleX, y: rotHandleY, radius: size, fillColor: '#88f', strokeColor: HANDLE_BORDER, strokeWidth: 1 })
+        drawText({ c: ctx, x: rotHandleX + 15, y: rotHandleY + 4, align: 'left', fillColor: '#88f', fontSize: 10, fontFamily: 'sans-serif', weight: 'bold', style: '', text: 'ROT' })
     }
 
     drawPolygonHandles(poly: EditorPolygon) {

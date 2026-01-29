@@ -72,6 +72,17 @@ export interface LevelHazardBlock {
     height: number
 }
 
+export interface LevelText {
+    x: number
+    y: number
+    text: string
+    fontSize: number
+    color: string
+    angle: number
+    fontFamily?: string
+    fontWeight?: string
+}
+
 // LevelData interface - used for game level constants
 export interface LevelData {
     name: string
@@ -86,6 +97,7 @@ export interface LevelData {
     movingPlatforms?: LevelMovingPlatform[]
     exitDoors?: LevelExitDoor[]
     hazardBlocks?: LevelHazardBlock[]
+    levelTexts?: LevelText[]
 }
 
 // Editor-specific types (extend base types with id and type)
@@ -119,6 +131,11 @@ export interface EditorHazardBlock extends LevelHazardBlock {
     type: 'hazardBlock'
 }
 
+export interface EditorText extends LevelText {
+    id: string
+    type: 'levelText'
+}
+
 export interface EditorPlayerStart {
     id: string
     type: 'playerStart'
@@ -126,7 +143,7 @@ export interface EditorPlayerStart {
     y: number
 }
 
-export type EditorObject = EditorWall | EditorPolygon | EditorPushBox | EditorMovingPlatform | EditorExitDoor | EditorPlayerStart | EditorHazardBlock
+export type EditorObject = EditorWall | EditorPolygon | EditorPushBox | EditorMovingPlatform | EditorExitDoor | EditorPlayerStart | EditorHazardBlock | EditorText
 
 export interface EditorLevelData {
     id: string
@@ -141,11 +158,12 @@ export interface EditorLevelData {
     movingPlatforms: EditorMovingPlatform[]
     exitDoors: EditorExitDoor[]
     hazardBlocks: EditorHazardBlock[]
+    levelTexts: EditorText[]
     createdAt: number
     updatedAt: number
 }
 
-export type EditorTool = 'select' | 'wall' | 'polygon' | 'pushBox' | 'movingPlatform' | 'exitDoor' | 'playerStart' | 'pan' | 'hazardBlock'
+export type EditorTool = 'select' | 'wall' | 'polygon' | 'pushBox' | 'movingPlatform' | 'exitDoor' | 'playerStart' | 'pan' | 'hazardBlock' | 'levelText'
 
 export interface PropertyField {
     key: string
@@ -209,6 +227,14 @@ export const OBJECT_PROPERTIES: Record<string, PropertyField[]> = {
         { key: 'x', label: 'X', type: 'number' },
         { key: 'y', label: 'Y', type: 'number' },
     ],
+    levelText: [
+        { key: 'x', label: 'X', type: 'number' },
+        { key: 'y', label: 'Y', type: 'number' },
+        { key: 'text', label: 'Text', type: 'string' },
+        { key: 'fontSize', label: 'Font Size', type: 'number', min: 8, max: 200 },
+        { key: 'angle', label: 'Angle (deg)', type: 'number', min: -360, max: 360 },
+        { key: 'color', label: 'Color', type: 'color' },
+    ],
 }
 
 export const DEFAULT_OBJECTS: Record<string, Partial<EditorObject>> = {
@@ -264,5 +290,12 @@ export const DEFAULT_OBJECTS: Record<string, Partial<EditorObject>> = {
     },
     playerStart: {
         type: 'playerStart',
+    },
+    levelText: {
+        type: 'levelText',
+        text: 'Text',
+        fontSize: 24,
+        color: '#ffffff',
+        angle: 0,
     },
 }
