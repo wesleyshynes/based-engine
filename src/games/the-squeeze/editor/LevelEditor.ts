@@ -1,31 +1,36 @@
 import { BasedButton } from "../../../engine/BasedButton"
 import { BasedLevel } from "../../../engine/BasedLevel"
 import { drawBox, drawCircle, drawText, rotateDraw, drawLine, drawPolygon } from "../../../engine/libs/drawHelpers"
-import { EditorLevelData, EditorObject, EditorTool, DEFAULT_OBJECTS, OBJECT_PROPERTIES, EditorWall, EditorPushBox, EditorMovingPlatform, EditorExitDoor, EditorHazardBlock, EditorPolygon, VertexPoint } from "./LevelEditorTypes"
+import { EditorLevelData, EditorObject, EditorTool, DEFAULT_OBJECTS, EditorWall, EditorPushBox, EditorMovingPlatform, EditorExitDoor, EditorHazardBlock, EditorPolygon, VertexPoint } from "./LevelEditorTypes"
 import { LevelEditorStorage } from "./LevelEditorStorage"
-
-const BG_COLOR = '#1a1a1a'
-const GRID_COLOR = '#2a2a2a'
-const GRID_SIZE = 25
-
-const TOOL_COLORS: Record<EditorTool, string> = {
-    select: '#fff',
-    wall: '#222',
-    polygon: '#222',
-    pushBox: '#d4c9b2',
-    movingPlatform: '#222',
-    exitDoor: '#000',
-    playerStart: '#ff0',
-    hazardBlock: '#800000',
-    pan: '#888',
-}
-
-const FILL_COLOR = '#81B622'
-const HOVER_COLOR = '#ECF87F'
-const TEXT_COLOR = '#FFFFFF'
-const TEXT_HOVER_COLOR = '#000000'
-const TOOL_BUTTON_FILL = '#333'
-const TOOL_BUTTON_HOVER = '#555'
+import { EditorInputManager } from "./EditorInputManager"
+import { 
+    PropertyPanel, 
+    LevelSettingsPanel, 
+    LevelListPanel, 
+    ExportPanel 
+} from "./panels"
+import {
+    BG_COLOR,
+    GRID_COLOR,
+    GRID_SIZE,
+    TOOL_COLORS,
+    FILL_COLOR,
+    HOVER_COLOR,
+    TEXT_COLOR,
+    TEXT_HOVER_COLOR,
+    TOOL_BUTTON_FILL,
+    TOOL_BUTTON_HOVER,
+    HANDLE_COLOR,
+    HANDLE_BORDER,
+    HANDLE_SIZE,
+    MIN_OBJECT_SIZE,
+    POLYGON_CLICK_DELAY,
+    MIN_VERTEX_DISTANCE,
+    DOUBLE_CLICK_THRESHOLD,
+    TOOL_LABELS,
+    TOOL_ORDER
+} from "./EditorConstants"
 
 export class LevelEditor extends BasedLevel {
 
@@ -49,17 +54,14 @@ export class LevelEditor extends BasedLevel {
     placingPreview: { x: number, y: number } | null = null
 
     // Handle dragging
-    activeHandle: string | null = null  // 'n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw', 'minX', 'maxX', 'minY', 'maxY', 'vertex-N', 'rotate'
-    handleSize: number = 10
+    activeHandle: string | null = null
+    handleSize: number = HANDLE_SIZE
 
     // Polygon creation state
     isDrawingPolygon: boolean = false
     polygonVertices: VertexPoint[] = []
     lastClickTime: number = 0
-    doubleClickThreshold: number = 300  // ms
     lastPolygonClickTime: number = 0
-    polygonClickDelay: number = 150  // ms minimum between polygon vertex clicks
-    minVertexDistance: number = 20   // minimum distance between polygon vertices
 
     // UI Elements
     toolButtons: Map<EditorTool, any> = new Map()
@@ -73,19 +75,11 @@ export class LevelEditor extends BasedLevel {
     levelSettingsButton: any
 
     // Panels
-    showPropertyPanel: boolean = false
-    showLevelList: boolean = false
-    showExportPanel: boolean = false
-    showLevelSettings: boolean = false
+    propertyPanel!: PropertyPanel
+    levelSettingsPanel!: LevelSettingsPanel
+    levelListPanel!: LevelListPanel
+    exportPanel!: ExportPanel
     savedLevels: EditorLevelData[] = []
-
-    // Property editing
-    editingProperty: string | null = null
-    propertyInputValue: string = ''
-
-    // Level settings editing
-    editingLevelSetting: string | null = null
-    levelSettingInputValue: string = ''
 
     // Messages
     messageText: string = ''
@@ -114,6 +108,7 @@ export class LevelEditor extends BasedLevel {
 
         this.savedLevels = LevelEditorStorage.getAllLevels()
 
+        this.setupPanels()
         this.setupUI()
         this.onResize()
 
@@ -123,18 +118,58 @@ export class LevelEditor extends BasedLevel {
         }
     }
 
+    setupPanels() {
+        // Property Panel
+        this.propertyPanel = new PropertyPanel(this.gameRef, {
+            onPropertyChange: (key: string, value: any) => {
+                if (this.selectedObject) {
+                    (this.selectedObject as any)[key] = value
+                    // Handle special case for playerStart
+                    if (this.selectedObject.type === 'playerStart' && this.currentLevel) {
+                        this.currentLevel.playerStart = {
+                            x: this.selectedObject.x,
+                            y: this.selectedObject.y
+                        }
+                    }
+                    this.saveCurrentLevel()
+                }
+            },
+            getSelectedObject: () => this.selectedObject
+        })
+
+        // Level Settings Panel
+        this.levelSettingsPanel = new LevelSettingsPanel(this.gameRef, {
+            getCurrentLevel: () => this.currentLevel,
+            onSettingChange: (key: string, value: any) => this.applyLevelSettingValue(key, value),
+            onDeleteLevel: () => this.deleteCurrentLevel(),
+            canDeleteLevel: () => this.savedLevels.length > 1,
+            showMessage: (msg: string) => this.showMessage(msg)
+        })
+
+        // Level List Panel
+        this.levelListPanel = new LevelListPanel(this.gameRef, {
+            getSavedLevels: () => this.savedLevels,
+            getCurrentLevelId: () => this.currentLevel?.id || null,
+            onLoadLevel: (level: EditorLevelData) => {
+                this.saveCurrentLevel()
+                this.currentLevel = level
+                LevelEditorStorage.setCurrentLevelId(level.id)
+                this.selectedObject = null
+                this.propertyPanel.hide()
+            }
+        })
+
+        // Export Panel
+        this.exportPanel = new ExportPanel(this.gameRef, {
+            getCurrentLevel: () => this.currentLevel
+        })
+    }
+
     centerOnPlayerStart() {
         if (!this.currentLevel) return
         const ps = this.currentLevel.playerStart
         this.cameraX = this.gameRef.gameWidth / 2 - ps.x * this.zoom
         this.cameraY = this.gameRef.gameHeight / 2 - ps.y * this.zoom
-    }
-
-    removeExportTextareas() {
-        const textarea1 = document.getElementById('export-constants')
-        if (textarea1) textarea1.remove()
-        const textarea2 = document.getElementById('export-class')
-        if (textarea2) textarea2.remove()
     }
 
     setupUI() {
@@ -146,21 +181,8 @@ export class LevelEditor extends BasedLevel {
         }
 
         // Tool buttons
-        const tools: EditorTool[] = ['select', 'pan', 'wall', 'polygon', 'pushBox', 'movingPlatform', 'exitDoor', 'playerStart', 'hazardBlock']
-        const toolLabels: Record<EditorTool, string> = {
-            select: 'Sel',
-            pan: 'Pan',
-            wall: 'Wall',
-            polygon: 'Poly',
-            hazardBlock: 'Hazd',
-            pushBox: 'Box',
-            movingPlatform: 'Plat',
-            exitDoor: 'Exit',
-            playerStart: 'Start',
-        }
-
-        tools.forEach((tool, index) => {
-            const btn = this.createButton(toolLabels[tool], 10 + index * 55, 55, 50, 30)
+        TOOL_ORDER.forEach((tool, index) => {
+            const btn = this.createButton(TOOL_LABELS[tool], 10 + index * 55, 55, 50, 30)
             btn.fillColor = this.currentTool === tool ? TOOL_BUTTON_HOVER : TOOL_BUTTON_FILL
             btn.clickFunction = () => {
                 // Cancel polygon drawing if switching away
@@ -169,8 +191,8 @@ export class LevelEditor extends BasedLevel {
                 }
                 this.currentTool = tool
                 this.selectedObject = null
-                this.showPropertyPanel = false
-                // Reset any drag/handle state to prevent stale state affecting new tool
+                this.propertyPanel.hide()
+                // Reset any drag/handle state
                 this.isDragging = false
                 this.activeHandle = null
                 this.dragOffset = { x: 0, y: 0 }
@@ -189,15 +211,13 @@ export class LevelEditor extends BasedLevel {
         }
 
         this.testButton = this.createButton('Test', rightX - 70, 10, 65, 35)
-        this.testButton.clickFunction = () => {
-            this.testLevel()
-        }
+        this.testButton.clickFunction = () => this.testLevel()
 
         this.exportButton = this.createButton('Export', rightX - 140, 10, 65, 35)
         this.exportButton.clickFunction = () => {
-            this.showExportPanel = !this.showExportPanel
-            this.showLevelList = false
-            this.showLevelSettings = false
+            this.exportPanel.toggle()
+            this.levelListPanel.hide()
+            this.levelSettingsPanel.hide()
         }
 
         this.newButton = this.createButton('New', rightX - 210, 10, 65, 35)
@@ -214,23 +234,21 @@ export class LevelEditor extends BasedLevel {
         this.loadButton = this.createButton('Load', rightX - 280, 10, 65, 35)
         this.loadButton.clickFunction = () => {
             this.savedLevels = LevelEditorStorage.getAllLevels()
-            this.showLevelList = !this.showLevelList
-            this.showExportPanel = false
-            this.showLevelSettings = false
+            this.levelListPanel.toggle()
+            this.exportPanel.hide()
+            this.levelSettingsPanel.hide()
         }
 
         this.levelSettingsButton = this.createButton('Settings', rightX - 360, 10, 75, 35)
         this.levelSettingsButton.clickFunction = () => {
-            this.showLevelSettings = !this.showLevelSettings
-            this.showLevelList = false
-            this.showExportPanel = false
+            this.levelSettingsPanel.toggle()
+            this.levelListPanel.hide()
+            this.exportPanel.hide()
         }
 
         this.deleteObjectButton = this.createButton('Delete', 10, this.gameRef.gameHeight - 45, 70, 35)
         this.deleteObjectButton.fillColor = '#a33'
-        this.deleteObjectButton.clickFunction = () => {
-            this.deleteSelectedObject()
-        }
+        this.deleteObjectButton.clickFunction = () => this.deleteSelectedObject()
     }
 
     createButton(text: string, x: number, y: number, width: number, height: number): any {
@@ -268,7 +286,6 @@ export class LevelEditor extends BasedLevel {
     testLevel() {
         if (this.currentLevel) {
             this.saveCurrentLevel()
-            // Store level data for test level to use
             this.gameRef.basedObjectRefs.testLevelData = this.currentLevel
             this.gameRef.loadLevel('test-level')
         }
@@ -300,22 +317,39 @@ export class LevelEditor extends BasedLevel {
         }
 
         this.selectedObject = null
-        this.showPropertyPanel = false
+        this.propertyPanel.hide()
         this.saveCurrentLevel()
     }
 
-    isInputFocused(): boolean {
-        const activeElement = document.activeElement
-        return activeElement instanceof HTMLInputElement ||
-            activeElement instanceof HTMLTextAreaElement ||
-            activeElement instanceof HTMLSelectElement
+    deleteCurrentLevel() {
+        if (!this.currentLevel) return
+        LevelEditorStorage.deleteLevel(this.currentLevel.id)
+        this.savedLevels = LevelEditorStorage.getAllLevels()
+        this.currentLevel = this.savedLevels[0] || LevelEditorStorage.createNewLevel()
+        LevelEditorStorage.setCurrentLevelId(this.currentLevel.id)
+        this.levelSettingsPanel.hide()
+        this.showMessage('Level Deleted')
+    }
+
+    applyLevelSettingValue(settingKey: string, value: string) {
+        if (!this.currentLevel) return
+
+        if (settingKey === 'name') {
+            this.currentLevel.name = value || 'Untitled Level'
+        } else if (settingKey === 'levelWidth') {
+            this.currentLevel.levelWidth = Math.max(200, parseInt(value) || 800)
+        } else if (settingKey === 'levelHeight') {
+            this.currentLevel.levelHeight = Math.max(200, parseInt(value) || 600)
+        } else if (settingKey === 'nextLevel') {
+            this.currentLevel.nextLevel = value || 'start-screen'
+        }
+
+        this.saveCurrentLevel()
+        this.savedLevels = LevelEditorStorage.getAllLevels()
     }
 
     handleInput() {
-        // Skip keyboard controls if an input is focused
-        if (this.isInputFocused()) {
-            return
-        }
+        if (EditorInputManager.isInputFocused()) return
 
         const keys = this.gameRef.pressedKeys
 
@@ -335,38 +369,32 @@ export class LevelEditor extends BasedLevel {
 
         // Delete selected object
         if (keys['Delete'] || keys['Backspace']) {
-            if (this.selectedObject && !this.editingProperty && !this.editingLevelSetting) {
+            if (this.selectedObject && !this.propertyPanel.isEditing && !this.levelSettingsPanel.isEditing) {
                 this.deleteSelectedObject()
             }
         }
 
         // P to toggle pan tool
-        if (keys['KeyP']) {
-            this.currentTool = 'pan'
-        }
+        if (keys['KeyP']) this.currentTool = 'pan'
 
         // V to toggle select tool
-        if (keys['KeyV']) {
-            this.currentTool = 'select'
-        }
+        if (keys['KeyV']) this.currentTool = 'select'
 
         // Enter to finalize polygon drawing
         if (keys['Enter'] && this.isDrawingPolygon) {
             this.finalizePolygon()
         }
 
-        // Escape to deselect or cancel polygon drawing
+        // Escape to deselect or cancel/close panels
         if (keys['Escape']) {
             if (this.isDrawingPolygon) {
                 this.cancelPolygonDrawing()
             } else {
                 this.selectedObject = null
-                this.showPropertyPanel = false
-                this.showLevelList = false
-                this.showExportPanel = false
-                this.showLevelSettings = false
-                this.editingProperty = null
-                this.editingLevelSetting = null
+                this.propertyPanel.hide()
+                this.levelListPanel.hide()
+                this.exportPanel.hide()
+                this.levelSettingsPanel.hide()
             }
         }
     }
@@ -375,12 +403,9 @@ export class LevelEditor extends BasedLevel {
         const mouse = this.gameRef.mouseInfo
         const worldPos = this.screenToWorld(mouse.x, mouse.y)
 
-        // Update placing preview - snap the top-left corner position, then offset to center
+        // Update placing preview
         if (this.currentTool !== 'select' && this.currentTool !== 'pan') {
             const defaults = DEFAULT_OBJECTS[this.currentTool] as any
-            const previewW = defaults?.width || 100
-            const previewH = defaults?.height || 50
-            // Snap to grid (this will be the center position)
             const snappedX = Math.round(worldPos.x / GRID_SIZE) * GRID_SIZE
             const snappedY = Math.round(worldPos.y / GRID_SIZE) * GRID_SIZE
             this.placingPreview = { x: snappedX, y: snappedY }
@@ -390,12 +415,11 @@ export class LevelEditor extends BasedLevel {
 
         // Handle mouse down
         if (mouse.mouseDown && !this.isDragging && !this.isPanning && !this.activeHandle) {
-            // Check if clicking on UI areas
             if (mouse.y < 100 || this.isClickOnPanel(mouse.x, mouse.y)) {
                 return
             }
 
-            // Check if clicking on a handle first (only in select mode with selected object)
+            // Check for handle first
             if (this.currentTool === 'select' && this.selectedObject) {
                 const handle = this.getHandleAtPosition(worldPos.x, worldPos.y)
                 if (handle) {
@@ -408,14 +432,12 @@ export class LevelEditor extends BasedLevel {
                 this.isPanning = true
                 this.panStart = { x: mouse.x, y: mouse.y }
             } else if (this.currentTool === 'polygon') {
-                // Handle polygon drawing
                 this.handlePolygonClick(worldPos.x, worldPos.y)
             } else if (this.currentTool === 'select') {
-                // Try to select an object
                 const clicked = this.getObjectAtPosition(worldPos.x, worldPos.y)
                 if (clicked) {
                     this.selectedObject = clicked
-                    this.showPropertyPanel = true
+                    this.propertyPanel.show()
                     this.isDragging = true
                     this.dragOffset = {
                         x: worldPos.x - clicked.x,
@@ -423,20 +445,16 @@ export class LevelEditor extends BasedLevel {
                     }
                 } else {
                     this.selectedObject = null
-                    this.showPropertyPanel = false
+                    this.propertyPanel.hide()
                 }
             } else {
-                // Place new object at the preview position (already snapped to grid)
-                // This ensures the object is placed exactly where the preview shows
                 if (this.placingPreview) {
                     this.placeObject(this.placingPreview.x, this.placingPreview.y)
                 } else {
-                    // Fallback: snap coordinates before placing (shouldn't normally reach here)
                     const snappedX = Math.round(worldPos.x / GRID_SIZE) * GRID_SIZE
                     const snappedY = Math.round(worldPos.y / GRID_SIZE) * GRID_SIZE
                     this.placeObject(snappedX, snappedY)
                 }
-                // Set isDragging to prevent placing multiple objects while mouse is held
                 this.isDragging = true
             }
         }
@@ -446,24 +464,21 @@ export class LevelEditor extends BasedLevel {
             this.handleHandleDrag(worldPos.x, worldPos.y)
         }
 
-        // Handle dragging (only in select tool to avoid affecting just-placed objects)
+        // Handle dragging
         if (this.isDragging && this.selectedObject && mouse.mouseDown && !this.activeHandle && this.currentTool === 'select') {
             const snappedX = Math.round((worldPos.x - this.dragOffset.x) / GRID_SIZE) * GRID_SIZE
             const snappedY = Math.round((worldPos.y - this.dragOffset.y) / GRID_SIZE) * GRID_SIZE
 
-            // Calculate delta for relative movement
             const deltaX = snappedX - this.selectedObject.x
             const deltaY = snappedY - this.selectedObject.y
 
             this.selectedObject.x = snappedX
             this.selectedObject.y = snappedY
 
-            // Update playerStart if it's being moved
             if (this.selectedObject.type === 'playerStart' && this.currentLevel) {
                 this.currentLevel.playerStart = { x: snappedX, y: snappedY }
             }
 
-            // Update moving platform bounds relatively
             if (this.selectedObject.type === 'movingPlatform') {
                 const plat = this.selectedObject as any
                 plat.minX += deltaX
@@ -491,29 +506,35 @@ export class LevelEditor extends BasedLevel {
         }
     }
 
+    isClickOnPanel(x: number, y: number): boolean {
+        if (this.propertyPanel.visible && x > this.gameRef.gameWidth - 220) return true
+        if (this.levelListPanel.visible && this.levelListPanel.isPointInside(x, y)) return true
+        if (this.exportPanel.visible && this.exportPanel.isPointInside(x, y)) return true
+        if (this.levelSettingsPanel.visible && this.levelSettingsPanel.isPointInside(x, y)) return true
+        if (this.selectedObject && x < 90 && y > this.gameRef.gameHeight - 55) return true
+        return false
+    }
+
     getHandleAtPosition(x: number, y: number): string | null {
         if (!this.selectedObject) return null
 
         const handleRadius = this.handleSize / this.zoom
 
-        // For polygons, check vertex handles and rotation handle
+        // For polygons
         if (this.selectedObject.type === 'polygon') {
             const poly = this.selectedObject as EditorPolygon
             const angleRad = (poly.angle || 0) * Math.PI / 180
             const cosA = Math.cos(angleRad)
             const sinA = Math.sin(angleRad)
 
-            // Check rotation handle (positioned above the polygon)
             const rotHandleX = poly.x
             const rotHandleY = poly.y - 60
             if (Math.abs(x - rotHandleX) < handleRadius && Math.abs(y - rotHandleY) < handleRadius) {
                 return 'rotate'
             }
 
-            // Check vertex handles
             for (let i = 0; i < poly.vertices.length; i++) {
                 const v = poly.vertices[i]
-                // Apply rotation to vertex position
                 const rotX = v.x * cosA - v.y * sinA
                 const rotY = v.x * sinA + v.y * cosA
                 const worldVX = poly.x + rotX
@@ -524,33 +545,27 @@ export class LevelEditor extends BasedLevel {
             }
         }
 
-        // For moving platforms, check the min/max endpoint handles first
+        // For moving platforms
         if (this.selectedObject.type === 'movingPlatform') {
             const plat = this.selectedObject as EditorMovingPlatform
-
-            // Min point handle
             if (Math.abs(x - plat.minX) < handleRadius && Math.abs(y - plat.minY) < handleRadius) {
                 return 'minPoint'
             }
-            // Max point handle
             if (Math.abs(x - plat.maxX) < handleRadius && Math.abs(y - plat.maxY) < handleRadius) {
                 return 'maxPoint'
             }
         }
 
-        // Check resize handles for objects with width/height
+        // Resize handles for objects with width/height
         if ('width' in this.selectedObject && 'height' in this.selectedObject) {
             const obj = this.selectedObject as any
             const halfW = obj.width / 2
             const halfH = obj.height / 2
 
-            // Corner handles
             if (Math.abs(x - (obj.x + halfW)) < handleRadius && Math.abs(y - (obj.y + halfH)) < handleRadius) return 'se'
             if (Math.abs(x - (obj.x - halfW)) < handleRadius && Math.abs(y - (obj.y + halfH)) < handleRadius) return 'sw'
             if (Math.abs(x - (obj.x + halfW)) < handleRadius && Math.abs(y - (obj.y - halfH)) < handleRadius) return 'ne'
             if (Math.abs(x - (obj.x - halfW)) < handleRadius && Math.abs(y - (obj.y - halfH)) < handleRadius) return 'nw'
-
-            // Edge handles
             if (Math.abs(x - (obj.x + halfW)) < handleRadius && Math.abs(y - obj.y) < handleRadius) return 'e'
             if (Math.abs(x - (obj.x - halfW)) < handleRadius && Math.abs(y - obj.y) < handleRadius) return 'w'
             if (Math.abs(x - obj.x) < handleRadius && Math.abs(y - (obj.y - halfH)) < handleRadius) return 'n'
@@ -566,32 +581,26 @@ export class LevelEditor extends BasedLevel {
         const snappedX = Math.round(worldX / GRID_SIZE) * GRID_SIZE
         const snappedY = Math.round(worldY / GRID_SIZE) * GRID_SIZE
 
-        // Handle polygon vertex dragging and rotation
+        // Polygon vertex/rotation
         if (this.selectedObject.type === 'polygon') {
             const poly = this.selectedObject as EditorPolygon
 
             if (this.activeHandle === 'rotate') {
-                // Calculate angle from center to mouse position
                 const dx = worldX - poly.x
                 const dy = worldY - poly.y
-                const angle = Math.atan2(dy, dx) * 180 / Math.PI + 90  // +90 because handle is above
-                poly.angle = Math.round(angle / 5) * 5  // Snap to 5 degree increments
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI + 90
+                poly.angle = Math.round(angle / 5) * 5
                 return
             }
 
             if (this.activeHandle.startsWith('vertex-')) {
                 const vertexIndex = parseInt(this.activeHandle.split('-')[1])
                 if (vertexIndex >= 0 && vertexIndex < poly.vertices.length) {
-                    // Convert world position to local vertex position (relative to polygon center)
-                    // Account for current rotation
                     const angleRad = (poly.angle || 0) * Math.PI / 180
-                    const cosA = Math.cos(-angleRad)  // Negative for inverse rotation
+                    const cosA = Math.cos(-angleRad)
                     const sinA = Math.sin(-angleRad)
-
                     const localX = snappedX - poly.x
                     const localY = snappedY - poly.y
-
-                    // Apply inverse rotation to get local vertex coordinates
                     poly.vertices[vertexIndex] = {
                         x: localX * cosA - localY * sinA,
                         y: localX * sinA + localY * cosA
@@ -601,10 +610,9 @@ export class LevelEditor extends BasedLevel {
             }
         }
 
-        // Handle moving platform endpoint dragging
+        // Moving platform endpoints
         if (this.selectedObject.type === 'movingPlatform') {
             const plat = this.selectedObject as EditorMovingPlatform
-
             if (this.activeHandle === 'minPoint') {
                 plat.minX = snappedX
                 plat.minY = snappedY
@@ -617,13 +625,11 @@ export class LevelEditor extends BasedLevel {
             }
         }
 
-        // Handle resize for objects with width/height
-        // Resizing anchors the opposite edge - dragging east edge keeps west edge fixed, etc.
+        // Resize handles
         if ('width' in this.selectedObject && 'height' in this.selectedObject) {
             const obj = this.selectedObject as any
-            const minSize = 20
+            const minSize = MIN_OBJECT_SIZE
 
-            // Calculate current edges
             const currentLeft = obj.x - obj.width / 2
             const currentRight = obj.x + obj.width / 2
             const currentTop = obj.y - obj.height / 2
@@ -631,7 +637,6 @@ export class LevelEditor extends BasedLevel {
 
             switch (this.activeHandle) {
                 case 'e': {
-                    // East handle: anchor west edge
                     const newRight = snappedX
                     const newWidth = Math.max(minSize, newRight - currentLeft)
                     obj.width = newWidth
@@ -639,7 +644,6 @@ export class LevelEditor extends BasedLevel {
                     break
                 }
                 case 'w': {
-                    // West handle: anchor east edge
                     const newLeft = snappedX
                     const newWidth = Math.max(minSize, currentRight - newLeft)
                     obj.width = newWidth
@@ -647,7 +651,6 @@ export class LevelEditor extends BasedLevel {
                     break
                 }
                 case 'n': {
-                    // North handle: anchor south edge
                     const newTop = snappedY
                     const newHeight = Math.max(minSize, currentBottom - newTop)
                     obj.height = newHeight
@@ -655,7 +658,6 @@ export class LevelEditor extends BasedLevel {
                     break
                 }
                 case 's': {
-                    // South handle: anchor north edge
                     const newBottom = snappedY
                     const newHeight = Math.max(minSize, newBottom - currentTop)
                     obj.height = newHeight
@@ -663,7 +665,6 @@ export class LevelEditor extends BasedLevel {
                     break
                 }
                 case 'ne': {
-                    // Northeast corner: anchor southwest corner
                     const newRight = snappedX
                     const newTop = snappedY
                     const newWidth = Math.max(minSize, newRight - currentLeft)
@@ -675,7 +676,6 @@ export class LevelEditor extends BasedLevel {
                     break
                 }
                 case 'nw': {
-                    // Northwest corner: anchor southeast corner
                     const newLeft = snappedX
                     const newTop = snappedY
                     const newWidth = Math.max(minSize, currentRight - newLeft)
@@ -687,7 +687,6 @@ export class LevelEditor extends BasedLevel {
                     break
                 }
                 case 'se': {
-                    // Southeast corner: anchor northwest corner
                     const newRight = snappedX
                     const newBottom = snappedY
                     const newWidth = Math.max(minSize, newRight - currentLeft)
@@ -699,7 +698,6 @@ export class LevelEditor extends BasedLevel {
                     break
                 }
                 case 'sw': {
-                    // Southwest corner: anchor northeast corner
                     const newLeft = snappedX
                     const newBottom = snappedY
                     const newWidth = Math.max(minSize, currentRight - newLeft)
@@ -712,30 +710,6 @@ export class LevelEditor extends BasedLevel {
                 }
             }
         }
-    }
-
-    isClickOnPanel(x: number, y: number): boolean {
-        // Property panel on the right
-        if (this.showPropertyPanel && x > this.gameRef.gameWidth - 220) {
-            return true
-        }
-        // Level list panel
-        if (this.showLevelList && x > this.gameRef.gameWidth - 320 && y > 50 && y < 400) {
-            return true
-        }
-        // Export panel
-        if (this.showExportPanel && x > 100 && x < this.gameRef.gameWidth - 100 && y > 100 && y < this.gameRef.gameHeight - 100) {
-            return true
-        }
-        // Level settings panel
-        if (this.showLevelSettings && x > this.gameRef.gameWidth - 320 && y > 50 && y < 300) {
-            return true
-        }
-        // Delete button area
-        if (this.selectedObject && x < 90 && y > this.gameRef.gameHeight - 55) {
-            return true
-        }
-        return false
     }
 
     screenToWorld(screenX: number, screenY: number): { x: number, y: number } {
@@ -755,38 +729,26 @@ export class LevelEditor extends BasedLevel {
     getObjectAtPosition(x: number, y: number): EditorObject | null {
         if (!this.currentLevel) return null
 
-        // Check player start
         const ps = this.currentLevel.playerStart
         if (Math.abs(x - ps.x) < 25 && Math.abs(y - ps.y) < 25) {
             return { id: 'playerStart', type: 'playerStart', x: ps.x, y: ps.y }
         }
 
-        // Check exit doors
         for (const door of this.currentLevel.exitDoors) {
             if (this.isPointInRect(x, y, door)) return door
         }
-
-        // Check moving platforms
         for (const plat of this.currentLevel.movingPlatforms) {
             if (this.isPointInRect(x, y, plat)) return plat
         }
-
-        // Check push boxes
         for (const box of this.currentLevel.pushBoxes) {
             if (this.isPointInRect(x, y, box)) return box
         }
-
-        // Check walls
         for (const wall of this.currentLevel.walls) {
             if (this.isPointInRect(x, y, wall)) return wall
         }
-
-        // Check polygons
         for (const poly of (this.currentLevel.polygons || [])) {
             if (this.isPointInPolygon(x, y, poly)) return poly
         }
-
-        // Check hazard blocks
         for (const hazard of this.currentLevel.hazardBlocks) {
             if (this.isPointInRect(x, y, hazard)) return hazard
         }
@@ -801,72 +763,56 @@ export class LevelEditor extends BasedLevel {
     }
 
     isPointInPolygon(x: number, y: number, poly: EditorPolygon): boolean {
-        // Transform point to polygon local coordinates (accounting for rotation)
         const angleRad = (poly.angle || 0) * Math.PI / 180
         const cosA = Math.cos(-angleRad)
         const sinA = Math.sin(-angleRad)
-
         const localX = (x - poly.x) * cosA - (y - poly.y) * sinA
         const localY = (x - poly.x) * sinA + (y - poly.y) * cosA
 
-        // Ray casting algorithm for point-in-polygon
         const vertices = poly.vertices
         let inside = false
 
         for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
             const xi = vertices[i].x, yi = vertices[i].y
             const xj = vertices[j].x, yj = vertices[j].y
-
             if (((yi > localY) !== (yj > localY)) &&
                 (localX < (xj - xi) * (localY - yi) / (yj - yi) + xi)) {
                 inside = !inside
             }
         }
-
         return inside
     }
 
-    // Polygon creation methods
+    // Polygon creation
     handlePolygonClick(worldX: number, worldY: number) {
         const snappedX = Math.round(worldX / GRID_SIZE) * GRID_SIZE
         const snappedY = Math.round(worldY / GRID_SIZE) * GRID_SIZE
-
         const now = Date.now()
 
-        // Check for click delay (prevent rapid clicks)
-        if ((now - this.lastPolygonClickTime) < this.polygonClickDelay) {
-            return
-        }
+        if ((now - this.lastPolygonClickTime) < POLYGON_CLICK_DELAY) return
 
-        const isDoubleClick = (now - this.lastClickTime) < this.doubleClickThreshold
+        const isDoubleClick = (now - this.lastClickTime) < DOUBLE_CLICK_THRESHOLD
         this.lastClickTime = now
         this.lastPolygonClickTime = now
 
         if (isDoubleClick && this.polygonVertices.length >= 3) {
-            // Double-click to finalize
             this.finalizePolygon()
             return
         }
 
-        // Check minimum distance from previous vertex
         if (this.polygonVertices.length > 0) {
             const lastVertex = this.polygonVertices[this.polygonVertices.length - 1]
             const dist = Math.sqrt(Math.pow(snappedX - lastVertex.x, 2) + Math.pow(snappedY - lastVertex.y, 2))
-            if (dist < this.minVertexDistance) {
-                return  // Too close to the last point, ignore
-            }
+            if (dist < MIN_VERTEX_DISTANCE) return
         }
 
-        // Start or continue drawing polygon
         this.isDrawingPolygon = true
         this.polygonVertices.push({ x: snappedX, y: snappedY })
 
-        // Auto-finalize if we have a good shape and click near the first point
         if (this.polygonVertices.length >= 3) {
             const first = this.polygonVertices[0]
             const dist = Math.sqrt(Math.pow(snappedX - first.x, 2) + Math.pow(snappedY - first.y, 2))
             if (dist < GRID_SIZE * 2) {
-                // Remove the last duplicate point and finalize
                 this.polygonVertices.pop()
                 this.finalizePolygon()
             }
@@ -879,20 +825,13 @@ export class LevelEditor extends BasedLevel {
             return
         }
 
-        // Calculate center of polygon
         let centerX = 0, centerY = 0
-        this.polygonVertices.forEach(v => {
-            centerX += v.x
-            centerY += v.y
-        })
+        this.polygonVertices.forEach(v => { centerX += v.x; centerY += v.y })
         centerX /= this.polygonVertices.length
         centerY /= this.polygonVertices.length
-
-        // Snap center to grid
         centerX = Math.round(centerX / GRID_SIZE) * GRID_SIZE
         centerY = Math.round(centerY / GRID_SIZE) * GRID_SIZE
 
-        // Convert vertices to be relative to center
         const localVertices = this.polygonVertices.map(v => ({
             x: v.x - centerX,
             y: v.y - centerY
@@ -910,13 +849,11 @@ export class LevelEditor extends BasedLevel {
 
         this.currentLevel.polygons.push(poly)
         this.selectedObject = poly
-        this.showPropertyPanel = true
+        this.propertyPanel.show()
         this.saveCurrentLevel()
 
-        // Reset polygon drawing state
         this.isDrawingPolygon = false
         this.polygonVertices = []
-
         this.showMessage('Polygon created!')
     }
 
@@ -928,108 +865,51 @@ export class LevelEditor extends BasedLevel {
     placeObject(x: number, y: number) {
         if (!this.currentLevel) return
 
-        // Use coordinates directly - they should already be snapped by the caller
-        // Re-snapping can cause off-by-one errors due to floating point precision
         const id = LevelEditorStorage.generateId()
 
         switch (this.currentTool) {
             case 'wall':
-                const wall: EditorWall = {
-                    id,
-                    type: 'wall',
-                    x: x,
-                    y: y,
-                    width: 100,
-                    height: 50,
-                    color: '#000'
-                }
+                const wall: EditorWall = { id, type: 'wall', x, y, width: 100, height: 50, color: '#000' }
                 this.currentLevel.walls.push(wall)
                 this.selectedObject = wall
                 break
-
             case 'pushBox':
-                const box: EditorPushBox = {
-                    id,
-                    type: 'pushBox',
-                    x: x,
-                    y: y,
-                    width: 90,
-                    height: 90,
-                    color: 'red',
-                    sizeToMove: 40
-                }
+                const box: EditorPushBox = { id, type: 'pushBox', x, y, width: 90, height: 90, color: 'red', sizeToMove: 40 }
                 this.currentLevel.pushBoxes.push(box)
                 this.selectedObject = box
                 break
-
             case 'movingPlatform':
                 const plat: EditorMovingPlatform = {
-                    id,
-                    type: 'movingPlatform',
-                    x: x,
-                    y: y,
-                    width: 100,
-                    height: 50,
-                    color: 'purple',
-                    xDirection: 1,
-                    yDirection: 0,
-                    xSpeed: 3,
-                    ySpeed: 0,
-                    minX: x - 100,
-                    maxX: x + 100,
-                    minY: y,
-                    maxY: y
+                    id, type: 'movingPlatform', x, y, width: 100, height: 50, color: 'purple',
+                    xDirection: 1, yDirection: 0, xSpeed: 3, ySpeed: 0,
+                    minX: x - 100, maxX: x + 100, minY: y, maxY: y
                 }
                 this.currentLevel.movingPlatforms.push(plat)
                 this.selectedObject = plat
                 break
-
             case 'exitDoor':
-                const door: EditorExitDoor = {
-                    id,
-                    type: 'exitDoor',
-                    x: x,
-                    y: y,
-                    width: 100,
-                    height: 100,
-                    color: 'yellow',
-                    doorPath: 'start-screen'
-                }
+                const door: EditorExitDoor = { id, type: 'exitDoor', x, y, width: 100, height: 100, color: 'yellow', doorPath: 'start-screen' }
                 this.currentLevel.exitDoors.push(door)
                 this.selectedObject = door
                 break
-
             case 'hazardBlock':
-                const hazard: EditorHazardBlock = {
-                    id,
-                    type: 'hazardBlock',
-                    x: x,
-                    y: y,
-                    width: 100,
-                    height: 50,
-                }
+                const hazard: EditorHazardBlock = { id, type: 'hazardBlock', x, y, width: 100, height: 50 }
                 this.currentLevel.hazardBlocks.push(hazard)
                 this.selectedObject = hazard
                 break
-
             case 'playerStart':
-                this.currentLevel.playerStart = { x: x, y: y }
-                this.selectedObject = { id: 'playerStart', type: 'playerStart', x: x, y: y }
+                this.currentLevel.playerStart = { x, y }
+                this.selectedObject = { id: 'playerStart', type: 'playerStart', x, y }
                 break
         }
 
-        this.showPropertyPanel = true
+        this.propertyPanel.show()
         this.saveCurrentLevel()
     }
 
     update() {
         this.handleInput()
         this.handleMouse()
-
-        // Remove export textareas if panel is closed
-        if (!this.showExportPanel) {
-            this.removeExportTextareas()
-        }
 
         // Update buttons
         this.backButton.update()
@@ -1048,7 +928,6 @@ export class LevelEditor extends BasedLevel {
     }
 
     onResize() {
-        // Reposition buttons on resize
         const rightX = this.gameRef.gameWidth - 75
         this.saveButton.x = rightX
         this.testButton.x = rightX - 70
@@ -1057,57 +936,45 @@ export class LevelEditor extends BasedLevel {
         this.loadButton.x = rightX - 280
         this.levelSettingsButton.x = rightX - 360
         this.deleteObjectButton.y = this.gameRef.gameHeight - 45
+
+        // Update panel positions
+        this.propertyPanel.onResize()
+        this.levelSettingsPanel.onResize()
+        this.levelListPanel.onResize()
+        this.exportPanel.onResize()
     }
 
     draw() {
         const ctx = this.gameRef.ctx
 
         // Background
-        drawBox({
-            c: ctx,
-            x: 0,
-            y: 0,
-            width: this.gameRef.gameWidth,
-            height: this.gameRef.gameHeight,
-            fillColor: BG_COLOR
-        })
+        drawBox({ c: ctx, x: 0, y: 0, width: this.gameRef.gameWidth, height: this.gameRef.gameHeight, fillColor: BG_COLOR })
 
-        // Draw level area
         if (this.currentLevel) {
             this.drawLevel()
         }
 
-        // Draw UI
         this.drawUI()
 
         // Draw message
         if (this.messageText && this.gameRef.lastUpdate - this.messageTime < this.messageDuration) {
             drawText({
-                c: ctx,
-                x: this.gameRef.gameWidth / 2,
-                y: this.gameRef.gameHeight - 20,
-                align: 'center',
-                fillColor: '#0f0',
-                fontSize: 16,
-                fontFamily: 'sans-serif',
-                weight: 'bold',
-                style: '',
-                text: this.messageText
+                c: ctx, x: this.gameRef.gameWidth / 2, y: this.gameRef.gameHeight - 20,
+                align: 'center', fillColor: '#0f0', fontSize: 16, fontFamily: 'sans-serif',
+                weight: 'bold', style: '', text: this.messageText
             })
         }
     }
 
     drawLevel() {
         const ctx = this.gameRef.ctx
-
         if (!this.currentLevel) return
 
-        // Level background
         const levelScreen = this.worldToScreen(0, 0)
+
+        // Level background
         drawBox({
-            c: ctx,
-            x: levelScreen.x,
-            y: levelScreen.y,
+            c: ctx, x: levelScreen.x, y: levelScreen.y,
             width: this.currentLevel.levelWidth * this.zoom,
             height: this.currentLevel.levelHeight * this.zoom,
             fillColor: '#444'
@@ -1116,140 +983,61 @@ export class LevelEditor extends BasedLevel {
         // Grid
         for (let x = 0; x <= this.currentLevel.levelWidth; x += GRID_SIZE) {
             const screenX = levelScreen.x + x * this.zoom
-            drawLine({
-                c: ctx,
-                x: screenX,
-                y: levelScreen.y,
-                toX: screenX,
-                toY: levelScreen.y + this.currentLevel.levelHeight * this.zoom,
-                strokeColor: GRID_COLOR,
-                strokeWidth: 1
-            })
+            drawLine({ c: ctx, x: screenX, y: levelScreen.y, toX: screenX, toY: levelScreen.y + this.currentLevel.levelHeight * this.zoom, strokeColor: GRID_COLOR, strokeWidth: 1 })
         }
         for (let y = 0; y <= this.currentLevel.levelHeight; y += GRID_SIZE) {
             const screenY = levelScreen.y + y * this.zoom
-            drawLine({
-                c: ctx,
-                x: levelScreen.x,
-                y: screenY,
-                toX: levelScreen.x + this.currentLevel.levelWidth * this.zoom,
-                toY: screenY,
-                strokeColor: GRID_COLOR,
-                strokeWidth: 1
-            })
+            drawLine({ c: ctx, x: levelScreen.x, y: screenY, toX: levelScreen.x + this.currentLevel.levelWidth * this.zoom, toY: screenY, strokeColor: GRID_COLOR, strokeWidth: 1 })
         }
 
-        // Draw walls
-        this.currentLevel.walls.forEach(wall => {
-            this.drawEditorRect(wall, wall.color, this.selectedObject?.id === wall.id)
-        })
+        // Draw objects
+        this.currentLevel.walls.forEach(wall => this.drawEditorRect(wall, wall.color, this.selectedObject?.id === wall.id))
+        ;(this.currentLevel.polygons || []).forEach(poly => this.drawEditorPolygon(poly, this.selectedObject?.id === poly.id))
+        this.currentLevel.pushBoxes.forEach(box => this.drawEditorRect(box, '#d4c9b2', this.selectedObject?.id === box.id))
 
-            // Draw polygons
-            ; (this.currentLevel.polygons || []).forEach(poly => {
-                this.drawEditorPolygon(poly, this.selectedObject?.id === poly.id)
-            })
-
-        // Draw push boxes
-        this.currentLevel.pushBoxes.forEach(box => {
-            this.drawEditorRect(box, '#d4c9b2', this.selectedObject?.id === box.id)
-        })
-
-        // Draw moving platforms (draw range first, then platform, then handles on top)
+        // Moving platforms (draw range, platform, then handles)
         this.currentLevel.movingPlatforms.forEach(plat => {
             const isSelected = this.selectedObject?.id === plat.id
-            // Draw the path line first (behind everything)
             this.drawMovementRangeLine(plat, isSelected)
-            // Then draw the platform
             this.drawEditorRect(plat, plat.color, isSelected)
         })
+        this.currentLevel.movingPlatforms.forEach(plat => this.drawMovementRangeHandles(plat, this.selectedObject?.id === plat.id))
 
-        // Draw moving platform handles on top of everything
-        this.currentLevel.movingPlatforms.forEach(plat => {
-            const isSelected = this.selectedObject?.id === plat.id
-            this.drawMovementRangeHandles(plat, isSelected)
-        })
-
-        // Draw exit doors
+        // Exit doors
         this.currentLevel.exitDoors.forEach(door => {
             this.drawEditorRect(door, '#333', this.selectedObject?.id === door.id)
-            // Draw exit indicator
             const pos = this.worldToScreen(door.x, door.y)
-            drawText({
-                c: ctx,
-                x: pos.x,
-                y: pos.y + 5,
-                align: 'center',
-                fillColor: '#ff0',
-                fontSize: 12 * this.zoom,
-                fontFamily: 'sans-serif',
-                weight: 'bold',
-                style: '',
-                text: 'EXIT'
-            })
+            drawText({ c: ctx, x: pos.x, y: pos.y + 5, align: 'center', fillColor: '#ff0', fontSize: 12 * this.zoom, fontFamily: 'sans-serif', weight: 'bold', style: '', text: 'EXIT' })
         })
 
-        // Draw hazards
-        this.currentLevel.hazardBlocks.forEach(hazard => {
-            this.drawEditorRect(hazard, '#f00', this.selectedObject?.id === hazard.id)
-        })
+        // Hazards
+        this.currentLevel.hazardBlocks.forEach(hazard => this.drawEditorRect(hazard, '#f00', this.selectedObject?.id === hazard.id))
 
-        // Draw player start
+        // Player start
         const ps = this.currentLevel.playerStart
         const psScreen = this.worldToScreen(ps.x, ps.y)
         const isSelected = this.selectedObject?.type === 'playerStart'
-        drawCircle({
-            c: ctx,
-            x: psScreen.x,
-            y: psScreen.y,
-            radius: 25 * this.zoom,
-            fillColor: '#ff9900',
-            strokeColor: isSelected ? '#fff' : '#ff0',
-            strokeWidth: isSelected ? 3 : 2
-        })
-        drawText({
-            c: ctx,
-            x: psScreen.x,
-            y: psScreen.y + 5,
-            align: 'center',
-            fillColor: '#fff',
-            fontSize: 12 * this.zoom,
-            fontFamily: 'sans-serif',
-            weight: 'bold',
-            style: '',
-            text: 'START'
-        })
+        drawCircle({ c: ctx, x: psScreen.x, y: psScreen.y, radius: 25 * this.zoom, fillColor: '#ff9900', strokeColor: isSelected ? '#fff' : '#ff0', strokeWidth: isSelected ? 3 : 2 })
+        drawText({ c: ctx, x: psScreen.x, y: psScreen.y + 5, align: 'center', fillColor: '#fff', fontSize: 12 * this.zoom, fontFamily: 'sans-serif', weight: 'bold', style: '', text: 'START' })
 
-        // Draw placement preview
+        // Placement preview
         if (this.placingPreview && this.currentTool !== 'select' && this.currentTool !== 'pan' && this.currentTool !== 'polygon') {
             const previewScreen = this.worldToScreen(this.placingPreview.x, this.placingPreview.y)
             ctx.globalAlpha = 0.5
 
             if (this.currentTool === 'playerStart') {
-                drawCircle({
-                    c: ctx,
-                    x: previewScreen.x,
-                    y: previewScreen.y,
-                    radius: 25 * this.zoom,
-                    fillColor: '#ff9900'
-                })
+                drawCircle({ c: ctx, x: previewScreen.x, y: previewScreen.y, radius: 25 * this.zoom, fillColor: '#ff9900' })
             } else {
                 const defaults = DEFAULT_OBJECTS[this.currentTool] as any
                 const w = (defaults?.width || 100) * this.zoom
                 const h = (defaults?.height || 50) * this.zoom
-                drawBox({
-                    c: ctx,
-                    x: previewScreen.x - w / 2,
-                    y: previewScreen.y - h / 2,
-                    width: w,
-                    height: h,
-                    fillColor: TOOL_COLORS[this.currentTool]
-                })
+                drawBox({ c: ctx, x: previewScreen.x - w / 2, y: previewScreen.y - h / 2, width: w, height: h, fillColor: TOOL_COLORS[this.currentTool] })
             }
 
             ctx.globalAlpha = 1
         }
 
-        // Draw polygon being created
+        // Polygon in progress
         if (this.isDrawingPolygon && this.polygonVertices.length > 0) {
             this.drawPolygonInProgress()
         }
@@ -1261,21 +1049,9 @@ export class LevelEditor extends BasedLevel {
         const w = obj.width * this.zoom
         const h = obj.height * this.zoom
 
-        drawBox({
-            c: ctx,
-            x: pos.x - w / 2,
-            y: pos.y - h / 2,
-            width: w,
-            height: h,
-            fillColor: color,
-            strokeColor: selected ? '#fff' : '#666',
-            strokeWidth: selected ? 3 : 1
-        })
+        drawBox({ c: ctx, x: pos.x - w / 2, y: pos.y - h / 2, width: w, height: h, fillColor: color, strokeColor: selected ? '#fff' : '#666', strokeWidth: selected ? 3 : 1 })
 
-        // Draw resize handles if selected
-        if (selected) {
-            this.drawResizeHandles(obj)
-        }
+        if (selected) this.drawResizeHandles(obj)
     }
 
     drawResizeHandles(obj: { x: number, y: number, width: number, height: number }) {
@@ -1285,81 +1061,34 @@ export class LevelEditor extends BasedLevel {
         const halfH = (obj.height / 2) * this.zoom
         const size = this.handleSize
 
-        const handleColor = '#81B622'
-        const handleBorder = '#fff'
-
-        // Corner handles
         const corners = [
-            { x: pos.x - halfW, y: pos.y - halfH }, // nw
-            { x: pos.x + halfW, y: pos.y - halfH }, // ne
-            { x: pos.x - halfW, y: pos.y + halfH }, // sw
-            { x: pos.x + halfW, y: pos.y + halfH }, // se
+            { x: pos.x - halfW, y: pos.y - halfH },
+            { x: pos.x + halfW, y: pos.y - halfH },
+            { x: pos.x - halfW, y: pos.y + halfH },
+            { x: pos.x + halfW, y: pos.y + halfH },
         ]
-
-        corners.forEach(corner => {
-            drawBox({
-                c: ctx,
-                x: corner.x - size / 2,
-                y: corner.y - size / 2,
-                width: size,
-                height: size,
-                fillColor: handleColor,
-                strokeColor: handleBorder,
-                strokeWidth: 1
-            })
-        })
-
-        // Edge handles
         const edges = [
-            { x: pos.x, y: pos.y - halfH }, // n
-            { x: pos.x, y: pos.y + halfH }, // s
-            { x: pos.x - halfW, y: pos.y }, // w
-            { x: pos.x + halfW, y: pos.y }, // e
+            { x: pos.x, y: pos.y - halfH },
+            { x: pos.x, y: pos.y + halfH },
+            { x: pos.x - halfW, y: pos.y },
+            { x: pos.x + halfW, y: pos.y },
         ]
 
-        edges.forEach(edge => {
-            drawBox({
-                c: ctx,
-                x: edge.x - size / 2,
-                y: edge.y - size / 2,
-                width: size,
-                height: size,
-                fillColor: handleColor,
-                strokeColor: handleBorder,
-                strokeWidth: 1
-            })
+        ;[...corners, ...edges].forEach(p => {
+            drawBox({ c: ctx, x: p.x - size / 2, y: p.y - size / 2, width: size, height: size, fillColor: HANDLE_COLOR, strokeColor: HANDLE_BORDER, strokeWidth: 1 })
         })
     }
 
     drawEditorPolygon(poly: EditorPolygon, selected: boolean) {
         const ctx = this.gameRef.ctx
         const pos = this.worldToScreen(poly.x, poly.y)
+        const scaledVertices = poly.vertices.map(v => ({ x: v.x * this.zoom, y: v.y * this.zoom }))
 
-        // Scale vertices for zoom
-        const scaledVertices = poly.vertices.map(v => ({
-            x: v.x * this.zoom,
-            y: v.y * this.zoom
-        }))
-
-        rotateDraw({
-            c: ctx,
-            x: pos.x,
-            y: pos.y,
-            a: poly.angle || 0
-        }, () => {
-            drawPolygon({
-                c: ctx,
-                vertices: scaledVertices,
-                fillColor: poly.color || '#222',
-                strokeColor: selected ? '#fff' : '#666',
-                strokeWidth: selected ? 3 : 1
-            })
+        rotateDraw({ c: ctx, x: pos.x, y: pos.y, a: poly.angle || 0 }, () => {
+            drawPolygon({ c: ctx, vertices: scaledVertices, fillColor: poly.color || '#222', strokeColor: selected ? '#fff' : '#666', strokeWidth: selected ? 3 : 1 })
         })
 
-        // Draw vertex handles and rotation handle if selected
-        if (selected) {
-            this.drawPolygonHandles(poly)
-        }
+        if (selected) this.drawPolygonHandles(poly)
     }
 
     drawPolygonHandles(poly: EditorPolygon) {
@@ -1370,161 +1099,57 @@ export class LevelEditor extends BasedLevel {
         const sinA = Math.sin(angleRad)
         const size = this.handleSize
 
-        const handleColor = '#81B622'
-        const handleBorder = '#fff'
-
-        // Draw vertex handles
-        poly.vertices.forEach((v) => {
-            // Apply rotation to get world position
+        poly.vertices.forEach(v => {
             const rotX = v.x * cosA - v.y * sinA
             const rotY = v.x * sinA + v.y * cosA
             const screenPos = this.worldToScreen(poly.x + rotX, poly.y + rotY)
-
-            drawBox({
-                c: ctx,
-                x: screenPos.x - size / 2,
-                y: screenPos.y - size / 2,
-                width: size,
-                height: size,
-                fillColor: handleColor,
-                strokeColor: handleBorder,
-                strokeWidth: 1
-            })
+            drawBox({ c: ctx, x: screenPos.x - size / 2, y: screenPos.y - size / 2, width: size, height: size, fillColor: HANDLE_COLOR, strokeColor: HANDLE_BORDER, strokeWidth: 1 })
         })
 
-        // Draw rotation handle (above the polygon center)
+        // Rotation handle
         const rotHandleY = pos.y - 60 * this.zoom
-        drawLine({
-            c: ctx,
-            x: pos.x,
-            y: pos.y,
-            toX: pos.x,
-            toY: rotHandleY,
-            strokeColor: '#88f',
-            strokeWidth: 2
-        })
-
-        drawCircle({
-            c: ctx,
-            x: pos.x,
-            y: rotHandleY,
-            radius: size,
-            fillColor: '#88f',
-            strokeColor: handleBorder,
-            strokeWidth: 1
-        })
-
-        // Label
-        drawText({
-            c: ctx,
-            x: pos.x + 15,
-            y: rotHandleY + 4,
-            align: 'left',
-            fillColor: '#88f',
-            fontSize: 10,
-            fontFamily: 'sans-serif',
-            weight: 'bold',
-            style: '',
-            text: 'ROT'
-        })
+        drawLine({ c: ctx, x: pos.x, y: pos.y, toX: pos.x, toY: rotHandleY, strokeColor: '#88f', strokeWidth: 2 })
+        drawCircle({ c: ctx, x: pos.x, y: rotHandleY, radius: size, fillColor: '#88f', strokeColor: HANDLE_BORDER, strokeWidth: 1 })
+        drawText({ c: ctx, x: pos.x + 15, y: rotHandleY + 4, align: 'left', fillColor: '#88f', fontSize: 10, fontFamily: 'sans-serif', weight: 'bold', style: '', text: 'ROT' })
     }
 
     drawPolygonInProgress() {
         const ctx = this.gameRef.ctx
         const mouse = this.gameRef.mouseInfo
         const mouseWorld = this.screenToWorld(mouse.x, mouse.y)
-        const snappedMouse = {
-            x: Math.round(mouseWorld.x / GRID_SIZE) * GRID_SIZE,
-            y: Math.round(mouseWorld.y / GRID_SIZE) * GRID_SIZE
-        }
+        const snappedMouse = { x: Math.round(mouseWorld.x / GRID_SIZE) * GRID_SIZE, y: Math.round(mouseWorld.y / GRID_SIZE) * GRID_SIZE }
         const mouseScreen = this.worldToScreen(snappedMouse.x, snappedMouse.y)
 
         ctx.globalAlpha = 0.7
 
-        // Draw lines connecting vertices
         for (let i = 0; i < this.polygonVertices.length - 1; i++) {
             const fromScreen = this.worldToScreen(this.polygonVertices[i].x, this.polygonVertices[i].y)
             const toScreen = this.worldToScreen(this.polygonVertices[i + 1].x, this.polygonVertices[i + 1].y)
-            drawLine({
-                c: ctx,
-                x: fromScreen.x,
-                y: fromScreen.y,
-                toX: toScreen.x,
-                toY: toScreen.y,
-                strokeColor: '#81B622',
-                strokeWidth: 2
-            })
+            drawLine({ c: ctx, x: fromScreen.x, y: fromScreen.y, toX: toScreen.x, toY: toScreen.y, strokeColor: '#81B622', strokeWidth: 2 })
         }
 
-        // Line from last vertex to current mouse position
         if (this.polygonVertices.length > 0) {
-            const lastScreen = this.worldToScreen(
-                this.polygonVertices[this.polygonVertices.length - 1].x,
-                this.polygonVertices[this.polygonVertices.length - 1].y
-            )
-            drawLine({
-                c: ctx,
-                x: lastScreen.x,
-                y: lastScreen.y,
-                toX: mouseScreen.x,
-                toY: mouseScreen.y,
-                strokeColor: '#81B622',
-                strokeWidth: 2
-            })
+            const lastScreen = this.worldToScreen(this.polygonVertices[this.polygonVertices.length - 1].x, this.polygonVertices[this.polygonVertices.length - 1].y)
+            drawLine({ c: ctx, x: lastScreen.x, y: lastScreen.y, toX: mouseScreen.x, toY: mouseScreen.y, strokeColor: '#81B622', strokeWidth: 2 })
         }
 
-        // Draw vertices as circles
         this.polygonVertices.forEach((v, i) => {
             const screenPos = this.worldToScreen(v.x, v.y)
-            drawCircle({
-                c: ctx,
-                x: screenPos.x,
-                y: screenPos.y,
-                radius: 6,
-                fillColor: i === 0 ? '#ff0' : '#81B622',
-                strokeColor: '#fff',
-                strokeWidth: 2
-            })
+            drawCircle({ c: ctx, x: screenPos.x, y: screenPos.y, radius: 6, fillColor: i === 0 ? '#ff0' : '#81B622', strokeColor: '#fff', strokeWidth: 2 })
         })
 
-        // Preview point at mouse
-        drawCircle({
-            c: ctx,
-            x: mouseScreen.x,
-            y: mouseScreen.y,
-            radius: 6,
-            fillColor: '#81B622',
-            strokeColor: '#fff',
-            strokeWidth: 2
-        })
+        drawCircle({ c: ctx, x: mouseScreen.x, y: mouseScreen.y, radius: 6, fillColor: '#81B622', strokeColor: '#fff', strokeWidth: 2 })
 
         ctx.globalAlpha = 1
 
-        // Instruction text
         const vertCount = this.polygonVertices.length
-        const instructionText = vertCount < 3
-            ? `Click to add points (${vertCount}/3 min)`
-            : `Click to add, double-click or Enter to finish, Esc to cancel`
-
-        drawText({
-            c: ctx,
-            x: this.gameRef.gameWidth / 2,
-            y: this.gameRef.gameHeight - 40,
-            align: 'center',
-            fillColor: '#81B622',
-            fontSize: 14,
-            fontFamily: 'sans-serif',
-            weight: 'bold',
-            style: '',
-            text: instructionText
-        })
+        const instructionText = vertCount < 3 ? `Click to add points (${vertCount}/3 min)` : `Click to add, double-click or Enter to finish, Esc to cancel`
+        drawText({ c: ctx, x: this.gameRef.gameWidth / 2, y: this.gameRef.gameHeight - 40, align: 'center', fillColor: '#81B622', fontSize: 14, fontFamily: 'sans-serif', weight: 'bold', style: '', text: instructionText })
     }
 
     drawMovementRangeLine(plat: EditorMovingPlatform, selected: boolean = false) {
         const ctx = this.gameRef.ctx
-        const opacity = selected ? 1 : 0.3
-
-        ctx.globalAlpha = opacity
+        ctx.globalAlpha = selected ? 1 : 0.3
         ctx.strokeStyle = selected ? 'rgba(255, 255, 0, 0.7)' : 'rgba(255, 255, 0, 0.5)'
         ctx.lineWidth = selected ? 2 : 1
         ctx.setLineDash([5, 5])
@@ -1543,66 +1168,19 @@ export class LevelEditor extends BasedLevel {
 
     drawMovementRangeHandles(plat: EditorMovingPlatform, selected: boolean = false) {
         const ctx = this.gameRef.ctx
-        const opacity = selected ? 1 : 0.3
-
-        ctx.globalAlpha = opacity
+        ctx.globalAlpha = selected ? 1 : 0.3
 
         const minPos = this.worldToScreen(plat.minX, plat.minY)
         const maxPos = this.worldToScreen(plat.maxX, plat.maxY)
-
-        // Draw endpoint handles (smaller when not selected)
         const handleSize = selected ? this.handleSize + 4 : 6
 
-        // Min point handle (green)
-        drawCircle({
-            c: ctx,
-            x: minPos.x,
-            y: minPos.y,
-            radius: handleSize / 2,
-            fillColor: '#00ff00',
-            strokeColor: selected ? '#fff' : undefined,
-            strokeWidth: selected ? 2 : undefined
-        })
+        drawCircle({ c: ctx, x: minPos.x, y: minPos.y, radius: handleSize / 2, fillColor: '#00ff00', strokeColor: selected ? '#fff' : undefined, strokeWidth: selected ? 2 : undefined })
+        drawCircle({ c: ctx, x: maxPos.x, y: maxPos.y, radius: handleSize / 2, fillColor: '#ff4444', strokeColor: selected ? '#fff' : undefined, strokeWidth: selected ? 2 : undefined })
 
-        // Max point handle (red)
-        drawCircle({
-            c: ctx,
-            x: maxPos.x,
-            y: maxPos.y,
-            radius: handleSize / 2,
-            fillColor: '#ff4444',
-            strokeColor: selected ? '#fff' : undefined,
-            strokeWidth: selected ? 2 : undefined
-        })
-
-        // Labels (only when selected)
         if (selected) {
             ctx.globalAlpha = 1
-            drawText({
-                c: ctx,
-                x: minPos.x,
-                y: minPos.y - handleSize,
-                align: 'center',
-                fillColor: '#0f0',
-                fontSize: 10,
-                fontFamily: 'sans-serif',
-                weight: 'bold',
-                style: '',
-                text: 'MIN'
-            })
-
-            drawText({
-                c: ctx,
-                x: maxPos.x,
-                y: maxPos.y - handleSize,
-                align: 'center',
-                fillColor: '#f44',
-                fontSize: 10,
-                fontFamily: 'sans-serif',
-                weight: 'bold',
-                style: '',
-                text: 'MAX'
-            })
+            drawText({ c: ctx, x: minPos.x, y: minPos.y - handleSize, align: 'center', fillColor: '#0f0', fontSize: 10, fontFamily: 'sans-serif', weight: 'bold', style: '', text: 'MIN' })
+            drawText({ c: ctx, x: maxPos.x, y: maxPos.y - handleSize, align: 'center', fillColor: '#f44', fontSize: 10, fontFamily: 'sans-serif', weight: 'bold', style: '', text: 'MAX' })
         }
 
         ctx.globalAlpha = 1
@@ -1611,46 +1189,15 @@ export class LevelEditor extends BasedLevel {
     drawUI() {
         const ctx = this.gameRef.ctx
 
-        // Top bar background
-        drawBox({
-            c: ctx,
-            x: 0,
-            y: 0,
-            width: this.gameRef.gameWidth,
-            height: 100,
-            fillColor: 'rgba(0, 0, 0, 0.8)'
-        })
+        // Top bar
+        drawBox({ c: ctx, x: 0, y: 0, width: this.gameRef.gameWidth, height: 100, fillColor: 'rgba(0, 0, 0, 0.8)' })
 
-        // Draw level name
         if (this.currentLevel) {
-            drawText({
-                c: ctx,
-                x: this.gameRef.gameWidth / 2,
-                y: 30,
-                align: 'center',
-                fillColor: '#fff',
-                fontSize: 18,
-                fontFamily: 'sans-serif',
-                weight: 'bold',
-                style: '',
-                text: this.currentLevel.name
-            })
-
-            drawText({
-                c: ctx,
-                x: this.gameRef.gameWidth / 2,
-                y: 50,
-                align: 'center',
-                fillColor: '#888',
-                fontSize: 12,
-                fontFamily: 'sans-serif',
-                weight: 'normal',
-                style: '',
-                text: `${this.currentLevel.levelWidth}x${this.currentLevel.levelHeight} | Zoom: ${Math.round(this.zoom * 100)}%`
-            })
+            drawText({ c: ctx, x: this.gameRef.gameWidth / 2, y: 30, align: 'center', fillColor: '#fff', fontSize: 18, fontFamily: 'sans-serif', weight: 'bold', style: '', text: this.currentLevel.name })
+            drawText({ c: ctx, x: this.gameRef.gameWidth / 2, y: 50, align: 'center', fillColor: '#888', fontSize: 12, fontFamily: 'sans-serif', weight: 'normal', style: '', text: `${this.currentLevel.levelWidth}x${this.currentLevel.levelHeight} | Zoom: ${Math.round(this.zoom * 100)}%` })
         }
 
-        // Draw buttons
+        // Buttons
         this.backButton.draw()
         this.saveButton.draw()
         this.testButton.draw()
@@ -1660,623 +1207,21 @@ export class LevelEditor extends BasedLevel {
         this.levelSettingsButton.draw()
         this.toolButtons.forEach(btn => btn.draw())
 
-        // Current tool indicator
-        drawText({
-            c: ctx,
-            x: 10,
-            y: 95,
-            align: 'left',
-            fillColor: '#888',
-            fontSize: 11,
-            fontFamily: 'sans-serif',
-            weight: 'normal',
-            style: '',
-            text: `Tool: ${this.currentTool} | Pan: Arrow keys/WASD | Zoom: +/-`
-        })
-
-        // Property panel
-        if (this.showPropertyPanel && this.selectedObject) {
-            this.drawPropertyPanel()
-        }
-
-        // Delete button (only when object selected)
-        if (this.selectedObject) {
-            this.deleteObjectButton.draw()
-        }
-
-        // Level list panel
-        if (this.showLevelList) {
-            this.drawLevelListPanel()
-        }
-
-        // Export panel
-        if (this.showExportPanel) {
-            this.drawExportPanel()
-        }
-
-        // Level settings panel
-        if (this.showLevelSettings) {
-            this.drawLevelSettingsPanel()
-        }
-    }
-
-    drawPropertyPanel() {
-        if (!this.selectedObject) return
-
-        const ctx = this.gameRef.ctx
-        const panelX = this.gameRef.gameWidth - 210
-        const panelY = 110
-        const panelW = 200
-        // const panelH = 400
-        const panelH = (OBJECT_PROPERTIES[this.selectedObject.type]?.length || 0) * 40 + 60
-
-        // Panel background
-        drawBox({
-            c: ctx,
-            x: panelX,
-            y: panelY,
-            width: panelW,
-            height: panelH,
-            fillColor: 'rgba(0, 0, 0, 0.9)',
-            strokeColor: '#444',
-            strokeWidth: 1
-        })
-
-        // Title
-        drawText({
-            c: ctx,
-            x: panelX + 10,
-            y: panelY + 25,
-            align: 'left',
-            fillColor: '#fff',
-            fontSize: 14,
-            fontFamily: 'sans-serif',
-            weight: 'bold',
-            style: '',
-            text: `Edit ${this.selectedObject.type}`
-        })
-
-        // Properties
-        const props = OBJECT_PROPERTIES[this.selectedObject.type] || []
-        let y = panelY + 50
-
-        props.forEach((prop, index) => {
-            const value = (this.selectedObject as any)[prop.key]
-            const isEditing = this.editingProperty === prop.key
-
-            drawText({
-                c: ctx,
-                x: panelX + 10,
-                y: y,
-                align: 'left',
-                fillColor: '#888',
-                fontSize: 11,
-                fontFamily: 'sans-serif',
-                weight: 'normal',
-                style: '',
-                text: prop.label
-            })
-
-            // Value box
-            drawBox({
-                c: ctx,
-                x: panelX + 10,
-                y: y + 5,
-                width: panelW - 20,
-                height: 25,
-                fillColor: isEditing ? '#444' : '#222',
-                strokeColor: isEditing ? '#81B622' : '#444',
-                strokeWidth: 1
-            })
-
-            drawText({
-                c: ctx,
-                x: panelX + 15,
-                y: y + 22,
-                align: 'left',
-                fillColor: '#fff',
-                fontSize: 12,
-                fontFamily: 'sans-serif',
-                weight: 'normal',
-                style: '',
-                text: isEditing ? this.propertyInputValue : String(value ?? '')
-            })
-
-            // Handle clicks on property fields
-            const mouse = this.gameRef.mouseInfo
-            if (mouse.mouseDown && !this.isDragging) {
-                if (mouse.x > panelX + 10 && mouse.x < panelX + panelW - 10 &&
-                    mouse.y > y + 5 && mouse.y < y + 30) {
-                    if (this.editingProperty !== prop.key) {
-                        this.editingProperty = prop.key
-                        this.propertyInputValue = String(value ?? '')
-                        this.setupPropertyInput(prop.key, panelX + 10, y + 5, panelW - 20, 25)
-                    }
-                }
-            }
-
-            y += 40
-        })
-    }
-
-    setupPropertyInput(propKey: string, x: number, y: number, width: number, height: number) {
-        // Remove any existing input
-        const existingInput = document.getElementById('editor-property-input')
-        if (existingInput) existingInput.remove()
-
-        // Create input element
-        const input = document.createElement('input')
-        input.id = 'editor-property-input'
-        input.type = 'text'
-        input.value = this.propertyInputValue
-        input.style.position = 'absolute'
-        input.style.left = `${x}px`
-        input.style.top = `${y}px`
-        input.style.width = `${width}px`
-        input.style.height = `${height}px`
-        input.style.background = '#333'
-        input.style.color = '#fff'
-        input.style.border = '2px solid #81B622'
-        input.style.fontSize = '12px'
-        input.style.padding = '2px 5px'
-        input.style.zIndex = '1000'
-
-        input.onblur = () => {
-            this.applyPropertyValue(propKey, input.value)
-            input.remove()
-            this.editingProperty = null
-        }
-
-        input.onkeydown = (e) => {
-            if (e.key === 'Enter') {
-                this.applyPropertyValue(propKey, input.value)
-                input.remove()
-                this.editingProperty = null
-            } else if (e.key === 'Escape') {
-                input.remove()
-                this.editingProperty = null
-            }
-        }
-
-        document.body.appendChild(input)
-        input.focus()
-        input.select()
-    }
-
-    applyPropertyValue(propKey: string, value: string) {
-        if (!this.selectedObject || !this.currentLevel) return
-
-        const props = OBJECT_PROPERTIES[this.selectedObject.type]
-        const propDef = props?.find(p => p.key === propKey)
-
-        let parsedValue: any = value
-        if (propDef?.type === 'number') {
-            parsedValue = parseFloat(value) || 0
-            if (propDef.min !== undefined) parsedValue = Math.max(propDef.min, parsedValue)
-            if (propDef.max !== undefined) parsedValue = Math.min(propDef.max, parsedValue)
-        }
-
-        (this.selectedObject as any)[propKey] = parsedValue
-
-        // Handle special case for playerStart
-        if (this.selectedObject.type === 'playerStart') {
-            this.currentLevel.playerStart = {
-                x: this.selectedObject.x,
-                y: this.selectedObject.y
-            }
-        }
-
-        this.saveCurrentLevel()
-    }
-
-    drawLevelListPanel() {
-        const ctx = this.gameRef.ctx
-        const panelX = this.gameRef.gameWidth - 310
-        const panelY = 50
-        const panelW = 300
-        const panelH = 350
-
-        drawBox({
-            c: ctx,
-            x: panelX,
-            y: panelY,
-            width: panelW,
-            height: panelH,
-            fillColor: 'rgba(0, 0, 0, 0.95)',
-            strokeColor: '#444',
-            strokeWidth: 1
-        })
-
-        drawText({
-            c: ctx,
-            x: panelX + 10,
-            y: panelY + 25,
-            align: 'left',
-            fillColor: '#fff',
-            fontSize: 14,
-            fontFamily: 'sans-serif',
-            weight: 'bold',
-            style: '',
-            text: 'Load Level'
-        })
-
-        let y = panelY + 50
-        const mouse = this.gameRef.mouseInfo
-
-        this.savedLevels.forEach((level, index) => {
-            const isHovered = mouse.x > panelX + 10 && mouse.x < panelX + panelW - 10 &&
-                mouse.y > y && mouse.y < y + 30
-            const isCurrent = level.id === this.currentLevel?.id
-
-            drawBox({
-                c: ctx,
-                x: panelX + 10,
-                y: y,
-                width: panelW - 20,
-                height: 30,
-                fillColor: isHovered ? '#444' : (isCurrent ? '#333' : '#222')
-            })
-
-            drawText({
-                c: ctx,
-                x: panelX + 15,
-                y: y + 20,
-                align: 'left',
-                fillColor: isCurrent ? '#81B622' : '#fff',
-                fontSize: 12,
-                fontFamily: 'sans-serif',
-                weight: isCurrent ? 'bold' : 'normal',
-                style: '',
-                text: level.name
-            })
-
-            if (isHovered && mouse.mouseDown) {
-                this.saveCurrentLevel()
-                this.currentLevel = level
-                LevelEditorStorage.setCurrentLevelId(level.id)
-                this.showLevelList = false
-                this.selectedObject = null
-                this.showPropertyPanel = false
-            }
-
-            y += 35
-        })
-    }
-
-    drawExportPanel() {
-        if (!this.currentLevel) return
-
-        const ctx = this.gameRef.ctx
-        const panelX = 50
-        const panelY = 50
-        const panelW = this.gameRef.gameWidth - 100
-        const panelH = this.gameRef.gameHeight - 100
-
-        drawBox({
-            c: ctx,
-            x: panelX,
-            y: panelY,
-            width: panelW,
-            height: panelH,
-            fillColor: 'rgba(0, 0, 0, 0.95)',
-            strokeColor: '#444',
-            strokeWidth: 1
-        })
-
-        drawText({
-            c: ctx,
-            x: panelX + 20,
-            y: panelY + 30,
-            align: 'left',
-            fillColor: '#fff',
-            fontSize: 16,
-            fontFamily: 'sans-serif',
-            weight: 'bold',
-            style: '',
-            text: 'Export Level - Copy the code below'
-        })
-
-        // Constants code
-        drawText({
-            c: ctx,
-            x: panelX + 20,
-            y: panelY + 60,
-            align: 'left',
-            fillColor: '#81B622',
-            fontSize: 12,
-            fontFamily: 'sans-serif',
-            weight: 'bold',
-            style: '',
-            text: 'Constants File (save as constants/yourLevelConstants.ts):'
-        })
-
-        const constantsCode = LevelEditorStorage.exportLevelAsCode(this.currentLevel)
-
-        // Create a textarea for easy copying
-        let textarea = document.getElementById('export-constants') as HTMLTextAreaElement
-        if (!textarea) {
-            textarea = document.createElement('textarea')
-            textarea.id = 'export-constants'
-            textarea.style.position = 'absolute'
-            textarea.style.left = `${panelX + 20}px`
-            textarea.style.top = `${panelY + 70}px`
-            textarea.style.width = `${panelW - 40}px`
-            textarea.style.height = `${(panelH - 200) / 2}px`
-            textarea.style.background = '#111'
-            textarea.style.color = '#0f0'
-            textarea.style.border = '1px solid #444'
-            textarea.style.fontSize = '10px'
-            textarea.style.fontFamily = 'monospace'
-            textarea.style.padding = '10px'
-            textarea.style.resize = 'none'
-            textarea.readOnly = true
-            document.body.appendChild(textarea)
-        }
-        textarea.value = constantsCode
-
-        // Level class code
-        drawText({
-            c: ctx,
-            x: panelX + 20,
-            y: panelY + (panelH / 2) + 20,
-            align: 'left',
-            fillColor: '#81B622',
-            fontSize: 12,
-            fontFamily: 'sans-serif',
-            weight: 'bold',
-            style: '',
-            text: 'Level Class File (save as levels/yourLevel.ts):'
-        })
-
-        const classCode = LevelEditorStorage.exportLevelClassCode(this.currentLevel)
-
-        let textarea2 = document.getElementById('export-class') as HTMLTextAreaElement
-        if (!textarea2) {
-            textarea2 = document.createElement('textarea')
-            textarea2.id = 'export-class'
-            textarea2.style.position = 'absolute'
-            textarea2.style.left = `${panelX + 20}px`
-            textarea2.style.top = `${panelY + (panelH / 2) + 30}px`
-            textarea2.style.width = `${panelW - 40}px`
-            textarea2.style.height = `${(panelH - 200) / 2}px`
-            textarea2.style.background = '#111'
-            textarea2.style.color = '#0f0'
-            textarea2.style.border = '1px solid #444'
-            textarea2.style.fontSize = '10px'
-            textarea2.style.fontFamily = 'monospace'
-            textarea2.style.padding = '10px'
-            textarea2.style.resize = 'none'
-            textarea2.readOnly = true
-            document.body.appendChild(textarea2)
-        }
-        textarea2.value = classCode
-
-        // Close instruction
-        drawText({
-            c: ctx,
-            x: panelX + panelW - 20,
-            y: panelY + 30,
-            align: 'right',
-            fillColor: '#888',
-            fontSize: 12,
-            fontFamily: 'sans-serif',
-            weight: 'normal',
-            style: '',
-            text: 'Press ESC or click Export again to close'
-        })
-    }
-
-    drawLevelSettingsPanel() {
-        if (!this.currentLevel) return
-
-        const ctx = this.gameRef.ctx
-        const panelX = this.gameRef.gameWidth - 310
-        const panelY = 50
-        const panelW = 300
-        const panelH = 295
-
-        drawBox({
-            c: ctx,
-            x: panelX,
-            y: panelY,
-            width: panelW,
-            height: panelH,
-            fillColor: 'rgba(0, 0, 0, 0.95)',
-            strokeColor: '#444',
-            strokeWidth: 1
-        })
-
-        drawText({
-            c: ctx,
-            x: panelX + 10,
-            y: panelY + 25,
-            align: 'left',
-            fillColor: '#fff',
-            fontSize: 14,
-            fontFamily: 'sans-serif',
-            weight: 'bold',
-            style: '',
-            text: 'Level Settings'
-        })
-
-        const settings = [
-            { key: 'name', label: 'Level Name', value: this.currentLevel.name },
-            { key: 'levelWidth', label: 'Width', value: this.currentLevel.levelWidth },
-            { key: 'levelHeight', label: 'Height', value: this.currentLevel.levelHeight },
-            { key: 'nextLevel', label: 'Next Level', value: this.currentLevel.nextLevel || 'start-screen' },
-        ]
-
-        let y = panelY + 50
-        const mouse = this.gameRef.mouseInfo
-
-        settings.forEach((setting) => {
-            const isEditing = this.editingLevelSetting === setting.key
-
-            drawText({
-                c: ctx,
-                x: panelX + 10,
-                y: y,
-                align: 'left',
-                fillColor: '#888',
-                fontSize: 11,
-                fontFamily: 'sans-serif',
-                weight: 'normal',
-                style: '',
-                text: setting.label
-            })
-
-            drawBox({
-                c: ctx,
-                x: panelX + 10,
-                y: y + 5,
-                width: panelW - 20,
-                height: 25,
-                fillColor: isEditing ? '#444' : '#222',
-                strokeColor: isEditing ? '#81B622' : '#444',
-                strokeWidth: 1
-            })
-
-            drawText({
-                c: ctx,
-                x: panelX + 15,
-                y: y + 22,
-                align: 'left',
-                fillColor: '#fff',
-                fontSize: 12,
-                fontFamily: 'sans-serif',
-                weight: 'normal',
-                style: '',
-                text: isEditing ? this.levelSettingInputValue : String(setting.value)
-            })
-
-            if (mouse.mouseDown && !this.isDragging) {
-                if (mouse.x > panelX + 10 && mouse.x < panelX + panelW - 10 &&
-                    mouse.y > y + 5 && mouse.y < y + 30) {
-                    if (this.editingLevelSetting !== setting.key) {
-                        this.editingLevelSetting = setting.key
-                        this.levelSettingInputValue = String(setting.value)
-                        this.setupLevelSettingInput(setting.key, panelX + 10, y + 5, panelW - 20, 25)
-                    }
-                }
-            }
-
-            y += 45
-        })
-
-        // Delete level button
-        const deleteY = panelY + panelH - 45
-        const isDeleteHovered = mouse.x > panelX + 10 && mouse.x < panelX + panelW - 10 &&
-            mouse.y > deleteY && mouse.y < deleteY + 35
-
-        drawBox({
-            c: ctx,
-            x: panelX + 10,
-            y: deleteY,
-            width: panelW - 20,
-            height: 35,
-            fillColor: isDeleteHovered ? '#a33' : '#633'
-        })
-
-        drawText({
-            c: ctx,
-            x: panelX + panelW / 2,
-            y: deleteY + 23,
-            align: 'center',
-            fillColor: '#fff',
-            fontSize: 12,
-            fontFamily: 'sans-serif',
-            weight: 'bold',
-            style: '',
-            text: 'Delete Level'
-        })
-
-        if (isDeleteHovered && mouse.mouseDown) {
-            if (this.savedLevels.length > 1) {
-                LevelEditorStorage.deleteLevel(this.currentLevel.id)
-                this.savedLevels = LevelEditorStorage.getAllLevels()
-                this.currentLevel = this.savedLevels[0] || LevelEditorStorage.createNewLevel()
-                LevelEditorStorage.setCurrentLevelId(this.currentLevel.id)
-                this.showLevelSettings = false
-                this.showMessage('Level Deleted')
-            } else {
-                this.showMessage('Cannot delete the only level')
-            }
-        }
-    }
-
-    setupLevelSettingInput(settingKey: string, x: number, y: number, width: number, height: number) {
-        const existingInput = document.getElementById('editor-setting-input')
-        if (existingInput) existingInput.remove()
-
-        const input = document.createElement('input')
-        input.id = 'editor-setting-input'
-        input.type = 'text'
-        input.value = this.levelSettingInputValue
-        input.style.position = 'absolute'
-        input.style.left = `${x}px`
-        input.style.top = `${y}px`
-        input.style.width = `${width}px`
-        input.style.height = `${height}px`
-        input.style.background = '#333'
-        input.style.color = '#fff'
-        input.style.border = '2px solid #81B622'
-        input.style.fontSize = '12px'
-        input.style.padding = '2px 5px'
-        input.style.zIndex = '1000'
-
-        input.onblur = () => {
-            this.applyLevelSettingValue(settingKey, input.value)
-            input.remove()
-            this.editingLevelSetting = null
-        }
-
-        input.onkeydown = (e) => {
-            if (e.key === 'Enter') {
-                this.applyLevelSettingValue(settingKey, input.value)
-                input.remove()
-                this.editingLevelSetting = null
-            } else if (e.key === 'Escape') {
-                input.remove()
-                this.editingLevelSetting = null
-            }
-        }
-
-        document.body.appendChild(input)
-        input.focus()
-        input.select()
-    }
-
-    applyLevelSettingValue(settingKey: string, value: string) {
-        if (!this.currentLevel) return
-
-        if (settingKey === 'name') {
-            this.currentLevel.name = value || 'Untitled Level'
-        } else if (settingKey === 'levelWidth') {
-            this.currentLevel.levelWidth = Math.max(200, parseInt(value) || 800)
-        } else if (settingKey === 'levelHeight') {
-            this.currentLevel.levelHeight = Math.max(200, parseInt(value) || 600)
-        } else if (settingKey === 'nextLevel') {
-            this.currentLevel.nextLevel = value || 'start-screen'
-        }
-
-        this.saveCurrentLevel()
-        this.savedLevels = LevelEditorStorage.getAllLevels()
+        drawText({ c: ctx, x: 10, y: 95, align: 'left', fillColor: '#888', fontSize: 11, fontFamily: 'sans-serif', weight: 'normal', style: '', text: `Tool: ${this.currentTool} | Pan: Arrow keys/WASD | Zoom: +/-` })
+
+        // Panels
+        this.propertyPanel.draw()
+        if (this.selectedObject) this.deleteObjectButton.draw()
+        this.levelListPanel.draw()
+        this.exportPanel.draw()
+        this.levelSettingsPanel.draw()
     }
 
     tearDown() {
-        // Remove any HTML elements we created
-        const input1 = document.getElementById('editor-property-input')
-        if (input1) input1.remove()
-
-        const input2 = document.getElementById('editor-setting-input')
-        if (input2) input2.remove()
-
-        const textarea1 = document.getElementById('export-constants')
-        if (textarea1) textarea1.remove()
-
-        const textarea2 = document.getElementById('export-class')
-        if (textarea2) textarea2.remove()
-
+        this.propertyPanel.tearDown()
+        this.levelSettingsPanel.tearDown()
+        this.levelListPanel.tearDown()
+        this.exportPanel.tearDown()
         this.saveCurrentLevel()
     }
 }
