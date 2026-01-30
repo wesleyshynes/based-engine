@@ -63,8 +63,8 @@ export const TOOL_LABELS: Record<EditorTool, string> = {
     levelText: 'Text',
 }
 
-// Tool order for toolbar
+// Tool order for toolbar (placement tools only - select/pan are separate)
 export const TOOL_ORDER: EditorTool[] = [
-    'select', 'pan', 'wall', 'polygon', 'pushBox', 
+    'wall', 'polygon', 'pushBox', 
     'movingPlatform', 'exitDoor', 'playerStart', 'hazardBlock', 'levelText'
 ]

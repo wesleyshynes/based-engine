@@ -66,6 +66,8 @@ export class LevelEditor extends BasedLevel {
     // UI Elements
     toolButtons: Map<EditorTool, any> = new Map()
     backButton: any
+    selectButton: any
+    panButton: any
     saveButton: any
     testButton: any
     exportButton: any
@@ -210,6 +212,33 @@ export class LevelEditor extends BasedLevel {
             this.showMessage('Level Saved!')
         }
 
+        // Select and Pan buttons (right side, second row)
+        this.selectButton = this.createButton('Select', rightX, 55, 65, 30)
+        this.selectButton.fillColor = this.currentTool === 'select' ? TOOL_BUTTON_HOVER : TOOL_BUTTON_FILL
+        this.selectButton.clickFunction = () => {
+            if (this.isDrawingPolygon) this.cancelPolygonDrawing()
+            this.currentTool = 'select'
+            this.selectedObject = null
+            this.propertyPanel.hide()
+            this.isDragging = false
+            this.activeHandle = null
+            this.dragOffset = { x: 0, y: 0 }
+            this.updateToolButtonColors()
+        }
+
+        this.panButton = this.createButton('Pan', rightX - 70, 55, 65, 30)
+        this.panButton.fillColor = this.currentTool === 'pan' ? TOOL_BUTTON_HOVER : TOOL_BUTTON_FILL
+        this.panButton.clickFunction = () => {
+            if (this.isDrawingPolygon) this.cancelPolygonDrawing()
+            this.currentTool = 'pan'
+            this.selectedObject = null
+            this.propertyPanel.hide()
+            this.isDragging = false
+            this.activeHandle = null
+            this.dragOffset = { x: 0, y: 0 }
+            this.updateToolButtonColors()
+        }
+
         this.testButton = this.createButton('Test', rightX - 70, 10, 65, 35)
         this.testButton.clickFunction = () => this.testLevel()
 
@@ -270,6 +299,9 @@ export class LevelEditor extends BasedLevel {
         this.toolButtons.forEach((btn, tool) => {
             btn.fillColor = this.currentTool === tool ? TOOL_BUTTON_HOVER : TOOL_BUTTON_FILL
         })
+        // Update select and pan button colors
+        this.selectButton.fillColor = this.currentTool === 'select' ? TOOL_BUTTON_HOVER : TOOL_BUTTON_FILL
+        this.panButton.fillColor = this.currentTool === 'pan' ? TOOL_BUTTON_HOVER : TOOL_BUTTON_FILL
     }
 
     showMessage(text: string) {
@@ -973,6 +1005,8 @@ export class LevelEditor extends BasedLevel {
         this.newButton.update()
         this.loadButton.update()
         this.levelSettingsButton.update()
+        this.selectButton.update()
+        this.panButton.update()
 
         if (this.selectedObject) {
             this.deleteObjectButton.update()
@@ -989,6 +1023,9 @@ export class LevelEditor extends BasedLevel {
         this.newButton.x = rightX - 210
         this.loadButton.x = rightX - 280
         this.levelSettingsButton.x = rightX - 360
+        // Select and Pan buttons on second row
+        this.selectButton.x = rightX
+        this.panButton.x = rightX - 70
         this.deleteObjectButton.y = this.gameRef.gameHeight - 45
 
         // Update panel positions
@@ -1321,6 +1358,8 @@ export class LevelEditor extends BasedLevel {
         this.newButton.draw()
         this.loadButton.draw()
         this.levelSettingsButton.draw()
+        this.selectButton.draw()
+        this.panButton.draw()
         this.toolButtons.forEach(btn => btn.draw())
 
         drawText({ c: ctx, x: 10, y: 95, align: 'left', fillColor: '#888', fontSize: 11, fontFamily: 'sans-serif', weight: 'normal', style: '', text: `Tool: ${this.currentTool} | Pan: Arrow keys/WASD | Zoom: +/-` })
