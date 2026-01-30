@@ -1,7 +1,7 @@
 import { BasedButton } from "../../../engine/BasedButton"
 import { BasedLevel } from "../../../engine/BasedLevel"
 import { drawBox, drawCircle, drawText, rotateDraw, drawLine, drawPolygon } from "../../../engine/libs/drawHelpers"
-import { EditorLevelData, EditorObject, EditorTool, DEFAULT_OBJECTS, EditorWall, EditorPushBox, EditorMovingPlatform, EditorExitDoor, EditorHazardBlock, EditorPolygon, EditorText, VertexPoint } from "./LevelEditorTypes"
+import { EditorLevelData, EditorObject, EditorTool, DEFAULT_OBJECTS, EditorWall, EditorPushBox, EditorMovingPlatform, EditorExitDoor, EditorHazardBlock, EditorPolygon, EditorText, VertexPoint, EditorBounceBall } from "./LevelEditorTypes"
 import { LevelEditorStorage } from "./LevelEditorStorage"
 import { EditorInputManager } from "./EditorInputManager"
 import { 
@@ -337,6 +337,9 @@ export class LevelEditor extends BasedLevel {
             case 'pushBox':
                 this.currentLevel.pushBoxes = this.currentLevel.pushBoxes.filter(b => b.id !== obj.id)
                 break
+            case 'bounceBall':
+                this.currentLevel.bounceBalls = this.currentLevel.bounceBalls.filter(b => b.id !== obj.id)
+                break
             case 'movingPlatform':
                 this.currentLevel.movingPlatforms = this.currentLevel.movingPlatforms.filter(p => p.id !== obj.id)
                 break
@@ -592,6 +595,15 @@ export class LevelEditor extends BasedLevel {
             }
         }
 
+        // For bounce balls - radius handle
+        if (this.selectedObject.type === 'bounceBall') {
+            const ball = this.selectedObject as EditorBounceBall
+            // Check radius handle (on the right side of the ball)
+            if (Math.abs(x - (ball.x + ball.radius)) < handleRadius && Math.abs(y - ball.y) < handleRadius) {
+                return 'radius'
+            }
+        }
+
         // For moving platforms
         if (this.selectedObject.type === 'movingPlatform') {
             const plat = this.selectedObject as EditorMovingPlatform
@@ -600,6 +612,23 @@ export class LevelEditor extends BasedLevel {
             }
             if (Math.abs(x - plat.maxX) < handleRadius && Math.abs(y - plat.maxY) < handleRadius) {
                 return 'maxPoint'
+            }
+        }
+
+        // Rotation handles for rectangular objects with angle support
+        if (this.selectedObject.type === 'wall' || 
+            this.selectedObject.type === 'pushBox' || 
+            this.selectedObject.type === 'movingPlatform' || 
+            this.selectedObject.type === 'exitDoor' || 
+            this.selectedObject.type === 'hazardBlock') {
+            const obj = this.selectedObject as any
+            const angleRad = (obj.angle || 0) * Math.PI / 180
+            const rotHandleDistance = obj.height / 2 + 30
+            // Handle is above the object (in local space), rotated by the object's angle
+            const rotHandleX = obj.x + Math.sin(angleRad) * rotHandleDistance
+            const rotHandleY = obj.y - Math.cos(angleRad) * rotHandleDistance
+            if (Math.abs(x - rotHandleX) < handleRadius && Math.abs(y - rotHandleY) < handleRadius) {
+                return 'rotate'
             }
         }
 
@@ -668,6 +697,34 @@ export class LevelEditor extends BasedLevel {
                 textObj.angle = Math.round(-angle / 5) * 5
                 return
             }
+        }
+
+        // Bounce ball radius
+        if (this.selectedObject.type === 'bounceBall') {
+            const ball = this.selectedObject as EditorBounceBall
+            if (this.activeHandle === 'radius') {
+                const dx = worldX - ball.x
+                const dy = worldY - ball.y
+                const newRadius = Math.max(20, Math.round(Math.sqrt(dx * dx + dy * dy) / GRID_SIZE) * GRID_SIZE)
+                ball.radius = newRadius
+                return
+            }
+        }
+
+        // Rotation for rectangular objects (walls, push boxes, moving platforms, exit doors, hazard blocks)
+        if ((this.selectedObject.type === 'wall' || 
+             this.selectedObject.type === 'pushBox' || 
+             this.selectedObject.type === 'movingPlatform' || 
+             this.selectedObject.type === 'exitDoor' || 
+             this.selectedObject.type === 'hazardBlock') && 
+            this.activeHandle === 'rotate') {
+            const obj = this.selectedObject as any
+            const dx = worldX - obj.x
+            const dy = worldY - obj.y
+            // atan2(dx, -dy) gives angle where 0 is up, positive is clockwise
+            const angle = Math.atan2(dx, -dy) * 180 / Math.PI
+            obj.angle = Math.round(angle / 5) * 5
+            return
         }
 
         // Moving platform endpoints
@@ -803,6 +860,9 @@ export class LevelEditor extends BasedLevel {
         for (const box of this.currentLevel.pushBoxes) {
             if (this.isPointInRect(x, y, box)) return box
         }
+        for (const ball of (this.currentLevel.bounceBalls || [])) {
+            if (this.isPointInCircle(x, y, ball)) return ball
+        }
         for (const wall of this.currentLevel.walls) {
             if (this.isPointInRect(x, y, wall)) return wall
         }
@@ -819,10 +879,32 @@ export class LevelEditor extends BasedLevel {
         return null
     }
 
-    isPointInRect(x: number, y: number, obj: { x: number, y: number, width: number, height: number }): boolean {
+    isPointInCircle(x: number, y: number, obj: { x: number, y: number, radius: number }): boolean {
+        const dx = x - obj.x
+        const dy = y - obj.y
+        return dx * dx + dy * dy <= obj.radius * obj.radius
+    }
+
+    isPointInRect(x: number, y: number, obj: { x: number, y: number, width: number, height: number, angle?: number }): boolean {
         const halfW = obj.width / 2
         const halfH = obj.height / 2
-        return x >= obj.x - halfW && x <= obj.x + halfW && y >= obj.y - halfH && y <= obj.y + halfH
+        const angle = (obj as any).angle || 0
+        
+        if (angle === 0) {
+            // No rotation - simple bounds check
+            return x >= obj.x - halfW && x <= obj.x + halfW && y >= obj.y - halfH && y <= obj.y + halfH
+        }
+        
+        // Transform point to local (unrotated) space
+        const angleRad = -angle * Math.PI / 180
+        const cosA = Math.cos(angleRad)
+        const sinA = Math.sin(angleRad)
+        const dx = x - obj.x
+        const dy = y - obj.y
+        const localX = dx * cosA - dy * sinA
+        const localY = dx * sinA + dy * cosA
+        
+        return localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH
     }
 
     isPointInPolygon(x: number, y: number, poly: EditorPolygon): boolean {
@@ -950,31 +1032,36 @@ export class LevelEditor extends BasedLevel {
 
         switch (this.currentTool) {
             case 'wall':
-                const wall: EditorWall = { id, type: 'wall', x, y, width: 100, height: 50, color: '#000' }
+                const wall: EditorWall = { id, type: 'wall', x, y, width: 100, height: 50, color: '#000', angle: 0 }
                 this.currentLevel.walls.push(wall)
                 this.selectedObject = wall
                 break
             case 'pushBox':
-                const box: EditorPushBox = { id, type: 'pushBox', x, y, width: 90, height: 90, color: 'red', sizeToMove: 40 }
+                const box: EditorPushBox = { id, type: 'pushBox', x, y, width: 90, height: 90, color: 'red', sizeToMove: 40, angle: 0 }
                 this.currentLevel.pushBoxes.push(box)
                 this.selectedObject = box
+                break
+            case 'bounceBall':
+                const ball: EditorBounceBall = { id, type: 'bounceBall', x, y, radius: 45, color: '#4488ff', sizeToMove: 40 }
+                this.currentLevel.bounceBalls.push(ball)
+                this.selectedObject = ball
                 break
             case 'movingPlatform':
                 const plat: EditorMovingPlatform = {
                     id, type: 'movingPlatform', x, y, width: 100, height: 50, color: 'purple',
                     xDirection: 1, yDirection: 0, xSpeed: 3, ySpeed: 0,
-                    minX: x - 100, maxX: x + 100, minY: y, maxY: y
+                    minX: x - 100, maxX: x + 100, minY: y, maxY: y, angle: 0
                 }
                 this.currentLevel.movingPlatforms.push(plat)
                 this.selectedObject = plat
                 break
             case 'exitDoor':
-                const door: EditorExitDoor = { id, type: 'exitDoor', x, y, width: 100, height: 100, color: 'yellow', doorPath: 'start-screen' }
+                const door: EditorExitDoor = { id, type: 'exitDoor', x, y, width: 100, height: 100, color: 'yellow', doorPath: 'start-screen', angle: 0 }
                 this.currentLevel.exitDoors.push(door)
                 this.selectedObject = door
                 break
             case 'hazardBlock':
-                const hazard: EditorHazardBlock = { id, type: 'hazardBlock', x, y, width: 100, height: 50 }
+                const hazard: EditorHazardBlock = { id, type: 'hazardBlock', x, y, width: 100, height: 50, angle: 0 }
                 this.currentLevel.hazardBlocks.push(hazard)
                 this.selectedObject = hazard
                 break
@@ -1091,6 +1178,9 @@ export class LevelEditor extends BasedLevel {
         // Push boxes
         this.currentLevel.pushBoxes.forEach(box => this.drawEditorRect(box, '#d4c9b2', this.selectedObject?.id === box.id))
 
+        // Bounce balls
+        ;(this.currentLevel.bounceBalls || []).forEach(ball => this.drawEditorBall(ball, this.selectedObject?.id === ball.id))
+
         // Moving platforms (draw range, platform, then handles)
         this.currentLevel.movingPlatforms.forEach(plat => {
             const isSelected = this.selectedObject?.id === plat.id
@@ -1124,6 +1214,10 @@ export class LevelEditor extends BasedLevel {
 
             if (this.currentTool === 'playerStart') {
                 drawCircle({ c: ctx, x: previewScreen.x, y: previewScreen.y, radius: 25 * this.zoom, fillColor: '#ff9900' })
+            } else if (this.currentTool === 'bounceBall') {
+                const defaults = DEFAULT_OBJECTS[this.currentTool] as any
+                const r = (defaults?.radius || 45) * this.zoom
+                drawCircle({ c: ctx, x: previewScreen.x, y: previewScreen.y, radius: r, fillColor: TOOL_COLORS[this.currentTool] })
             } else {
                 const defaults = DEFAULT_OBJECTS[this.currentTool] as any
                 const w = (defaults?.width || 100) * this.zoom
@@ -1140,15 +1234,62 @@ export class LevelEditor extends BasedLevel {
         }
     }
 
-    drawEditorRect(obj: { x: number, y: number, width: number, height: number }, color: string, selected: boolean) {
+    drawEditorRect(obj: { x: number, y: number, width: number, height: number, angle?: number, type?: string }, color: string, selected: boolean) {
         const ctx = this.gameRef.ctx
         const pos = this.worldToScreen(obj.x, obj.y)
         const w = obj.width * this.zoom
         const h = obj.height * this.zoom
+        const angle = obj.angle || 0
 
-        drawBox({ c: ctx, x: pos.x - w / 2, y: pos.y - h / 2, width: w, height: h, fillColor: color, strokeColor: selected ? '#fff' : '#666', strokeWidth: selected ? 3 : 1 })
+        rotateDraw({ c: ctx, x: pos.x, y: pos.y, a: angle }, () => {
+            drawBox({ c: ctx, x: -w / 2, y: -h / 2, width: w, height: h, fillColor: color, strokeColor: selected ? '#fff' : '#666', strokeWidth: selected ? 3 : 1 })
+        })
 
-        if (selected) this.drawResizeHandles(obj)
+        if (selected) {
+            this.drawResizeHandles(obj)
+            // Draw rotation handle for rotatable objects
+            if (obj.type === 'wall' || obj.type === 'pushBox' || obj.type === 'movingPlatform' || obj.type === 'exitDoor' || obj.type === 'hazardBlock') {
+                this.drawRotationHandle(obj)
+            }
+        }
+    }
+
+    drawEditorBall(ball: EditorBounceBall, selected: boolean) {
+        const ctx = this.gameRef.ctx
+        const pos = this.worldToScreen(ball.x, ball.y)
+        const r = ball.radius * this.zoom
+
+        drawCircle({ c: ctx, x: pos.x, y: pos.y, radius: r, fillColor: ball.color, strokeColor: selected ? '#fff' : '#666', strokeWidth: selected ? 3 : 1 })
+
+        if (selected) {
+            this.drawBallHandles(ball)
+        }
+    }
+
+    drawBallHandles(ball: EditorBounceBall) {
+        const ctx = this.gameRef.ctx
+        const pos = this.worldToScreen(ball.x, ball.y)
+        const size = this.handleSize
+
+        // Radius handle on the right side
+        const radiusHandleX = pos.x + ball.radius * this.zoom
+        drawLine({ c: ctx, x: pos.x, y: pos.y, toX: radiusHandleX, toY: pos.y, strokeColor: '#88f', strokeWidth: 2 })
+        drawBox({ c: ctx, x: radiusHandleX - size / 2, y: pos.y - size / 2, width: size, height: size, fillColor: HANDLE_COLOR, strokeColor: HANDLE_BORDER, strokeWidth: 1 })
+    }
+
+    drawRotationHandle(obj: { x: number, y: number, width: number, height: number, angle?: number }) {
+        const ctx = this.gameRef.ctx
+        const pos = this.worldToScreen(obj.x, obj.y)
+        const size = this.handleSize
+        const angleRad = (obj.angle || 0) * Math.PI / 180
+        const rotHandleDistance = (obj.height / 2 + 30) * this.zoom
+        // Handle is above the object (in local space), rotated by the object's angle
+        const rotHandleX = pos.x + Math.sin(angleRad) * rotHandleDistance
+        const rotHandleY = pos.y - Math.cos(angleRad) * rotHandleDistance
+
+        drawLine({ c: ctx, x: pos.x, y: pos.y, toX: rotHandleX, toY: rotHandleY, strokeColor: '#88f', strokeWidth: 2 })
+        drawCircle({ c: ctx, x: rotHandleX, y: rotHandleY, radius: size, fillColor: '#88f', strokeColor: HANDLE_BORDER, strokeWidth: 1 })
+        drawText({ c: ctx, x: rotHandleX + 15, y: rotHandleY + 4, align: 'left', fillColor: '#88f', fontSize: 10, fontFamily: 'sans-serif', weight: 'bold', style: '', text: 'ROT' })
     }
 
     drawResizeHandles(obj: { x: number, y: number, width: number, height: number }) {

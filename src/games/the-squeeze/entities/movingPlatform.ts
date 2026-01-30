@@ -19,6 +19,7 @@ export class MovingPlatform extends PhysBox {
     color: string = 'red'
     strokeColor: string = 'darkred'
     innerGlowColor: string = 'rgba(171,195,47, 1)'
+    angle: number = 0
 
     xSpeed: number = 3
     ySpeed: number = 3
@@ -75,6 +76,11 @@ export class MovingPlatform extends PhysBox {
 
         this.initializeBody()
         this.setCenter()
+        
+        // Apply initial rotation if set
+        if (this.angle && this.body) {
+            Physics.Body.setAngle(this.body, this.angle * Math.PI / 180)
+        }
     }
     update() {
         this.movePlatform()

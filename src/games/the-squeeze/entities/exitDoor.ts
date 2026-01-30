@@ -1,6 +1,7 @@
 import { drawBox, drawEllipse, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { radToDeg } from "../../../engine/libs/mathHelpers";
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
+import Physics from 'matter-js';
 
 export class ExitDoor extends PhysBox {
     x: number = 0
@@ -11,6 +12,7 @@ export class ExitDoor extends PhysBox {
 
     color: string = '#1e1e1e'
     strokeColor: string = '#3c3c3c'
+    angle: number = 0
 
     doorPath: string = 'start-screen'
 
@@ -56,6 +58,11 @@ export class ExitDoor extends PhysBox {
         this.strokeColor = '#3c3c3c'
         this.initializeBody()
         this.setCenter()
+        
+        // Apply initial rotation if set
+        if (this.angle && this.body) {
+            Physics.Body.setAngle(this.body, this.angle * Math.PI / 180)
+        }
     }
     update() { }
     draw() {

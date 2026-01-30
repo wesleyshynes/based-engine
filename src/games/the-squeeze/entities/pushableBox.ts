@@ -16,6 +16,7 @@ export class PushableBox extends PhysBox {
     height: number = 100
 
     color: string = 'red'
+    angle: number = 0
 
     options = {
         tags: {
@@ -96,12 +97,17 @@ export class PushableBox extends PhysBox {
         this.color = this.sizeToMove < 41 ? LIGHT_BROWN : this.sizeToMove < 61 ? MID_BROWN : HEAVY_BROWN
         this.initializeBody()
         this.setCenter()
+        
+        // Apply initial rotation if set
+        if (this.angle && this.body) {
+            Physics.Body.setAngle(this.body, this.angle * Math.PI / 180)
+        }
     }
     update() {
         this.validatePosition()
     }
     draw() {
-        this.drawPhysicsBody()
+        // this.drawPhysicsBody()
 
         rotateDraw({
             c: this.gameRef.ctx,

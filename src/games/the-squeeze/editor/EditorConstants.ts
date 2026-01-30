@@ -13,6 +13,7 @@ export const TOOL_COLORS: Record<EditorTool, string> = {
     wall: '#222',
     polygon: '#222',
     pushBox: '#d4c9b2',
+    bounceBall: '#4488ff',
     movingPlatform: '#222',
     exitDoor: '#000',
     playerStart: '#ff0',
@@ -57,6 +58,7 @@ export const TOOL_LABELS: Record<EditorTool, string> = {
     polygon: 'Poly',
     hazardBlock: 'Hazd',
     pushBox: 'Box',
+    bounceBall: 'Ball',
     movingPlatform: 'Plat',
     exitDoor: 'Exit',
     playerStart: 'Start',
@@ -65,6 +67,6 @@ export const TOOL_LABELS: Record<EditorTool, string> = {
 
 // Tool order for toolbar (placement tools only - select/pan are separate)
 export const TOOL_ORDER: EditorTool[] = [
-    'wall', 'polygon', 'pushBox', 
+    'wall', 'polygon', 'pushBox', 'bounceBall',
     'movingPlatform', 'exitDoor', 'playerStart', 'hazardBlock', 'levelText'
 ]

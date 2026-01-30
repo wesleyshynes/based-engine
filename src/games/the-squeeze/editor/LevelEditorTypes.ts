@@ -13,6 +13,7 @@ export interface LevelWall {
     width: number
     height: number
     color: string
+    angle?: number
 }
 
 export interface LevelPolygon {
@@ -28,6 +29,15 @@ export interface LevelPushBox {
     y: number
     width: number
     height: number
+    color: string
+    sizeToMove: number
+    angle?: number
+}
+
+export interface LevelBounceBall {
+    x: number
+    y: number
+    radius: number
     color: string
     sizeToMove: number
 }
@@ -46,6 +56,7 @@ export interface LevelMovingPlatform {
     maxX: number
     minY: number
     maxY: number
+    angle?: number
 }
 
 export interface LevelExitDoor {
@@ -55,6 +66,7 @@ export interface LevelExitDoor {
     height: number
     color: string
     doorPath: string
+    angle?: number
 }
 
 export interface LevelBoundary {
@@ -70,6 +82,7 @@ export interface LevelHazardBlock {
     y: number
     width: number
     height: number
+    angle?: number
 }
 
 export interface LevelText {
@@ -94,6 +107,7 @@ export interface LevelData {
     walls?: LevelWall[]
     polygons?: LevelPolygon[]
     pushBoxes?: LevelPushBox[]
+    bounceBalls?: LevelBounceBall[]
     movingPlatforms?: LevelMovingPlatform[]
     exitDoors?: LevelExitDoor[]
     hazardBlocks?: LevelHazardBlock[]
@@ -114,6 +128,11 @@ export interface EditorPolygon extends LevelPolygon {
 export interface EditorPushBox extends LevelPushBox {
     id: string
     type: 'pushBox'
+}
+
+export interface EditorBounceBall extends LevelBounceBall {
+    id: string
+    type: 'bounceBall'
 }
 
 export interface EditorMovingPlatform extends LevelMovingPlatform {
@@ -143,7 +162,7 @@ export interface EditorPlayerStart {
     y: number
 }
 
-export type EditorObject = EditorWall | EditorPolygon | EditorPushBox | EditorMovingPlatform | EditorExitDoor | EditorPlayerStart | EditorHazardBlock | EditorText
+export type EditorObject = EditorWall | EditorPolygon | EditorPushBox | EditorBounceBall | EditorMovingPlatform | EditorExitDoor | EditorPlayerStart | EditorHazardBlock | EditorText
 
 export interface EditorLevelData {
     id: string
@@ -155,6 +174,7 @@ export interface EditorLevelData {
     walls: EditorWall[]
     polygons: EditorPolygon[]
     pushBoxes: EditorPushBox[]
+    bounceBalls: EditorBounceBall[]
     movingPlatforms: EditorMovingPlatform[]
     exitDoors: EditorExitDoor[]
     hazardBlocks: EditorHazardBlock[]
@@ -163,7 +183,7 @@ export interface EditorLevelData {
     updatedAt: number
 }
 
-export type EditorTool = 'select' | 'wall' | 'polygon' | 'pushBox' | 'movingPlatform' | 'exitDoor' | 'playerStart' | 'pan' | 'hazardBlock' | 'levelText'
+export type EditorTool = 'select' | 'wall' | 'polygon' | 'pushBox' | 'bounceBall' | 'movingPlatform' | 'exitDoor' | 'playerStart' | 'pan' | 'hazardBlock' | 'levelText'
 
 export interface PropertyField {
     key: string
@@ -180,6 +200,7 @@ export const OBJECT_PROPERTIES: Record<string, PropertyField[]> = {
         { key: 'y', label: 'Y', type: 'number' },
         { key: 'width', label: 'Width', type: 'number', min: 10, max: 1000 },
         { key: 'height', label: 'Height', type: 'number', min: 10, max: 1000 },
+        { key: 'angle', label: 'Angle (deg)', type: 'number', min: -360, max: 360 },
         { key: 'color', label: 'Color', type: 'color' },
     ],
     pushBox: [
@@ -187,13 +208,22 @@ export const OBJECT_PROPERTIES: Record<string, PropertyField[]> = {
         { key: 'y', label: 'Y', type: 'number' },
         { key: 'width', label: 'Width', type: 'number', min: 30, max: 500 },
         { key: 'height', label: 'Height', type: 'number', min: 30, max: 500 },
+        { key: 'angle', label: 'Angle (deg)', type: 'number', min: -360, max: 360 },
         { key: 'sizeToMove', label: 'Size to Move', type: 'number', min: 20, max: 200 },
+    ],
+    bounceBall: [
+        { key: 'x', label: 'X', type: 'number' },
+        { key: 'y', label: 'Y', type: 'number' },
+        { key: 'radius', label: 'Radius', type: 'number', min: 20, max: 200 },
+        { key: 'sizeToMove', label: 'Size to Move', type: 'number', min: 20, max: 200 },
+        { key: 'color', label: 'Color', type: 'color' },
     ],
     movingPlatform: [
         { key: 'x', label: 'X', type: 'number' },
         { key: 'y', label: 'Y', type: 'number' },
         { key: 'width', label: 'Width', type: 'number', min: 20, max: 800 },
         { key: 'height', label: 'Height', type: 'number', min: 20, max: 800 },
+        { key: 'angle', label: 'Angle (deg)', type: 'number', min: -360, max: 360 },
         { key: 'xDirection', label: 'X Direction', type: 'number', min: -1, max: 1, step: 1 },
         { key: 'yDirection', label: 'Y Direction', type: 'number', min: -1, max: 1, step: 1 },
         { key: 'xSpeed', label: 'X Speed', type: 'number', min: 0, max: 20 },
@@ -209,6 +239,7 @@ export const OBJECT_PROPERTIES: Record<string, PropertyField[]> = {
         { key: 'y', label: 'Y', type: 'number' },
         { key: 'width', label: 'Width', type: 'number', min: 50, max: 200 },
         { key: 'height', label: 'Height', type: 'number', min: 50, max: 200 },
+        { key: 'angle', label: 'Angle (deg)', type: 'number', min: -360, max: 360 },
         { key: 'doorPath', label: 'Door Path', type: 'string' },
     ],
     hazardBlock: [
@@ -216,6 +247,7 @@ export const OBJECT_PROPERTIES: Record<string, PropertyField[]> = {
         { key: 'y', label: 'Y', type: 'number' },
         { key: 'width', label: 'Width', type: 'number', min: 20, max: 500 },
         { key: 'height', label: 'Height', type: 'number', min: 20, max: 500 },
+        { key: 'angle', label: 'Angle (deg)', type: 'number', min: -360, max: 360 },
     ],
     polygon: [
         { key: 'x', label: 'X', type: 'number' },
@@ -243,12 +275,20 @@ export const DEFAULT_OBJECTS: Record<string, Partial<EditorObject>> = {
         width: 100,
         height: 50,
         color: '#000',
+        angle: 0,
     },
     pushBox: {
         type: 'pushBox',
         width: 90,
         height: 90,
         color: 'red',
+        sizeToMove: 40,
+        angle: 0,
+    },
+    bounceBall: {
+        type: 'bounceBall',
+        radius: 45,
+        color: '#4488ff',
         sizeToMove: 40,
     },
     movingPlatform: {
@@ -264,6 +304,7 @@ export const DEFAULT_OBJECTS: Record<string, Partial<EditorObject>> = {
         maxX: 300,
         minY: 0,
         maxY: 0,
+        angle: 0,
     },
     exitDoor: {
         type: 'exitDoor',
@@ -271,11 +312,13 @@ export const DEFAULT_OBJECTS: Record<string, Partial<EditorObject>> = {
         height: 100,
         color: 'yellow',
         doorPath: 'credits-screen',
+        angle: 0,
     },
     hazardBlock: {
         type: 'hazardBlock',
         width: 100,
         height: 50,
+        angle: 0,
     },
     polygon: {
         type: 'polygon',

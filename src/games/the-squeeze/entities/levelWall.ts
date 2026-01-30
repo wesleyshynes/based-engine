@@ -1,6 +1,7 @@
 import { drawBox, drawLine, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { radToDeg } from "../../../engine/libs/mathHelpers";
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
+import Physics from 'matter-js';
 
 const FILL_COLOR = '#222222'
 const BORDER_COLOR = '#111111'
@@ -9,6 +10,7 @@ export class LevelWall extends PhysBox {
 
     strokeColor: string = BORDER_COLOR
     color: string = FILL_COLOR
+    angle: number = 0
 
     options = {
         tags: {
@@ -26,6 +28,11 @@ export class LevelWall extends PhysBox {
 
         this.initializeBody()
         this.setCenter()
+        
+        // Apply initial rotation if set
+        if (this.angle && this.body) {
+            Physics.Body.setAngle(this.body, this.angle * Math.PI / 180)
+        }
     }
 
     draw() {

@@ -23,6 +23,7 @@ export class LevelEditorStorage {
             walls: [],
             polygons: [],
             pushBoxes: [],
+            bounceBalls: [],
             movingPlatforms: [],
             exitDoors: [],
             hazardBlocks: [],
@@ -53,6 +54,7 @@ export class LevelEditorStorage {
             walls: level.walls || [],
             polygons: level.polygons || [],
             pushBoxes: level.pushBoxes || [],
+            bounceBalls: level.bounceBalls || [],
             movingPlatforms: level.movingPlatforms || [],
             exitDoors: level.exitDoors || [],
             hazardBlocks: level.hazardBlocks || [],
@@ -129,7 +131,8 @@ export class LevelEditorStorage {
         // Walls
         code += `    walls: [\n`
         level.walls.forEach(wall => {
-            code += `        { x: ${wall.x}, y: ${wall.y}, width: ${wall.width}, height: ${wall.height}, color: '${wall.color}' },\n`
+            const angleStr = wall.angle ? `, angle: ${wall.angle}` : ''
+            code += `        { x: ${wall.x}, y: ${wall.y}, width: ${wall.width}, height: ${wall.height}, color: '${wall.color}'${angleStr} },\n`
         })
         code += `    ],\n`
 
@@ -144,7 +147,15 @@ export class LevelEditorStorage {
         // Push Boxes
         code += `    pushBoxes: [\n`
         level.pushBoxes.forEach(box => {
-            code += `        { x: ${box.x}, y: ${box.y}, width: ${box.width}, height: ${box.height}, color: '${box.color}', sizeToMove: ${box.sizeToMove} },\n`
+            const angleStr = box.angle ? `, angle: ${box.angle}` : ''
+            code += `        { x: ${box.x}, y: ${box.y}, width: ${box.width}, height: ${box.height}, color: '${box.color}', sizeToMove: ${box.sizeToMove}${angleStr} },\n`
+        })
+        code += `    ],\n`
+
+        // Bounce Balls
+        code += `    bounceBalls: [\n`
+        ;(level.bounceBalls || []).forEach(ball => {
+            code += `        { x: ${ball.x}, y: ${ball.y}, radius: ${ball.radius}, color: '${ball.color}', sizeToMove: ${ball.sizeToMove} },\n`
         })
         code += `    ],\n`
 
@@ -156,6 +167,7 @@ export class LevelEditorStorage {
             code += `            y: ${plat.y},\n`
             code += `            width: ${plat.width},\n`
             code += `            height: ${plat.height},\n`
+            if (plat.angle) code += `            angle: ${plat.angle},\n`
             code += `            xDirection: ${plat.xDirection},\n`
             code += `            yDirection: ${plat.yDirection},\n`
             code += `            xSpeed: ${plat.xSpeed},\n`
@@ -172,14 +184,16 @@ export class LevelEditorStorage {
         // Exit Doors
         code += `    exitDoors: [\n`
         level.exitDoors.forEach(door => {
-            code += `        { x: ${door.x}, y: ${door.y}, width: ${door.width}, height: ${door.height}, color: '${door.color}', doorPath: '${door.doorPath}' },\n`
+            const angleStr = door.angle ? `, angle: ${door.angle}` : ''
+            code += `        { x: ${door.x}, y: ${door.y}, width: ${door.width}, height: ${door.height}, color: '${door.color}', doorPath: '${door.doorPath}'${angleStr} },\n`
         })
         code += `    ],\n`
 
         // Hazard Blocks
         code += `    hazardBlocks: [\n`
         level.hazardBlocks.forEach(block => {
-            code += `        { x: ${block.x}, y: ${block.y}, width: ${block.width}, height: ${block.height}, },\n`
+            const angleStr = block.angle ? `, angle: ${block.angle}` : ''
+            code += `        { x: ${block.x}, y: ${block.y}, width: ${block.width}, height: ${block.height}${angleStr} },\n`
         })
         code += `    ],\n`
 
@@ -215,6 +229,8 @@ export class LevelEditorStorage {
         code += `    _levelPolygons: any[] = ${constantName}.polygons || []\n`
         code += `    pushBoxes: any[] = []\n`
         code += `    _pushBoxes: any[] = ${constantName}.pushBoxes\n`
+        code += `    bounceBalls: any[] = []\n`
+        code += `    _bounceBalls: any[] = ${constantName}.bounceBalls || []\n`
         code += `    movingPlatforms: any[] = []\n`
         code += `    _movingPlatforms: any[] = ${constantName}.movingPlatforms\n`
         code += `    exitDoors: any[] = []\n`

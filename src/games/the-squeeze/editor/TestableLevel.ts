@@ -25,6 +25,9 @@ export class TestableLevel extends SqueezeBaseLevel {
     hazardBlocks: any[] = []
     _hazardBlocks: any[] = []
 
+    bounceBalls: any[] = []
+    _bounceBalls: any[] = []
+
     levelTexts: any[] = []
     _levelTexts: any[] = []
 
@@ -61,6 +64,7 @@ export class TestableLevel extends SqueezeBaseLevel {
                 width: wall.width,
                 height: wall.height,
                 color: wall.color,
+                angle: wall.angle || 0,
             }))
 
             // Map polygons
@@ -80,6 +84,7 @@ export class TestableLevel extends SqueezeBaseLevel {
                 height: box.height,
                 color: box.color,
                 sizeToMove: box.sizeToMove,
+                angle: box.angle || 0,
             }))
 
             // Map moving platforms
@@ -97,6 +102,7 @@ export class TestableLevel extends SqueezeBaseLevel {
                 maxX: plat.maxX,
                 minY: plat.minY,
                 maxY: plat.maxY,
+                angle: plat.angle || 0,
             }))
 
             // Map exit doors - redirect to editor instead of original door path
@@ -107,6 +113,7 @@ export class TestableLevel extends SqueezeBaseLevel {
                 height: door.height,
                 color: door.color,
                 doorPath: 'level-editor', // Always go back to editor when testing
+                angle: door.angle || 0,
             }))
 
             // Map hazard blocks
@@ -115,6 +122,16 @@ export class TestableLevel extends SqueezeBaseLevel {
                 y: hazard.y,
                 width: hazard.width,
                 height: hazard.height,
+                angle: hazard.angle || 0,
+            }))
+
+            // Map bounce balls
+            this._bounceBalls = (levelData.bounceBalls || []).map(ball => ({
+                x: ball.x,
+                y: ball.y,
+                radius: ball.radius,
+                color: ball.color,
+                sizeToMove: ball.sizeToMove,
             }))
 
             // Map level texts

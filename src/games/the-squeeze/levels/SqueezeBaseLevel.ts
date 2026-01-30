@@ -11,6 +11,7 @@ import { HazardBlock } from "../entities/hazardBlock";
 import { LevelText } from "../entities/levelText";
 import { TouchKnob } from "../../../engine/controls/TouchKnob";
 import { MovingPlatform } from "../entities/movingPlatform";
+import { BounceBall } from "../entities/bounceBall";
 
 import WallThud1 from '../../../assets/the-squeeze/387478__cosmicembers__dart-thud-1.mp3'
 import WallThud2 from '../../../assets/the-squeeze/387480__cosmicembers__dart-thud-2.mp3'
@@ -84,6 +85,8 @@ export class SqueezeBaseLevel extends BasedLevel {
     _exitDoors: any[] = []
     hazardBlocks: any[] = []
     _hazardBlocks: any[] = []
+    bounceBalls: any[] = []
+    _bounceBalls: any[] = []
     levelTexts: any[] = []
     _levelTexts: any[] = []
 
@@ -270,6 +273,7 @@ export class SqueezeBaseLevel extends BasedLevel {
         this.setupMovingPlatforms()
         this.setupExitDoors()
         this.setupHazardBlocks()
+        this.setupBounceBalls()
         this.setupLevelTexts()
 
         // BEGIN
@@ -308,6 +312,10 @@ export class SqueezeBaseLevel extends BasedLevel {
 
         this.pushBoxes.forEach((box: any) => {
             box.update()
+        })
+
+        this.bounceBalls.forEach((ball: any) => {
+            ball.update()
         })
 
         this.hazardBlocks.forEach((hazard: any) => {
@@ -445,6 +453,11 @@ export class SqueezeBaseLevel extends BasedLevel {
             box.draw()
         })
 
+        // draw bounce balls
+        this.bounceBalls.forEach((ball: any) => {
+            ball.draw()
+        })
+
         // draw moving platforms
         this.movingPlatforms.forEach((plat: any) => {
             plat.draw()
@@ -505,6 +518,7 @@ export class SqueezeBaseLevel extends BasedLevel {
             tempObj.width = obj.width
             tempObj.height = obj.height
             tempObj.color = obj.color
+            tempObj.angle = obj.angle || 0
             tempObj.initialize()
             this.gameRef.addToWorld(tempObj.body)
             return tempObj
@@ -543,6 +557,7 @@ export class SqueezeBaseLevel extends BasedLevel {
             tempObj.width = obj.width
             tempObj.height = obj.height
             tempObj.sizeToMove = obj.sizeToMove
+            tempObj.angle = obj.angle || 0
             tempObj.initialize()
             this.gameRef.addToWorld(tempObj.body)
             return tempObj
@@ -573,6 +588,7 @@ export class SqueezeBaseLevel extends BasedLevel {
             tempObj.width = obj.width
             tempObj.height = obj.height
             tempObj.color = obj.color
+            tempObj.angle = obj.angle || 0
             tempObj.initialize()
             this.gameRef.addToWorld(tempObj.body)
             return tempObj
@@ -595,6 +611,7 @@ export class SqueezeBaseLevel extends BasedLevel {
             tempObj.width = obj.width
             tempObj.height = obj.height
             tempObj.color = obj.color
+            tempObj.angle = obj.angle || 0
             tempObj.doorPath = obj.doorPath
             tempObj.onExit = () => {
                 this.gameRef.basedObjectRefs.scores.currentScore += this.gameRef.lastUpdate - this.levelStartTime
@@ -617,6 +634,26 @@ export class SqueezeBaseLevel extends BasedLevel {
             tempObj.y = obj.y
             tempObj.width = obj.width
             tempObj.height = obj.height
+            tempObj.angle = obj.angle || 0
+            tempObj.initialize()
+            this.gameRef.addToWorld(tempObj.body)
+            return tempObj
+        })
+    }
+
+    setupBounceBalls() {
+        this.bounceBalls = [
+            ...this._bounceBalls,
+        ].map((obj: any, idx: number) => {
+            const tempObj = new BounceBall({
+                key: `bounceBall-${idx}`,
+                gameRef: this.gameRef
+            })
+            tempObj.x = obj.x
+            tempObj.y = obj.y
+            tempObj.radius = obj.radius
+            tempObj.sizeToMove = obj.sizeToMove
+            tempObj.color = obj.color
             tempObj.initialize()
             this.gameRef.addToWorld(tempObj.body)
             return tempObj

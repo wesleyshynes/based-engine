@@ -1,6 +1,7 @@
 import { drawBox, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { radToDeg } from "../../../engine/libs/mathHelpers";
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
+import Physics from 'matter-js';
 
 export class HazardBlock extends PhysBox {
 
@@ -8,6 +9,7 @@ export class HazardBlock extends PhysBox {
     color: string = '#FF0000'
     colorCycleSpeed: number = 0.05
     colorPhase: number = 0
+    angle: number = 0
 
     options = {
         tags: {
@@ -22,6 +24,11 @@ export class HazardBlock extends PhysBox {
     initialize() {
         this.initializeBody()
         this.setCenter()
+        
+        // Apply initial rotation if set
+        if (this.angle && this.body) {
+            Physics.Body.setAngle(this.body, this.angle * Math.PI / 180)
+        }
     }
 
     update() {
