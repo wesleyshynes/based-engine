@@ -6,8 +6,7 @@ import { Level03 } from "./levels/level-03"
 import { Level04 } from "./levels/level-04"
 import { Level05 } from "./levels/level-05"
 import { StartScreen } from "./levels/startScreen"
-import { LevelEditor } from "./editor/LevelEditor"
-import { TestableLevel } from "./editor/TestableLevel"
+import { SqueezeLevelEditor, TestableLevel } from "./editor"
 
 export const START_LEVEL = 'level-01' 
 // export const START_LEVEL = 'standard-level' 
@@ -25,8 +24,8 @@ export function startGame() {
       { key: 'level-03', level: Level03 },
       { key: 'level-04', level: Level04 },
       { key: 'level-05', level: Level05 },
-      { key: 'level-editor', level: LevelEditor },
-      { key: 'test-level', level: TestableLevel },
+      { key: 'level-editor', level: SqueezeLevelEditor },
+      { key: 'testable-level', level: TestableLevel },
     ]
   })
   newGame.enableMouse()
