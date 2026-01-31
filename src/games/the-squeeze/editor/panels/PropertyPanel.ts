@@ -3,7 +3,8 @@
 import { BasedGame } from "../../../../engine/BasedEngine"
 import { EditorPanel } from "./EditorPanel"
 import { EditorInputManager } from "../EditorInputManager"
-import { EditorObject, OBJECT_PROPERTIES } from "../LevelEditorTypes"
+import { EditorObject, PlaceableObjectType, PropertyField } from "../LevelEditorTypes"
+import { getObjectProperties } from "../LevelEditorObjectRegistry"
 import { PANEL_BG } from "../EditorConstants"
 
 const PROPERTY_INPUT_ID = 'editor-property-input'
@@ -60,7 +61,7 @@ export class PropertyPanel extends EditorPanel {
         const selectedObject = this.callbacks.getSelectedObject()
         if (!selectedObject) return
 
-        const props = OBJECT_PROPERTIES[selectedObject.type] || []
+        const props = getObjectProperties(selectedObject.type as PlaceableObjectType) || []
 
         // Dynamically calculate panel height based on number of properties
         this.height = props.length * 40 + 60
@@ -129,8 +130,8 @@ export class PropertyPanel extends EditorPanel {
         const selectedObject = this.callbacks.getSelectedObject()
         if (!selectedObject) return
 
-        const props = OBJECT_PROPERTIES[selectedObject.type]
-        const propDef = props?.find(p => p.key === key)
+        const props = getObjectProperties(selectedObject.type as PlaceableObjectType)
+        const propDef = props?.find((p: PropertyField) => p.key === key)
 
         let parsedValue: any = value
         if (propDef?.type === 'number') {

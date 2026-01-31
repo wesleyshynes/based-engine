@@ -1,12 +1,26 @@
 // Level Editor Types and Interfaces
 
+import { PrimitiveType, DrawContext, CoordinateHandleConfig } from "./LevelEditorPrimitives"
+
+// Re-export DrawContext for convenience
+export { DrawContext } from "./LevelEditorPrimitives"
+
 // Vertex type for polygon shapes
 export interface VertexPoint {
     x: number
     y: number
 }
 
+// ============================================================================
+// Built-in Tools (not placeable objects)
+// ============================================================================
+
+export type BuiltInTool = 'select' | 'pan'
+
+// ============================================================================
 // Base types for level data (used by both editor and game levels)
+// ============================================================================
+
 export interface LevelWall {
     x: number
     y: number
@@ -114,45 +128,53 @@ export interface LevelData {
     levelTexts?: LevelText[]
 }
 
-// Editor-specific types (extend base types with id and type)
+// Editor-specific types (extend base types with id, type, and optional zIndex for editor)
 export interface EditorWall extends LevelWall {
     id: string
     type: 'wall'
+    zIndex?: number
 }
 
 export interface EditorPolygon extends LevelPolygon {
     id: string
     type: 'polygon'
+    zIndex?: number
 }
 
 export interface EditorPushBox extends LevelPushBox {
     id: string
     type: 'pushBox'
+    zIndex?: number
 }
 
 export interface EditorBounceBall extends LevelBounceBall {
     id: string
     type: 'bounceBall'
+    zIndex?: number
 }
 
 export interface EditorMovingPlatform extends LevelMovingPlatform {
     id: string
     type: 'movingPlatform'
+    zIndex?: number
 }
 
 export interface EditorExitDoor extends LevelExitDoor {
     id: string
     type: 'exitDoor'
+    zIndex?: number
 }
 
 export interface EditorHazardBlock extends LevelHazardBlock {
     id: string
     type: 'hazardBlock'
+    zIndex?: number
 }
 
 export interface EditorText extends LevelText {
     id: string
     type: 'levelText'
+    zIndex?: number
 }
 
 export interface EditorPlayerStart {
@@ -160,9 +182,16 @@ export interface EditorPlayerStart {
     type: 'playerStart'
     x: number
     y: number
+    zIndex?: number
 }
 
 export type EditorObject = EditorWall | EditorPolygon | EditorPushBox | EditorBounceBall | EditorMovingPlatform | EditorExitDoor | EditorPlayerStart | EditorHazardBlock | EditorText
+
+// All placeable object type keys
+export type PlaceableObjectType = EditorObject['type']
+
+// Combined tool type (built-in tools + placeable object types)
+export type EditorTool = BuiltInTool | PlaceableObjectType
 
 export interface EditorLevelData {
     id: string
@@ -183,162 +212,57 @@ export interface EditorLevelData {
     updatedAt: number
 }
 
-export type EditorTool = 'select' | 'wall' | 'polygon' | 'pushBox' | 'bounceBall' | 'movingPlatform' | 'exitDoor' | 'playerStart' | 'pan' | 'hazardBlock' | 'levelText'
+// ============================================================================
+// Property Field Types
+// ============================================================================
 
 export interface PropertyField {
     key: string
     label: string
-    type: 'number' | 'string' | 'color'
+    type: 'number' | 'string' | 'color' | 'coordinate'
     min?: number
     max?: number
     step?: number
+    // For coordinate type - the paired keys
+    coordinateKeys?: { x: string, y: string }
 }
 
-export const OBJECT_PROPERTIES: Record<string, PropertyField[]> = {
-    wall: [
-        { key: 'x', label: 'X', type: 'number' },
-        { key: 'y', label: 'Y', type: 'number' },
-        { key: 'width', label: 'Width', type: 'number', min: 10, max: 1000 },
-        { key: 'height', label: 'Height', type: 'number', min: 10, max: 1000 },
-        { key: 'angle', label: 'Angle (deg)', type: 'number', min: -360, max: 360 },
-        { key: 'color', label: 'Color', type: 'color' },
-    ],
-    pushBox: [
-        { key: 'x', label: 'X', type: 'number' },
-        { key: 'y', label: 'Y', type: 'number' },
-        { key: 'width', label: 'Width', type: 'number', min: 30, max: 500 },
-        { key: 'height', label: 'Height', type: 'number', min: 30, max: 500 },
-        { key: 'angle', label: 'Angle (deg)', type: 'number', min: -360, max: 360 },
-        { key: 'sizeToMove', label: 'Size to Move', type: 'number', min: 20, max: 200 },
-    ],
-    bounceBall: [
-        { key: 'x', label: 'X', type: 'number' },
-        { key: 'y', label: 'Y', type: 'number' },
-        { key: 'radius', label: 'Radius', type: 'number', min: 20, max: 200 },
-        { key: 'sizeToMove', label: 'Size to Move', type: 'number', min: 20, max: 200 },
-        { key: 'color', label: 'Color', type: 'color' },
-    ],
-    movingPlatform: [
-        { key: 'x', label: 'X', type: 'number' },
-        { key: 'y', label: 'Y', type: 'number' },
-        { key: 'width', label: 'Width', type: 'number', min: 20, max: 800 },
-        { key: 'height', label: 'Height', type: 'number', min: 20, max: 800 },
-        { key: 'angle', label: 'Angle (deg)', type: 'number', min: -360, max: 360 },
-        { key: 'xDirection', label: 'X Direction', type: 'number', min: -1, max: 1, step: 1 },
-        { key: 'yDirection', label: 'Y Direction', type: 'number', min: -1, max: 1, step: 1 },
-        { key: 'xSpeed', label: 'X Speed', type: 'number', min: 0, max: 20 },
-        { key: 'ySpeed', label: 'Y Speed', type: 'number', min: 0, max: 20 },
-        { key: 'minX', label: 'Min X', type: 'number' },
-        { key: 'maxX', label: 'Max X', type: 'number' },
-        { key: 'minY', label: 'Min Y', type: 'number' },
-        { key: 'maxY', label: 'Max Y', type: 'number' },
-        { key: 'color', label: 'Color', type: 'color' },
-    ],
-    exitDoor: [
-        { key: 'x', label: 'X', type: 'number' },
-        { key: 'y', label: 'Y', type: 'number' },
-        { key: 'width', label: 'Width', type: 'number', min: 50, max: 200 },
-        { key: 'height', label: 'Height', type: 'number', min: 50, max: 200 },
-        { key: 'angle', label: 'Angle (deg)', type: 'number', min: -360, max: 360 },
-        { key: 'doorPath', label: 'Door Path', type: 'string' },
-    ],
-    hazardBlock: [
-        { key: 'x', label: 'X', type: 'number' },
-        { key: 'y', label: 'Y', type: 'number' },
-        { key: 'width', label: 'Width', type: 'number', min: 20, max: 500 },
-        { key: 'height', label: 'Height', type: 'number', min: 20, max: 500 },
-        { key: 'angle', label: 'Angle (deg)', type: 'number', min: -360, max: 360 },
-    ],
-    polygon: [
-        { key: 'x', label: 'X', type: 'number' },
-        { key: 'y', label: 'Y', type: 'number' },
-        { key: 'angle', label: 'Angle (deg)', type: 'number', min: 0, max: 360 },
-        { key: 'color', label: 'Color', type: 'color' },
-    ],
-    playerStart: [
-        { key: 'x', label: 'X', type: 'number' },
-        { key: 'y', label: 'Y', type: 'number' },
-    ],
-    levelText: [
-        { key: 'x', label: 'X', type: 'number' },
-        { key: 'y', label: 'Y', type: 'number' },
-        { key: 'text', label: 'Text', type: 'string' },
-        { key: 'fontSize', label: 'Font Size', type: 'number', min: 8, max: 200 },
-        { key: 'angle', label: 'Angle (deg)', type: 'number', min: -360, max: 360 },
-        { key: 'color', label: 'Color', type: 'color' },
-    ],
+// ============================================================================
+// Object Definition - used by the registry to define placeable objects
+// ============================================================================
+
+export interface ObjectDefinition {
+    // The primitive type this object uses for basic rendering
+    primitive: PrimitiveType
+    // Label shown on the toolbar button
+    toolLabel: string
+    // How the object is created: single-click or multi-click (like polygon)
+    creationMode: 'single-click' | 'multi-click'
+    // The key in EditorLevelData where instances are stored (e.g., 'walls', 'pushBoxes')
+    // For playerStart this is special - stored directly on level.playerStart
+    arrayKey: keyof EditorLevelData | 'playerStart'
+    // Default zIndex for rendering order (0 if not specified)
+    zIndex: number
+    // Default values for new instances (merged with primitive defaults)
+    defaults: Record<string, any>
+    // Property fields shown in the property panel
+    properties: PropertyField[]
+    // Coordinate handle configurations (for things like movingPlatform min/max points)
+    coordinateHandles?: CoordinateHandleConfig[]
+    // Optional custom draw function (called after primitive draw)
+    customDraw?: (obj: any, ctx: DrawContext, selected: boolean) => void
+    // Color used for the object (can be a property key or a fixed color)
+    colorKey?: string
+    // Fixed color override (used if object doesn't have a color property)
+    fixedColor?: string
 }
 
-export const DEFAULT_OBJECTS: Record<string, Partial<EditorObject>> = {
-    wall: {
-        type: 'wall',
-        width: 100,
-        height: 50,
-        color: '#000',
-        angle: 0,
-    },
-    pushBox: {
-        type: 'pushBox',
-        width: 90,
-        height: 90,
-        color: 'red',
-        sizeToMove: 40,
-        angle: 0,
-    },
-    bounceBall: {
-        type: 'bounceBall',
-        radius: 45,
-        color: '#4488ff',
-        sizeToMove: 40,
-    },
-    movingPlatform: {
-        type: 'movingPlatform',
-        width: 100,
-        height: 50,
-        color: 'purple',
-        xDirection: 1,
-        yDirection: 0,
-        xSpeed: 3,
-        ySpeed: 0,
-        minX: 0,
-        maxX: 300,
-        minY: 0,
-        maxY: 0,
-        angle: 0,
-    },
-    exitDoor: {
-        type: 'exitDoor',
-        width: 100,
-        height: 100,
-        color: 'yellow',
-        doorPath: 'credits-screen',
-        angle: 0,
-    },
-    hazardBlock: {
-        type: 'hazardBlock',
-        width: 100,
-        height: 50,
-        angle: 0,
-    },
-    polygon: {
-        type: 'polygon',
-        vertices: [
-            { x: -50, y: -25 },
-            { x: 50, y: -25 },
-            { x: 50, y: 25 },
-            { x: -50, y: 25 },
-        ],
-        angle: 0,
-        color: '#000',
-    },
-    playerStart: {
-        type: 'playerStart',
-    },
-    levelText: {
-        type: 'levelText',
-        text: 'Text',
-        fontSize: 24,
-        color: '#ffffff',
-        angle: 0,
-    },
-}
+// ============================================================================
+// Legacy exports for backwards compatibility during migration
+// These will be removed once migration is complete
+// ============================================================================
+
+// OBJECT_PROPERTIES and DEFAULT_OBJECTS have been moved to LevelEditorObjectRegistry.ts
+// Import from there instead:
+// import { OBJECT_REGISTRY, getObjectProperties, getObjectDefaults } from './LevelEditorObjectRegistry'
+

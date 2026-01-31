@@ -1,25 +1,16 @@
 // Editor Constants - Colors, sizes, and configuration values
 
-import { EditorTool } from "./LevelEditorTypes"
+import { BuiltInTool, PlaceableObjectType } from "./LevelEditorTypes"
 
 // Background and grid
 export const BG_COLOR = '#1a1a1a'
 export const GRID_COLOR = '#2a2a2a'
 export const GRID_SIZE = 25
 
-// Tool colors for preview and selection
-export const TOOL_COLORS: Record<EditorTool, string> = {
+// Preview colors for built-in tools
+export const BUILT_IN_TOOL_COLORS: Record<BuiltInTool, string> = {
     select: '#fff',
-    wall: '#222',
-    polygon: '#222',
-    pushBox: '#d4c9b2',
-    bounceBall: '#4488ff',
-    movingPlatform: '#222',
-    exitDoor: '#000',
-    playerStart: '#ff0',
-    hazardBlock: '#800000',
     pan: '#888',
-    levelText: '#ffffff',
 }
 
 // Button colors
@@ -50,23 +41,6 @@ export const POLYGON_CLICK_DELAY = 150  // ms minimum between polygon vertex cli
 export const MIN_VERTEX_DISTANCE = 20   // minimum distance between polygon vertices
 export const DOUBLE_CLICK_THRESHOLD = 300  // ms
 
-// Tool labels for buttons
-export const TOOL_LABELS: Record<EditorTool, string> = {
-    select: 'Sel',
-    pan: 'Pan',
-    wall: 'Wall',
-    polygon: 'Poly',
-    hazardBlock: 'Hazd',
-    pushBox: 'Box',
-    bounceBall: 'Ball',
-    movingPlatform: 'Plat',
-    exitDoor: 'Exit',
-    playerStart: 'Start',
-    levelText: 'Text',
-}
-
-// Tool order for toolbar (placement tools only - select/pan are separate)
-export const TOOL_ORDER: EditorTool[] = [
-    'wall', 'polygon', 'pushBox', 'bounceBall',
-    'movingPlatform', 'exitDoor', 'playerStart', 'hazardBlock', 'levelText'
-]
+// Note: TOOL_LABELS and TOOL_ORDER have been moved to LevelEditorObjectRegistry.ts
+// Tool labels are now defined per-object as 'toolLabel' in OBJECT_REGISTRY
+// Tool order is now defined in OBJECT_REGISTRY_ORDER
