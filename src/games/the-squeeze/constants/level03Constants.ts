@@ -1,10 +1,10 @@
-import { LevelData } from "../editor/LevelEditorTypes"
+import { SqueezeLevelData } from "../editor"
 import { generateLevelBoundaries } from "../helpers"
 
 const WIDTH = 800
 const HEIGHT = 600
 
-export const LEVEL_03: LevelData = {
+export const LEVEL_03: SqueezeLevelData = {
     name: 'Level 03',
     levelWidth: WIDTH,
     levelHeight: HEIGHT,

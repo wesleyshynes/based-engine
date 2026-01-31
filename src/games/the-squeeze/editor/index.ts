@@ -19,11 +19,6 @@ export type { SqueezeObjectType } from './SqueezeObjectRegistry'
 // Test Level
 export { TestableLevel } from './TestableLevel'
 
-// Legacy exports (for backwards compatibility during transition)
-export { LevelEditor } from './LevelEditor'
-export { LevelEditorStorage } from './LevelEditorStorage'
-export * from './LevelEditorTypes'
-
 // Re-export base editor utilities for convenience
 export {
     BaseLevelEditor,

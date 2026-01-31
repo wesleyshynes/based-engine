@@ -95,6 +95,8 @@ export interface SqueezeLevelText {
     x: number
     y: number
     text: string
+    fontFamily?: string
+    fontWeight?: string
     fontSize: number
     color: string
     angle?: number
@@ -139,11 +141,11 @@ export interface SqueezeLevelData {
     playerStart: { x: number; y: number }
     boundaries: SqueezeWall[]
     walls: SqueezeWall[]
-    polygons: SqueezePolygon[]
+    polygons?: SqueezePolygon[]
     pushBoxes: SqueezePushBox[]
-    bounceBalls: SqueezeBounceBall[]
-    movingPlatforms: SqueezeMovingPlatform[]
+    bounceBalls?: SqueezeBounceBall[]
+    movingPlatforms?: SqueezeMovingPlatform[]
     exitDoors: SqueezeExitDoor[]
-    hazardBlocks: SqueezeHazardBlock[]
-    levelTexts: SqueezeLevelText[]
+    hazardBlocks?: SqueezeHazardBlock[]
+    levelTexts?: SqueezeLevelText[]
 }
