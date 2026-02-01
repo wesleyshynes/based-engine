@@ -17,11 +17,11 @@ export class StartScreen extends BasedLevel {
 
   gameTitle: string = 'The Squeeze'
 
-  startButton: any;
-  soundButton: any;
-  creditsButton: any;
-  resetScoreButton: any;
-  editorButton: any;
+  startButton: BasedButton;
+  soundButton: BasedButton;
+  creditsButton: BasedButton;
+  resetScoreButton: BasedButton;
+  editorButton: BasedButton;
 
   activeSound: any = {
     playing: false,
@@ -33,7 +33,7 @@ export class StartScreen extends BasedLevel {
   levelWidth: number = 800
   levelHeight: number = 600
 
-  buttonGroup: any[] = []
+  buttonGroup: BasedButton[] = []
 
 
   // logoSprite: any;
@@ -110,6 +110,7 @@ export class StartScreen extends BasedLevel {
     this.startButton.buttonText = 'Play'
     this.startButton.width = this.gameRef.gameWidth - 200
     this.startButton.clickFunction = () => {
+      this.gameRef.clearGameData()
       this.gameRef.basedObjectRefs.scores.currentScore = 0
       this.gameRef.loadLevel(START_LEVEL)
     }

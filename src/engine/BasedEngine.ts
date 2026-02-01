@@ -98,6 +98,7 @@ export class BasedGame implements BasedGameType {
   basedObjectRefs: any = {}
 
   levelData: any = {}
+  gameData: any = {}
 
   loadingMessage: string = 'Loading Assets'
   currentlyLoading: string = ''
@@ -380,6 +381,14 @@ export class BasedGame implements BasedGameType {
     })
   }
 
+  clearLevelData() {
+    this.levelData = {}
+  }
+
+  clearGameData() {
+    this.gameData = {}
+  }
+
   loadLevel(level: string) {
     this.targetLevel = level;
     this.pendingLevelLoad = true
@@ -391,7 +400,7 @@ export class BasedGame implements BasedGameType {
     this.drawLoading()
     this.levels[this.activeLevel].tearDown()
     this.activeLevel = this.targetLevel
-    this.levelData = {}
+    this.clearLevelData()
     await this.levels[this.activeLevel].preload()
     this.levels[this.activeLevel].initialize()
     this.pendingLevelLoad = false
