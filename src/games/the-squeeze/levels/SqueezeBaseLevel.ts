@@ -43,8 +43,6 @@ const BG_COLOR = 'black'
 
 export class SqueezeBaseLevel extends BasedLevel {
 
-    physics: any
-
     levelWidth: number = 800
     levelHeight: number = 600
 
@@ -54,40 +52,40 @@ export class SqueezeBaseLevel extends BasedLevel {
 
     // Camera related stuff
     miniMapActive: boolean = false
-    followCam: any;
+    followCam: FollowCam;
 
     // Interface stuff
-    cameraZoomButton: any
-    moveKnob: any;
-    actionButton1: any;
-    actionButton2: any;
-    nextLevelButton: any;
-    resetButton: any;
+    cameraZoomButton: BasedButton
+    moveKnob: TouchKnob;
+    actionButton1: BasedButton;
+    actionButton2: BasedButton;
+    nextLevelButton: BasedButton;
+    resetButton: BasedButton;
 
     // Game related stuff
     gameState: string = 'active'
 
-    mainPlayer: any
+    mainPlayer: MainPlayer
     
     nextLevel: string = 'standard-level'
     
     playerStartPosition: any = { x: 100, y: 100 }
-    levelWalls: any[] = []
+    levelWalls: LevelWall[] = []
     _levelBoundaries: any[] = []
     _levelWalls: any[] = []
-    levelPolygons: any[] = []
+    levelPolygons: LevelPolygon[] = []
     _levelPolygons: any[] = []
-    pushBoxes: any[] = []
+    pushBoxes: PushableBox[] = []
     _pushBoxes: any[] = []
-    movingPlatforms: any[] = []
+    movingPlatforms: MovingPlatform[] = []
     _movingPlatforms: any[] = []
-    exitDoors: any[] = []
+    exitDoors: ExitDoor[] = []
     _exitDoors: any[] = []
-    hazardBlocks: any[] = []
+    hazardBlocks: HazardBlock[] = []
     _hazardBlocks: any[] = []
-    bounceBalls: any[] = []
+    bounceBalls: BounceBall[] = []
     _bounceBalls: any[] = []
-    levelTexts: any[] = []
+    levelTexts: LevelText[] = []
     _levelTexts: any[] = []
 
     // SOUNDS
@@ -216,7 +214,7 @@ export class SqueezeBaseLevel extends BasedLevel {
         this.actionButton1.buttonText = '→ ←'
         this.actionButton1.fillColor = 'rgba(255,165,0,0.7)'
         this.actionButton1.roundButton = true
-        this.actionButton1.holdFunction = (_: any) => {}
+        this.actionButton1.holdFunction = () => {}
 
         this.actionButton2 = new BasedButton({ gameRef: this.gameRef, key: 'actionButton2' })
         this.actionButton2.width = 60
@@ -226,7 +224,7 @@ export class SqueezeBaseLevel extends BasedLevel {
         this.actionButton2.buttonText = '← →'
         this.actionButton2.fillColor = 'rgba(255,0,0,0.7)'
         this.actionButton2.roundButton = true
-        this.actionButton2.holdFunction = (_: any) => {}
+        this.actionButton2.holdFunction = () => {}
 
 
         this.moveKnob = new TouchKnob({ key: 'move-knob', gameRef: this.gameRef })
@@ -438,6 +436,11 @@ export class SqueezeBaseLevel extends BasedLevel {
             wall.draw()
         })
 
+        // draw exit doors
+        this.exitDoors.forEach((door: any) => {
+            door.draw()
+        })
+
         // draw level polygons
         this.levelPolygons.forEach((poly: any) => {
             poly.draw()
@@ -466,11 +469,6 @@ export class SqueezeBaseLevel extends BasedLevel {
         // draw hazard blocks
         this.hazardBlocks.forEach((hazard: any) => {
             hazard.draw()
-        })
-
-        // draw exit doors
-        this.exitDoors.forEach((door: any) => {
-            door.draw()
         })
 
 
