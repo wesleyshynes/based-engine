@@ -255,11 +255,12 @@ export const SQUEEZE_OBJECT_REGISTRY: Record<SqueezeObjectType, ObjectDefinition
                 y: pos.y + 5,
                 align: 'center',
                 fillColor: '#ff0',
-                fontSize: 12 * ctx.cameraZoom,
+                fontSize: 12,
                 fontFamily: 'sans-serif',
                 weight: 'bold',
                 style: '',
-                text: 'EXIT'
+                text: 'EXIT',
+                zoom: ctx.cameraZoom,
             })
         },
     },
@@ -317,11 +318,12 @@ export const SQUEEZE_OBJECT_REGISTRY: Record<SqueezeObjectType, ObjectDefinition
                 y: pos.y + 5,
                 align: 'center',
                 fillColor: '#fff',
-                fontSize: 12 * ctx.cameraZoom,
+                fontSize: 12,
                 fontFamily: 'sans-serif',
                 weight: 'bold',
                 style: '',
-                text: 'START'
+                text: 'START',
+                zoom: ctx.cameraZoom,
             })
         },
     },

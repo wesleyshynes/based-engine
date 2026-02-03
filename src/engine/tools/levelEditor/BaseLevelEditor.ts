@@ -969,19 +969,20 @@ export class BaseLevelEditor extends BasedLevel {
         // Level background
         drawBox({
             c: ctx, x: levelScreen.x, y: levelScreen.y,
-            width: this.currentLevel.levelWidth * this.zoom,
-            height: this.currentLevel.levelHeight * this.zoom,
-            fillColor: '#444'
+            width: this.currentLevel.levelWidth,
+            height: this.currentLevel.levelHeight,
+            fillColor: '#444',
+            zoom: this.zoom
         })
 
         // Grid
         for (let x = 0; x <= this.currentLevel.levelWidth; x += GRID_SIZE) {
             const screenX = levelScreen.x + x * this.zoom
-            drawLine({ c: ctx, x: screenX, y: levelScreen.y, toX: screenX, toY: levelScreen.y + this.currentLevel.levelHeight * this.zoom, strokeColor: GRID_COLOR, strokeWidth: 1 })
+            drawLine({ c: ctx, x: screenX, y: levelScreen.y, toX: screenX, toY: levelScreen.y + this.currentLevel.levelHeight, strokeColor: GRID_COLOR, strokeWidth: 1, zoom: this.zoom })
         }
         for (let y = 0; y <= this.currentLevel.levelHeight; y += GRID_SIZE) {
             const screenY = levelScreen.y + y * this.zoom
-            drawLine({ c: ctx, x: levelScreen.x, y: screenY, toX: levelScreen.x + this.currentLevel.levelWidth * this.zoom, toY: screenY, strokeColor: GRID_COLOR, strokeWidth: 1 })
+            drawLine({ c: ctx, x: levelScreen.x, y: screenY, toX: levelScreen.x + this.currentLevel.levelWidth, toY: screenY, strokeColor: GRID_COLOR, strokeWidth: 1, zoom: this.zoom })
         }
 
         // Create draw context for primitives
@@ -1033,7 +1034,6 @@ export class BaseLevelEditor extends BasedLevel {
         if (this.placingPreview && isPlaceableObjectType(this.currentTool, this.objectRegistry)) {
             const definition = getObjectDefinition(this.currentTool, this.objectRegistry)
             if (definition && definition.creationMode === 'single-click') {
-                const previewScreen = this.worldToScreen(this.placingPreview.x, this.placingPreview.y)
                 const defaults = getObjectDefaults(this.currentTool, this.objectRegistry)
                 const color = definition.fixedColor || defaults.color || '#888'
                 

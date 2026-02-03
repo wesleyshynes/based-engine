@@ -404,11 +404,13 @@ export class SqueezeBaseLevel extends BasedLevel {
         // level bg
         drawBox({
             c: this.gameRef.ctx,
-            x: 0 + this.gameRef.cameraPos.x,
-            y: 0 + this.gameRef.cameraPos.y,
-            width: this.levelWidth * this.gameRef.cameraZoom,
-            height: this.levelHeight * this.gameRef.cameraZoom,
-            fillColor: '#777' // '#777'
+            x: 0,
+            y: 0,
+            width: this.levelWidth,
+            height: this.levelHeight,
+            fillColor: '#777', // '#777',
+            zoom: this.gameRef.cameraZoom,
+            cameraPos: this.gameRef.cameraPos,
         })
 
         // draw shadows
@@ -417,26 +419,30 @@ export class SqueezeBaseLevel extends BasedLevel {
         // draw circle where the player starts
         drawCircle({
             c: this.gameRef.ctx,
-            x: this.playerStartPosition.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: this.playerStartPosition.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-            radius: 40 * this.gameRef.cameraZoom,
+            x: this.playerStartPosition.x,
+            y: this.playerStartPosition.y,
+            radius: 40,
             fillColor: '#777',
             strokeColor: 'rgba(255,255,0,0.4)',
-            strokeWidth: 6 * this.gameRef.cameraZoom,
-            strokeDashPattern: [20 * this.gameRef.cameraZoom, 11 * this.gameRef.cameraZoom]
+            strokeWidth: 6,
+            strokeDashPattern: [20 , 11],
+            zoom: this.gameRef.cameraZoom,
+            cameraPos: this.gameRef.cameraPos,
         })
         // draw X where the player starts
         drawText({
             c: this.gameRef.ctx,
-            x: this.playerStartPosition.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: (this.playerStartPosition.y + 18) * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
+            x: this.playerStartPosition.x,
+            y: this.playerStartPosition.y + 18,
             align: 'center',
             fillColor: 'rgba(255,255,0,0.4)',
             style: '',
             weight: '700',
             fontFamily: 'sans-serif',
-            fontSize: 50 * this.gameRef.cameraZoom,
-            text: 'X'
+            fontSize: 50,
+            text: 'X',
+            zoom: this.gameRef.cameraZoom,
+            cameraPos: this.gameRef.cameraPos,
         })
 
 
