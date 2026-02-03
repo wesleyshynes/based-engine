@@ -26,6 +26,8 @@ export class Level01 extends SqueezeBaseLevel {
     _hazardBlocks: any[] = LEVEL_01.hazardBlocks
     levelTexts: any[] = []
     _levelTexts: any[] = LEVEL_01.levelTexts || []
+    levelSensors: any[] = []
+    _levelSensors: any[] = LEVEL_01.levelSensors || []
 
     bgMusicTrack: any = BGMusic
 

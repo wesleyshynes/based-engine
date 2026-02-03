@@ -101,9 +101,8 @@ export class BounceBall extends PhysBall {
     async preload() { }
     
     initialize() {
+        super.initialize()
         this.color = this.sizeToMove < 41 ? LIGHT_BLUE : this.sizeToMove < 61 ? MID_BLUE : HEAVY_BLUE
-        this.initializeBody()
-        this.setCenter()
     }
     
     update() {
@@ -113,37 +112,42 @@ export class BounceBall extends PhysBall {
     draw() {
         rotateDraw({
             c: this.gameRef.ctx,
-            x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: this.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-            a: radToDeg(this.body.angle)
+            x: this.body.position.x,
+            y: this.body.position.y,
+            a: radToDeg(this.body.angle),
+            zoom: this.gameRef.cameraZoom,
+            cameraPos: this.gameRef.cameraPos
         }, () => {
             // Main ball
             drawCircle({
                 c: this.gameRef.ctx,
                 x: 0,
                 y: 0,
-                radius: this.radius * this.gameRef.cameraZoom,
+                radius: this.radius,
                 fillColor: this.color,
                 strokeColor: this.strokeColor,
-                strokeWidth: 3 * this.gameRef.cameraZoom
+                strokeWidth: 3,
+                zoom: this.gameRef.cameraZoom,
             })
 
             // Inner highlight circle
             drawCircle({
                 c: this.gameRef.ctx,
-                x: -this.radius * 0.25 * this.gameRef.cameraZoom,
-                y: -this.radius * 0.25 * this.gameRef.cameraZoom,
-                radius: this.radius * 0.35 * this.gameRef.cameraZoom,
+                x: -this.radius * 0.25,
+                y: -this.radius * 0.25,
+                radius: this.radius * 0.35,
                 fillColor: 'rgba(255, 255, 255, 0.3)',
+                zoom: this.gameRef.cameraZoom,
             })
 
             // Inner shadow
             drawCircle({
                 c: this.gameRef.ctx,
-                x: this.radius * 0.15 * this.gameRef.cameraZoom,
-                y: this.radius * 0.15 * this.gameRef.cameraZoom,
-                radius: this.radius * 0.5 * this.gameRef.cameraZoom,
+                x: this.radius * 0.15,
+                y: this.radius * 0.15,
+                radius: this.radius * 0.5,
                 fillColor: 'rgba(0, 0, 0, 0.15)',
+                zoom: this.gameRef.cameraZoom,
             })
 
             // Center decorative ring
@@ -151,9 +155,10 @@ export class BounceBall extends PhysBall {
                 c: this.gameRef.ctx,
                 x: 0,
                 y: 0,
-                radius: this.radius * 0.6 * this.gameRef.cameraZoom,
+                radius: this.radius * 0.6,
                 strokeColor: this.strokeColor,
-                strokeWidth: 2 * this.gameRef.cameraZoom
+                strokeWidth: 2,
+                zoom: this.gameRef.cameraZoom
             })
         })
     }

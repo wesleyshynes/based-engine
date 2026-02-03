@@ -309,9 +309,11 @@ export class MainPlayer extends PhysBall {
 
         rotateDraw({
             c: this.gameRef.ctx,
-            x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: this.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-            a: 0 // radToDeg(this.body.angle)
+            x: this.body.position.x,
+            y: this.body.position.y,
+            a: 0, // radToDeg(this.body.angle)
+            zoom: this.gameRef.cameraZoom,
+            cameraPos: this.gameRef.cameraPos
         }, () => {
 
             // draw 2 feet at 1/4 radius bottom of body
@@ -319,29 +321,32 @@ export class MainPlayer extends PhysBall {
             // left foot
             drawCircle({
                 c: this.gameRef.ctx,
-                x: -(this.radius / 2 - (nV.x)) * this.gameRef.cameraZoom,
-                y: (this.radius * .7 + (nV.y + maxOffset)) * this.gameRef.cameraZoom,
-                radius: (this.radius / 3) * this.gameRef.cameraZoom,
+                x: -(this.radius / 2 - (nV.x)),
+                y: (this.radius * .7 + (nV.y + maxOffset)),
+                radius: (this.radius / 3),
                 fillColor: 'black',
+                zoom: this.gameRef.cameraZoom
             })
 
             // right foot
             drawCircle({
                 c: this.gameRef.ctx,
-                x: (this.radius / 2 + (nV.x)) * this.gameRef.cameraZoom,
-                y: (this.radius * .7 + (nV.y - maxOffset)) * this.gameRef.cameraZoom,
-                radius: (this.radius / 3) * this.gameRef.cameraZoom,
+                x: (this.radius / 2 + (nV.x)),
+                y: (this.radius * .7 + (nV.y - maxOffset)),
+                radius: (this.radius / 3),
                 fillColor: 'black',
+                zoom: this.gameRef.cameraZoom
             })
 
             if (this.body.velocity.x < 0) {
                 // left arm
                 drawCircle({
                     c: this.gameRef.ctx,
-                    x: (-this.radius + nV.x) * this.gameRef.cameraZoom,
-                    y: (this.radius * .2 - nV.y * 2) * this.gameRef.cameraZoom,
-                    radius: (this.radius / 4) * this.gameRef.cameraZoom,
+                    x: (-this.radius + nV.x),
+                    y: (this.radius * .2 - nV.y * 2),
+                    radius: (this.radius / 4),
                     fillColor: 'black',
+                    zoom: this.gameRef.cameraZoom
                 })
             }
 
@@ -349,10 +354,11 @@ export class MainPlayer extends PhysBall {
                 // right arm
                 drawCircle({
                     c: this.gameRef.ctx,
-                    x: (this.radius + nV.x) * this.gameRef.cameraZoom,
-                    y: (this.radius * .2 - nV.y * 2) * this.gameRef.cameraZoom,
-                    radius: (this.radius / 4) * this.gameRef.cameraZoom,
+                    x: (this.radius + nV.x),
+                    y: (this.radius * .2 - nV.y * 2),
+                    radius: (this.radius / 4),
                     fillColor: 'black',
+                    zoom: this.gameRef.cameraZoom
                 })
             }
 
@@ -361,9 +367,10 @@ export class MainPlayer extends PhysBall {
                 c: this.gameRef.ctx,
                 x: this.bodyCenter.x,
                 y: this.bodyCenter.y,
-                radius: this.radius * this.gameRef.cameraZoom,
+                radius: this.radius,
                 fillColor: `rgb(${this.currentColor.r}, ${this.currentColor.g}, ${this.currentColor.b})`,
                 // fillColor: 'red',
+                zoom: this.gameRef.cameraZoom
             })
 
 
@@ -373,10 +380,11 @@ export class MainPlayer extends PhysBall {
                 // left arm
                 drawCircle({
                     c: this.gameRef.ctx,
-                    x: (-this.radius + nV.x * 2) * this.gameRef.cameraZoom,
-                    y: (this.radius * .2 - nV.y * 2) * this.gameRef.cameraZoom,
-                    radius: (this.radius / 4) * this.gameRef.cameraZoom,
+                    x: (-this.radius + nV.x * 2),
+                    y: (this.radius * .2 - nV.y * 2),
+                    radius: (this.radius / 4),
                     fillColor: 'black',
+                    zoom: this.gameRef.cameraZoom
                 })
             }
 
@@ -384,36 +392,40 @@ export class MainPlayer extends PhysBall {
                 // right arm
                 drawCircle({
                     c: this.gameRef.ctx,
-                    x: (this.radius + nV.x * 2) * this.gameRef.cameraZoom,
-                    y: (this.radius * .2 - nV.y * 2) * this.gameRef.cameraZoom,
-                    radius: (this.radius / 4) * this.gameRef.cameraZoom,
+                    x: (this.radius + nV.x * 2),
+                    y: (this.radius * .2 - nV.y * 2),
+                    radius: (this.radius / 4),
                     fillColor: 'black',
+                    zoom: this.gameRef.cameraZoom
                 })
             }
 
             // draw head white head at 1/4 radius top of body
             drawCircle({
                 c: this.gameRef.ctx,
-                x: nV.x * this.gameRef.cameraZoom,
-                y: -((this.radius / 2) - nV.y) * this.gameRef.cameraZoom,
-                radius: (this.radius / 2) * this.gameRef.cameraZoom,
+                x: nV.x,
+                y: -((this.radius / 2) - nV.y),
+                radius: (this.radius / 2),
                 fillColor: 'white',
+                zoom: this.gameRef.cameraZoom
             })
             // draw small black eyes
             drawCircle({
                 c: this.gameRef.ctx,
-                x: (-this.radius / 5 + nV.x * 2) * this.gameRef.cameraZoom,
-                y: -((this.radius / 1.5) - nV.y * 2 - this.radius / 5) * this.gameRef.cameraZoom,
-                radius: (this.radius / 10) * this.gameRef.cameraZoom,
+                x: (-this.radius / 5 + nV.x * 2),
+                y: -((this.radius / 1.5) - nV.y * 2 - this.radius / 5),
+                radius: (this.radius / 10),
                 fillColor: 'black',
+                zoom: this.gameRef.cameraZoom
             })
 
             drawCircle({
                 c: this.gameRef.ctx,
-                x: (this.radius / 5 + nV.x * 2) * this.gameRef.cameraZoom,
-                y: -((this.radius / 1.5) - nV.y * 2 - this.radius / 5) * this.gameRef.cameraZoom,
-                radius: (this.radius / 10) * this.gameRef.cameraZoom,
+                x: (this.radius / 5 + nV.x * 2),
+                y: -((this.radius / 1.5) - nV.y * 2 - this.radius / 5),
+                radius: (this.radius / 10),
                 fillColor: 'black',
+                zoom: this.gameRef.cameraZoom
             })
 
         })

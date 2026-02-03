@@ -33,6 +33,7 @@ import BoxThud3 from '../../../assets/the-squeeze/box_thud3.mp3'
 import RunningStairs from '../../../assets/the-squeeze/running_stairs.mp3'
 
 import BGMusic from '../../../assets/the-squeeze/tunetank.com_5630_ready-to-play_by_alexey-anisimov__1.mp3'
+import { SensorBox } from "../entities/sensorBox";
 
 // const FILL_COLOR = '#81B622'
 // const HOVER_COLOR = '#ECF87F'
@@ -87,6 +88,9 @@ export class SqueezeBaseLevel extends BasedLevel {
     _bounceBalls: any[] = []
     levelTexts: LevelText[] = []
     _levelTexts: any[] = []
+
+    levelSensors: any[] = []
+    _levelSensors: any[] = []
 
     // SOUNDS
     wallThud1: any;
@@ -273,6 +277,7 @@ export class SqueezeBaseLevel extends BasedLevel {
         this.setupHazardBlocks()
         this.setupBounceBalls()
         this.setupLevelTexts()
+        this.setupSensors()
 
         // BEGIN
         this.onResize()
@@ -318,6 +323,10 @@ export class SqueezeBaseLevel extends BasedLevel {
 
         this.hazardBlocks.forEach((hazard: any) => {
             hazard.update()
+        })
+
+        this.levelSensors.forEach((sensor: any) => {
+            sensor.update()
         })
 
         this.cameraZoomButton.update()
@@ -436,6 +445,11 @@ export class SqueezeBaseLevel extends BasedLevel {
             wall.draw()
         })
 
+        // draw level sensors
+        this.levelSensors.forEach((sensor: any) => {
+            sensor.draw()
+        })
+
         // draw exit doors
         this.exitDoors.forEach((door: any) => {
             door.draw()
@@ -516,6 +530,24 @@ export class SqueezeBaseLevel extends BasedLevel {
             tempObj.width = obj.width
             tempObj.height = obj.height
             tempObj.color = obj.color
+            tempObj.angle = obj.angle || 0
+            tempObj.initialize()
+            this.gameRef.addToWorld(tempObj.body)
+            return tempObj
+        })
+    }
+
+    setupSensors() {
+        this.levelSensors = [
+            ...this._levelSensors,
+        ].map((obj: any, idx: number) => {
+            const tempObj = new SensorBox({
+                key: `sensor-${idx}`, gameRef: this.gameRef
+            })
+            tempObj.x = obj.x
+            tempObj.y = obj.y
+            tempObj.width = obj.width
+            tempObj.height = obj.height
             tempObj.angle = obj.angle || 0
             tempObj.initialize()
             this.gameRef.addToWorld(tempObj.body)

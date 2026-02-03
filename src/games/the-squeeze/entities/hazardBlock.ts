@@ -21,16 +21,6 @@ export class HazardBlock extends PhysBox {
 
     bodyOptions = { label: `hazard`, isStatic: true }
 
-    initialize() {
-        this.initializeBody()
-        this.setCenter()
-        
-        // Apply initial rotation if set
-        if (this.angle && this.body) {
-            Physics.Body.setAngle(this.body, this.angle * Math.PI / 180)
-        }
-    }
-
     update() {
         // Cycle the color phase for animation
         this.colorPhase += this.colorCycleSpeed
@@ -55,22 +45,25 @@ export class HazardBlock extends PhysBox {
     draw() {
         rotateDraw({
             c: this.gameRef.ctx,
-            x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: this.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-            a: radToDeg(this.body.angle)
+            x: this.body.position.x,
+            y: this.body.position.y,
+            a: radToDeg(this.body.angle),
+            cameraPos: this.gameRef.cameraPos,
+            zoom: this.gameRef.cameraZoom
         }, () => {
 
             const currentColor = this.getColorForCycle()
 
             drawBox({
                 c: this.gameRef.ctx,
-                x: (-(this.width / 2)) * this.gameRef.cameraZoom,
-                y: (-(this.height / 2)) * this.gameRef.cameraZoom,
-                width: this.width * this.gameRef.cameraZoom,
-                height: this.height * this.gameRef.cameraZoom,
+                x: (-(this.width / 2)),
+                y: (-(this.height / 2)),
+                width: this.width,
+                height: this.height,
                 fillColor: currentColor,
                 strokeColor: this.strokeColor,
-                strokeWidth: 3 * this.gameRef.cameraZoom
+                strokeWidth: 3,
+                zoom: this.gameRef.cameraZoom
             })
 
             // Draw warning stripes
@@ -81,28 +74,16 @@ export class HazardBlock extends PhysBox {
                 if (i % 2 === 0) {
                     drawBox({
                         c: this.gameRef.ctx,
-                        x: (-(this.width / 2) + i * stripeWidth) * this.gameRef.cameraZoom,
-                        y: (-(this.height / 2)) * this.gameRef.cameraZoom,
-                        width: stripeWidth * this.gameRef.cameraZoom,
-                        height: this.height * this.gameRef.cameraZoom,
+                        x: (-(this.width / 2) + i * stripeWidth),
+                        y: (-(this.height / 2)),
+                        width: stripeWidth,
+                        height: this.height,
                         fillColor: 'rgba(0, 0, 0, 0.3)',
-                        strokeWidth: 0
+                        strokeWidth: 0,
+                        zoom: this.gameRef.cameraZoom
                     })
                 }
             }
-
-            // // Inner border
-            // const borderInset = 8
-            // drawBox({
-            //     c: this.gameRef.ctx,
-            //     x: (-(this.width / 2) + borderInset) * this.gameRef.cameraZoom,
-            //     y: (-(this.height / 2) + borderInset) * this.gameRef.cameraZoom,
-            //     width: (this.width - borderInset * 2) * this.gameRef.cameraZoom,
-            //     height: (this.height - borderInset * 2) * this.gameRef.cameraZoom,
-            //     fillColor: 'transparent',
-            //     strokeColor: 'rgba(255, 255, 0, 0.5)',
-            //     strokeWidth: 2 * this.gameRef.cameraZoom
-            // })
         })
     }
 }

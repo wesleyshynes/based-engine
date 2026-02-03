@@ -10,6 +10,8 @@ export default class PhysBall extends BasedObject {
   lastX: number = 0
   lastY: number = 0
 
+  angle: number = 0
+
   radius: number = 15;
   color: string = 'blue'
   strokeColor: string = 'black'
@@ -30,6 +32,7 @@ export default class PhysBall extends BasedObject {
   initialize() {
     this.initializeBody()
     this.setCenter()
+    this.setAngle()
   }
 
   initializeBody() {
@@ -48,6 +51,13 @@ export default class PhysBall extends BasedObject {
       Physics.Body.setCentre(this.body, this.bodyCenter, true)
     }
   }
+
+  setAngle() {
+    if (this.angle && this.body) {
+      Physics.Body.setAngle(this.body, this.angle * Math.PI / 180)
+    }
+  }
+
   onCollisionStart(otherBody: any) {
     this.collisionStartFn(otherBody)
   }

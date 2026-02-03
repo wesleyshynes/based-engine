@@ -7,8 +7,10 @@ export default class PhysBox extends BasedObject {
   x: number = 0
   y: number = 0
 
+  angle: number = 0
+
   lastX: number = 0
-  lastY: number  = 0
+  lastY: number = 0
 
   width: number = 40;
   height: number = 40;
@@ -30,6 +32,7 @@ export default class PhysBox extends BasedObject {
   initialize() {
     this.initializeBody()
     this.setCenter()
+    this.setAngle()
   }
 
   initializeBody() {
@@ -46,6 +49,11 @@ export default class PhysBox extends BasedObject {
   setCenter() {
     if (this.body) {
       Physics.Body.setCentre(this.body, this.bodyCenter, true)
+    }
+  }
+  setAngle() {
+    if (this.angle && this.body) {
+      Physics.Body.setAngle(this.body, this.angle * Math.PI / 180)
     }
   }
 
@@ -69,7 +77,7 @@ export default class PhysBox extends BasedObject {
     }
   }
 
-  update() {}
+  update() { }
 
   draw() {
     this.drawPhysicsBody()
@@ -91,7 +99,7 @@ export default class PhysBox extends BasedObject {
     })
   }
 
-  cameraDraw(cameraDrawFn = () => {}) {
+  cameraDraw(cameraDrawFn = () => { }) {
     rotateDraw({
       c: this.gameRef.ctx,
       x: this.body.position.x,

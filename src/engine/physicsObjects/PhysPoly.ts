@@ -33,7 +33,8 @@ export default class PhysPoly extends BasedObject {
   async preload() { }
   initialize() {
     this.initializeBody()
-    this.setCenter()
+    // this.setCenter()
+    this.setAngle()
   }
 
   initializeBody() {
@@ -90,6 +91,11 @@ export default class PhysPoly extends BasedObject {
   setCenter() {
     if (this.body) {
       Physics.Body.setCentre(this.body, this.bodyCenter, true)
+    }
+  }
+  setAngle() {
+    if (this.angle && this.body) {
+      Physics.Body.setAngle(this.body, this.angle * Math.PI / 180)
     }
   }
   onCollisionStart(otherBody: any) {

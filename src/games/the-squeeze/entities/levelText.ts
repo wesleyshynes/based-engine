@@ -33,9 +33,11 @@ export class LevelText extends BasedObject {
     draw() {
         rotateDraw({
             c: this.gameRef.ctx,
-            x: this.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: this.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-            a: this.angle
+            x: this.x,
+            y: this.y,
+            a: this.angle,
+            zoom: this.gameRef.cameraZoom,
+            cameraPos: this.gameRef.cameraPos
         }, () => {
             drawText({
                 c: this.gameRef.ctx,
@@ -47,8 +49,9 @@ export class LevelText extends BasedObject {
                 style: '',
                 weight: this.fontWeight,
                 fontFamily: this.fontFamily,
-                fontSize: this.fontSize * this.gameRef.cameraZoom,
-                text: this.text
+                fontSize: this.fontSize,
+                text: this.text,
+                zoom: this.gameRef.cameraZoom
             })
         })
     }

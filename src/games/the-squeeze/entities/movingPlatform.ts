@@ -68,19 +68,12 @@ export class MovingPlatform extends PhysBox {
 
     async preload() { }
     initialize() {
+        super.initialize()
         this.xDirection *= this.xSpeed
         this.yDirection *= this.ySpeed
 
         this.color = '#222222'
         this.strokeColor = '#141414'
-
-        this.initializeBody()
-        this.setCenter()
-        
-        // Apply initial rotation if set
-        if (this.angle && this.body) {
-            Physics.Body.setAngle(this.body, this.angle * Math.PI / 180)
-        }
     }
     update() {
         this.movePlatform()
@@ -138,101 +131,37 @@ export class MovingPlatform extends PhysBox {
         // this.drawPhysicsBody()
         rotateDraw({
             c: this.gameRef.ctx,
-            x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: this.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-            a: radToDeg(this.body.angle)
+            x: this.body.position.x,
+            y: this.body.position.y,
+            a: radToDeg(this.body.angle),
+            zoom: this.gameRef.cameraZoom,
+            cameraPos: this.gameRef.cameraPos
         }, () => {
 
             drawBox({
                 c: this.gameRef.ctx,
-                x: (-(this.width / 2)) * this.gameRef.cameraZoom,
-                y: (-(this.height / 2)) * this.gameRef.cameraZoom,
-                width: this.width * this.gameRef.cameraZoom,
-                height: this.height * this.gameRef.cameraZoom,
+                x: (-(this.width / 2)),
+                y: (-(this.height / 2)),
+                width: this.width,
+                height: this.height,
                 fillColor: this.color,
                 strokeColor: this.strokeColor,
-                strokeWidth: 2 * this.gameRef.cameraZoom,
+                strokeWidth: 2,
+                zoom: this.gameRef.cameraZoom
             })
 
             drawBox({
                 c: this.gameRef.ctx,
-                x: (-(this.width / 2) + 10) * this.gameRef.cameraZoom,
-                y: (-(this.height / 2) + 10) * this.gameRef.cameraZoom,
-                width: (this.width - 20) * this.gameRef.cameraZoom,
-                height: (this.height - 20) * this.gameRef.cameraZoom,
+                x: (-(this.width / 2) + 10),
+                y: (-(this.height / 2) + 10),
+                width: (this.width - 20),
+                height: (this.height - 20),
                 fillColor: this.innerGlowColor,
                 strokeColor: '#3b3b3b',
-                strokeWidth: 2 * this.gameRef.cameraZoom,
-                borderRadius: 10 * this.gameRef.cameraZoom
+                strokeWidth: 2,
+                borderRadius: 10,
+                zoom: this.gameRef.cameraZoom
             })
-
-            // const squareDim = 4
-            // let squareCount = 0
-
-            // while (squareCount * squareDim + squareCount < this.width / 2 - squareDim - 15) {
-            //     drawBox({
-            //         c: this.gameRef.ctx,
-            //         x: ((squareCount * squareDim + squareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
-            //         y: (-squareDim / 2) * this.gameRef.cameraZoom,
-            //         width: (squareDim) * this.gameRef.cameraZoom,
-            //         height: (squareDim) * this.gameRef.cameraZoom,
-            //         fillColor: '#3b3b3b',
-            //     })
-
-            //     if(squareCount > 0) {
-            //         drawBox({
-            //             c: this.gameRef.ctx,
-            //             x: (-(squareCount * squareDim + squareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
-            //             y: (-squareDim / 2) * this.gameRef.cameraZoom,
-            //             width: (squareDim) * this.gameRef.cameraZoom,
-            //             height: (squareDim) * this.gameRef.cameraZoom,
-            //             fillColor: '#3b3b3b',
-            //         })
-            //     }
-
-
-            //     let vSquareCount = 1
-            //     while (vSquareCount * squareDim + vSquareCount < this.height / 2 - squareDim - 15) {
-            //         drawBox({
-            //             c: this.gameRef.ctx,
-            //             x: ((squareCount * squareDim + squareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
-            //             y: ((vSquareCount * squareDim + vSquareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
-            //             width: (squareDim) * this.gameRef.cameraZoom,
-            //             height: (squareDim) * this.gameRef.cameraZoom,
-            //             fillColor: '#3b3b3b',
-            //         })
-            //         drawBox({
-            //             c: this.gameRef.ctx,
-            //             x: (-(squareCount * squareDim + squareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
-            //             y: (-(vSquareCount * squareDim + vSquareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
-            //             width: (squareDim) * this.gameRef.cameraZoom,
-            //             height: (squareDim) * this.gameRef.cameraZoom,
-            //             fillColor: '#3b3b3b',
-            //         })
-
-            //         if(vSquareCount > 0 && squareCount > 0) {
-            //             drawBox({
-            //                 c: this.gameRef.ctx,
-            //                 x: (-(squareCount * squareDim + squareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
-            //                 y: ((vSquareCount * squareDim + vSquareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
-            //                 width: (squareDim) * this.gameRef.cameraZoom,
-            //                 height: (squareDim) * this.gameRef.cameraZoom,
-            //                 fillColor: '#3b3b3b',
-            //             })
-            //             drawBox({
-            //                 c: this.gameRef.ctx,
-            //                 x: ((squareCount * squareDim + squareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
-            //                 y: (-(vSquareCount * squareDim + vSquareCount) - (squareDim / 2)) * this.gameRef.cameraZoom,
-            //                 width: (squareDim) * this.gameRef.cameraZoom,
-            //                 height: (squareDim) * this.gameRef.cameraZoom,
-            //                 fillColor: '#3b3b3b',
-            //             })
-            //         }                 
-            //         vSquareCount++
-            //     }
-
-            //     squareCount++
-            // }
 
 
 

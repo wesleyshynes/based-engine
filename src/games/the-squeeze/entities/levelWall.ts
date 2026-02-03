@@ -21,26 +21,14 @@ export class LevelWall extends PhysBox {
 
     bodyOptions = { label: `wall`, isStatic: true }
 
-    initialize() {
-
-        this.color = FILL_COLOR
-        this.strokeColor = BORDER_COLOR
-
-        this.initializeBody()
-        this.setCenter()
-        
-        // Apply initial rotation if set
-        if (this.angle && this.body) {
-            Physics.Body.setAngle(this.body, this.angle * Math.PI / 180)
-        }
-    }
-
     draw() {
         rotateDraw({
             c: this.gameRef.ctx,
-            x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: this.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-            a: radToDeg(this.body.angle)
+            x: this.body.position.x,
+            y: this.body.position.y,
+            a: radToDeg(this.body.angle),
+            zoom: this.gameRef.cameraZoom,
+            cameraPos: this.gameRef.cameraPos
         }, () => {
 
             const minDimension = Math.min(this.width, this.height)
@@ -48,13 +36,14 @@ export class LevelWall extends PhysBox {
 
             drawBox({
                 c: this.gameRef.ctx,
-                x: (-(this.width / 2)) * this.gameRef.cameraZoom,
-                y: (-(this.height / 2)) * this.gameRef.cameraZoom,
-                width: this.width * this.gameRef.cameraZoom,
-                height: this.height * this.gameRef.cameraZoom,
+                x: (-(this.width / 2)),
+                y: (-(this.height / 2)),
+                width: this.width,
+                height: this.height,
                 fillColor: this.color,
                 strokeColor: this.strokeColor,
-                strokeWidth: 2 * this.gameRef.cameraZoom
+                strokeWidth: 2,
+                zoom: this.gameRef.cameraZoom
             })
 
             if (minDimension > 60) {
@@ -64,21 +53,23 @@ export class LevelWall extends PhysBox {
                 drawLine({
                     c: this.gameRef.ctx,
                     x: 0,
-                    y: (-this.height / 2) * this.gameRef.cameraZoom,
+                    y: (-this.height / 2),
                     toX: 0,
-                    toY: (this.height / 2) * this.gameRef.cameraZoom,
+                    toY: (this.height / 2),
                     strokeColor: this.strokeColor,
-                    strokeWidth: 2 * this.gameRef.cameraZoom
+                    strokeWidth: 2,
+                    zoom: this.gameRef.cameraZoom
                 })
                 // // horizontal line across middle
                 drawLine({
                     c: this.gameRef.ctx,
-                    x: (-this.width / 2) * this.gameRef.cameraZoom,
+                    x: (-this.width / 2),
                     y: 0,
-                    toX: (this.width / 2) * this.gameRef.cameraZoom,
+                    toX: (this.width / 2),
                     toY: 0,
                     strokeColor: this.strokeColor,
-                    strokeWidth: 2 * this.gameRef.cameraZoom
+                    strokeWidth: 2,
+                    zoom: this.gameRef.cameraZoom
                 })
 
                 while (boxInset * lineMultiplier <= this.width / 2 - boxInset) {
@@ -86,21 +77,23 @@ export class LevelWall extends PhysBox {
                     // vertical line down middle
                     drawLine({
                         c: this.gameRef.ctx,
-                        x: -lineOffsetAmount * this.gameRef.cameraZoom,
-                        y: (-this.height / 2) * this.gameRef.cameraZoom,
-                        toX: -lineOffsetAmount * this.gameRef.cameraZoom,
-                        toY: (this.height / 2) * this.gameRef.cameraZoom,
+                        x: -lineOffsetAmount,
+                        y: (-this.height / 2),
+                        toX: -lineOffsetAmount,
+                        toY: (this.height / 2),
                         strokeColor: this.strokeColor,
-                        strokeWidth: 2 * this.gameRef.cameraZoom
+                        strokeWidth: 2,
+                        zoom: this.gameRef.cameraZoom
                     })
                     drawLine({
                         c: this.gameRef.ctx,
-                        x: lineOffsetAmount * this.gameRef.cameraZoom,
-                        y: (-this.height / 2) * this.gameRef.cameraZoom,
-                        toX: lineOffsetAmount * this.gameRef.cameraZoom,
-                        toY: (this.height / 2) * this.gameRef.cameraZoom,
+                        x: lineOffsetAmount,
+                        y: (-this.height / 2),
+                        toX: lineOffsetAmount,
+                        toY: (this.height / 2),
                         strokeColor: this.strokeColor,
-                        strokeWidth: 2 * this.gameRef.cameraZoom
+                        strokeWidth: 2,
+                        zoom: this.gameRef.cameraZoom
                     })
                     lineMultiplier++
                 }
@@ -112,21 +105,23 @@ export class LevelWall extends PhysBox {
                     // horizontal line across middle
                     drawLine({
                         c: this.gameRef.ctx,
-                        x: (-this.width / 2) * this.gameRef.cameraZoom,
-                        y: lineOffsetAmount * this.gameRef.cameraZoom,
-                        toX: (this.width / 2) * this.gameRef.cameraZoom,
-                        toY: lineOffsetAmount * this.gameRef.cameraZoom,
+                        x: (-this.width / 2),
+                        y: lineOffsetAmount,
+                        toX: (this.width / 2),
+                        toY: lineOffsetAmount,
                         strokeColor: this.strokeColor,
-                        strokeWidth: 2 * this.gameRef.cameraZoom
+                        strokeWidth: 2,
+                        zoom: this.gameRef.cameraZoom
                     })
                     drawLine({
                         c: this.gameRef.ctx,
-                        x: (-this.width / 2) * this.gameRef.cameraZoom,
-                        y: -lineOffsetAmount * this.gameRef.cameraZoom,
-                        toX: (this.width / 2) * this.gameRef.cameraZoom,
-                        toY: -lineOffsetAmount * this.gameRef.cameraZoom,
+                        x: (-this.width / 2),
+                        y: -lineOffsetAmount,
+                        toX: (this.width / 2),
+                        toY: -lineOffsetAmount,
                         strokeColor: this.strokeColor,
-                        strokeWidth: 2 * this.gameRef.cameraZoom
+                        strokeWidth: 2,
+                        zoom: this.gameRef.cameraZoom
                     })
                     lineMultiplier++
                 }
@@ -136,15 +131,16 @@ export class LevelWall extends PhysBox {
 
             drawBox({
                 c: this.gameRef.ctx,
-                x: (-(this.width / 2) + boxInset) * this.gameRef.cameraZoom,
-                y: (-(this.height / 2) + boxInset) * this.gameRef.cameraZoom,
-                width: (this.width - boxInset * 2) * this.gameRef.cameraZoom,
-                height: (this.height - boxInset * 2) * this.gameRef.cameraZoom,
+                x: (-(this.width / 2) + boxInset),
+                y: (-(this.height / 2) + boxInset),
+                width: (this.width - boxInset * 2),
+                height: (this.height - boxInset * 2),
                 // fillColor: this.color,
                 // strokeColor: this.strokeColor,
                 fillColor: this.strokeColor,
                 strokeColor: 'black', // this.color,
-                strokeWidth: 1 * this.gameRef.cameraZoom
+                strokeWidth: 1,
+                zoom: this.gameRef.cameraZoom
             })
 
 

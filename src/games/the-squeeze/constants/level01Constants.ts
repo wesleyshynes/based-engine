@@ -28,7 +28,7 @@ export const LEVEL_01: SqueezeLevelData = {
         // Triangle obstacle near the center
         {
             x: 550,
-            y: 300,
+            y: 100,
             vertices: [
                 { x: 0, y: -40 },
                 { x: 35, y: 30 },
@@ -50,5 +50,8 @@ export const LEVEL_01: SqueezeLevelData = {
     ],
     levelTexts: [
         { x: 100, y: 50, text: 'The Squeeze - Level 01', fontSize: 24, color: '#fff', angle: 0, fontFamily: 'Arial', fontWeight: 'bold' },
+    ],
+    levelSensors: [
+        { type: 'box', angle: 0, x: 545, y: 200, width: 100, height: 100 },
     ]
 }

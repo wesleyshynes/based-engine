@@ -10,7 +10,7 @@ export class ExitDoor extends PhysBox {
     width: number = 100
     height: number = 100
 
-    color: string = '#1e1e1e'
+    color: string = '#000'
     strokeColor: string = '#3c3c3c'
     angle: number = 0
 
@@ -35,10 +35,10 @@ export class ExitDoor extends PhysBox {
     collisionStartFn = (o: any) => {
         const otherBody = o.plugin.basedRef()
         if (otherBody && otherBody.options && otherBody.options.tags.player) {
-            if(this.stairsNoise) {
+            if (this.stairsNoise) {
                 this.gameRef.soundPlayer.playSound(this.stairsNoise)
             }
-            if(this.onExit) {
+            if (this.onExit) {
                 this.onExit()
             }
             this.gameRef.loadLevel(this.doorPath)
@@ -53,111 +53,110 @@ export class ExitDoor extends PhysBox {
         this.stairsNoise = noise
     }
 
-    initialize() {
-        this.color = '#000'
-        this.strokeColor = '#3c3c3c'
-        this.initializeBody()
-        this.setCenter()
-        
-        // Apply initial rotation if set
-        if (this.angle && this.body) {
-            Physics.Body.setAngle(this.body, this.angle * Math.PI / 180)
-        }
-    }
     update() { }
     draw() {
         // this.drawPhysicsBody()
 
         rotateDraw({
             c: this.gameRef.ctx,
-            x: this.body.position.x * this.gameRef.cameraZoom + this.gameRef.cameraPos.x,
-            y: this.body.position.y * this.gameRef.cameraZoom + this.gameRef.cameraPos.y,
-            a: radToDeg(this.body.angle)
+            x: this.body.position.x,
+            y: this.body.position.y,
+            a: radToDeg(this.body.angle),
+            zoom: this.gameRef.cameraZoom,
+            cameraPos: this.gameRef.cameraPos
         }, () => {
 
             drawEllipse({
                 c: this.gameRef.ctx,
                 x: 0,
-                y: (- this.height / 2 + this.height / 3) * this.gameRef.cameraZoom,
-                radiusX: this.width / 2 * this.gameRef.cameraZoom,
-                radiusY: this.height / 3 * this.gameRef.cameraZoom,
+                y: (- this.height / 2 + this.height / 3),
+                radiusX: this.width / 2,
+                radiusY: this.height / 3,
                 fillColor: this.color,
                 strokeColor: this.strokeColor,
-                strokeWidth: 5 * this.gameRef.cameraZoom
+                strokeWidth: 5,
+                zoom: this.gameRef.cameraZoom
             })
 
             drawBox({
                 c: this.gameRef.ctx,
-                x: -this.width / 2 * this.gameRef.cameraZoom,
-                y: (-this.height / 2 + this.height/3) * this.gameRef.cameraZoom,
-                width: this.width * this.gameRef.cameraZoom,
-                height: this.height * 2/3 * this.gameRef.cameraZoom,
+                x: -this.width / 2,
+                y: (-this.height / 2 + this.height / 3),
+                width: this.width,
+                height: this.height * 2 / 3,
                 fillColor: this.color,
                 strokeColor: this.strokeColor,
-                strokeWidth: 5 * this.gameRef.cameraZoom
+                strokeWidth: 5,
+                zoom: this.gameRef.cameraZoom
             })
 
             drawEllipse({
                 c: this.gameRef.ctx,
                 x: 0,
-                y: (- this.height / 2 + this.height / 3) * this.gameRef.cameraZoom,
-                radiusX: this.width / 2 * this.gameRef.cameraZoom,
-                radiusY: this.height / 3 * this.gameRef.cameraZoom,
+                y: (- this.height / 2 + this.height / 3),
+                radiusX: this.width / 2,
+                radiusY: this.height / 3,
                 fillColor: this.color,
+                zoom: this.gameRef.cameraZoom
             })
 
             drawBox({
                 c: this.gameRef.ctx,
-                x: -this.width / 2 * this.gameRef.cameraZoom,
-                y: (-this.height / 2 + this.height/3) * this.gameRef.cameraZoom,
-                width: this.width * this.gameRef.cameraZoom,
-                height: this.height * 2/3 * this.gameRef.cameraZoom,
+                x: -this.width / 2,
+                y: (-this.height / 2 + this.height / 3),
+                width: this.width,
+                height: this.height * 2 / 3,
                 fillColor: this.color,
+                zoom: this.gameRef.cameraZoom
             })
 
             // steps
             drawBox({
                 c: this.gameRef.ctx,
-                x: (-this.width / 2 + 2) * this.gameRef.cameraZoom,
-                y: (this.height / 2 - 10) * this.gameRef.cameraZoom,
-                width: (this.width - 4) * this.gameRef.cameraZoom,
-                height: 10 * this.gameRef.cameraZoom,
+                x: -this.width / 2 + 2,
+                y: this.height / 2 - 10,
+                width: this.width - 4,
+                height: 10,
                 fillColor: '#333',
                 strokeColor: '#000',
-                strokeWidth: 2 * this.gameRef.cameraZoom
+                strokeWidth: 2,
+                zoom: this.gameRef.cameraZoom
             })
 
             drawBox({
                 c: this.gameRef.ctx,
-                x: (-this.width / 2 + 4) * this.gameRef.cameraZoom,
-                y: (this.height / 2 - 18) * this.gameRef.cameraZoom,
-                width: (this.width - 8) * this.gameRef.cameraZoom,
-                height: 8 * this.gameRef.cameraZoom,
+                x: -this.width / 2 + 4,
+                y: this.height / 2 - 18,
+                width: this.width - 8,
+                height: 8,
                 fillColor: '#333',
                 strokeColor: '#000',
-                strokeWidth: 2 * this.gameRef.cameraZoom
+                strokeWidth: 2,
+                zoom: this.gameRef.cameraZoom
             })
 
             drawBox({
                 c: this.gameRef.ctx,
-                x: (-this.width / 2 + 6) * this.gameRef.cameraZoom,
-                y: (this.height / 2 - 24) * this.gameRef.cameraZoom,
-                width: (this.width - 12) * this.gameRef.cameraZoom,
-                height: 6 * this.gameRef.cameraZoom,
+                x: (-this.width / 2 + 6),
+                y: (this.height / 2 - 24),
+                width: (this.width - 12),
+                height: 6,
                 fillColor: '#333',
                 strokeColor: '#000',
-                strokeWidth: 2 * this.gameRef.cameraZoom
+                strokeWidth: 2,
+                zoom: this.gameRef.cameraZoom
             })
 
             drawBox({
                 c: this.gameRef.ctx,
-                x: (-this.width / 2 + 8) * this.gameRef.cameraZoom,
-                y: (this.height / 2 - 28) * this.gameRef.cameraZoom,
-                width: (this.width - 16) * this.gameRef.cameraZoom,
-                height: 4 * this.gameRef.cameraZoom,
+                x: (-this.width / 2 + 8),
+                y: (this.height / 2 - 28),
+                width: (this.width - 16),
+                height: 4,
                 fillColor: '#333',
                 strokeColor: '#000',
-                strokeWidth: 2 * this.gameRef.cameraZoom
+                strokeWidth: 2,
+                zoom: this.gameRef.cameraZoom
             })
 
 
