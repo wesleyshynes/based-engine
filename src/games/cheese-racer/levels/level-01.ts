@@ -136,7 +136,7 @@ export class Level01 extends BasedLevel {
         // this.randomPoly.y = 400
         // this.randomPoly.color = SECONDARY_COLOR
         // this.randomPoly.strokeColor = PRIMARY_COLOR
-        // this.randomPoly.initialize()
+        // this.randomPoly.initialize(true)
         // this.gameRef.addToWorld(this.randomPoly.body)
 
         this.generateTileMap()
