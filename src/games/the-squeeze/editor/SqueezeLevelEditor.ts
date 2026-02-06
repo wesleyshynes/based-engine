@@ -47,8 +47,7 @@ export class SqueezeLevelEditor extends BaseLevelEditor {
         this.storage = new SqueezeEditorStorage(this.editorConfig)
         
         this.gameRef.cameraZoom = 1
-        this.cameraX = 0
-        this.cameraY = 0
+        this.gameRef.cameraPos = { x: 0, y: 0 }
 
         // Load current level or create new
         const currentId = this.storage.getCurrentLevelId()

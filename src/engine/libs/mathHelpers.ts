@@ -89,3 +89,33 @@ export function normalizeVector(v: XYCoordinateType, m: number = 1) {
     y: v.y/length * m
   }
 }
+
+/**
+ * Rotate a point around the origin (0, 0) by an angle in degrees.
+ */
+export function rotatePoint(point: XYCoordinateType, angleDeg: number): XYCoordinateType {
+  const angleRad = degToRad(angleDeg)
+  const cosA = Math.cos(angleRad)
+  const sinA = Math.sin(angleRad)
+  return {
+    x: point.x * cosA - point.y * sinA,
+    y: point.x * sinA + point.y * cosA
+  }
+}
+
+/**
+ * Rotate a point around an arbitrary center point by an angle in degrees.
+ */
+export function rotatePointAround(
+  point: XYCoordinateType, 
+  center: XYCoordinateType, 
+  angleDeg: number
+): XYCoordinateType {
+  const dx = point.x - center.x
+  const dy = point.y - center.y
+  const rotated = rotatePoint({ x: dx, y: dy }, angleDeg)
+  return {
+    x: center.x + rotated.x,
+    y: center.y + rotated.y
+  }
+}

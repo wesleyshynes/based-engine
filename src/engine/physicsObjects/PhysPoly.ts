@@ -57,9 +57,10 @@ export default class PhysPoly extends BasedObject {
     if (this.body) {
       // const mappedVerts = this.vertices.map((v: any) => ({ x: v.x + this.x, y: v.y + this.y }));
       // rotated mapped vertices
+      const angleRad = this.angle * Math.PI / 180;  // Convert degrees to radians
       const mappedVerts = this.vertices.map((v: any) => {
-        const cosA = Math.cos(this.angle);
-        const sinA = Math.sin(this.angle);
+        const cosA = Math.cos(angleRad);
+        const sinA = Math.sin(angleRad);
         return {
           x: v.x * cosA - v.y * sinA + this.x,
           y: v.x * sinA + v.y * cosA + this.y

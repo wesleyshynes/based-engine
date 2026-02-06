@@ -1,10 +1,9 @@
 // Editor Types - Generic type definitions for the level editor framework
 
-// Vertex type for polygon shapes
-export interface VertexPoint {
-    x: number
-    y: number
-}
+import { XYCoordinateType } from "../../libs/mathHelpers"
+
+// Re-export XYCoordinateType as VertexPoint for backwards compatibility
+export type VertexPoint = XYCoordinateType
 
 // ============================================================================
 // Primitive Types - shared between EditorTypes and EditorPrimitives

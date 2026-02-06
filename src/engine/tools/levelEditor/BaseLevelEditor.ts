@@ -3,6 +3,7 @@
 import { BasedButton } from "../../BasedButton"
 import { BasedLevel } from "../../BasedLevel"
 import { drawBox, drawCircle, drawText, drawLine } from "../../libs/drawHelpers"
+import { XYCoordinateType } from "../../libs/mathHelpers"
 import { 
     BaseEditorLevelData, 
     EditorTool, 
@@ -62,10 +63,7 @@ export class BaseLevelEditor extends BasedLevel {
     protected editorConfig: EditorConfig
     protected storage: BaseEditorStorage
 
-    // Camera/Viewport
-    cameraX: number = 0
-    cameraY: number = 0
-    zoom: number = 1
+    // Camera/Viewport (using engine's cameraPos and cameraZoom)
     panSpeed: number = 10
     isPanning: boolean = false
     panStart: { x: number, y: number } = { x: 0, y: 0 }
@@ -166,8 +164,7 @@ export class BaseLevelEditor extends BasedLevel {
 
     initialize() {
         this.gameRef.cameraZoom = 1
-        this.cameraX = 0
-        this.cameraY = 0
+        this.gameRef.cameraPos = { x: 0, y: 0 }
 
         // Load current level or create new
         const currentId = this.storage.getCurrentLevelId()
@@ -245,8 +242,8 @@ export class BaseLevelEditor extends BasedLevel {
     centerOnPlayerStart() {
         if (!this.currentLevel) return
         const ps = this.currentLevel.playerStart
-        this.cameraX = this.gameRef.gameWidth / 2 - ps.x * this.zoom
-        this.cameraY = this.gameRef.gameHeight / 2 - ps.y * this.zoom
+        this.gameRef.cameraPos.x = this.gameRef.gameWidth / 2 - ps.x * this.gameRef.cameraZoom
+        this.gameRef.cameraPos.y = this.gameRef.gameHeight / 2 - ps.y * this.gameRef.cameraZoom
     }
 
     setupUI() {
@@ -459,17 +456,17 @@ export class BaseLevelEditor extends BasedLevel {
         const keys = this.gameRef.pressedKeys
 
         // Pan with arrow keys or WASD
-        if (keys['ArrowLeft'] || keys['KeyA']) this.cameraX += this.panSpeed
-        if (keys['ArrowRight'] || keys['KeyD']) this.cameraX -= this.panSpeed
-        if (keys['ArrowUp'] || keys['KeyW']) this.cameraY += this.panSpeed
-        if (keys['ArrowDown'] || keys['KeyS']) this.cameraY -= this.panSpeed
+        if (keys['ArrowLeft'] || keys['KeyA']) this.gameRef.cameraPos.x += this.panSpeed
+        if (keys['ArrowRight'] || keys['KeyD']) this.gameRef.cameraPos.x -= this.panSpeed
+        if (keys['ArrowUp'] || keys['KeyW']) this.gameRef.cameraPos.y += this.panSpeed
+        if (keys['ArrowDown'] || keys['KeyS']) this.gameRef.cameraPos.y -= this.panSpeed
 
         // Zoom with +/-
         if (keys['Equal'] || keys['NumpadAdd']) {
-            this.zoom = Math.min(2, this.zoom + 0.02)
+            this.gameRef.cameraZoom = Math.min(2, this.gameRef.cameraZoom + 0.02)
         }
         if (keys['Minus'] || keys['NumpadSubtract']) {
-            this.zoom = Math.max(0.25, this.zoom - 0.02)
+            this.gameRef.cameraZoom = Math.max(0.25, this.gameRef.cameraZoom - 0.02)
         }
 
         // Delete selected object
@@ -506,7 +503,7 @@ export class BaseLevelEditor extends BasedLevel {
 
     handleMouse() {
         const mouse = this.gameRef.mouseInfo
-        const worldPos = this.screenToWorld(mouse.x, mouse.y)
+        const worldPos = this.gameRef.screenToWorld(mouse.x, mouse.y)
 
         // Update placing preview for placeable tools
         if (isPlaceableObjectType(this.currentTool, this.objectRegistry)) {
@@ -606,8 +603,8 @@ export class BaseLevelEditor extends BasedLevel {
 
         // Handle panning
         if (this.isPanning && mouse.mouseDown) {
-            this.cameraX += mouse.x - this.panStart.x
-            this.cameraY += mouse.y - this.panStart.y
+            this.gameRef.cameraPos.x += mouse.x - this.panStart.x
+            this.gameRef.cameraPos.y += mouse.y - this.panStart.y
             this.panStart = { x: mouse.x, y: mouse.y }
         }
 
@@ -637,11 +634,11 @@ export class BaseLevelEditor extends BasedLevel {
         const ctx = this.gameRef.ctx as CanvasRenderingContext2D
         const drawCtx: DrawContext = {
             ctx,
-            cameraPos: { x: this.cameraX, y: this.cameraY },
-            cameraZoom: this.zoom,
+            cameraPos: { x: this.gameRef.cameraPos.x, y: this.gameRef.cameraPos.y },
+            cameraZoom: this.gameRef.cameraZoom,
             handleSize: this.handleSize,
-            worldToScreen: this.worldToScreen.bind(this),
-            screenToWorld: this.screenToWorld.bind(this)
+            worldToScreen: this.gameRef.worldToScreen.bind(this.gameRef),
+            screenToWorld: this.gameRef.screenToWorld.bind(this.gameRef)
         }
 
         // Look up the object definition from registry
@@ -711,20 +708,6 @@ export class BaseLevelEditor extends BasedLevel {
                 primitiveHandle = `resize-${this.activeHandle}`
             }
             primitive.handleDrag(this.selectedObject, primitiveHandle, worldX, worldY, snappedX, snappedY)
-        }
-    }
-
-    screenToWorld(screenX: number, screenY: number): { x: number, y: number } {
-        return {
-            x: (screenX - this.cameraX) / this.zoom,
-            y: (screenY - this.cameraY) / this.zoom
-        }
-    }
-
-    worldToScreen(worldX: number, worldY: number): { x: number, y: number } {
-        return {
-            x: worldX * this.zoom + this.cameraX,
-            y: worldY * this.zoom + this.cameraY
         }
     }
 
@@ -964,7 +947,7 @@ export class BaseLevelEditor extends BasedLevel {
         const ctx = this.gameRef.ctx
         if (!this.currentLevel) return
 
-        const levelScreen = this.worldToScreen(0, 0)
+        const levelScreen = this.gameRef.worldToScreen(0, 0)
 
         // Level background
         drawBox({
@@ -972,27 +955,27 @@ export class BaseLevelEditor extends BasedLevel {
             width: this.currentLevel.levelWidth,
             height: this.currentLevel.levelHeight,
             fillColor: '#444',
-            zoom: this.zoom
+            zoom: this.gameRef.cameraZoom
         })
 
         // Grid
         for (let x = 0; x <= this.currentLevel.levelWidth; x += GRID_SIZE) {
-            const screenX = levelScreen.x + x * this.zoom
-            drawLine({ c: ctx, x: screenX, y: levelScreen.y, toX: screenX, toY: levelScreen.y + this.currentLevel.levelHeight, strokeColor: GRID_COLOR, strokeWidth: 1, zoom: this.zoom })
+            const screenX = levelScreen.x + x * this.gameRef.cameraZoom
+            drawLine({ c: ctx, x: screenX, y: levelScreen.y, toX: screenX, toY: levelScreen.y + this.currentLevel.levelHeight, strokeColor: GRID_COLOR, strokeWidth: 1, zoom: this.gameRef.cameraZoom })
         }
         for (let y = 0; y <= this.currentLevel.levelHeight; y += GRID_SIZE) {
-            const screenY = levelScreen.y + y * this.zoom
-            drawLine({ c: ctx, x: levelScreen.x, y: screenY, toX: levelScreen.x + this.currentLevel.levelWidth, toY: screenY, strokeColor: GRID_COLOR, strokeWidth: 1, zoom: this.zoom })
+            const screenY = levelScreen.y + y * this.gameRef.cameraZoom
+            drawLine({ c: ctx, x: levelScreen.x, y: screenY, toX: levelScreen.x + this.currentLevel.levelWidth, toY: screenY, strokeColor: GRID_COLOR, strokeWidth: 1, zoom: this.gameRef.cameraZoom })
         }
 
         // Create draw context for primitives
         const drawCtx: DrawContext = {
             ctx,
-            cameraPos: { x: this.cameraX, y: this.cameraY },
-            cameraZoom: this.zoom,
+            cameraPos: { x: this.gameRef.cameraPos.x, y: this.gameRef.cameraPos.y },
+            cameraZoom: this.gameRef.cameraZoom,
             handleSize: this.handleSize,
-            worldToScreen: (wx, wy) => this.worldToScreen(wx, wy),
-            screenToWorld: (sx, sy) => this.screenToWorld(sx, sy),
+            worldToScreen: (wx, wy) => this.gameRef.worldToScreen(wx, wy),
+            screenToWorld: (sx, sy) => this.gameRef.screenToWorld(sx, sy),
         }
 
         // Get all objects sorted by zIndex
@@ -1056,25 +1039,25 @@ export class BaseLevelEditor extends BasedLevel {
     drawPolygonInProgress() {
         const ctx = this.gameRef.ctx
         const mouse = this.gameRef.mouseInfo
-        const mouseWorld = this.screenToWorld(mouse.x, mouse.y)
+        const mouseWorld = this.gameRef.screenToWorld(mouse.x, mouse.y)
         const snappedMouse = { x: Math.round(mouseWorld.x / GRID_SIZE) * GRID_SIZE, y: Math.round(mouseWorld.y / GRID_SIZE) * GRID_SIZE }
-        const mouseScreen = this.worldToScreen(snappedMouse.x, snappedMouse.y)
+        const mouseScreen = this.gameRef.worldToScreen(snappedMouse.x, snappedMouse.y)
 
         ctx.globalAlpha = 0.7
 
         for (let i = 0; i < this.polygonVertices.length - 1; i++) {
-            const fromScreen = this.worldToScreen(this.polygonVertices[i].x, this.polygonVertices[i].y)
-            const toScreen = this.worldToScreen(this.polygonVertices[i + 1].x, this.polygonVertices[i + 1].y)
+            const fromScreen = this.gameRef.worldToScreen(this.polygonVertices[i].x, this.polygonVertices[i].y)
+            const toScreen = this.gameRef.worldToScreen(this.polygonVertices[i + 1].x, this.polygonVertices[i + 1].y)
             drawLine({ c: ctx, x: fromScreen.x, y: fromScreen.y, toX: toScreen.x, toY: toScreen.y, strokeColor: '#81B622', strokeWidth: 2 })
         }
 
         if (this.polygonVertices.length > 0) {
-            const lastScreen = this.worldToScreen(this.polygonVertices[this.polygonVertices.length - 1].x, this.polygonVertices[this.polygonVertices.length - 1].y)
+            const lastScreen = this.gameRef.worldToScreen(this.polygonVertices[this.polygonVertices.length - 1].x, this.polygonVertices[this.polygonVertices.length - 1].y)
             drawLine({ c: ctx, x: lastScreen.x, y: lastScreen.y, toX: mouseScreen.x, toY: mouseScreen.y, strokeColor: '#81B622', strokeWidth: 2 })
         }
 
         this.polygonVertices.forEach((v, i) => {
-            const screenPos = this.worldToScreen(v.x, v.y)
+            const screenPos = this.gameRef.worldToScreen(v.x, v.y)
             drawCircle({ c: ctx, x: screenPos.x, y: screenPos.y, radius: 6, fillColor: i === 0 ? '#ff0' : '#81B622', strokeColor: '#fff', strokeWidth: 2 })
         })
 
@@ -1095,7 +1078,7 @@ export class BaseLevelEditor extends BasedLevel {
 
         if (this.currentLevel) {
             drawText({ c: ctx, x: this.gameRef.gameWidth / 2, y: 30, align: 'center', fillColor: '#fff', fontSize: 18, fontFamily: 'sans-serif', weight: 'bold', style: '', text: this.currentLevel.name })
-            drawText({ c: ctx, x: this.gameRef.gameWidth / 2, y: 50, align: 'center', fillColor: '#888', fontSize: 12, fontFamily: 'sans-serif', weight: 'normal', style: '', text: `${this.currentLevel.levelWidth}x${this.currentLevel.levelHeight} | Zoom: ${Math.round(this.zoom * 100)}%` })
+            drawText({ c: ctx, x: this.gameRef.gameWidth / 2, y: 50, align: 'center', fillColor: '#888', fontSize: 12, fontFamily: 'sans-serif', weight: 'normal', style: '', text: `${this.currentLevel.levelWidth}x${this.currentLevel.levelHeight} | Zoom: ${Math.round(this.gameRef.cameraZoom * 100)}%` })
         }
 
         // Buttons

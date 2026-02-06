@@ -2,12 +2,12 @@ import './assets/style.scss';
 // import { startGame } from './games/walk-the-human/startGame';
 // import { startGame } from './games/blasty-man/startGame';
 // import { startGame } from './games/vimjam2/startGame';
-// import { startGame } from './games/physbo/startGame';
+import { startGame } from './games/physbo/startGame';
 // import { startGame } from './games/netmo/startGame';
 // import { startGame } from './games/dice-grid/startGame';
 // import { startGame } from './games/lead-cub/startGame';
 // import { startGame } from './games/bad-hands/startGame';
-import { startGame } from './games/the-squeeze/startGame';
+// import { startGame } from './games/the-squeeze/startGame';
 // import { startGame } from './games/cheese-racer/startGame';
 // import { startGame } from './games/physcard/startGame';
 

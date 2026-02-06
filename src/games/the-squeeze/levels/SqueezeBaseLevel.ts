@@ -571,7 +571,7 @@ export class SqueezeBaseLevel extends BasedLevel {
             tempObj.x = obj.x
             tempObj.y = obj.y
             tempObj.vertices = obj.vertices || []
-            tempObj.angle = (obj.angle || 0) * Math.PI / 180  // Convert degrees to radians
+            tempObj.angle = obj.angle || 0
             tempObj.color = obj.color
             tempObj.initialize()
             this.gameRef.addToWorld(tempObj.body)

@@ -524,4 +524,51 @@ export class BasedGame implements BasedGameType {
     }
   }
 
+  /**
+   * Convert world coordinates to screen coordinates.
+   * Simple version without camera rotation - use convertPointToScreenSpace for rotation support.
+   */
+  worldToScreen(worldX: number, worldY: number): XYCoordinateType {
+    return {
+      x: worldX * this.cameraZoom + this.cameraPos.x,
+      y: worldY * this.cameraZoom + this.cameraPos.y
+    }
+  }
+
+  /**
+   * Convert screen coordinates to world coordinates.
+   * Simple version without camera rotation - use convertPointToCameraSpace for rotation support.
+   */
+  screenToWorld(screenX: number, screenY: number): XYCoordinateType {
+    return {
+      x: (screenX - this.cameraPos.x) / this.cameraZoom,
+      y: (screenY - this.cameraPos.y) / this.cameraZoom
+    }
+  }
+
+  /**
+   * Convert world coordinates to screen space, accounting for camera rotation.
+   * Inverse of convertPointToCameraSpace.
+   */
+  convertPointToScreenSpace(worldCoord: XYCoordinateType): XYCoordinateType {
+    const rcX = this.gameWidth / 2
+    const rcY = this.gameHeight / 2
+
+    // Apply camera offset and zoom
+    const screenX = worldCoord.x * this.cameraZoom + this.cameraPos.x
+    const screenY = worldCoord.y * this.cameraZoom + this.cameraPos.y
+
+    // Apply rotation around screen center
+    const dx = screenX - rcX
+    const dy = screenY - rcY
+    const rotatedAngleRads = degToRad(this.cameraRotation)
+    const cosA = Math.cos(rotatedAngleRads)
+    const sinA = Math.sin(rotatedAngleRads)
+
+    return {
+      x: rcX + dx * cosA - dy * sinA,
+      y: rcY + dx * sinA + dy * cosA
+    }
+  }
+
 }

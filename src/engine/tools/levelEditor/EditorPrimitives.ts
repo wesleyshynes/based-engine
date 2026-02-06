@@ -1,8 +1,10 @@
 // Editor Primitives - Base drawing primitives and their handle configurations
 
 import { drawBox, drawCircle, drawText, rotateDraw, drawPolygon, drawLine } from "../../libs/drawHelpers"
+import { degToRad, rotatePoint, XYCoordinateType } from "../../libs/mathHelpers"
+import { pointInRotatedRect, pointInCircle, pointInRotatedPolygon, isNearPoint } from "../../libs/collisionHelpers"
 import { VertexPoint, PrimitiveType, DrawContext, CoordinateHandleConfig } from "./EditorTypes"
-import { HANDLE_COLOR, HANDLE_BORDER } from "./EditorConstants"
+import { HANDLE_COLOR, HANDLE_BORDER, GRID_SIZE } from "./EditorConstants"
 
 // Re-export types for external use
 export { DrawContext, CoordinateHandleConfig } from "./EditorTypes"
@@ -260,24 +262,13 @@ export const BoxPrimitive: PrimitiveDefinition = {
     },
 
     isPointInside(obj: any, x: number, y: number): boolean {
-        const halfW = obj.width / 2
-        const halfH = obj.height / 2
-        const angle = obj.angle || 0
-
-        if (angle === 0) {
-            return x >= obj.x - halfW && x <= obj.x + halfW && y >= obj.y - halfH && y <= obj.y + halfH
-        }
-
-        // Transform point to local (unrotated) space
-        const angleRad = -angle * Math.PI / 180
-        const cosA = Math.cos(angleRad)
-        const sinA = Math.sin(angleRad)
-        const dx = x - obj.x
-        const dy = y - obj.y
-        const localX = dx * cosA - dy * sinA
-        const localY = dx * sinA + dy * cosA
-
-        return localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH
+        return pointInRotatedRect(
+            { x, y },
+            { x: obj.x, y: obj.y },
+            obj.width,
+            obj.height,
+            obj.angle || 0
+        )
     }
 }
 
@@ -335,16 +326,13 @@ export const BallPrimitive: PrimitiveDefinition = {
         if (handle === 'radius') {
             const dx = worldX - obj.x
             const dy = worldY - obj.y
-            const gridSize = 25 // TODO: pass this in
-            const newRadius = Math.max(20, Math.round(Math.sqrt(dx * dx + dy * dy) / gridSize) * gridSize)
+            const newRadius = Math.max(20, Math.round(Math.sqrt(dx * dx + dy * dy) / GRID_SIZE) * GRID_SIZE)
             obj.radius = newRadius
         }
     },
 
     isPointInside(obj: any, x: number, y: number): boolean {
-        const dx = x - obj.x
-        const dy = y - obj.y
-        return dx * dx + dy * dy <= obj.radius * obj.radius
+        return pointInCircle({ x, y }, { x: obj.x, y: obj.y }, obj.radius)
     }
 }
 
@@ -388,16 +376,13 @@ export const PolygonPrimitive: PrimitiveDefinition = {
 
     drawHandles(obj: any, ctx: DrawContext) {
         const pos = ctx.worldToScreen(obj.x, obj.y)
-        const angleRad = (obj.angle || 0) * Math.PI / 180
-        const cosA = Math.cos(angleRad)
-        const sinA = Math.sin(angleRad)
+        const angle = obj.angle || 0
         const size = ctx.handleSize
 
         // Vertex handles
         obj.vertices.forEach((v: VertexPoint) => {
-            const rotX = v.x * cosA - v.y * sinA
-            const rotY = v.x * sinA + v.y * cosA
-            const screenPos = ctx.worldToScreen(obj.x + rotX, obj.y + rotY)
+            const rotated = rotatePoint(v, angle)
+            const screenPos = ctx.worldToScreen(obj.x + rotated.x, obj.y + rotated.y)
             drawBox({
                 c: ctx.ctx,
                 x: screenPos.x - size / 2,
@@ -410,34 +395,38 @@ export const PolygonPrimitive: PrimitiveDefinition = {
             })
         })
 
-        // Rotation handle
-        const rotHandleY = pos.y - 60 * ctx.cameraZoom
-        drawLine({ c: ctx.ctx, x: pos.x, y: pos.y, toX: pos.x, toY: rotHandleY, strokeColor: '#88f', strokeWidth: 2 })
-        drawCircle({ c: ctx.ctx, x: pos.x, y: rotHandleY, radius: size, fillColor: '#88f', strokeColor: HANDLE_BORDER, strokeWidth: 1 })
-        drawText({ c: ctx.ctx, x: pos.x + 15, y: rotHandleY + 4, align: 'left', fillColor: '#88f', fontSize: 10, fontFamily: 'sans-serif', weight: 'bold', style: '', text: 'ROT' })
+        // Rotation handle - positioned relative to polygon rotation
+        const rotHandleDistance = 60 * ctx.cameraZoom
+        const angleRad = degToRad(angle)
+        const rotHandleX = pos.x + Math.sin(angleRad) * rotHandleDistance
+        const rotHandleY = pos.y - Math.cos(angleRad) * rotHandleDistance
+        drawLine({ c: ctx.ctx, x: pos.x, y: pos.y, toX: rotHandleX, toY: rotHandleY, strokeColor: '#88f', strokeWidth: 2 })
+        drawCircle({ c: ctx.ctx, x: rotHandleX, y: rotHandleY, radius: size, fillColor: '#88f', strokeColor: HANDLE_BORDER, strokeWidth: 1 })
+        drawText({ c: ctx.ctx, x: rotHandleX + 15, y: rotHandleY + 4, align: 'left', fillColor: '#88f', fontSize: 10, fontFamily: 'sans-serif', weight: 'bold', style: '', text: 'ROT' })
     },
 
     getHandleAtPosition(obj: any, worldX: number, worldY: number, ctx: DrawContext): string | null {
         const handleRadius = ctx.handleSize / ctx.cameraZoom
-        const angleRad = (obj.angle || 0) * Math.PI / 180
-        const cosA = Math.cos(angleRad)
-        const sinA = Math.sin(angleRad)
+        const angle = obj.angle || 0
+        const point = { x: worldX, y: worldY }
 
-        // Rotation handle
-        const rotHandleX = obj.x
-        const rotHandleY = obj.y - 60
-        if (Math.abs(worldX - rotHandleX) < handleRadius && Math.abs(worldY - rotHandleY) < handleRadius) {
+        // Rotation handle - positioned relative to polygon rotation
+        const rotHandleDistance = 60
+        const angleRad = degToRad(angle)
+        const rotHandle = {
+            x: obj.x + Math.sin(angleRad) * rotHandleDistance,
+            y: obj.y - Math.cos(angleRad) * rotHandleDistance
+        }
+        if (isNearPoint(point, rotHandle, handleRadius)) {
             return 'rotate'
         }
 
         // Vertex handles
         for (let i = 0; i < obj.vertices.length; i++) {
             const v = obj.vertices[i]
-            const rotX = v.x * cosA - v.y * sinA
-            const rotY = v.x * sinA + v.y * cosA
-            const worldVX = obj.x + rotX
-            const worldVY = obj.y + rotY
-            if (Math.abs(worldX - worldVX) < handleRadius && Math.abs(worldY - worldVY) < handleRadius) {
+            const rotated = rotatePoint(v, angle)
+            const worldV = { x: obj.x + rotated.x, y: obj.y + rotated.y }
+            if (isNearPoint(point, worldV, handleRadius)) {
                 return `vertex-${i}`
             }
         }
@@ -457,38 +446,22 @@ export const PolygonPrimitive: PrimitiveDefinition = {
         if (handle.startsWith('vertex-')) {
             const vertexIndex = parseInt(handle.split('-')[1])
             if (vertexIndex >= 0 && vertexIndex < obj.vertices.length) {
-                const angleRad = (obj.angle || 0) * Math.PI / 180
-                const cosA = Math.cos(-angleRad)
-                const sinA = Math.sin(-angleRad)
-                const localX = snappedX - obj.x
-                const localY = snappedY - obj.y
-                obj.vertices[vertexIndex] = {
-                    x: localX * cosA - localY * sinA,
-                    y: localX * sinA + localY * cosA
-                }
+                const angle = obj.angle || 0
+                const localOffset = { x: snappedX - obj.x, y: snappedY - obj.y }
+                // Rotate back to local space (negative angle)
+                const localVertex = rotatePoint(localOffset, -angle)
+                obj.vertices[vertexIndex] = localVertex
             }
         }
     },
 
     isPointInside(obj: any, x: number, y: number): boolean {
-        const angleRad = (obj.angle || 0) * Math.PI / 180
-        const cosA = Math.cos(-angleRad)
-        const sinA = Math.sin(-angleRad)
-        const localX = (x - obj.x) * cosA - (y - obj.y) * sinA
-        const localY = (x - obj.x) * sinA + (y - obj.y) * cosA
-
-        const vertices = obj.vertices
-        let inside = false
-
-        for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
-            const xi = vertices[i].x, yi = vertices[i].y
-            const xj = vertices[j].x, yj = vertices[j].y
-            if (((yi > localY) !== (yj > localY)) &&
-                (localX < (xj - xi) * (localY - yi) / (yj - yi) + xi)) {
-                inside = !inside
-            }
-        }
-        return inside
+        return pointInRotatedPolygon(
+            { x, y },
+            { x: obj.x, y: obj.y },
+            obj.vertices,
+            obj.angle || 0
+        )
     }
 }
 
@@ -585,15 +558,13 @@ export const TextPrimitive: PrimitiveDefinition = {
         const estimatedWidth = obj.text.length * obj.fontSize * 0.6
         const estimatedHeight = obj.fontSize * 1.2
 
-        const angleRad = (obj.angle || 0) * Math.PI / 180
-        const cosA = Math.cos(-angleRad)
-        const sinA = Math.sin(-angleRad)
-        const localX = (x - obj.x) * cosA - (y - obj.y) * sinA
-        const localY = (x - obj.x) * sinA + (y - obj.y) * cosA
-
-        const halfW = estimatedWidth / 2
-        const halfH = estimatedHeight / 2
-        return localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH
+        return pointInRotatedRect(
+            { x, y },
+            { x: obj.x, y: obj.y },
+            estimatedWidth,
+            estimatedHeight,
+            obj.angle || 0
+        )
     }
 }
 
@@ -637,9 +608,7 @@ export const PointPrimitive: PrimitiveDefinition = {
     },
 
     isPointInside(obj: any, x: number, y: number): boolean {
-        const dx = x - obj.x
-        const dy = y - obj.y
-        return dx * dx + dy * dy <= 25 * 25
+        return pointInCircle({ x, y }, { x: obj.x, y: obj.y }, 25)
     }
 }
 
