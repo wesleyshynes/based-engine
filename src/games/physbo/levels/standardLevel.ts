@@ -207,7 +207,7 @@ export class StandardLevel extends BasedLevel {
           this.gameRef.soundPlayer.playSound(this.ballRailBounce)
         }
       }
-      tempPad.initialize()
+      tempPad.initialize(true)
       Physics.Body.setPosition(tempPad.body, { x: tempPad.x, y: tempPad.y })
       Physics.Body.setAngle(tempPad.body, degToRad(tempPad.angle))
       this.addToWorld(tempPad.body)
@@ -857,10 +857,6 @@ export class StandardLevel extends BasedLevel {
       }
     })
 
-    // this.bouncePads.forEach(b => {
-    //   b.draw()
-    // })
-
     // TABLE TOP
     drawImage({
       ...this.tableTopSprite,
@@ -868,6 +864,10 @@ export class StandardLevel extends BasedLevel {
       dy: 0 + this.gameRef.cameraPos.y,
       dWidth: this.levelWidth * this.gameRef.cameraZoom,
       dHeight: this.levelHeight * this.gameRef.cameraZoom
+    })
+
+    this.bouncePads.forEach(b => {
+      b.draw()
     })
 
     if (this.aimTarget.active) {

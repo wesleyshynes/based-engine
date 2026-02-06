@@ -31,11 +31,16 @@ export default class PhysPoly extends BasedObject {
   collisionEndFn: (o: any) => void = (o: any) => null;
 
   async preload() { }
-  initialize() {
+
+  initialize(setCenter: boolean = false) {
     this.initializeBody()
-    // this.setCenter()
+    if (setCenter) {
+      this.setCenter()
+    }
     this.setAngle()
   }
+
+
 
   initializeBody() {
     const vertString = Physics.Vertices.fromPath(this.vertices.map(p => `${p.x} ${p.y}`).join(' '), this.bodyOptions)
@@ -53,6 +58,7 @@ export default class PhysPoly extends BasedObject {
     }
   }
 
+  // Call this function after adding to world to offset the body based on vertices
   offsetSelfByOffset() {
     if (this.body) {
       // const mappedVerts = this.vertices.map((v: any) => ({ x: v.x + this.x, y: v.y + this.y }));
