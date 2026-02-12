@@ -142,7 +142,7 @@ export class MyEntity extends BasedObject {
 }
 ```
 
-**Tag System:** Use `options.tags` for collision identification. Check with `hasTag(tagName)` or `hasTags(tagArray)`.
+**Tag System:** Use `options.tags` for collision identification. Check with `options.tags.tagName`.
 
 ---
 
