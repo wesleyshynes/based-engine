@@ -12,6 +12,7 @@ import { LevelText } from "../entities/levelText";
 import { TouchKnob } from "../../../engine/controls/TouchKnob";
 import { MovingPlatform } from "../entities/movingPlatform";
 import { BounceBall } from "../entities/bounceBall";
+import { ConditionalWall } from "../entities/conditionalWall";
 
 import WallThud1 from '../../../assets/the-squeeze/387478__cosmicembers__dart-thud-1.mp3'
 import WallThud2 from '../../../assets/the-squeeze/387480__cosmicembers__dart-thud-2.mp3'
@@ -91,6 +92,9 @@ export class SqueezeBaseLevel extends BasedLevel {
 
     levelSensors: any[] = []
     _levelSensors: any[] = []
+
+    conditionalWalls: ConditionalWall[] = []
+    _conditionalWalls: any[] = []
 
     // SOUNDS
     wallThud1: any;
@@ -278,6 +282,7 @@ export class SqueezeBaseLevel extends BasedLevel {
         this.setupBounceBalls()
         this.setupLevelTexts()
         this.setupSensors()
+        this.setupConditionalWalls()
 
         // BEGIN
         this.onResize()
@@ -327,6 +332,10 @@ export class SqueezeBaseLevel extends BasedLevel {
 
         this.levelSensors.forEach((sensor: any) => {
             sensor.update()
+        })
+
+        this.conditionalWalls.forEach((wall: any) => {
+            wall.update()
         })
 
         this.cameraZoomButton.update()
@@ -451,6 +460,11 @@ export class SqueezeBaseLevel extends BasedLevel {
             wall.draw()
         })
 
+        // draw conditional walls
+        this.conditionalWalls.forEach((wall: any) => {
+            wall.draw()
+        })
+
         // draw level sensors
         this.levelSensors.forEach((sensor: any) => {
             sensor.draw()
@@ -555,6 +569,31 @@ export class SqueezeBaseLevel extends BasedLevel {
             tempObj.width = obj.width
             tempObj.height = obj.height
             tempObj.angle = obj.angle || 0
+            tempObj.triggerTags = obj.triggerTags || ['pushBox']
+            tempObj.flagName = obj.flagName || ''
+            tempObj.invertFlag = obj.invertFlag || false
+            tempObj.initialize()
+            this.gameRef.addToWorld(tempObj.body)
+            return tempObj
+        })
+    }
+
+    setupConditionalWalls() {
+        this.conditionalWalls = [
+            ...this._conditionalWalls,
+        ].map((obj: any, idx: number) => {
+            const tempObj = new ConditionalWall({
+                key: `conditional-wall-${idx}`, gameRef: this.gameRef
+            })
+            tempObj.x = obj.x
+            tempObj.y = obj.y
+            tempObj.width = obj.width
+            tempObj.height = obj.height
+            tempObj.color = obj.color || '#6666FF'
+            tempObj.angle = obj.angle || 0
+            tempObj.flagName = obj.flagName || ''
+            tempObj.showWhenTrue = obj.showWhenTrue !== undefined ? obj.showWhenTrue : true
+            tempObj.hiddenOpacity = obj.hiddenOpacity || 0.2
             tempObj.initialize()
             this.gameRef.addToWorld(tempObj.body)
             return tempObj
@@ -720,5 +759,6 @@ export class SqueezeBaseLevel extends BasedLevel {
         if (this.activeSound.playing && this.activeSound.soundRef) {
             this.activeSound.soundRef.stop()
         }
+        this.conditionalWalls.forEach(w => this.gameRef.removeFromWorld(w.body))
     }
 } 

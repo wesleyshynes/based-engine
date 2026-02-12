@@ -148,5 +148,26 @@ export interface SqueezeLevelData {
     exitDoors: SqueezeExitDoor[]
     hazardBlocks?: SqueezeHazardBlock[]
     levelTexts?: SqueezeLevelText[]
-    levelSensors?: { x: number; y: number; width: number; height: number, angle?: number, type: 'box' | 'ball' | 'polygon' }[]
+    levelSensors?: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        angle?: number;
+        type: 'box' | 'ball' | 'polygon';
+        triggerTags?: string[];
+        flagName?: string;
+        invertFlag?: boolean;
+    }[]
+    conditionalWalls?: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        color?: string;
+        angle?: number;
+        flagName?: string;
+        showWhenTrue?: boolean;
+        hiddenOpacity?: number;
+    }[]
 }

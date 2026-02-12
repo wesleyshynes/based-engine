@@ -9,6 +9,14 @@ export class SensorBox extends PhysBox {
     triggeredStrokeColor: string = '#FF0000'
     triggeredColor: string = 'rgba(255, 0, 0, 0.3)'
 
+    // Configurable properties
+    triggerTags: string[] = ['pushBox']  // Tags that trigger this sensor
+    flagName: string = ''  // Name of flag to set in levelData
+    invertFlag: boolean = false  // If true, flag is true when NOT triggered
+
+    // Track colliding objects
+    collidingObjects: Set<string> = new Set()
+
     options = {
         tags: {
             sensor: true,
@@ -18,20 +26,32 @@ export class SensorBox extends PhysBox {
     bodyOptions = { label: `sensor`, isStatic: true, isSensor: true }
 
     collisionStartFn = (o: any) => {
-        const otherBody = o.plugin.basedRef()
-        if (otherBody && otherBody.options && otherBody.options.tags) {
-            if (otherBody.options.tags.pushBox) {
-                this.triggered = true
+        const ref = o.plugin.basedRef()
+        if (ref && ref.options && ref.options.tags) {
+            // Check if any trigger tag matches
+            const hasMatchingTag = this.triggerTags.some(tag => ref.options.tags[tag])
+            if (hasMatchingTag) {
+                this.collidingObjects.add(ref.objectKey)
+                this.updateTriggerState()
             }
         }
     }
 
     collisionEndFn = (o: any) => {
-        const otherBody = o.plugin.basedRef()
-        if (otherBody && otherBody.options && otherBody.options.tags) {
-            if (otherBody.options.tags.pushBox) {
-                this.triggered = false
-            }
+        const ref = o.plugin.basedRef()
+        if (ref) {
+            this.collidingObjects.delete(ref.objectKey)
+            this.updateTriggerState()
+        }
+    }
+
+    updateTriggerState() {
+        const isTriggered = this.collidingObjects.size > 0
+        this.triggered = isTriggered
+
+        if (this.flagName) {
+            const flagValue = this.invertFlag ? !isTriggered : isTriggered
+            this.gameRef.levelData[this.flagName] = flagValue
         }
     }
 

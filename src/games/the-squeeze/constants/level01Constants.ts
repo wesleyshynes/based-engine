@@ -52,6 +52,39 @@ export const LEVEL_01: SqueezeLevelData = {
         { x: 100, y: 50, text: 'The Squeeze - Level 01', fontSize: 24, color: '#fff', angle: 0, fontFamily: 'Arial', fontWeight: 'bold' },
     ],
     levelSensors: [
-        { type: 'box', angle: 0, x: 545, y: 200, width: 100, height: 100 },
+        {
+            type: 'box',
+            angle: 0,
+            x: 545,
+            y: 200,
+            width: 100,
+            height: 100,
+            triggerTags: ['pushBox'],
+            flagName: 'jail_cell_unlocked',
+            invertFlag: false
+        },
+    ],
+    conditionalWalls: [
+        // Jail bars that disappear when the pressure plate is triggered
+        {
+            x: 375,
+            y: 75,
+            width: 50,
+            height: 50,
+            color: '#FF6666',
+            angle: 0,
+            flagName: 'jail_cell_unlocked',
+            showWhenTrue: false
+        },
+        {
+            x: 375,
+            y: 175,
+            width: 50,
+            height: 50,
+            color: '#FF6666',
+            angle: 0,
+            flagName: 'jail_cell_unlocked',
+            showWhenTrue: false
+        },
     ]
 }
