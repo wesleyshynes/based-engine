@@ -100,6 +100,30 @@ function mapSqueezeEditorData(data: SqueezeEditorLevelData) {
             color: text.color,
             angle: text.angle,
         })),
+
+        levelSensors: (data.levelSensors || []).map(sensor => ({
+            x: sensor.x,
+            y: sensor.y,
+            width: sensor.width,
+            height: sensor.height,
+            type: 'box' as const,
+            angle: sensor.angle || 0,
+            triggerTags: sensor.triggerTags || ['pushBox'],
+            flagName: sensor.flagName,
+            invertFlag: sensor.invertFlag || false,
+        })),
+
+        conditionalWalls: (data.conditionalWalls || []).map(wall => ({
+            x: wall.x,
+            y: wall.y,
+            width: wall.width,
+            height: wall.height,
+            color: wall.color,
+            angle: wall.angle || 0,
+            flagName: wall.flagName,
+            showWhenTrue: wall.showWhenTrue !== undefined ? wall.showWhenTrue : true,
+            hiddenOpacity: wall.hiddenOpacity !== undefined ? wall.hiddenOpacity : 0.2,
+        })),
     }
 }
 
@@ -132,6 +156,12 @@ export class TestableLevel extends SqueezeBaseLevel {
     levelTexts: any[] = []
     _levelTexts: any[] = []
 
+    levelSensors: any[] = []
+    _levelSensors: any[] = []
+
+    conditionalWalls: any[] = []
+    _conditionalWalls: any[] = []
+
     textLines: string[] = [
         'Move: ←↑↓→ or W A S D',
         'Shrink: Z',
@@ -159,6 +189,8 @@ export class TestableLevel extends SqueezeBaseLevel {
             this._hazardBlocks = mapped.hazardBlocks
             this._bounceBalls = mapped.bounceBalls
             this._levelTexts = mapped.levelTexts
+            this._levelSensors = mapped.levelSensors
+            this._conditionalWalls = mapped.conditionalWalls
         }
 
         // Call parent preload to load sounds

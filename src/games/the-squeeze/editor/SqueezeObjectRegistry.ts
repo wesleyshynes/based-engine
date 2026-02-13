@@ -24,16 +24,18 @@ const zIndexField: PropertyField = { key: 'zIndex', label: 'Z-Index', type: 'num
 // Squeeze Object Types
 // ============================================================================
 
-export type SqueezeObjectType = 
-    | 'wall' 
-    | 'polygon' 
-    | 'pushBox' 
-    | 'bounceBall' 
-    | 'movingPlatform' 
-    | 'exitDoor' 
-    | 'hazardBlock' 
-    | 'playerStart' 
+export type SqueezeObjectType =
+    | 'wall'
+    | 'polygon'
+    | 'pushBox'
+    | 'bounceBall'
+    | 'movingPlatform'
+    | 'exitDoor'
+    | 'hazardBlock'
+    | 'playerStart'
     | 'levelText'
+    | 'sensorBox'
+    | 'conditionalWall'
 
 // ============================================================================
 // Object Registry - All Squeeze placeable object definitions
@@ -355,6 +357,103 @@ export const SQUEEZE_OBJECT_REGISTRY: Record<SqueezeObjectType, ObjectDefinition
         ],
         colorKey: 'color',
     },
+
+    // ========================================================================
+    // Sensor Box - Trigger area that sets flags based on collisions
+    // ========================================================================
+    sensorBox: {
+        primitive: 'box',
+        toolLabel: 'Sensor',
+        creationMode: 'single-click',
+        arrayKey: 'levelSensors',
+        zIndex: 2,
+        defaults: {
+            type: 'sensorBox',
+            width: 100,
+            height: 100,
+            angle: 0,
+            triggerTags: ['pushBox'],
+            flagName: 'sensor_triggered',
+            invertFlag: false,
+            zIndex: 2,
+        },
+        properties: [
+            ...positionFields,
+            { key: 'width', label: 'Width', type: 'number', min: 20, max: 500 },
+            { key: 'height', label: 'Height', type: 'number', min: 20, max: 500 },
+            angleField,
+            { key: 'flagName', label: 'Flag Name', type: 'string' },
+            zIndexField,
+        ],
+        fixedColor: 'rgba(0, 255, 0, 0.3)',
+        customDraw: (obj: any, ctx: DrawContext, selected: boolean) => {
+            // Draw sensor label
+            const pos = ctx.worldToScreen(obj.x, obj.y)
+            drawText({
+                c: ctx.ctx,
+                x: pos.x,
+                y: pos.y + 5,
+                align: 'center',
+                fillColor: selected ? '#fff' : '#0f0',
+                fontSize: 10,
+                fontFamily: 'sans-serif',
+                weight: 'bold',
+                style: '',
+                text: 'SENSOR',
+                zoom: ctx.cameraZoom,
+            })
+        },
+    },
+
+    // ========================================================================
+    // Conditional Wall - Wall that toggles based on flags
+    // ========================================================================
+    conditionalWall: {
+        primitive: 'box',
+        toolLabel: 'CondWall',
+        creationMode: 'single-click',
+        arrayKey: 'conditionalWalls',
+        zIndex: 0,
+        defaults: {
+            type: 'conditionalWall',
+            width: 100,
+            height: 50,
+            color: '#6666FF',
+            angle: 0,
+            flagName: 'wall_active',
+            showWhenTrue: true,
+            hiddenOpacity: 0.2,
+            zIndex: 0,
+        },
+        properties: [
+            ...positionFields,
+            { key: 'width', label: 'Width', type: 'number', min: 10, max: 1000 },
+            { key: 'height', label: 'Height', type: 'number', min: 10, max: 1000 },
+            angleField,
+            colorField,
+            { key: 'flagName', label: 'Flag Name', type: 'string' },
+            { key: 'hiddenOpacity', label: 'Hidden Opacity', type: 'number', min: 0, max: 1, step: 0.1 },
+            zIndexField,
+        ],
+        colorKey: 'color',
+        customDraw: (obj: any, ctx: DrawContext, selected: boolean) => {
+            // Draw "COND" label
+            const pos = ctx.worldToScreen(obj.x, obj.y)
+            drawText({
+                c: ctx.ctx,
+                x: pos.x,
+                y: pos.y + 5,
+                align: 'center',
+                fillColor: selected ? '#fff' : '#44f',
+                fontSize: 10,
+                fontFamily: 'sans-serif',
+                weight: 'bold',
+                style: '',
+                text: 'COND',
+                zoom: ctx.cameraZoom,
+            })
+        },
+    },
 }
 
 // ============================================================================
@@ -363,10 +462,12 @@ export const SQUEEZE_OBJECT_REGISTRY: Record<SqueezeObjectType, ObjectDefinition
 
 export const SQUEEZE_OBJECT_REGISTRY_ORDER: SqueezeObjectType[] = [
     'wall',
-    'polygon', 
+    'conditionalWall',
+    'polygon',
     'pushBox',
     'bounceBall',
     'movingPlatform',
+    'sensorBox',
     'exitDoor',
     'playerStart',
     'hazardBlock',

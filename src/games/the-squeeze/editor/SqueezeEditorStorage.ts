@@ -27,6 +27,8 @@ export class SqueezeEditorStorage extends BaseEditorStorage {
             exitDoors: [],
             hazardBlocks: [],
             levelTexts: [],
+            levelSensors: [],
+            conditionalWalls: [],
         } as SqueezeEditorLevelData
     }
 
@@ -45,6 +47,8 @@ export class SqueezeEditorStorage extends BaseEditorStorage {
             exitDoors: sanitized.exitDoors || [],
             hazardBlocks: sanitized.hazardBlocks || [],
             levelTexts: sanitized.levelTexts || [],
+            levelSensors: sanitized.levelSensors || [],
+            conditionalWalls: sanitized.conditionalWalls || [],
         } as SqueezeEditorLevelData
     }
 
@@ -146,6 +150,26 @@ export class SqueezeEditorStorage extends BaseEditorStorage {
         })
         code += `    ],\n`
 
+        // Level Sensors
+        code += `    levelSensors: [\n`
+        ;(squeezeLevel.levelSensors || []).forEach(sensor => {
+            const angleStr = sensor.angle ? `, angle: ${sensor.angle}` : ''
+            const triggerTagsStr = sensor.triggerTags ? `, triggerTags: ${JSON.stringify(sensor.triggerTags)}` : ''
+            const invertFlagStr = sensor.invertFlag ? `, invertFlag: ${sensor.invertFlag}` : ''
+            code += `        { x: ${sensor.x}, y: ${sensor.y}, width: ${sensor.width}, height: ${sensor.height}, type: 'box', flagName: '${sensor.flagName}'${angleStr}${triggerTagsStr}${invertFlagStr} },\n`
+        })
+        code += `    ],\n`
+
+        // Conditional Walls
+        code += `    conditionalWalls: [\n`
+        ;(squeezeLevel.conditionalWalls || []).forEach(wall => {
+            const angleStr = wall.angle ? `, angle: ${wall.angle}` : ''
+            const showWhenTrueStr = wall.showWhenTrue !== undefined ? `, showWhenTrue: ${wall.showWhenTrue}` : ''
+            const hiddenOpacityStr = wall.hiddenOpacity !== undefined ? `, hiddenOpacity: ${wall.hiddenOpacity}` : ''
+            code += `        { x: ${wall.x}, y: ${wall.y}, width: ${wall.width}, height: ${wall.height}, color: '${wall.color}', flagName: '${wall.flagName}'${angleStr}${showWhenTrueStr}${hiddenOpacityStr} },\n`
+        })
+        code += `    ],\n`
+
         code += `}\n`
 
         return code
@@ -185,6 +209,10 @@ export class SqueezeEditorStorage extends BaseEditorStorage {
         code += `    _hazardBlocks: any[] = ${constantName}.hazardBlocks\n\n`
         code += `    levelTexts: any[] = []\n`
         code += `    _levelTexts: any[] = ${constantName}.levelTexts || []\n\n`
+        code += `    levelSensors: any[] = []\n`
+        code += `    _levelSensors: any[] = ${constantName}.levelSensors || []\n\n`
+        code += `    conditionalWalls: any[] = []\n`
+        code += `    _conditionalWalls: any[] = ${constantName}.conditionalWalls || []\n\n`
         code += `}\n`
 
         return code
