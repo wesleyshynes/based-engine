@@ -150,12 +150,14 @@ export interface BaseEditorLevelData {
 export interface PropertyField {
     key: string
     label: string
-    type: 'number' | 'string' | 'color' | 'coordinate'
+    type: 'number' | 'string' | 'color' | 'coordinate' | 'boolean' | 'array'
     min?: number
     max?: number
     step?: number
     // For coordinate type - the paired keys
     coordinateKeys?: { x: string, y: string }
+    // For array type - expected item type (for validation/parsing hints)
+    arrayItemType?: 'string' | 'number'
 }
 
 // ============================================================================
