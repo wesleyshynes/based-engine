@@ -48,4 +48,8 @@ export {
     LevelSettingsPanel,
     LevelListPanel,
     ExportPanel,
+    ImportPanel,
 } from './panels'
+
+// Panel types
+export type { RegisteredLevel, ImportPanelCallbacks } from './panels'

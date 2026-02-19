@@ -13,12 +13,12 @@ import {
 } from "./EditorTypes"
 import { BaseEditorStorage } from "./BaseEditorStorage"
 import { EditorInputManager } from "./EditorInputManager"
-import { 
-    PropertyPanel, 
-    LevelSettingsPanel, 
-    LevelListPanel, 
-    ExportPanel 
-} from "./panels"
+import { PropertyPanel } from "./panels/PropertyPanel"
+import { LevelSettingsPanel } from "./panels/LevelSettingsPanel"
+import { LevelListPanel } from "./panels/LevelListPanel"
+import { ExportPanel } from "./panels/ExportPanel"
+import { ImportPanel } from "./panels/ImportPanel"
+import type { RegisteredLevel } from "./panels/ImportPanel"
 import {
     BG_COLOR,
     GRID_COLOR,
@@ -99,6 +99,7 @@ export class BaseLevelEditor extends BasedLevel {
     exportButton: any
     newButton: any
     loadButton: any
+    importButton: any
     deleteObjectButton: any
     levelSettingsButton: any
 
@@ -107,6 +108,7 @@ export class BaseLevelEditor extends BasedLevel {
     levelSettingsPanel!: LevelSettingsPanel
     levelListPanel!: LevelListPanel
     exportPanel!: ExportPanel
+    importPanel!: ImportPanel
     savedLevels: BaseEditorLevelData[] = []
 
     // Messages
@@ -237,6 +239,14 @@ export class BaseLevelEditor extends BasedLevel {
             exportLevelAsCode: (level) => this.storage.exportLevelAsCode(level),
             exportLevelClassCode: (level) => this.storage.exportLevelClassCode(level)
         })
+
+        // Import Panel
+        this.importPanel = new ImportPanel(this.gameRef, {
+            getRegisteredLevels: () => this.getRegisteredLevels(),
+            importLevelData: (data: any) => this.convertImportData(data),
+            onLevelImported: (level: BaseEditorLevelData) => this.handleLevelImported(level),
+            showMessage: (msg: string) => this.showMessage(msg),
+        })
     }
 
     centerOnPlayerStart() {
@@ -320,11 +330,20 @@ export class BaseLevelEditor extends BasedLevel {
         this.exportButton = this.createButton('Export', rightX - 140, 10, 65, 35)
         this.exportButton.clickFunction = () => {
             this.exportPanel.toggle()
+            this.importPanel.hide()
             this.levelListPanel.hide()
             this.levelSettingsPanel.hide()
         }
 
-        this.newButton = this.createButton('New', rightX - 210, 10, 65, 35)
+        this.importButton = this.createButton('Import', rightX - 210, 10, 65, 35)
+        this.importButton.clickFunction = () => {
+            this.importPanel.toggle()
+            this.exportPanel.hide()
+            this.levelListPanel.hide()
+            this.levelSettingsPanel.hide()
+        }
+
+        this.newButton = this.createButton('New', rightX - 280, 10, 65, 35)
         this.newButton.clickFunction = () => {
             this.saveCurrentLevel()
             this.currentLevel = this.storage.createNewLevel()
@@ -335,17 +354,19 @@ export class BaseLevelEditor extends BasedLevel {
             this.showMessage('New Level Created!')
         }
 
-        this.loadButton = this.createButton('Load', rightX - 280, 10, 65, 35)
+        this.loadButton = this.createButton('Load', rightX - 350, 10, 65, 35)
         this.loadButton.clickFunction = () => {
             this.savedLevels = this.storage.getAllLevels()
             this.levelListPanel.toggle()
+            this.importPanel.hide()
             this.exportPanel.hide()
             this.levelSettingsPanel.hide()
         }
 
-        this.levelSettingsButton = this.createButton('Settings', rightX - 360, 10, 75, 35)
+        this.levelSettingsButton = this.createButton('Settings', rightX - 430, 10, 75, 35)
         this.levelSettingsButton.clickFunction = () => {
             this.levelSettingsPanel.toggle()
+            this.importPanel.hide()
             this.levelListPanel.hide()
             this.exportPanel.hide()
         }
@@ -382,6 +403,50 @@ export class BaseLevelEditor extends BasedLevel {
     showMessage(text: string) {
         this.messageText = text
         this.messageTime = this.gameRef.lastUpdate
+    }
+
+    /**
+     * Get the list of pre-registered levels available for import.
+     * Override in subclass to provide game-specific registered levels.
+     */
+    protected getRegisteredLevels(): RegisteredLevel[] {
+        return []
+    }
+
+    /**
+     * Convert imported data into editor level data.
+     * Override in subclass for game-specific conversion.
+     * Returns null if the data cannot be parsed/converted.
+     */
+    protected convertImportData(data: any): BaseEditorLevelData | null {
+        if (!data || typeof data !== 'object') return null
+        const now = Date.now()
+        return {
+            ...data,
+            id: this.storage.generateId(),
+            createdAt: now,
+            updatedAt: now,
+            name: data.name || 'Imported Level',
+            levelWidth: data.levelWidth || 800,
+            levelHeight: data.levelHeight || 600,
+            playerStart: data.playerStart || { x: 100, y: 100 },
+            nextLevel: data.nextLevel || this.editorConfig.levelKeys.menu,
+        }
+    }
+
+    /**
+     * Handle a successfully imported level: save it and make it active.
+     */
+    protected handleLevelImported(level: BaseEditorLevelData): void {
+        this.saveCurrentLevel()
+        this.storage.saveLevel(level)
+        this.storage.setCurrentLevelId(level.id)
+        this.currentLevel = level
+        this.savedLevels = this.storage.getAllLevels()
+        this.selectedObject = null
+        this.propertyPanel.hide()
+        this.importPanel.hide()
+        this.centerOnPlayerStart()
     }
 
     saveCurrentLevel() {
@@ -496,6 +561,7 @@ export class BaseLevelEditor extends BasedLevel {
                 this.propertyPanel.hide()
                 this.levelListPanel.hide()
                 this.exportPanel.hide()
+                this.importPanel.hide()
                 this.levelSettingsPanel.hide()
             }
         }
@@ -623,6 +689,7 @@ export class BaseLevelEditor extends BasedLevel {
         if (this.propertyPanel.visible && x > this.gameRef.gameWidth - 220) return true
         if (this.levelListPanel.visible && this.levelListPanel.isPointInside(x, y)) return true
         if (this.exportPanel.visible && this.exportPanel.isPointInside(x, y)) return true
+        if (this.importPanel.visible && this.importPanel.isPointInside(x, y)) return true
         if (this.levelSettingsPanel.visible && this.levelSettingsPanel.isPointInside(x, y)) return true
         if (this.selectedObject && x < 90 && y > this.gameRef.gameHeight - 55) return true
         return false
@@ -888,6 +955,7 @@ export class BaseLevelEditor extends BasedLevel {
         this.saveButton.update()
         this.testButton.update()
         this.exportButton.update()
+        this.importButton.update()
         this.newButton.update()
         this.loadButton.update()
         this.levelSettingsButton.update()
@@ -906,9 +974,10 @@ export class BaseLevelEditor extends BasedLevel {
         this.saveButton.x = rightX
         this.testButton.x = rightX - 70
         this.exportButton.x = rightX - 140
-        this.newButton.x = rightX - 210
-        this.loadButton.x = rightX - 280
-        this.levelSettingsButton.x = rightX - 360
+        this.importButton.x = rightX - 210
+        this.newButton.x = rightX - 280
+        this.loadButton.x = rightX - 350
+        this.levelSettingsButton.x = rightX - 430
         // Select and Pan buttons on second row
         this.selectButton.x = rightX
         this.panButton.x = rightX - 70
@@ -919,6 +988,7 @@ export class BaseLevelEditor extends BasedLevel {
         this.levelSettingsPanel.onResize()
         this.levelListPanel.onResize()
         this.exportPanel.onResize()
+        this.importPanel.onResize()
     }
 
     draw() {
@@ -1086,6 +1156,7 @@ export class BaseLevelEditor extends BasedLevel {
         this.saveButton.draw()
         this.testButton.draw()
         this.exportButton.draw()
+        this.importButton.draw()
         this.newButton.draw()
         this.loadButton.draw()
         this.levelSettingsButton.draw()
@@ -1100,6 +1171,7 @@ export class BaseLevelEditor extends BasedLevel {
         if (this.selectedObject) this.deleteObjectButton.draw()
         this.levelListPanel.draw()
         this.exportPanel.draw()
+        this.importPanel.draw()
         this.levelSettingsPanel.draw()
     }
 
@@ -1108,6 +1180,7 @@ export class BaseLevelEditor extends BasedLevel {
         this.levelSettingsPanel.tearDown()
         this.levelListPanel.tearDown()
         this.exportPanel.tearDown()
+        this.importPanel.tearDown()
         this.saveCurrentLevel()
     }
 }

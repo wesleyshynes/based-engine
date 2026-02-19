@@ -75,9 +75,12 @@ export class EditorInputManager {
         width: number
         height: number
         value: string
+        readOnly?: boolean
     }): HTMLTextAreaElement {
         let textarea = document.getElementById(config.id) as HTMLTextAreaElement
-        
+
+        const isReadOnly = config.readOnly !== false
+
         if (!textarea) {
             textarea = document.createElement('textarea')
             textarea.id = config.id
@@ -86,18 +89,18 @@ export class EditorInputManager {
             textarea.style.top = `${config.y}px`
             textarea.style.width = `${config.width}px`
             textarea.style.height = `${config.height}px`
-            textarea.style.background = '#111'
-            textarea.style.color = '#0f0'
-            textarea.style.border = '1px solid #444'
+            textarea.style.background = isReadOnly ? '#111' : '#222'
+            textarea.style.color = isReadOnly ? '#0f0' : '#fff'
+            textarea.style.border = isReadOnly ? '1px solid #444' : '1px solid #81B622'
             textarea.style.fontSize = '10px'
             textarea.style.fontFamily = 'monospace'
             textarea.style.padding = '10px'
             textarea.style.resize = 'none'
             textarea.style.boxSizing = 'border-box'
-            textarea.readOnly = true
+            textarea.readOnly = isReadOnly
             document.body.appendChild(textarea)
         }
-        
+
         textarea.value = config.value
         return textarea
     }
