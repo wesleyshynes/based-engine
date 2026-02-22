@@ -1,7 +1,5 @@
 import { drawPolygon, rotateDraw } from "../../../engine/libs/drawHelpers";
-import { radToDeg } from "../../../engine/libs/mathHelpers";
 import PhysPoly from "../../../engine/physicsObjects/PhysPoly";
-import Physics from 'matter-js';
 
 const FILL_COLOR = '#222222'
 const BORDER_COLOR = '#111111'

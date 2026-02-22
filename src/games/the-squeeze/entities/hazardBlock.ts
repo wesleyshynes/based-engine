@@ -1,7 +1,6 @@
 import { drawBox, rotateDraw } from "../../../engine/libs/drawHelpers";
 import { radToDeg } from "../../../engine/libs/mathHelpers";
 import PhysBox from "../../../engine/physicsObjects/PhysBox";
-import Physics from 'matter-js';
 
 export class HazardBlock extends PhysBox {
 
