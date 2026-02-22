@@ -36,6 +36,7 @@ export type SqueezeObjectType =
     | 'levelText'
     | 'sensorBox'
     | 'conditionalWall'
+    | 'collectible'
 
 // ============================================================================
 // Object Registry - All Squeeze placeable object definitions
@@ -457,6 +458,30 @@ export const SQUEEZE_OBJECT_REGISTRY: Record<SqueezeObjectType, ObjectDefinition
             })
         },
     },
+
+    // ========================================================================
+    // Collectible - Pickup item for score
+    // ========================================================================
+    collectible: {
+        primitive: 'ball',
+        toolLabel: 'Collect',
+        creationMode: 'single-click',
+        arrayKey: 'collectibles',
+        zIndex: 3,
+        defaults: {
+            type: 'collectible',
+            radius: 15,
+            color: '#FFD700',
+            zIndex: 3,
+        },
+        properties: [
+            ...positionFields,
+            { key: 'radius', label: 'Radius', type: 'number', min: 5, max: 50 },
+            colorField,
+            zIndexField,
+        ],
+        colorKey: 'color',
+    },
 }
 
 // ============================================================================
@@ -475,4 +500,5 @@ export const SQUEEZE_OBJECT_REGISTRY_ORDER: SqueezeObjectType[] = [
     'playerStart',
     'hazardBlock',
     'levelText',
+    'collectible',
 ]

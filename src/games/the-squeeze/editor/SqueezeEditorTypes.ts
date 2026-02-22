@@ -130,6 +130,15 @@ export interface SqueezeLevelSensor {
     zIndex?: number
 }
 
+export interface SqueezeCollectible {
+    id?: string
+    x: number
+    y: number
+    radius: number
+    color: string
+    zIndex?: number
+}
+
 // ============================================================================
 // Squeeze Level Data - Game-specific editor level data structure
 // ============================================================================
@@ -156,6 +165,7 @@ export interface SqueezeEditorLevelData {
     levelTexts: SqueezeLevelText[]
     levelSensors: SqueezeLevelSensor[]
     conditionalWalls: SqueezeConditionalWall[]
+    collectibles: SqueezeCollectible[]
 }
 
 // ============================================================================
@@ -198,5 +208,11 @@ export interface SqueezeLevelData {
         flagName?: string;
         showWhenTrue?: boolean;
         hiddenOpacity?: number;
+    }[]
+    collectibles?: {
+        x: number;
+        y: number;
+        radius: number;
+        color: string;
     }[]
 }

@@ -146,6 +146,7 @@ export class SqueezeLevelEditor extends BaseLevelEditor {
                 color: w.color || '#6666FF',
                 flagName: w.flagName || '',
             })),
+            collectibles: stamp(data.collectibles, 'collectible'),
         }
     }
 

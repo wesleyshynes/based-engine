@@ -46,4 +46,9 @@ export const LEVEL_01: SqueezeLevelData = {
         { x: 375, y: 275, width: 50, height: 50, color: '#333', flagName: 'jail_cell_unlocked', showWhenTrue: false, hiddenOpacity: 0.2 },
         { x: 375, y: 375, width: 50, height: 50, color: '#333', flagName: 'jail_cell_unlocked', showWhenTrue: false, hiddenOpacity: 0.2 },
     ],
+    collectibles: [
+        { x: 200, y: 100, radius: 15, color: '#FFD700' },
+        { x: 500, y: 200, radius: 15, color: '#FFD700' },
+        { x: 700, y: 350, radius: 15, color: '#FFD700' },
+    ],
 }

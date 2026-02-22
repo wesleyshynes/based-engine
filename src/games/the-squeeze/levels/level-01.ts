@@ -36,6 +36,8 @@ export class Level01 extends SqueezeBaseLevel {
     conditionalWalls: any[] = []
     _conditionalWalls: any[] = LEVEL_01.conditionalWalls || []
 
+    _collectibles: any[] = LEVEL_01.collectibles || []
+
     bgMusicTrack: any = BGMusic
 
 } 

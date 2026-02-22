@@ -20,6 +20,8 @@ export class Level05 extends SqueezeBaseLevel {
     exitDoors: any[] = []
     _exitDoors: any[] = LEVEL_05.exitDoors
 
+    _collectibles: any[] = LEVEL_05.collectibles || []
+
     bgMusicTrack: any = BGMusic
 
 } 

@@ -29,6 +29,7 @@ export class SqueezeEditorStorage extends BaseEditorStorage {
             levelTexts: [],
             levelSensors: [],
             conditionalWalls: [],
+            collectibles: [],
         } as SqueezeEditorLevelData
     }
 
@@ -49,6 +50,7 @@ export class SqueezeEditorStorage extends BaseEditorStorage {
             levelTexts: sanitized.levelTexts || [],
             levelSensors: sanitized.levelSensors || [],
             conditionalWalls: sanitized.conditionalWalls || [],
+            collectibles: sanitized.collectibles || [],
         } as SqueezeEditorLevelData
     }
 
@@ -170,6 +172,13 @@ export class SqueezeEditorStorage extends BaseEditorStorage {
         })
         code += `    ],\n`
 
+        // Collectibles
+        code += `    collectibles: [\n`
+        ;(squeezeLevel.collectibles || []).forEach(collectible => {
+            code += `        { x: ${collectible.x}, y: ${collectible.y}, radius: ${collectible.radius}, color: '${collectible.color}' },\n`
+        })
+        code += `    ],\n`
+
         code += `}\n`
 
         return code
@@ -213,6 +222,8 @@ export class SqueezeEditorStorage extends BaseEditorStorage {
         code += `    _levelSensors: any[] = ${constantName}.levelSensors || []\n\n`
         code += `    conditionalWalls: any[] = []\n`
         code += `    _conditionalWalls: any[] = ${constantName}.conditionalWalls || []\n\n`
+        code += `    collectibles: any[] = []\n`
+        code += `    _collectibles: any[] = ${constantName}.collectibles || []\n\n`
         code += `}\n`
 
         return code

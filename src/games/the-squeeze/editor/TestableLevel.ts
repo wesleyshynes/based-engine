@@ -124,6 +124,13 @@ function mapSqueezeEditorData(data: SqueezeEditorLevelData) {
             showWhenTrue: wall.showWhenTrue !== undefined ? wall.showWhenTrue : true,
             hiddenOpacity: wall.hiddenOpacity !== undefined ? wall.hiddenOpacity : 0.2,
         })),
+
+        collectibles: (data.collectibles || []).map(collectible => ({
+            x: collectible.x,
+            y: collectible.y,
+            radius: collectible.radius,
+            color: collectible.color,
+        })),
     }
 }
 
@@ -162,6 +169,9 @@ export class TestableLevel extends SqueezeBaseLevel {
     conditionalWalls: any[] = []
     _conditionalWalls: any[] = []
 
+    collectibles: any[] = []
+    _collectibles: any[] = []
+
     textLines: string[] = [
         'Move: ←↑↓→ or W A S D',
         'Shrink: Z',
@@ -191,6 +201,7 @@ export class TestableLevel extends SqueezeBaseLevel {
             this._levelTexts = mapped.levelTexts
             this._levelSensors = mapped.levelSensors
             this._conditionalWalls = mapped.conditionalWalls
+            this._collectibles = mapped.collectibles
         }
 
         // Call parent preload to load sounds

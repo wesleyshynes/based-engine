@@ -13,6 +13,7 @@ import { TouchKnob } from "../../../engine/controls/TouchKnob";
 import { MovingPlatform } from "../entities/movingPlatform";
 import { BounceBall } from "../entities/bounceBall";
 import { ConditionalWall } from "../entities/conditionalWall";
+import { Collectible } from "../entities/collectible";
 
 import WallThud1 from '../../../assets/the-squeeze/387478__cosmicembers__dart-thud-1.mp3'
 import WallThud2 from '../../../assets/the-squeeze/387480__cosmicembers__dart-thud-2.mp3'
@@ -95,6 +96,11 @@ export class SqueezeBaseLevel extends BasedLevel {
 
     conditionalWalls: ConditionalWall[] = []
     _conditionalWalls: any[] = []
+
+    collectibles: Collectible[] = []
+    _collectibles: any[] = []
+    collectibleCount: number = 0
+    totalCollectibles: number = 0
 
     // SOUNDS
     wallThud1: any;
@@ -283,6 +289,7 @@ export class SqueezeBaseLevel extends BasedLevel {
         this.setupLevelTexts()
         this.setupSensors()
         this.setupConditionalWalls()
+        this.setupCollectibles()
 
         // BEGIN
         this.onResize()
@@ -337,6 +344,8 @@ export class SqueezeBaseLevel extends BasedLevel {
         this.conditionalWalls.forEach((wall: any) => {
             wall.update()
         })
+
+        this.collectibleCount = this.collectibles.filter(c => c.collected).length
 
         this.cameraZoomButton.update()
         this.actionButton1.update()
@@ -505,6 +514,11 @@ export class SqueezeBaseLevel extends BasedLevel {
             hazard.draw()
         })
 
+        // draw collectibles
+        this.collectibles.forEach((collectible: any) => {
+            collectible.draw()
+        })
+
 
         // draw the main player
         this.mainPlayer.draw()
@@ -531,6 +545,24 @@ export class SqueezeBaseLevel extends BasedLevel {
                     fontSize: 14,
                     text: line
                   })
+            })
+        }
+
+        // draw collectible counter
+        if (this.totalCollectibles > 0) {
+            drawText({
+                c: this.gameRef.ctx,
+                x: this.gameRef.gameWidth / 2,
+                y: 30,
+                align: 'center',
+                fillColor: '#FFD700',
+                strokeColor: '#000',
+                strokeWidth: 3,
+                style: '',
+                weight: '700',
+                fontFamily: 'sans-serif',
+                fontSize: 20,
+                text: `${this.collectibleCount} / ${this.totalCollectibles}`,
             })
         }
 
@@ -755,10 +787,32 @@ export class SqueezeBaseLevel extends BasedLevel {
         })
     }
 
+    setupCollectibles() {
+        this.collectibles = [
+            ...this._collectibles,
+        ].map((obj: any, idx: number) => {
+            const tempObj = new Collectible({
+                key: `collectible-${idx}`,
+                gameRef: this.gameRef
+            })
+            tempObj.x = obj.x
+            tempObj.y = obj.y
+            tempObj.radius = obj.radius || 15
+            tempObj.color = obj.color || '#FFD700'
+            tempObj.initialize()
+            this.gameRef.addToWorld(tempObj.body)
+            return tempObj
+        })
+        this.totalCollectibles = this.collectibles.length
+    }
+
     tearDown(): void {
         if (this.activeSound.playing && this.activeSound.soundRef) {
             this.activeSound.soundRef.stop()
         }
         this.conditionalWalls.forEach(w => this.gameRef.removeFromWorld(w.body))
+        this.collectibles.forEach(c => {
+            if (!c.collected) this.gameRef.removeFromWorld(c.body)
+        })
     }
 } 
