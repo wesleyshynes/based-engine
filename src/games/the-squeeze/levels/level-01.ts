@@ -10,7 +10,6 @@ export class Level01 extends SqueezeBaseLevel {
     nextLevel: string = LEVEL_01.nextLevel
 
     playerStartPosition: any = LEVEL_01.playerStart
-
     levelWalls: any[] = []
     _levelBoundaries: any[] = LEVEL_01.boundaries
     _levelWalls: any[] = LEVEL_01.walls
@@ -18,16 +17,22 @@ export class Level01 extends SqueezeBaseLevel {
     _levelPolygons: any[] = LEVEL_01.polygons || []
     pushBoxes: any[] = []
     _pushBoxes: any[] = LEVEL_01.pushBoxes
+    bounceBalls: any[] = []
+    _bounceBalls: any[] = LEVEL_01.bounceBalls || []
     movingPlatforms: any[] = []
     _movingPlatforms: any[] = LEVEL_01.movingPlatforms
     exitDoors: any[] = []
     _exitDoors: any[] = LEVEL_01.exitDoors
+
     hazardBlocks: any[] = []
     _hazardBlocks: any[] = LEVEL_01.hazardBlocks
+
     levelTexts: any[] = []
     _levelTexts: any[] = LEVEL_01.levelTexts || []
+
     levelSensors: any[] = []
     _levelSensors: any[] = LEVEL_01.levelSensors || []
+
     conditionalWalls: any[] = []
     _conditionalWalls: any[] = LEVEL_01.conditionalWalls || []
 
