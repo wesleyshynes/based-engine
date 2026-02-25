@@ -32,6 +32,8 @@ export type SqueezeObjectType =
     | 'movingPlatform'
     | 'exitDoor'
     | 'hazardBlock'
+    | 'hazardPoly'
+    | 'hazardBall'
     | 'playerStart'
     | 'levelText'
     | 'sensorBox'
@@ -295,6 +297,56 @@ export const SQUEEZE_OBJECT_REGISTRY: Record<SqueezeObjectType, ObjectDefinition
     },
 
     // ========================================================================
+    // Hazard Poly - Polygon-shaped hazard
+    // ========================================================================
+    hazardPoly: {
+        primitive: 'polygon',
+        toolLabel: 'HzPoly',
+        creationMode: 'multi-click',
+        arrayKey: 'hazardPolys',
+        zIndex: 0,
+        defaults: {
+            type: 'hazardPoly',
+            vertices: [
+                { x: -50, y: -25 },
+                { x: 50, y: -25 },
+                { x: 50, y: 25 },
+                { x: -50, y: 25 },
+            ],
+            angle: 0,
+            zIndex: 0,
+        },
+        properties: [
+            ...positionFields,
+            angleField,
+            zIndexField,
+        ],
+        fixedColor: '#f00',
+    },
+
+    // ========================================================================
+    // Hazard Ball - Circular hazard
+    // ========================================================================
+    hazardBall: {
+        primitive: 'ball',
+        toolLabel: 'HzBall',
+        creationMode: 'single-click',
+        arrayKey: 'hazardBalls',
+        zIndex: 0,
+        defaults: {
+            type: 'hazardBall',
+            radius: 30,
+            zIndex: 0,
+        },
+        properties: [
+            ...positionFields,
+            { key: 'radius', label: 'Radius', type: 'number', min: 10, max: 200 },
+            zIndexField,
+        ],
+        fixedColor: '#f00',
+    },
+
+    // ========================================================================
     // Player Start - Spawn point
     // ========================================================================
     playerStart: {
@@ -499,6 +551,8 @@ export const SQUEEZE_OBJECT_REGISTRY_ORDER: SqueezeObjectType[] = [
     'exitDoor',
     'playerStart',
     'hazardBlock',
+    'hazardPoly',
+    'hazardBall',
     'levelText',
     'collectible',
 ]

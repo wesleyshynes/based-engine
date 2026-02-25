@@ -800,11 +800,10 @@ export class BaseLevelEditor extends BasedLevel {
 
     // Multi-click placement (for polygon and future multi-click objects)
     handleMultiClickPlacement(worldX: number, worldY: number) {
-        // Currently only polygon uses multi-click
-        if (this.currentTool === 'polygon') {
+        const definition = getObjectDefinition(this.currentTool, this.objectRegistry)
+        if (definition && definition.creationMode === 'multi-click') {
             this.handlePolygonClick(worldX, worldY)
         }
-        // Future multi-click objects can be added here
     }
 
     // Polygon creation
@@ -861,7 +860,7 @@ export class BaseLevelEditor extends BasedLevel {
             y: v.y - centerY
         }))
 
-        const definition = getObjectDefinition('polygon', this.objectRegistry)
+        const definition = getObjectDefinition(this.currentTool, this.objectRegistry)
         if (!definition) {
             this.cancelPolygonDrawing()
             return
@@ -869,7 +868,7 @@ export class BaseLevelEditor extends BasedLevel {
 
         const poly: any = {
             id: this.storage.generateId(),
-            type: 'polygon',
+            type: this.currentTool,
             x: centerX,
             y: centerY,
             vertices: localVertices,

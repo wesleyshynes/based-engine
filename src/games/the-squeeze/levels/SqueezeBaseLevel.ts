@@ -8,6 +8,8 @@ import { ExitDoor } from "../entities/exitDoor";
 import { LevelWall } from "../entities/levelWall";
 import { LevelPolygon } from "../entities/levelPolygon";
 import { HazardBlock } from "../entities/hazardBlock";
+import { HazardPoly } from "../entities/hazardPoly";
+import { HazardBall } from "../entities/hazardBall";
 import { LevelText } from "../entities/levelText";
 import { TouchKnob } from "../../../engine/controls/TouchKnob";
 import { MovingPlatform } from "../entities/movingPlatform";
@@ -86,6 +88,10 @@ export class SqueezeBaseLevel extends BasedLevel {
     _exitDoors: any[] = []
     hazardBlocks: HazardBlock[] = []
     _hazardBlocks: any[] = []
+    hazardPolys: HazardPoly[] = []
+    _hazardPolys: any[] = []
+    hazardBalls: HazardBall[] = []
+    _hazardBalls: any[] = []
     bounceBalls: BounceBall[] = []
     _bounceBalls: any[] = []
     levelTexts: LevelText[] = []
@@ -285,6 +291,8 @@ export class SqueezeBaseLevel extends BasedLevel {
         this.setupMovingPlatforms()
         this.setupExitDoors()
         this.setupHazardBlocks()
+        this.setupHazardPolys()
+        this.setupHazardBalls()
         this.setupBounceBalls()
         this.setupLevelTexts()
         this.setupSensors()
@@ -334,6 +342,14 @@ export class SqueezeBaseLevel extends BasedLevel {
         })
 
         this.hazardBlocks.forEach((hazard: any) => {
+            hazard.update()
+        })
+
+        this.hazardPolys.forEach((hazard: any) => {
+            hazard.update()
+        })
+
+        this.hazardBalls.forEach((hazard: any) => {
             hazard.update()
         })
 
@@ -511,6 +527,16 @@ export class SqueezeBaseLevel extends BasedLevel {
 
         // draw hazard blocks
         this.hazardBlocks.forEach((hazard: any) => {
+            hazard.draw()
+        })
+
+        // draw hazard polys
+        this.hazardPolys.forEach((hazard: any) => {
+            hazard.draw()
+        })
+
+        // draw hazard balls
+        this.hazardBalls.forEach((hazard: any) => {
             hazard.draw()
         })
 
@@ -748,6 +774,40 @@ export class SqueezeBaseLevel extends BasedLevel {
         })
     }
 
+    setupHazardPolys() {
+        this.hazardPolys = [
+            ...this._hazardPolys,
+        ].map((obj: any, idx: number) => {
+            const tempObj = new HazardPoly({
+                key: `hazardPoly-${idx}`, gameRef: this.gameRef
+            })
+            tempObj.x = obj.x
+            tempObj.y = obj.y
+            tempObj.vertices = obj.vertices || []
+            tempObj.angle = obj.angle || 0
+            tempObj.initialize()
+            this.gameRef.addToWorld(tempObj.body)
+            tempObj.offsetSelfByOffset()
+            return tempObj
+        })
+    }
+
+    setupHazardBalls() {
+        this.hazardBalls = [
+            ...this._hazardBalls,
+        ].map((obj: any, idx: number) => {
+            const tempObj = new HazardBall({
+                key: `hazardBall-${idx}`, gameRef: this.gameRef
+            })
+            tempObj.x = obj.x
+            tempObj.y = obj.y
+            tempObj.radius = obj.radius
+            tempObj.initialize()
+            this.gameRef.addToWorld(tempObj.body)
+            return tempObj
+        })
+    }
+
     setupBounceBalls() {
         this.bounceBalls = [
             ...this._bounceBalls,
@@ -811,6 +871,8 @@ export class SqueezeBaseLevel extends BasedLevel {
             this.activeSound.soundRef.stop()
         }
         this.conditionalWalls.forEach(w => this.gameRef.removeFromWorld(w.body))
+        this.hazardPolys.forEach(h => this.gameRef.removeFromWorld(h.body))
+        this.hazardBalls.forEach(h => this.gameRef.removeFromWorld(h.body))
         this.collectibles.forEach(c => {
             if (!c.collected) this.gameRef.removeFromWorld(c.body)
         })

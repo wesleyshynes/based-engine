@@ -84,6 +84,19 @@ function mapSqueezeEditorData(data: SqueezeEditorLevelData) {
             angle: hazard.angle || 0,
         })),
 
+        hazardPolys: (data.hazardPolys || []).map(poly => ({
+            x: poly.x,
+            y: poly.y,
+            vertices: poly.vertices,
+            angle: poly.angle || 0,
+        })),
+
+        hazardBalls: (data.hazardBalls || []).map(ball => ({
+            x: ball.x,
+            y: ball.y,
+            radius: ball.radius,
+        })),
+
         bounceBalls: (data.bounceBalls || []).map(ball => ({
             x: ball.x,
             y: ball.y,
@@ -157,6 +170,12 @@ export class TestableLevel extends SqueezeBaseLevel {
     hazardBlocks: any[] = []
     _hazardBlocks: any[] = []
 
+    hazardPolys: any[] = []
+    _hazardPolys: any[] = []
+
+    hazardBalls: any[] = []
+    _hazardBalls: any[] = []
+
     bounceBalls: any[] = []
     _bounceBalls: any[] = []
 
@@ -197,6 +216,8 @@ export class TestableLevel extends SqueezeBaseLevel {
             this._movingPlatforms = mapped.movingPlatforms
             this._exitDoors = mapped.exitDoors
             this._hazardBlocks = mapped.hazardBlocks
+            this._hazardPolys = mapped.hazardPolys
+            this._hazardBalls = mapped.hazardBalls
             this._bounceBalls = mapped.bounceBalls
             this._levelTexts = mapped.levelTexts
             this._levelSensors = mapped.levelSensors

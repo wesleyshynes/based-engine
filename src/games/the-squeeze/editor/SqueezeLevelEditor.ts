@@ -136,6 +136,8 @@ export class SqueezeLevelEditor extends BaseLevelEditor {
             movingPlatforms: stamp(data.movingPlatforms, 'movingPlatform'),
             exitDoors: stamp(data.exitDoors, 'exitDoor'),
             hazardBlocks: stamp(data.hazardBlocks, 'hazardBlock'),
+            hazardPolys: stamp(data.hazardPolys, 'hazardPoly'),
+            hazardBalls: stamp(data.hazardBalls, 'hazardBall'),
             levelTexts: stamp(data.levelTexts, 'levelText'),
             levelSensors: stamp(data.levelSensors, 'sensorBox').map(s => ({
                 ...s,

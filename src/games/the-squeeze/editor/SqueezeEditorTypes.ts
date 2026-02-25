@@ -90,6 +90,23 @@ export interface SqueezeHazardBlock {
     zIndex?: number
 }
 
+export interface SqueezeHazardPoly {
+    id?: string
+    x: number
+    y: number
+    vertices: { x: number; y: number }[]
+    angle: number
+    zIndex?: number
+}
+
+export interface SqueezeHazardBall {
+    id?: string
+    x: number
+    y: number
+    radius: number
+    zIndex?: number
+}
+
 export interface SqueezeLevelText {
     id?: string
     x: number
@@ -162,6 +179,8 @@ export interface SqueezeEditorLevelData {
     movingPlatforms: SqueezeMovingPlatform[]
     exitDoors: SqueezeExitDoor[]
     hazardBlocks: SqueezeHazardBlock[]
+    hazardPolys: SqueezeHazardPoly[]
+    hazardBalls: SqueezeHazardBall[]
     levelTexts: SqueezeLevelText[]
     levelSensors: SqueezeLevelSensor[]
     conditionalWalls: SqueezeConditionalWall[]
@@ -186,6 +205,8 @@ export interface SqueezeLevelData {
     movingPlatforms?: SqueezeMovingPlatform[]
     exitDoors: SqueezeExitDoor[]
     hazardBlocks?: SqueezeHazardBlock[]
+    hazardPolys?: SqueezeHazardPoly[]
+    hazardBalls?: SqueezeHazardBall[]
     levelTexts?: SqueezeLevelText[]
     levelSensors?: {
         x: number;

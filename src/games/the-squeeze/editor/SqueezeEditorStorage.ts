@@ -26,6 +26,8 @@ export class SqueezeEditorStorage extends BaseEditorStorage {
             movingPlatforms: [],
             exitDoors: [],
             hazardBlocks: [],
+            hazardPolys: [],
+            hazardBalls: [],
             levelTexts: [],
             levelSensors: [],
             conditionalWalls: [],
@@ -47,6 +49,8 @@ export class SqueezeEditorStorage extends BaseEditorStorage {
             movingPlatforms: sanitized.movingPlatforms || [],
             exitDoors: sanitized.exitDoors || [],
             hazardBlocks: sanitized.hazardBlocks || [],
+            hazardPolys: sanitized.hazardPolys || [],
+            hazardBalls: sanitized.hazardBalls || [],
             levelTexts: sanitized.levelTexts || [],
             levelSensors: sanitized.levelSensors || [],
             conditionalWalls: sanitized.conditionalWalls || [],
@@ -145,6 +149,21 @@ export class SqueezeEditorStorage extends BaseEditorStorage {
         })
         code += `    ],\n`
 
+        // Hazard Polys
+        code += `    hazardPolys: [\n`
+        ;(squeezeLevel.hazardPolys || []).forEach(poly => {
+            const verticesStr = JSON.stringify(poly.vertices)
+            code += `        { x: ${poly.x}, y: ${poly.y}, vertices: ${verticesStr}, angle: ${poly.angle} },\n`
+        })
+        code += `    ],\n`
+
+        // Hazard Balls
+        code += `    hazardBalls: [\n`
+        ;(squeezeLevel.hazardBalls || []).forEach(ball => {
+            code += `        { x: ${ball.x}, y: ${ball.y}, radius: ${ball.radius} },\n`
+        })
+        code += `    ],\n`
+
         // Level Texts
         code += `    levelTexts: [\n`
         ;(squeezeLevel.levelTexts || []).forEach(text => {
@@ -216,6 +235,10 @@ export class SqueezeEditorStorage extends BaseEditorStorage {
         code += `    _exitDoors: any[] = ${constantName}.exitDoors\n\n`
         code += `    hazardBlocks: any[] = []\n`
         code += `    _hazardBlocks: any[] = ${constantName}.hazardBlocks\n\n`
+        code += `    hazardPolys: any[] = []\n`
+        code += `    _hazardPolys: any[] = ${constantName}.hazardPolys || []\n\n`
+        code += `    hazardBalls: any[] = []\n`
+        code += `    _hazardBalls: any[] = ${constantName}.hazardBalls || []\n\n`
         code += `    levelTexts: any[] = []\n`
         code += `    _levelTexts: any[] = ${constantName}.levelTexts || []\n\n`
         code += `    levelSensors: any[] = []\n`
