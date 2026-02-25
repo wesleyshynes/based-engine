@@ -522,7 +522,7 @@ export const TextPrimitive: PrimitiveDefinition = {
         // Rotation handle (above the text)
         const angleRad = (obj.angle || 0) * Math.PI / 180
         const rotHandleDistance = 60 * ctx.cameraZoom
-        const rotHandleX = pos.x - Math.sin(angleRad) * rotHandleDistance
+        const rotHandleX = pos.x + Math.sin(angleRad) * rotHandleDistance
         const rotHandleY = pos.y - Math.cos(angleRad) * rotHandleDistance
 
         drawLine({ c: ctx.ctx, x: pos.x, y: pos.y, toX: rotHandleX, toY: rotHandleY, strokeColor: '#88f', strokeWidth: 2 })
@@ -536,7 +536,7 @@ export const TextPrimitive: PrimitiveDefinition = {
         // Rotation handle
         const angleRad = (obj.angle || 0) * Math.PI / 180
         const rotHandleDistance = 60
-        const rotHandleX = obj.x - Math.sin(angleRad) * rotHandleDistance
+        const rotHandleX = obj.x + Math.sin(angleRad) * rotHandleDistance
         const rotHandleY = obj.y - Math.cos(angleRad) * rotHandleDistance
         if (Math.abs(worldX - rotHandleX) < handleRadius && Math.abs(worldY - rotHandleY) < handleRadius) {
             return 'rotate'
@@ -549,8 +549,8 @@ export const TextPrimitive: PrimitiveDefinition = {
         if (handle === 'rotate') {
             const dx = worldX - obj.x
             const dy = worldY - obj.y
-            const angle = Math.atan2(dx, dy) * 180 / Math.PI
-            obj.angle = Math.round(-angle / 5) * 5
+            const angle = Math.atan2(dx, -dy) * 180 / Math.PI
+            obj.angle = Math.round(angle / 5) * 5
         }
     },
 
