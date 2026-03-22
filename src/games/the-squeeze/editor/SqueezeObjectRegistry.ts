@@ -237,7 +237,7 @@ export const SQUEEZE_OBJECT_REGISTRY: Record<SqueezeObjectType, ObjectDefinition
             type: 'exitDoor',
             width: 100,
             height: 100,
-            color: 'yellow',
+            color: 'black',
             doorPath: 'start-screen',
             angle: 0,
             zIndex: -1,

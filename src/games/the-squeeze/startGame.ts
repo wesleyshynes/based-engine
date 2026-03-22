@@ -7,10 +7,13 @@ import { Level04 } from "./levels/level-04"
 import { Level05 } from "./levels/level-05"
 import { StartScreen } from "./levels/startScreen"
 import { SqueezeLevelEditor, TestableLevel } from "./editor"
+import { JailEscape } from "./levels/mail-level-01-jail-escape"
 
-export const START_LEVEL = 'level-01' 
+// export const START_LEVEL = 'level-01' 
 // export const START_LEVEL = 'standard-level' 
-// 
+export const START_LEVEL = 'jail-escape'
+
+
 export function startGame() {
   const newGame = new BasedGame({
     canvasElementId: 'game-container',
@@ -26,6 +29,8 @@ export function startGame() {
       { key: 'level-05', level: Level05 },
       { key: 'level-editor', level: SqueezeLevelEditor },
       { key: 'testable-level', level: TestableLevel },
+
+      { key: 'jail-escape', level: JailEscape },
     ]
   })
   newGame.enableMouse()
